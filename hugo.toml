@@ -2,6 +2,10 @@ baseURL = "https://thanhhv.github.io/"
 languageCode = "en-us"
 title = "Thanh HV's Blog"
 theme = "PaperMod"
+pagination.pagerSize = 20
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
 
 [params]
   homeInfoParams = { Title = "Hi, I'm Thanh HV 👋", Content = "Welcome to my dev blog - sharing backend insights, performance tips, and useful notes." }
@@ -9,14 +13,48 @@ theme = "PaperMod"
   showBreadCrumbs = true
   showCodeCopyButtons = true
   defaultTheme = "light"
+  comments = true
   socialIcons = [
     { name = "github", url = "https://github.com/thanhhv" },
     { name = "linkedin", url = "https://www.linkedin.com/in/thanhhv317" },
     { name = "telegram", url = "https://t.me/thanhhv98" }
   ]
-[params.utterances]
-  repo = "thanhhv/blog-comments"      
-  issueTerm = "pathname"           
-  label = "💬 comment"                
-  theme = "github-light" 
-  crossorigin = "anonymous"
+  fuseOpts = { keys = ["title", "description", "content"], threshold = 0.3 }
+
+  [params.utterances]
+    repo = "https://github.com/thanhhv/blog-comments"       # Thay bằng repository của bạn
+    issueTerm = "pathname"               # Gắn bình luận theo đường dẫn bài viết
+    label = "💬 comment"
+    theme = "github-light"
+    crossorigin = "anonymous"
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 1
+
+  [[menu.main]]
+    name = "Posts"
+    url = "/posts/"
+    weight = 2
+
+  [[menu.main]]
+    name = "Tags"
+    url = "/tags/"
+    weight = 3
+
+  [[menu.main]]
+    name = "Search"
+    url = "/search/"
+    weight = 4
+
+  [[menu.main]]
+    name = "CV"
+    url = "/cv/"
+    weight = 5
+
+  [[menu.main]]
+    name = "Wiki"
+    url = "/wiki/"
+    weight = 6
