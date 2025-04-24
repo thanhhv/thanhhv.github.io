@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Wikis on Thanh HV's Blog</title><link>https://thanhhv.github.io/wiki/</link><description>Recent content in Wikis on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><atom:link href="https://thanhhv.github.io/wiki/index.xml" rel="self" type="application/rss+xml"/><item><title>Go-live load test &amp; deployment checklist</title><link>https://thanhhv.github.io/wiki/go-live-checklist/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://thanhhv.github.io/wiki/go-live-checklist/</guid><description>&lt;blockquote>
+&lt;p>🎯 &lt;strong>Goal:&lt;/strong> Ensure the system is stable, scalable, and production-ready before launching.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="-i-code--functional">🧱 I. CODE &amp;amp; FUNCTIONAL&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> Code reviewed and approved by at least one senior developer&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Unit test coverage ≥ 80%&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Edge cases handled properly&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> No N+1 queries (GraphQL/ORM optimized)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> No leftover &lt;code>console.log&lt;/code> or &lt;code>debugger&lt;/code> in code&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> No secrets or tokens hardcoded&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="-ii-cicd--deployment">🚦 II. CI/CD &amp;amp; DEPLOYMENT&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> CI pipeline set up (build → test → deploy)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Rollback plan in place (script or quick revert strategy)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Staging/UAT environment available and tested&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> &lt;code>.env&lt;/code> variables configured correctly (not copied from local)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Proper branch/tag naming (e.g. &lt;code>release/v1.0.0&lt;/code>)&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="-iii-security">🔒 III. SECURITY&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> Auth applied on all sensitive routes (JWT, OAuth, API keys)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Role &amp;amp; permission system tested&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> No publicly exposed sensitive endpoints (&lt;code>/admin&lt;/code>, &lt;code>/debug&lt;/code>)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Checked for XSS, SQLi, path traversal vulnerabilities&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Rate limiting/throttling in place for public APIs&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Security headers enabled (&lt;code>helmet&lt;/code>, CORS, etc.)&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="-iv-performance--scaling">📈 IV. PERFORMANCE &amp;amp; SCALING&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> Load tested for target RPS (e.g. ≥ 10k req/s)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Concurrent users simulated (e.g. 1k logins)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> DB indexed properly (&lt;code>EXPLAIN ANALYZE&lt;/code> used)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Redis, CDN, or in-memory caching applied&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> File/media offloaded to external storage (e.g. S3)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> API only returns necessary data (REST/GraphQL select)&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="-v-monitoring--alerting">🧠 V. MONITORING &amp;amp; ALERTING&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> Logging integrated (Winston, Pino, ELK, Datadog, etc.)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Logs include traceId, userId, route context&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Metrics collection: Prometheus / Grafana / OpenTelemetry&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Alert configured for:
+&lt;ul>
+&lt;li>High error rate (5xx)&lt;/li>
+&lt;li>CPU &amp;gt; 80%&lt;/li>
+&lt;li>Memory full&lt;/li>
+&lt;li>Queue backlog increasing&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="-vi-infrastructure">⚙️ VI. INFRASTRUCTURE&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> Load balancer configured and stable&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Auto-restart and healthcheck ready (PM2, Docker, k8s readiness)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Database backup and restore tested&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Horizontal scaling/pod autoscaling set up if using k8s&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> &lt;code>.env.production&lt;/code> encrypted or managed via Vault&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="-vii-other">📋 VII. OTHER&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> Changelog written (&lt;code>CHANGELOG.md&lt;/code>)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Release announcement sent to relevant teams&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Post-deploy checklist created (Smoke test UI/API)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> QA checklist completed (login, checkout, error, etc.)&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Graceful fallback UI for error handling&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> &lt;code>/status&lt;/code>, &lt;code>/health&lt;/code>, &lt;code>/metrics&lt;/code>, &lt;code>/version&lt;/code> endpoints ready&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="-ready-to-go-live">✅ READY TO GO LIVE?&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Goal&lt;/th>
+&lt;th>Ready?&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Code clean and stable&lt;/td>
+&lt;td>✅&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Load test passed&lt;/td>
+&lt;td>✅&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Monitoring in place&lt;/td>
+&lt;td>✅&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Rollback plan confirmed&lt;/td>
+&lt;td>✅&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Stakeholders notified&lt;/td>
+&lt;td>✅&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2 id="-post-go-live-actions">🔁 POST GO-LIVE ACTIONS&lt;/h2>
+&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> Real-time system monitoring active&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> User feedback monitored&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Latency/error rate observed&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> 24h go-live report or postmortem (if needed)&lt;/li>
+&lt;/ul></description></item><item><title>Non-Tech Books Worth Reading</title><link>https://thanhhv.github.io/wiki/non-tech-books-worth-reading/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://thanhhv.github.io/wiki/non-tech-books-worth-reading/</guid><description>&lt;p>Reading is not only for fun, but also to develop clear thinking and deeper perspective.&lt;br>
+Here&amp;rsquo;s a list of non-technical books that can help backend engineers grow in mindset and soft skills.&lt;/p>
+&lt;h2 id="-psychology--thinking">📘 Psychology &amp;amp; Thinking&lt;/h2>
+&lt;ul>
+&lt;li>&lt;em>Thinking, Fast and Slow&lt;/em> - Daniel Kahneman&lt;/li>
+&lt;li>&lt;em>The One Thing&lt;/em> - Gary W. Keller, Jay Papasan&lt;/li>
+&lt;/ul>
+&lt;h2 id="-philosophy--life">🌍 Philosophy &amp;amp; Life&lt;/h2>
+&lt;ul>
+&lt;li>&lt;em>Naval Ravikant: Để thịnh vượng và hạnh phúc&lt;/em> - Eric Jorgenson&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>&amp;hellip; will be updated more&lt;/p></description></item></channel></rss>
