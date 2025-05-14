@@ -9,8 +9,8 @@ url: /cv/
 - 📍 Thu Duc, Ho Chi Minh City, Vietnam  
 - 📞 0332 *** 362  
 - 📧 Email: thanhhv317@gmail.com  
-- 🐙 GitHub: [@thanhhv317](https://github.com/thanhhv)  
-- 🔗 LinkedIn: [linkedin.com/in/thanhhv](https://www.linkedin.com/in/thanhhv317/)
+- 🐙 GitHub: [@thanhhv](https://github.com/thanhhv)  
+- 🔗 LinkedIn: [linkedin.com/in/thanhhv317](https://www.linkedin.com/in/thanhhv317/)
 - 📅 DOB: 11/08/1998
 
 ---
@@ -20,7 +20,7 @@ url: /cv/
 - **Languages & Frameworks**: Node.js, Go, TypeScript, JavaScript, Express, NestJS  
 - **Architecture**: Microservices, Message Queue, Clean Architecture, WebSocket  
 - **Databases**: MongoDB, PostgreSQL, Redis  
-- **Blockchain**: Web3.js, Smart Contracts, On-chain Data  
+- **Blockchain**: Web3.js, ethers, On-chain Data  
 - **DevOps & Tools**: Docker, AWS (EC2, S3, Lambda, SQS), Prometheus, Grafana, Kibana  
 - **Testing & Monitoring**: Jest, Jaeger, Tracing, n8n  
 - **Others**: HTML, CSS, Bootstrap, React.js, CI/CD, GitHub, Linux  
@@ -38,12 +38,6 @@ url: /cv/
 - Developed services for core business logic  
 - Wrote unit tests and participated in agile sprints  
 
-#### Finviet Technology Corporation (10/2020 - 9/2023)
-**Project: Loyalty** - Scalable system for transaction-based point rewards  
-- Architected databases and microservices  
-- Integrated monitoring with Prometheus & Grafana  
-- Wrote dashboards and optimized MongoDB queries  
-
 **Project: OneID & KYC** - Blockchain-based identity solution  
 - Designed databases and handled smart contract integration  
 - Built modules for KYC/KYB and payment tracking  
@@ -52,6 +46,12 @@ url: /cv/
 - Migrated JS → TS, refactored services  
 - Integrated CoinGecko and Debank APIs  
 - Provided analytics and market tracking  
+
+#### Finviet Technology Corporation (10/2020 - 9/2023)
+**Project: Loyalty** - Scalable system for transaction-based point rewards  
+- Architected databases and microservices  
+- Integrated monitoring with Prometheus & Grafana  
+- Wrote dashboards and optimized MongoDB queries  
 
 **Project: Eco Consumer App**  
 - Built backend for wallet, loyalty, payments  
@@ -85,6 +85,6 @@ I'm a passionate backend developer seeking opportunities to grow, contribute, an
 ### 📂 Projects & Links
 
 - [Blog: thanhhv.github.io](https://thanhhv.github.io)
-- [GitHub: thanhhv317](https://github.com/thanhhv317)
+- [GitHub: thanhhv](https://github.com/thanhhv)
 
 _Last updated: 2024-04-23_

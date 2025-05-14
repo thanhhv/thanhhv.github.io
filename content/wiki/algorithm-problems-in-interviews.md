@@ -1,6 +1,6 @@
 ---
 title: "Algorithm Problems in Interviews"
-draft: false
+draft: true
 ---
 
 # 🔢 Common Algorithm Problems in Tech Interviews
