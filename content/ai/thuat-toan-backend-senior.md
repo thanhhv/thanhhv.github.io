@@ -1,3 +1,4 @@
++++
 date = 2024-05-03T16:35:00+07:00
 draft = false
 title = "Tại sao thuật toán là yếu tố sống còn cho Backend Senior?"
@@ -34,3 +35,4 @@ Thế giới công nghệ luôn thay đổi. Các framework và thư viện mớ
 
 **Tóm lại:**
 
+Đối với một Senior Backend Developer, thuật toán không chỉ là một môn học khô khan mà là một công cụ mạnh mẽ giúp bạn xây dựng các hệ thống hiệu quả, giải quyết các vấn đề phức tạp và luôn sẵn sàng đối mặt với những thách thức mới.  Đầu tư vào việc học và rèn luyện kỹ năng thuật toán là một khoản đầu tư xứng đáng cho sự nghiệp của bạn
