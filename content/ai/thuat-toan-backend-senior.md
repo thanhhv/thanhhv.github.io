@@ -1,9 +1,9 @@
 +++
-date = 2024-05-03T16:35:00+07:00
+date = 2025-05-23T16:35:00+07:00
 draft = false
 title = "Tại sao thuật toán là yếu tố sống còn cho Backend Senior?"
 filename = "thuat-toan-backend-senior"
-tags = ["backend", "thuattoan", "senior", "laptrinh"]
+tags = ["backend", "senior"]
 +++
 
 ## Tại sao thuật toán là yếu tố sống còn cho Backend Senior?
