@@ -1,12 +1,10 @@
 +++
 date = 2025-05-25T20:27:00+07:00
 draft = false
-title = Tầm quan trọng của tiếng Anh cho Backend Developer
-filename = importance-of-english-for-backend-developers
+title = 'Tầm quan trọng của tiếng Anh cho Backend Developer'
+filename = 'importance-of-english-for-backend-developers'
 tags = ["backend", "english", "career"]
 +++
-
-## Tiếng Anh: Chìa khóa thành công cho Backend Developer
 
 Trong thế giới công nghệ ngày nay, tiếng Anh không chỉ là một lợi thế, mà còn là một yếu tố **then chốt** cho sự thành công của một Backend Developer. Tại sao lại như vậy?
 
