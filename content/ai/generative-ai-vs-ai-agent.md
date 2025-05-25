@@ -1,5 +1,5 @@
 +++
-date = '2024-10-27T16:33:00+07:00'
+date = '2025-04-11T16:33:00+07:00'
 draft = false
 title = 'Phân biệt Generative AI và AI Agent cho Lập trình viên Backend'
 filename = 'generative-ai-vs-ai-agent'
