@@ -1,72 +1,111 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Blockchain on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/blockchain/</link><description>Recent content in Blockchain on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Sun, 18 May 2025 16:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/blockchain/index.xml" rel="self" type="application/rss+xml"/><item><title>Tổng quan về Hợp đồng Thông minh trong DEX và AMM</title><link>https://thanhhv.github.io/posts/dex/</link><pubDate>Sun, 18 May 2025 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/dex/</guid><description>&lt;h2 id="hợp-đồng-thông-minh-dex">Hợp đồng thông minh DEX&lt;/h2>
-&lt;p>Trong một sàn giao dịch phi tập trung (DEX) như Uniswap, nhiều hợp đồng thông minh làm việc cùng nhau để cho phép hoán đổi token. Các hợp đồng chính thường bao gồm: &lt;strong>Factory&lt;/strong>, &lt;strong>Router&lt;/strong>, và &lt;strong>Pair&lt;/strong>. Vai trò của từng hợp đồng như sau:&lt;/p>
-&lt;h3 id="-1-factory-contract">🔹 1. Factory Contract&lt;/h3>
-&lt;ul>
-&lt;li>Là nơi đăng ký chính của các pool thanh khoản (cặp token).&lt;/li>
-&lt;li>Tạo ra pool thanh khoản mới khi có thêm cặp giao dịch mới.&lt;/li>
-&lt;li>Lưu trữ ánh xạ giữa các cặp token và địa chỉ của hợp đồng Pair tương ứng.&lt;/li>
-&lt;/ul>
-&lt;p>&lt;strong>Các hàm chính:&lt;/strong>&lt;/p></description></item><item><title>Xác thực người dùng bằng ví crypto</title><link>https://thanhhv.github.io/posts/verify-user-wallet/</link><pubDate>Sun, 11 May 2025 20:40:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/verify-user-wallet/</guid><description>&lt;p>Hôm nay, trong một buổi đầu tuần sau chuyến đi du lịch giữa năm, tôi tranh thủ ôn lại kiến thức để chuẩn bị cho buổi phỏng vấn vị trí Backend Blockchain sắp tới. Nhân tiện, tôi viết lại bài này để ghi nhớ kỹ thuật xác thực người dùng không cần tài khoản và mật khẩu, mà sử dụng đăng nhập bằng ví Web3 (như Metamask, Coin98 Super Wallet, Trust Wallet,&amp;hellip;). Cùng bắt đầu nhé! Quá trình này gồm &lt;strong>3 bước đơn giản&lt;/strong>:&lt;/p></description></item><item><title>Re-org là gì? Backend Developer cần xử lý thế nào khi Blockchain "đổi ý"</title><link>https://thanhhv.github.io/posts/reorg-in-blockchain/</link><pubDate>Sat, 10 May 2025 23:44:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/reorg-in-blockchain/</guid><description>&lt;h2 id="1-cơ-bản-về-cách-blockchain-thêm-block">1. Cơ bản về cách blockchain thêm block&lt;/h2>
-&lt;p>Các blockchain như Ethereum, Bitcoin hoạt động như sau:&lt;/p>
-&lt;ul>
-&lt;li>Mỗi node trong mạng sẽ giữ một bản sao của blockchain hiện tại.&lt;/li>
-&lt;li>Khi một miner (hoặc validator) tìm được block mới hợp lệ, nó sẽ broadcast block đó cho mạng.&lt;/li>
-&lt;li>Các node nhận block mới sẽ xác minh, nếu hợp lệ thì thêm vào chain của mình.&lt;/li>
-&lt;/ul>
-&lt;p>Vấn đề xảy ra khi nhiều miner có thể tìm được block mới gần như cùng một lúc.&lt;br>
-Giả sử mạng lưới đang dừng ở block thứ &lt;code>99&lt;/code>. Miner A tìm ra block &lt;code>100A&lt;/code> và broadcast nó. Ở một nơi khác, Miner B cũng tìm ra một block &lt;code>100B&lt;/code> và broadcast. Do độ trễ mạng, các node khác nhau có thể nhận và thêm vào chuỗi khác nhau: 100A hoặc 100B.&lt;/p></description></item><item><title>Sự Khác Biệt Giữa Genesis Block của Bitcoin và Ethereum</title><link>https://thanhhv.github.io/ai/genesis-block-bitcoin-vs-ethereum/</link><pubDate>Sat, 26 Oct 2024 16:35:00 +0700</pubDate><guid>https://thanhhv.github.io/ai/genesis-block-bitcoin-vs-ethereum/</guid><description>&lt;h1 id="genesis-block-so-sánh-bitcoin-và-ethereum">Genesis Block: So Sánh Bitcoin và Ethereum&lt;/h1>
-&lt;p>Genesis Block, hay Block 0, là khối đầu tiên trong một blockchain. Nó đóng vai trò là nền tảng, đặt nền móng cho toàn bộ mạng lưới. Mặc dù cả Bitcoin và Ethereum đều có Genesis Block, nhưng có những khác biệt quan trọng về cách chúng được tạo ra và dữ liệu chúng chứa.&lt;/p>
-&lt;h2 id="genesis-block-của-bitcoin">Genesis Block của Bitcoin&lt;/h2>
-&lt;ul>
-&lt;li>&lt;strong>Hardcoded:&lt;/strong> Genesis Block của Bitcoin được hardcoded trực tiếp vào mã nguồn của Bitcoin Core. Điều này có nghĩa là nó không được khai thác như các block sau này.&lt;/li>
-&lt;li>&lt;strong>Message:&lt;/strong> Chứa một thông điệp ẩn: &lt;code>&amp;quot;The Times 03/Jan/2009 Chancellor on brink of second bailout for banks&amp;quot;&lt;/code>. Thông điệp này được cho là một dấu mốc thời gian, đồng thời là một lời chỉ trích hệ thống ngân hàng truyền thống.&lt;/li>
-&lt;li>&lt;strong>Difficulty:&lt;/strong> Có độ khó (difficulty) bằng 1, độ khó thấp nhất có thể.&lt;/li>
-&lt;li>&lt;strong>Nonce:&lt;/strong> Giá trị nonce được tìm thấy bằng cách brute-force, thử nhiều giá trị khác nhau cho đến khi tìm thấy một hash hợp lệ.&lt;/li>
-&lt;li>&lt;strong>Reward:&lt;/strong> Phần thưởng cho việc &amp;ldquo;khai thác&amp;rdquo; Genesis Block (50 BTC) không thể sử dụng được. Transaction này tồn tại, nhưng không thể chi tiêu.&lt;/li>
-&lt;/ul>
-&lt;h2 id="genesis-block-của-ethereum">Genesis Block của Ethereum&lt;/h2>
-&lt;ul>
-&lt;li>&lt;strong>Không Hardcoded:&lt;/strong> Genesis Block của Ethereum không được hardcoded vào mã nguồn. Thay vào đó, nó được tạo ra thông qua một file JSON cấu hình. Điều này cho phép các blockchain Ethereum riêng tư hoặc thử nghiệm có thể dễ dàng tạo genesis block của riêng họ.&lt;/li>
-&lt;li>&lt;strong>State:&lt;/strong> Genesis Block của Ethereum không chỉ chứa thông tin về block, mà còn chứa trạng thái ban đầu của tài khoản. Điều này bao gồm số dư của các tài khoản ban đầu.&lt;/li>
-&lt;li>&lt;strong>Mix Hash và Nonce:&lt;/strong> Genesis Block của Ethereum có một mix hash và nonce hợp lệ, nhưng chúng không được tạo ra thông qua quá trình proof-of-work. Chúng được đặt thủ công.&lt;/li>
-&lt;li>&lt;strong>Difficulty:&lt;/strong> Genesis block của Ethereum có độ khó thấp, nhưng không nhất thiết phải là độ khó thấp nhất.&lt;/li>
-&lt;/ul>
-&lt;h2 id="tóm-tắt-so-sánh">Tóm tắt so sánh&lt;/h2>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>Tính năng&lt;/th>
-&lt;th>Bitcoin&lt;/th>
-&lt;th>Ethereum&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>Hardcoded&lt;/td>
-&lt;td>Có&lt;/td>
-&lt;td>Không&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>Message&lt;/td>
-&lt;td>Có (dòng tiêu đề báo)&lt;/td>
-&lt;td>Không&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>State&lt;/td>
-&lt;td>Không&lt;/td>
-&lt;td>Có (trạng thái tài khoản ban đầu)&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>Khai thác&lt;/td>
-&lt;td>Không (hardcoded)&lt;/td>
-&lt;td>Không (tạo bằng file JSON)&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>Phần thưởng&lt;/td>
-&lt;td>Không thể chi tiêu&lt;/td>
-&lt;td>Không có&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h2 id="kết-luận">Kết luận&lt;/h2>
-&lt;p>Genesis Block của Bitcoin và Ethereum, mặc dù đều là khối đầu tiên của blockchain, nhưng lại có những khác biệt đáng kể về cách chúng được tạo ra và dữ liệu chúng chứa. Sự khác biệt này phản ánh sự khác biệt về triết lý thiết kế và mục tiêu của hai blockchain này. Bitcoin tập trung vào sự đơn giản và phi tập trung, trong khi Ethereum tập trung vào tính linh hoạt và khả năng mở rộng.&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Blockchain on Thanh HV&#39;s Blog</title>
+    <link>http://localhost:1313/tags/blockchain/</link>
+    <description>Recent content in Blockchain on Thanh HV&#39;s Blog</description>
+    <generator>Hugo -- 0.146.7</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 18 May 2025 16:00:00 +0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/blockchain/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Tổng quan về Hợp đồng Thông minh trong DEX và AMM</title>
+      <link>http://localhost:1313/posts/dex/</link>
+      <pubDate>Sun, 18 May 2025 16:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/posts/dex/</guid>
+      <description>&lt;h2 id=&#34;hợp-đồng-thông-minh-dex&#34;&gt;Hợp đồng thông minh DEX&lt;/h2&gt;
+&lt;p&gt;Trong một sàn giao dịch phi tập trung (DEX) như Uniswap, nhiều hợp đồng thông minh làm việc cùng nhau để cho phép hoán đổi token. Các hợp đồng chính thường bao gồm: &lt;strong&gt;Factory&lt;/strong&gt;, &lt;strong&gt;Router&lt;/strong&gt;, và &lt;strong&gt;Pair&lt;/strong&gt;. Vai trò của từng hợp đồng như sau:&lt;/p&gt;
+&lt;h3 id=&#34;-1-factory-contract&#34;&gt;🔹 1. Factory Contract&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Là nơi đăng ký chính của các pool thanh khoản (cặp token).&lt;/li&gt;
+&lt;li&gt;Tạo ra pool thanh khoản mới khi có thêm cặp giao dịch mới.&lt;/li&gt;
+&lt;li&gt;Lưu trữ ánh xạ giữa các cặp token và địa chỉ của hợp đồng Pair tương ứng.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Các hàm chính:&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Xác thực người dùng bằng ví crypto</title>
+      <link>http://localhost:1313/posts/verify-user-wallet/</link>
+      <pubDate>Sun, 11 May 2025 20:40:00 +0700</pubDate>
+      <guid>http://localhost:1313/posts/verify-user-wallet/</guid>
+      <description>&lt;p&gt;Hôm nay, trong một buổi đầu tuần sau chuyến đi du lịch giữa năm, tôi tranh thủ ôn lại kiến thức để chuẩn bị cho buổi phỏng vấn vị trí Backend Blockchain sắp tới. Nhân tiện, tôi viết lại bài này để ghi nhớ kỹ thuật xác thực người dùng không cần tài khoản và mật khẩu, mà sử dụng đăng nhập bằng ví Web3 (như Metamask, Coin98 Super Wallet, Trust Wallet,&amp;hellip;). Cùng bắt đầu nhé! Quá trình này gồm &lt;strong&gt;3 bước đơn giản&lt;/strong&gt;:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Re-org là gì? Backend Developer cần xử lý thế nào khi Blockchain &#34;đổi ý&#34;</title>
+      <link>http://localhost:1313/posts/reorg-in-blockchain/</link>
+      <pubDate>Sat, 10 May 2025 23:44:00 +0700</pubDate>
+      <guid>http://localhost:1313/posts/reorg-in-blockchain/</guid>
+      <description>&lt;h2 id=&#34;1-cơ-bản-về-cách-blockchain-thêm-block&#34;&gt;1. Cơ bản về cách blockchain thêm block&lt;/h2&gt;
+&lt;p&gt;Các blockchain như Ethereum, Bitcoin hoạt động như sau:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Mỗi node trong mạng sẽ giữ một bản sao của blockchain hiện tại.&lt;/li&gt;
+&lt;li&gt;Khi một miner (hoặc validator) tìm được block mới hợp lệ, nó sẽ broadcast block đó cho mạng.&lt;/li&gt;
+&lt;li&gt;Các node nhận block mới sẽ xác minh, nếu hợp lệ thì thêm vào chain của mình.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Vấn đề xảy ra khi nhiều miner có thể tìm được block mới gần như cùng một lúc.&lt;br&gt;
+Giả sử mạng lưới đang dừng ở block thứ &lt;code&gt;99&lt;/code&gt;. Miner A tìm ra block &lt;code&gt;100A&lt;/code&gt; và broadcast nó. Ở một nơi khác, Miner B cũng tìm ra một block &lt;code&gt;100B&lt;/code&gt; và broadcast. Do độ trễ mạng, các node khác nhau có thể nhận và thêm vào chuỗi khác nhau: 100A hoặc 100B.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Sự Khác Biệt Giữa Genesis Block của Bitcoin và Ethereum</title>
+      <link>http://localhost:1313/ai/genesis-block-bitcoin-vs-ethereum/</link>
+      <pubDate>Sat, 26 Oct 2024 16:35:00 +0700</pubDate>
+      <guid>http://localhost:1313/ai/genesis-block-bitcoin-vs-ethereum/</guid>
+      <description>&lt;h1 id=&#34;genesis-block-so-sánh-bitcoin-và-ethereum&#34;&gt;Genesis Block: So Sánh Bitcoin và Ethereum&lt;/h1&gt;
+&lt;p&gt;Genesis Block, hay Block 0, là khối đầu tiên trong một blockchain. Nó đóng vai trò là nền tảng, đặt nền móng cho toàn bộ mạng lưới. Mặc dù cả Bitcoin và Ethereum đều có Genesis Block, nhưng có những khác biệt quan trọng về cách chúng được tạo ra và dữ liệu chúng chứa.&lt;/p&gt;
+&lt;h2 id=&#34;genesis-block-của-bitcoin&#34;&gt;Genesis Block của Bitcoin&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Hardcoded:&lt;/strong&gt; Genesis Block của Bitcoin được hardcoded trực tiếp vào mã nguồn của Bitcoin Core. Điều này có nghĩa là nó không được khai thác như các block sau này.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Message:&lt;/strong&gt; Chứa một thông điệp ẩn: &lt;code&gt;&amp;quot;The Times 03/Jan/2009 Chancellor on brink of second bailout for banks&amp;quot;&lt;/code&gt;. Thông điệp này được cho là một dấu mốc thời gian, đồng thời là một lời chỉ trích hệ thống ngân hàng truyền thống.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Difficulty:&lt;/strong&gt; Có độ khó (difficulty) bằng 1, độ khó thấp nhất có thể.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Nonce:&lt;/strong&gt; Giá trị nonce được tìm thấy bằng cách brute-force, thử nhiều giá trị khác nhau cho đến khi tìm thấy một hash hợp lệ.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Reward:&lt;/strong&gt; Phần thưởng cho việc &amp;ldquo;khai thác&amp;rdquo; Genesis Block (50 BTC) không thể sử dụng được. Transaction này tồn tại, nhưng không thể chi tiêu.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;genesis-block-của-ethereum&#34;&gt;Genesis Block của Ethereum&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Không Hardcoded:&lt;/strong&gt; Genesis Block của Ethereum không được hardcoded vào mã nguồn. Thay vào đó, nó được tạo ra thông qua một file JSON cấu hình. Điều này cho phép các blockchain Ethereum riêng tư hoặc thử nghiệm có thể dễ dàng tạo genesis block của riêng họ.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;State:&lt;/strong&gt; Genesis Block của Ethereum không chỉ chứa thông tin về block, mà còn chứa trạng thái ban đầu của tài khoản. Điều này bao gồm số dư của các tài khoản ban đầu.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Mix Hash và Nonce:&lt;/strong&gt; Genesis Block của Ethereum có một mix hash và nonce hợp lệ, nhưng chúng không được tạo ra thông qua quá trình proof-of-work. Chúng được đặt thủ công.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Difficulty:&lt;/strong&gt; Genesis block của Ethereum có độ khó thấp, nhưng không nhất thiết phải là độ khó thấp nhất.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;tóm-tắt-so-sánh&#34;&gt;Tóm tắt so sánh&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;Tính năng&lt;/th&gt;
+          &lt;th&gt;Bitcoin&lt;/th&gt;
+          &lt;th&gt;Ethereum&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Hardcoded&lt;/td&gt;
+          &lt;td&gt;Có&lt;/td&gt;
+          &lt;td&gt;Không&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Message&lt;/td&gt;
+          &lt;td&gt;Có (dòng tiêu đề báo)&lt;/td&gt;
+          &lt;td&gt;Không&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;State&lt;/td&gt;
+          &lt;td&gt;Không&lt;/td&gt;
+          &lt;td&gt;Có (trạng thái tài khoản ban đầu)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Khai thác&lt;/td&gt;
+          &lt;td&gt;Không (hardcoded)&lt;/td&gt;
+          &lt;td&gt;Không (tạo bằng file JSON)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Phần thưởng&lt;/td&gt;
+          &lt;td&gt;Không thể chi tiêu&lt;/td&gt;
+          &lt;td&gt;Không có&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;kết-luận&#34;&gt;Kết luận&lt;/h2&gt;
+&lt;p&gt;Genesis Block của Bitcoin và Ethereum, mặc dù đều là khối đầu tiên của blockchain, nhưng lại có những khác biệt đáng kể về cách chúng được tạo ra và dữ liệu chúng chứa. Sự khác biệt này phản ánh sự khác biệt về triết lý thiết kế và mục tiêu của hai blockchain này. Bitcoin tập trung vào sự đơn giản và phi tập trung, trong khi Ethereum tập trung vào tính linh hoạt và khả năng mở rộng.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
