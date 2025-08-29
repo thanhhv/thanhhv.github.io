@@ -5,7 +5,7 @@ draft = false
 tags = ["cloud", "virtual tag"]
 +++
 
-Khi làm việc với các hệ thống FinOps thì có 2 thứ quan trọng chúng ta cần phải quan tâm đó chính là **perspective**, thứ 2 là **showback và chargeback**. Trong bài viết này mình sẽ chia sẻ lại tại sao chúng quan trọng và làm sao để có thể dễ dàng quản lý chúng bằng module **virtual tag** trong các hệ thông FinOps.
+Khi làm việc với các hệ thống FinOps thì có 2 thứ quan trọng chúng ta cần phải quan tâm đó chính là **perspective**, thứ 2 là **showback và chargeback**. Trong bài viết này mình sẽ chia sẻ lại tại sao chúng quan trọng và làm sao để có thể dễ dàng quản lý chúng bằng module **virtual tag** trong các hệ thống FinOps.
 
 Bắt đầu nào, dĩ nhiên là ngoài những cái này ra thì FinOps cũng có rất nhiều thứ quan trọng cần phải chú ý nhưng ở đây ta chỉ nói về những cái này thôi nhé.
 
@@ -62,7 +62,7 @@ Bạn thanh toán trước, rồi chia tiền lại cho từng người trong te
 
 ### Trong môi trường Cloud thì sao?
 
-Công ty bạn có nhiều team, dùng chung AWS cloud, mỗi team làm 1 dự án. Bạn là sếp, thấy bill tháng rồi là **$4000**.
+Công ty bạn có nhiều team, dùng chung AWS cloud, mỗi team làm 1 dự án. Bạn là sếp, thấy bill tháng vừa rồi là **$4000**.
 
 - Công ty trả tiền → **Showback**
 - Bạn muốn xem chi tiết từng team xài bao nhiêu → gửi báo cáo để họ tối ưu tháng sau → **Chargeback**
@@ -110,7 +110,7 @@ Vì:
 
 ## Bonus: Tự động đánh tag bằng rule engine
 
-Khi đã có module virtual tag thì nên có thêm **module rule engine** – gọi là `tag-rule-engine`.
+Khi đã có module virtual tag thì nên có thêm **module rule engine** - gọi là `tag-rule-engine`.
 
 ### 📌 Lý do:
 - Dữ liệu FinOps lấy từ cloud cực lớn (hàng chục triệu record)
@@ -119,7 +119,7 @@ Khi đã có module virtual tag thì nên có thêm **module rule engine** – g
 ### 🛠 Ví dụ rule:
 > Nếu 1 resource trong tháng vừa rồi xài > $200 → tự động gán virtual tag là `expensive`
 
-Cron job sẽ check điều kiện, nếu đúng → gán tag. Sau này cần lọc resource expensive thì rất nhanh. Dưới đây là 1 thiết kế cơ bản nhất của 1 rule tag-engine. Nó bao gồm 1 cái condition để dữ liệu có thể được match và 1 action để trigger hành động khi match với condition đó. Viết blog nên làm đơn giản vậy thôi, thực tế nó cũng vậy à, chỉ là có râu ria thêm tí thui =))
+Cron job sẽ check điều kiện, nếu đúng → gán tag. Sau này cần lọc resource `expensive` thì rất nhanh. Dưới đây là 1 thiết kế cơ bản nhất của 1 rule tag-engine. Nó bao gồm 1 cái condition để dữ liệu có thể được match và 1 action để trigger hành động khi match với condition đó. Viết blog nên làm đơn giản vậy thôi, thực tế nó cũng vậy à, chỉ là có râu ria thêm tí thui =))
 
 ![Virtual tag rule engine](tag-rule-engine.png)
 
