@@ -1,7 +1,7 @@
 +++
 date = '2025-09-07T23:00:00+07:00'
 draft = false
-title = 'Từ kiến trúc đến dữ liệu: PostgreSQL xử lý câu lệnh DML như thế nào'
+title = 'PostgreSQL xử lý câu lệnh DML như thế nào?'
 tags = ["postgresql", "database"]
 +++
 
