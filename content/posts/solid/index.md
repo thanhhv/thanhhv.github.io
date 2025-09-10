@@ -306,4 +306,4 @@ Khi nhìn lại quy tắc **SRP**, có thể thấy trong NestJS (và nhiều fr
 
 ---
 
-Ngày đã tắt nắng, bài viết cũng dài. Đến đây, chúc cho vị đại hiệp đọc xong bí kíp có thể vận dụng thành thạo, tung hoành giang hồ lập trình, khiến người đời hân hoan nể phục. **Cáo từ.**
+Ngày đã dần xuống, bài viết cũng dài. Đến đây, chúc cho vị đại hiệp đọc xong bí kíp có thể vận dụng thành thạo, tung hoành giang hồ lập trình, khiến người đời hân hoan nể phục. **Cáo từ.**
