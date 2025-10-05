@@ -1,17 +1,15 @@
 +++
-title = "Triển khai microservice với graphQL federation"
+title = "Triển khai microservice với GraphQL Federation"
 date = "2025-09-22T21:10:00+07:00"
 draft = false
 tags = ["graphql federation", "microservice"]
 +++
 
-# Tổng quan
+Trong quá trình làm việc, team mình từng triển khai một hệ thống microservice với hơn **20 service** hoạt động độc lập. Để kết nối các service này vào một API thống nhất cho client sử dụng, bọn mình đã áp dụng **GraphQL Federation**.
 
-Hôm nay mình muốn chia sẻ một cách tiếp cận mà team mình đã áp dụng khi triển khai một hệ thống microservice với hơn 20 service, trong đó mỗi service đều hoạt động độc lập.
+Bài viết này sẽ chia sẻ lại cách tiếp cận đó — cách mà Federation giúp gom nhiều service lại thành một **GraphQL API** duy nhất, đơn giản cho phía client nhưng vẫn linh hoạt cho backend.
 
-Bài viết này sẽ giới thiệu cách sử dụng GraphQL Federation để kết nối các service đó vào **một API GraphQL thống nhất**, giúp client truy vấn dữ liệu dễ dàng qua một endpoint duy nhất.
-
-Hãy cùng bắt đầu nhé!
+Cùng mình bắt đầu nhé!
 
 ![Graphql Federation](graphql-federation-banner.png)
 
@@ -33,7 +31,7 @@ GraphQL bao gồm 4 yếu tố chính:
 - REST: nhiều endpoint, server quyết định payload
 - GraphQL: một endpoint, client quyết định trường trả về → tránh under/over-fetching
 
-> **Khi dùng:** phù hợp khi frontend cần linh hoạt lấy dữ liệu (mobile/web apps phức tạp). Nếu API đơn giản hoặc muốn caching HTTP truyền thống thì REST vẫn ổn.
+> Phù hợp khi frontend cần linh hoạt lấy dữ liệu (mobile/web apps phức tạp). Nếu API đơn giản hoặc muốn caching HTTP truyền thống thì REST vẫn ổn.
 
 ---
 
@@ -56,18 +54,18 @@ Thông qua một **federated gateway** đóng vai trò điều phối trung tâm
 
 ## 3. Các thành phần cốt lõi
 
-- **Subgraph (service):** cung cấp một phần schema (types, queries, mutations) và resolvers của nó.
-- **Gateway (federation gateway):** nhận SDL từ subgraphs, compose thành supergraph schema và route request tới subgraphs.
+- **Subgraph (service):** cung cấp một phần schema (types, queries, mutations) và resolvers của nó. Thông thường sẽ có nhiều subgraph
+- **Gateway (federation gateway):** nhận Schema từ các subgraphs, compose thành supergraph schema và route request tới subgraphs.
 
 **Schema composition** gồm:
 
 - **Entities & keys:** liên kết type giữa các subgraphs, dùng directive `@key(fields: "...")` — khoá nhận diện entity (ví dụ `User` có `id`).
 
-- **Type extension:** service B có thể extend type User @key(fields: "id") { id: ID! reviews: [Review] } — gateway biết cách gắn dữ liệu từ nhiều service.
+- **Type extension:** service B có thể extend type User `@key(fields: "id")` { id: ID! reviews: [Review] } — gateway biết cách gắn dữ liệu từ nhiều service.
 
-- **Reference resolver**: mỗi subgraph cung cấp resolver để khi gateway cần "tái tạo" một entity từ một reference, subgraph đó trả dữ liệu (resolver được gọi là \_\_resolveReference).
+- **Reference resolver**: mỗi subgraph cung cấp resolver để khi gateway cần **lấy thêm thông tin chi tiết một entity** từ một reference, subgraph đó trả dữ liệu (resolver được gọi là `__resolveReference`).
 
-- **Directives bổ sung:** @requires, @provides để điều khiển dữ liệu cần fetch giữa services.
+- **Directives bổ sung:** `@requires`, `@provides` để điều khiển dữ liệu cần fetch giữa services.
 
 ## 4. Cách GraphQL Federation hoạt động
 
@@ -92,20 +90,20 @@ Thông qua một **federated gateway** đóng vai trò điều phối trung tâm
 ## 5. Lợi ích của GraphQL Federation
 
 - ✅ **Phát triển theo domain**  
-  Các team có thể làm việc độc lập trên service của riêng mình đồng thời đóng góp vào một API thống nhất. Tính tự chủ này giúp đẩy nhanh tiến độ phát triển và giảm overhead trong phối hợp.
+  Mỗi team có thể phát triển service của riêng mình một cách độc lập, nhưng vẫn dễ dàng tích hợp vào một API GraphQL chung. Nhờ đó, quá trình phát triển trở nên linh hoạt hơn và giảm bớt sự phụ thuộc giữa các team.
 
-- 🔒 **Bảo vệ tính toàn vẹn của dịch vụ**  
+- 🔒 **Bảo vệ tính toàn vẹn của service**  
   Bước composition (ghép schema) kiểm tra sự tích hợp giữa các service, đảm bảo thay đổi trong một subgraph không xung đột với subgraph khác.
 
 - 🚀 **Khả năng mở rộng và hiệu năng**  
-  Mỗi subgraph/service có thể scale riêng theo yêu cầu của nó. Ví dụ: service `product` có thể áp dụng chiến lược scale khác với hệ thống xử lý đơn hàng.
+  Mỗi subgraph/service có thể scale riêng theo yêu cầu của nó. Ví dụ: service `product` có thể scale 2 instances, trong khi service `order` lại chỉ chạy 1 instance.
 
 - 🌐 **API duy nhất, thống nhất**  
-  Client chỉ cần gọi một endpoint duy nhất với schema thống nhất trải trên nhiều subgraph. Độ phức tạp của hệ phân tán được che giấu — gateway đảm bảo mỗi truy vấn được gửi đúng nơi và trả về dữ liệu chính xác.
+  Client chỉ cần gọi một endpoint duy nhất, dù dữ liệu nằm rải rác ở nhiều service khác nhau. Gateway sẽ tự xử lý phần phức tạp phía sau, định tuyến truy vấn đến đúng service và trả về dữ liệu chính xác.
 
 ---
 
-## 6. Triển khai hệ thống mẫu
+## 6. Triển khai thử
 
 Trong phần này mình triển khai một hệ thống microservice nhỏ theo GraphQL Federation gồm:
 
@@ -137,4 +135,6 @@ Trong phần này mình triển khai một hệ thống microservice nhỏ theo 
 
 ---
 
-Mặc dù GraphQL Federation rất mạnh, nhưng cũng không phải là "vũ khí tối thượng" cho mọi bài toán. Hãy lựa chọn nó khi thực sự cần — khi kiến trúc hệ thống và tổ chức của bạn phù hợp với mô hình phân tách và phối hợp nhiều team. Nếu không nó có thể gây phức tạp không cần thiết và tốn nhiều thời gian trong quá trình triển khai. Hết rồi chúc các bạn triển khai thành công và đừng quên để lại thảo luận ở bên dưới nhé.
+GraphQL Federation là một giải pháp mạnh mẽ, nhưng không phải lúc nào cũng phù hợp. Hãy chỉ sử dụng khi hệ thống của bạn thực sự cần phân tách service và có nhiều team cùng phát triển. Nếu lạm dụng, nó có thể khiến mọi thứ trở nên phức tạp và tốn nhiều công sức không cần thiết.
+
+Cảm ơn bạn đã theo dõi đến cuối bài. Chúc bạn triển khai thành công! Nếu có câu hỏi hay chia sẻ gì thêm, đừng ngần ngại để lại bình luận bên dưới nhé.
