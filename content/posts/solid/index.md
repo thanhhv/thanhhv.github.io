@@ -1,5 +1,5 @@
 +++
-title = "Bộ nguyên tắc SOLID trong lập trình là gì? (Phiên bản kiếp hiệp)"
+title = "SOLID - Ngũ tuyệt trong thế giới lập trình (Phiên bản kiếp hiệp)"
 date = "2025-09-10T15:00:00+07:00"
 draft = false
 tags = ["solid"]
@@ -7,7 +7,7 @@ tags = ["solid"]
 
 Hôm nay, trong một buổi chiều cuối thu ở Sài Gòn nhộn nhịp, có một chàng trai đang ngồi ôn lại kiến thức để chuẩn bị tham gia phỏng vấn trong căn nhà nhỏ. Bên ngoài cửa sổ, trời đang đổ những cơn mưa rào kèm những đợt sấm chớp lan man. Lòng ta lại suy tư về một thứ gì đó muốn được viết ra cho nhẹ nỗi lòng, thôi thì ta hãy cùng viết về **SOLID** nhé.
 
-![soli](solid.png)
+![solid](solid.png)
 
 ---
 
