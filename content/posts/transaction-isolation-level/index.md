@@ -1,5 +1,5 @@
 +++
-title = "Các level isolation của transaction trong SQL"
+title = "Hiểu về các mức Isolation trong Transaction của SQL"
 date = "2025-10-08T20:10:00+07:00"
 draft = false
 tags = ["database", "transaction isolation"]
