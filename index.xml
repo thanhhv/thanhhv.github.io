@@ -1,4 +1,14 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Thanh HV's Blog</title><link>https://thanhhv.github.io/</link><description>Recent content on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Wed, 08 Oct 2025 20:10:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Hiểu về các mức Isolation trong Transaction của SQL</title><link>https://thanhhv.github.io/posts/transaction-isolation-level/</link><pubDate>Wed, 08 Oct 2025 20:10:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/transaction-isolation-level/</guid><description>&lt;p>Thời gian gần đây khi mình tham gia các buổi phỏng vấn ở vị trí backend thì thường xuyên được hỏi đến các câu hỏi về &lt;strong>database&lt;/strong>, trong đó chủ yếu xoay quanh &lt;strong>transaction&lt;/strong>.&lt;br>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Thanh HV's Blog</title><link>https://thanhhv.github.io/</link><description>Recent content on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Tue, 14 Oct 2025 14:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Hiểu rõ cách hoạt động của RabbitMQ Exchange khi dùng NestJS Microservice</title><link>https://thanhhv.github.io/posts/exchange-in-rabbitmq/</link><pubDate>Tue, 14 Oct 2025 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/exchange-in-rabbitmq/</guid><description>&lt;p>&lt;img alt="rabbitmq-exchange" loading="lazy" src="https://thanhhv.github.io/posts/exchange-in-rabbitmq/rabbit-exchange.png">&lt;/p>
+&lt;p>Trong quá trình làm việc với &lt;strong>microservice trong NestJS&lt;/strong>, mình chủ yếu dùng &lt;strong>RabbitMQ microservice transport&lt;/strong>.&lt;br>
+Bản chất là các service giao tiếp qua &lt;strong>message broker (RabbitMQ)&lt;/strong>, &lt;strong>chứ không gọi HTTP trực tiếp&lt;/strong>.&lt;/p>
+&lt;p>Mỗi service có thể đóng vai trò:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Publisher&lt;/strong>: gửi message&lt;/li>
+&lt;li>&lt;strong>Consumer&lt;/strong>: nhận message&lt;/li>
+&lt;/ul>
+&lt;p>Khi gửi message, service sẽ &lt;strong>publish đến exchange&lt;/strong> — đây là &lt;strong>nơi định tuyến trung gian&lt;/strong>.&lt;br>
+RabbitMQ dùng &lt;strong>binding rule giữa exchange và các queue&lt;/strong> để quyết định message sẽ được gửi đến queue nào.&lt;br>
+Các service khác (&lt;strong>consumer&lt;/strong>) sẽ &lt;strong>subscribe vào queue&lt;/strong>, lắng nghe message được định tuyến đến đó và xử lý.&lt;/p></description></item><item><title>Hiểu về các mức Isolation trong Transaction của SQL</title><link>https://thanhhv.github.io/posts/transaction-isolation-level/</link><pubDate>Wed, 08 Oct 2025 20:10:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/transaction-isolation-level/</guid><description>&lt;p>Thời gian gần đây khi mình tham gia các buổi phỏng vấn ở vị trí backend thì thường xuyên được hỏi đến các câu hỏi về &lt;strong>database&lt;/strong>, trong đó chủ yếu xoay quanh &lt;strong>transaction&lt;/strong>.&lt;br>
 Vậy nên trong bài viết hôm nay mình sẽ cùng ôn lại kiến thức về nó nhé.&lt;br>
 Nội dung này mình không rành lắm nên chủ yếu là góp nhặt và tích luỹ để viết cho bản thân nhớ lâu hơn — cũng tiện chia sẻ cho các bạn hữu duyên nếu đọc được.&lt;/p></description></item><item><title>Những điều mình học được về Index trong MongoDB</title><link>https://thanhhv.github.io/posts/index-mongodb/</link><pubDate>Sun, 05 Oct 2025 10:50:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/index-mongodb/</guid><description>&lt;p>Khi làm việc với MongoDB, chắc hẳn bạn đã nghe đến &lt;strong>index&lt;/strong> - một khái niệm tưởng đơn giản nhưng lại có ảnh hưởng rất lớn đến hiệu năng của hệ thống.&lt;br>
 Nếu không hiểu rõ cách hoạt động của index, bạn có thể khiến truy vấn chậm đi đáng kể, hoặc tốn nhiều tài nguyên mà không biết lý do.&lt;/p>
@@ -131,7 +141,78 @@ My main focus is on &lt;strong>Node.js, Golang, distributed architectures&lt;/st
 &lt;li>&lt;strong>Monitoring&lt;/strong>: Prometheus, Grafana, Jaeger, OpenTelemetry&lt;/li>
 &lt;li>&lt;strong>Blockchain&lt;/strong>: Web3.js, ethers.js, on-chain data tracking&lt;/li>
 &lt;/ul>
-&lt;p>I enjoy solving complex system design problems, ensuring reliability and performance in large-scale environments.&lt;/p></description></item><item><title>Go-live load test &amp; deployment checklist</title><link>https://thanhhv.github.io/wiki/go-live-checklist/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://thanhhv.github.io/wiki/go-live-checklist/</guid><description>&lt;blockquote>
+&lt;p>I enjoy solving complex system design problems, ensuring reliability and performance in large-scale environments.&lt;/p></description></item><item><title>Algorithm Problems in Interviews</title><link>https://thanhhv.github.io/wiki/algorithm-problems-in-interviews/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://thanhhv.github.io/wiki/algorithm-problems-in-interviews/</guid><description>&lt;h1 id="-common-algorithm-problems-in-tech-interviews">🔢 Common Algorithm Problems in Tech Interviews&lt;/h1>
+&lt;p>This wiki stores a collection of popular algorithm problems that often appear in backend or fullstack interviews.&lt;/p>
+&lt;h2 id="1-arrays--strings">1. Arrays &amp;amp; Strings&lt;/h2>
+&lt;ul>
+&lt;li>Two Sum&lt;/li>
+&lt;li>Longest Substring Without Repeating Characters&lt;/li>
+&lt;li>Sliding Window Maximum&lt;/li>
+&lt;/ul>
+&lt;h2 id="2-linked-lists">2. Linked Lists&lt;/h2>
+&lt;ul>
+&lt;li>Reverse a Linked List&lt;/li>
+&lt;li>Detect Cycle in a Linked List&lt;/li>
+&lt;li>Merge Two Sorted Lists&lt;/li>
+&lt;/ul>
+&lt;h2 id="3-trees">3. Trees&lt;/h2>
+&lt;ul>
+&lt;li>Binary Tree Inorder Traversal&lt;/li>
+&lt;li>Lowest Common Ancestor&lt;/li>
+&lt;li>Serialize and Deserialize Binary Tree&lt;/li>
+&lt;/ul>
+&lt;h2 id="4-dynamic-programming">4. Dynamic Programming&lt;/h2>
+&lt;ul>
+&lt;li>Fibonacci (Top-down &amp;amp; Bottom-up)&lt;/li>
+&lt;li>Longest Increasing Subsequence&lt;/li>
+&lt;li>0/1 Knapsack&lt;/li>
+&lt;/ul>
+&lt;h2 id="5-graphs">5. Graphs&lt;/h2>
+&lt;ul>
+&lt;li>BFS &amp;amp; DFS Template&lt;/li>
+&lt;li>Detect Cycles in Directed Graph&lt;/li>
+&lt;li>Dijkstra’s Algorithm&lt;/li>
+&lt;/ul>
+&lt;h2 id="6-others">6. Others&lt;/h2>
+&lt;ul>
+&lt;li>Top K Frequent Elements&lt;/li>
+&lt;li>LRU Cache&lt;/li>
+&lt;li>Median of Two Sorted Arrays&lt;/li>
+&lt;/ul></description></item><item><title>Backend Interview Questions</title><link>https://thanhhv.github.io/wiki/backend-interview-questions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://thanhhv.github.io/wiki/backend-interview-questions/</guid><description>&lt;h1 id="-common-backend-interview-questions">📌 Common Backend Interview Questions&lt;/h1>
+&lt;p>Below are categorized questions that frequently appear in backend developer interviews.&lt;/p>
+&lt;h2 id="1-system-design">1. System Design&lt;/h2>
+&lt;ul>
+&lt;li>How would you design a URL shortener?&lt;/li>
+&lt;li>How to design a rate limiter?&lt;/li>
+&lt;li>What are the differences between monolith and microservices?&lt;/li>
+&lt;li>What is a message queue and when would you use one?&lt;/li>
+&lt;/ul>
+&lt;h2 id="2-databases">2. Databases&lt;/h2>
+&lt;ul>
+&lt;li>What is the difference between SQL and NoSQL?&lt;/li>
+&lt;li>How does indexing work in PostgreSQL?&lt;/li>
+&lt;li>What is ACID and why is it important?&lt;/li>
+&lt;li>How do you scale a relational database?&lt;/li>
+&lt;/ul>
+&lt;h2 id="3-api-design">3. API Design&lt;/h2>
+&lt;ul>
+&lt;li>What&amp;rsquo;s the difference between REST and GraphQL?&lt;/li>
+&lt;li>How do you handle versioning in APIs?&lt;/li>
+&lt;li>What are idempotent HTTP methods?&lt;/li>
+&lt;li>How to secure an API?&lt;/li>
+&lt;/ul>
+&lt;h2 id="4-caching--performance">4. Caching &amp;amp; Performance&lt;/h2>
+&lt;ul>
+&lt;li>What is the role of Redis in a web application?&lt;/li>
+&lt;li>How would you prevent cache stampede?&lt;/li>
+&lt;li>What is a CDN and when should you use one?&lt;/li>
+&lt;/ul>
+&lt;h2 id="5-deployment--devops">5. Deployment &amp;amp; DevOps&lt;/h2>
+&lt;ul>
+&lt;li>What is a container and how does Docker work?&lt;/li>
+&lt;li>What are health checks in a production service?&lt;/li>
+&lt;li>How would you set up CI/CD for a microservices architecture?&lt;/li>
+&lt;/ul></description></item><item><title>Go-live load test &amp; deployment checklist</title><link>https://thanhhv.github.io/wiki/go-live-checklist/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://thanhhv.github.io/wiki/go-live-checklist/</guid><description>&lt;blockquote>
 &lt;p>🎯 &lt;strong>Goal:&lt;/strong> Ensure the system is stable, scalable, and production-ready before launching.&lt;/p>&lt;/blockquote>
 &lt;hr>
 &lt;h2 id="-i-code--functional">🧱 I. CODE &amp;amp; FUNCTIONAL&lt;/h2>

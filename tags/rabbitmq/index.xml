@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>RabbitMQ on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/rabbitmq/</link><description>Recent content in RabbitMQ on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Tue, 14 Oct 2025 14:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/rabbitmq/index.xml" rel="self" type="application/rss+xml"/><item><title>Hiểu rõ cách hoạt động của RabbitMQ Exchange khi dùng NestJS Microservice</title><link>https://thanhhv.github.io/posts/exchange-in-rabbitmq/</link><pubDate>Tue, 14 Oct 2025 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/exchange-in-rabbitmq/</guid><description>&lt;p>&lt;img alt="rabbitmq-exchange" loading="lazy" src="https://thanhhv.github.io/posts/exchange-in-rabbitmq/rabbit-exchange.png">&lt;/p>
+&lt;p>Trong quá trình làm việc với &lt;strong>microservice trong NestJS&lt;/strong>, mình chủ yếu dùng &lt;strong>RabbitMQ microservice transport&lt;/strong>.&lt;br>
+Bản chất là các service giao tiếp qua &lt;strong>message broker (RabbitMQ)&lt;/strong>, &lt;strong>chứ không gọi HTTP trực tiếp&lt;/strong>.&lt;/p>
+&lt;p>Mỗi service có thể đóng vai trò:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Publisher&lt;/strong>: gửi message&lt;/li>
+&lt;li>&lt;strong>Consumer&lt;/strong>: nhận message&lt;/li>
+&lt;/ul>
+&lt;p>Khi gửi message, service sẽ &lt;strong>publish đến exchange&lt;/strong> — đây là &lt;strong>nơi định tuyến trung gian&lt;/strong>.&lt;br>
+RabbitMQ dùng &lt;strong>binding rule giữa exchange và các queue&lt;/strong> để quyết định message sẽ được gửi đến queue nào.&lt;br>
+Các service khác (&lt;strong>consumer&lt;/strong>) sẽ &lt;strong>subscribe vào queue&lt;/strong>, lắng nghe message được định tuyến đến đó và xử lý.&lt;/p></description></item></channel></rss>
