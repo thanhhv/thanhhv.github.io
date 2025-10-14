@@ -61,6 +61,8 @@ You can find my work and writing here:
 - 🐙 [GitHub](https://github.com/thanhhv)  
 - 💼 [LinkedIn](https://www.linkedin.com/in/thanhhv317/)  
 
+![github contribute graph](https://ghchart.rshah.org/thanhhv)
+
 ---
 
 _Last updated: October 2025_

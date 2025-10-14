@@ -1,6 +1,6 @@
 ---
 title: "Backend Interview Questions"
-draft: true
+draft: false
 ---
 
 # 📌 Common Backend Interview Questions
