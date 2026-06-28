@@ -1,7 +1,7 @@
 +++
 title = "Hướng dẫn implement 1 hệ thống realtime sử dụng Socket IO bằng GoLang"
 date = "2025-09-10T15:00:00+07:00"
-draft = false
+draft = true
 tags = ["socket-io", "websocket"]
 +++
 
