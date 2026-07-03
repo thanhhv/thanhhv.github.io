@@ -1,31 +1,339 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Kafka | Thanh HV's Blog</title>
-<meta name=keywords content><meta name=description content><meta name=author content><link rel=canonical href=https://thanhhv.github.io/tags/kafka/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/tags/kafka/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/tags/kafka/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/tags/kafka/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Kafka"><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Kafka"><meta name=twitter:description content></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/tags/>Tags</a></div><h1>Kafka</h1></header><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh</h2></header><div class=entry-content><p>Tốc độ Kafka đến từ bốn quyết định thiết kế cộng hưởng, không phải một mẹo.
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=49754&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Kafka | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:49754/tags/kafka/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:49754/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:49754/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:49754/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:49754/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:49754/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:49754/tags/kafka/index.xml">
+<link rel="alternate" hreflang="en" href="http://localhost:49754/tags/kafka/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:49754/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:49754/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:49754/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:49754/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:49754/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:49754/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:49754/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:49754/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:49754/tags/">Tags</a></div>
+  <h1>
+    Kafka
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Tốc độ Kafka đến từ bốn quyết định thiết kế cộng hưởng, không phải một mẹo.
 1. Ghi tuần tự (sequential write) Trực giác sai: “ghi đĩa chậm, phải dùng RAM”. Thực tế: ghi đĩa tuần tự nhanh hơn ghi RAM ngẫu nhiên.
 Random access (DB cập nhật chỗ này chỗ kia): tốn seek, chậm cả HDD lẫn SSD. Sequential write: chỉ ghi nối tiếp vào cuối file, không seek — HDD ~100s MB/s, SSD cao hơn. Kafka chọn log append-only: message mới luôn ghi vào cuối, không sửa/chèn. Đây là lý do sâu xa Kafka không cho xóa/sửa message — ràng buộc có chủ đích để đổi lấy tốc độ.
-...</p></div><footer class=entry-footer><span title='2026-06-25 08:00:00 +0700 +07'>June 25, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh" href=https://thanhhv.github.io/series/11-storage-internals/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 10 — Kiến trúc thực chiến</h2></header><div class=entry-content><p>Outbox Pattern — giải bài toán “dual write” Service order phải ghi vào DB và bắn event lên Kafka. Làm tuần tự thì luôn có khe hở:
-ghi DB OK -> bắn Kafka FAIL => DB có đơn, hệ thống khác không biết (lệch) bắn Kafka OK -> ghi DB FAIL => event bắn rồi nhưng đơn không tồn tại (ma) Hai hệ thống khác nhau không chia sẻ transaction → không thể “cùng thành công hoặc cùng thất bại” trực tiếp.
-...</p></div><footer class=entry-footer><span title='2026-06-23 08:00:00 +0700 +07'>June 23, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Bài 10 — Kiến trúc thực chiến" href=https://thanhhv.github.io/series/10-kien-truc-thuc-chien/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 9 — Performance Tuning</h2></header><div class=entry-content><p>Mọi tinh chỉnh là đánh đổi giữa throughput (số lượng/giây), latency (độ trễ mỗi message), và durability. Không có nút “nhanh hơn” miễn phí.
-Phía Producer — gom để nhanh linger.ms + batch.size (cặp quan trọng nhất). Mặc định linger.ms=0 = gửi ngay từng message → nhiều request nhỏ. Tăng linger.ms (5–20ms) cho producer chờ gom batch rồi gửi một lần. batch.size (mặc định 16KB) là trần mỗi batch.
-...</p></div><footer class=entry-footer><span title='2026-06-20 08:00:00 +0700 +07'>June 20, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 9 — Performance Tuning" href=https://thanhhv.github.io/series/09-performance-tuning/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 8 — Schema Registry & Schema Evolution</h2></header><div class=entry-content><p>Vấn đề Topic được nhiều team ghi/đọc. Một ngày team A đổi cấu trúc message (đổi tên field, đổi kiểu, bỏ field) → consumer của B, C, D vỡ ngay, thường lúc 2h sáng. JSON tự do có 3 điểm yếu ở quy mô lớn: không có schema bắt buộc, tốn băng thông (lặp tên field), không kiểm soát thay đổi.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-25 08:00:00 +0700 +07'>June 25, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh" href="http://localhost:49754/series/kafka/11-storage-internals/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 10 — Kiến trúc thực chiến
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Outbox Pattern — giải bài toán “dual write” Service order phải ghi vào DB và bắn event lên Kafka. Làm tuần tự thì luôn có khe hở:
+ghi DB OK -&gt; bắn Kafka FAIL =&gt; DB có đơn, hệ thống khác không biết (lệch) bắn Kafka OK -&gt; ghi DB FAIL =&gt; event bắn rồi nhưng đơn không tồn tại (ma) Hai hệ thống khác nhau không chia sẻ transaction → không thể “cùng thành công hoặc cùng thất bại” trực tiếp.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-23 08:00:00 +0700 +07'>June 23, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 10 — Kiến trúc thực chiến" href="http://localhost:49754/series/kafka/10-kien-truc-thuc-chien/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 9 — Performance Tuning
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Mọi tinh chỉnh là đánh đổi giữa throughput (số lượng/giây), latency (độ trễ mỗi message), và durability. Không có nút “nhanh hơn” miễn phí.
+Phía Producer — gom để nhanh linger.ms &#43; batch.size (cặp quan trọng nhất). Mặc định linger.ms=0 = gửi ngay từng message → nhiều request nhỏ. Tăng linger.ms (5–20ms) cho producer chờ gom batch rồi gửi một lần. batch.size (mặc định 16KB) là trần mỗi batch.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-20 08:00:00 +0700 +07'>June 20, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 9 — Performance Tuning" href="http://localhost:49754/series/kafka/09-performance-tuning/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 8 — Schema Registry &amp; Schema Evolution
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Vấn đề Topic được nhiều team ghi/đọc. Một ngày team A đổi cấu trúc message (đổi tên field, đổi kiểu, bỏ field) → consumer của B, C, D vỡ ngay, thường lúc 2h sáng. JSON tự do có 3 điểm yếu ở quy mô lớn: không có schema bắt buộc, tốn băng thông (lặp tên field), không kiểm soát thay đổi.
 Schema Registry hoạt động thế nào Service riêng lưu và đánh version cho schema:
-...</p></div><footer class=entry-footer><span title='2026-06-17 08:00:00 +0700 +07'>June 17, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 8 — Schema Registry & Schema Evolution" href=https://thanhhv.github.io/series/08-schema-registry-evolution/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 7 — Retry, Backoff & Dead Letter Queue</h2></header><div class=entry-content><p>Triết lý: fail gracefully, đừng fail catastrophically. Một message hỏng là chuyện bình thường; mục tiêu là nó không kéo cả partition/hệ thống sập.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-17 08:00:00 +0700 +07'>June 17, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 8 — Schema Registry & Schema Evolution" href="http://localhost:49754/series/kafka/08-schema-registry-evolution/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 7 — Retry, Backoff &amp; Dead Letter Queue
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Triết lý: fail gracefully, đừng fail catastrophically. Một message hỏng là chuyện bình thường; mục tiêu là nó không kéo cả partition/hệ thống sập.
 Hai loại lỗi — phân biệt được mới xử lý đúng Tạm thời (transient): DB timeout, API phụ thuộc down, mạng chập chờn. → retry sẽ qua. Vĩnh viễn (permanent / “poison”): sai format, thiếu field, vi phạm nghiệp vụ. → retry vô ích, đẩy đi chỗ khác. Ánh xạ HTTP status hữu ích:
-...</p></div><footer class=entry-footer><span title='2026-06-14 08:00:00 +0700 +07'>June 14, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 7 — Retry, Backoff & Dead Letter Queue" href=https://thanhhv.github.io/series/07-retry-backoff-dlq/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 6 — Idempotent Producer & Transactions (Exactly-Once)</h2></header><div class=entry-content><p>Vấn đề 1 — Duplicate do PRODUCER retry Producer gửi message, broker đã ghi thành công nhưng gói ACK rớt trên đường về. Producer tưởng thất bại → retry → broker ghi lần hai. Message nằm 2 lần trong log dù bạn làm đúng mọi thứ. (Khác với duplicate phía consumer ở Bài 4.)
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-14 08:00:00 +0700 +07'>June 14, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 7 — Retry, Backoff & Dead Letter Queue" href="http://localhost:49754/series/kafka/07-retry-backoff-dlq/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 6 — Idempotent Producer &amp; Transactions (Exactly-Once)
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Vấn đề 1 — Duplicate do PRODUCER retry Producer gửi message, broker đã ghi thành công nhưng gói ACK rớt trên đường về. Producer tưởng thất bại → retry → broker ghi lần hai. Message nằm 2 lần trong log dù bạn làm đúng mọi thứ. (Khác với duplicate phía consumer ở Bài 4.)
 Giải pháp — Idempotent Producer enable.idempotence=true: broker cấp mỗi producer một PID và mỗi message một sequence number theo partition. Retry mang sequence đã thấy → broker lặng lẽ bỏ qua. Thêm bảo đảm thứ tự không bị đảo khi retry.
-...</p></div><footer class=entry-footer><span title='2026-06-12 08:00:00 +0700 +07'>June 12, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 6 — Idempotent Producer & Transactions (Exactly-Once)" href=https://thanhhv.github.io/series/06-transactions-exactly-once/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 5 — Replication, acks & ISR</h2></header><div class=entry-content><p>Replica, Leader, Follower Mỗi partition có N bản sao (replication-factor):
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-12 08:00:00 +0700 +07'>June 12, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 6 — Idempotent Producer & Transactions (Exactly-Once)" href="http://localhost:49754/series/kafka/06-transactions-exactly-once/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 5 — Replication, acks &amp; ISR
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Replica, Leader, Follower Mỗi partition có N bản sao (replication-factor):
 1 leader: phục vụ mọi đọc/ghi của client. N-1 follower: liên tục kéo dữ liệu từ leader để bắt kịp. Ẩn với client. Client chỉ làm việc với leader. Follower chỉ để chống mất dữ liệu khi broker chứa leader chết.
 ISR (In-Sync Replicas) Tập các replica đang theo kịp leader (gồm cả leader). Follower tụt quá replica.lag.time.max.ms (~30s) bị đá khỏi ISR. Khi leader chết, Kafka chỉ bầu leader mới từ trong ISR (vì chỉ chúng chắc chắn có đủ dữ liệu đã xác nhận).
-...</p></div><footer class=entry-footer><span title='2026-06-10 08:00:00 +0700 +07'>June 10, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 5 — Replication, acks & ISR" href=https://thanhhv.github.io/series/05-replication-acks-isr/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 4 — Offset & Delivery Semantics</h2></header><div class=entry-content><p>Bài quan trọng nhất về độ tin cậy. Hầu hết bug “mất message” / “xử lý trùng” ở production nằm ở đây.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-10 08:00:00 +0700 +07'>June 10, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 5 — Replication, acks & ISR" href="http://localhost:49754/series/kafka/05-replication-acks-isr/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 4 — Offset &amp; Delivery Semantics
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài quan trọng nhất về độ tin cậy. Hầu hết bug “mất message” / “xử lý trùng” ở production nằm ở đây.
 Offset commit là gì? Consumer cần báo cho Kafka biết đã xử lý đến đâu, để lần sau (hoặc consumer khác sau rebalance) đọc tiếp đúng chỗ. Việc đó gọi là commit offset, lưu trong topic nội bộ __consumer_offsets.
 Mấu chốt sinh ra mọi vấn đề: xử lý message và commit offset là hai hành động riêng biệt, giữa chúng consumer có thể crash. Thứ tự hai hành động này quyết định “delivery semantics”.
-...</p></div><footer class=entry-footer><span title='2026-06-08 08:00:00 +0700 +07'>June 8, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 4 — Offset & Delivery Semantics" href=https://thanhhv.github.io/series/04-offset-delivery-semantics/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 3 — Partitioning & Đảm bảo thứ tự</h2></header><div class=entry-content><p>Producer chọn partition thế nào? Có key: partition = hash(key) % số_partition. Cùng key + số partition không đổi → luôn cùng partition → giữ thứ tự. Không key: rải đều (sticky/round-robin), tối ưu throughput nhưng không đảm bảo thứ tự. Ba cạm bẫy quanh partitioning Bẫy 1 — Hàm hash khác nhau giữa các client Client Java dùng murmur2; librdkafka (confluent-kafka-go, Python, C…) mặc định dùng thuật toán khác (consistent_random, nền CRC32). → Cùng một key, producer Java và producer Go có thể đẩy vào hai partition khác nhau!
-...</p></div><footer class=entry-footer><span title='2026-06-06 08:00:00 +0700 +07'>June 6, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 3 — Partitioning & Đảm bảo thứ tự" href=https://thanhhv.github.io/series/03-partitioning-thu-tu/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 2 — Consumer Group & Rebalance</h2></header><div class=entry-content><p>Khái niệm Consumer group là tập các consumer cùng group.id, hợp sức tiêu thụ một topic. Kafka tự chia partition cho các thành viên — gọi là partition assignment.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-08 08:00:00 +0700 +07'>June 8, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 4 — Offset & Delivery Semantics" href="http://localhost:49754/series/kafka/04-offset-delivery-semantics/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 3 — Partitioning &amp; Đảm bảo thứ tự
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Producer chọn partition thế nào? Có key: partition = hash(key) % số_partition. Cùng key &#43; số partition không đổi → luôn cùng partition → giữ thứ tự. Không key: rải đều (sticky/round-robin), tối ưu throughput nhưng không đảm bảo thứ tự. Ba cạm bẫy quanh partitioning Bẫy 1 — Hàm hash khác nhau giữa các client Client Java dùng murmur2; librdkafka (confluent-kafka-go, Python, C…) mặc định dùng thuật toán khác (consistent_random, nền CRC32). → Cùng một key, producer Java và producer Go có thể đẩy vào hai partition khác nhau!
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-06 08:00:00 +0700 +07'>June 6, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 3 — Partitioning & Đảm bảo thứ tự" href="http://localhost:49754/series/kafka/03-partitioning-thu-tu/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 2 — Consumer Group &amp; Rebalance
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Khái niệm Consumer group là tập các consumer cùng group.id, hợp sức tiêu thụ một topic. Kafka tự chia partition cho các thành viên — gọi là partition assignment.
 Quan hệ then chốt:
-Trong 1 group: 1 partition -> tối đa 1 consumer (KHÔNG phải 1-n) 1 consumer -> có thể N partition Trên nhiều group: 1 partition -> N consumer (mỗi group 1 đứa) (pub/sub) Hệ quả thực chiến: số consumer hữu ích tối đa trong một group = số partition. Topic 3 partition, group 5 consumer → 3 đứa làm việc, 2 đứa ngồi không. Partition là trần scale của consumer — muốn xử lý song song hơn phải tăng partition trước.
-...</p></div><footer class=entry-footer><span title='2026-06-03 08:00:00 +0700 +07'>June 3, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 2 — Consumer Group & Rebalance" href=https://thanhhv.github.io/series/02-consumer-group-rebalance/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 1 — Topic, Partition, Producer & Consumer</h2></header><div class=entry-content><p>Khái niệm nền tảng Topic là một “kênh” logic chứa message, ví dụ orders chứa các sự kiện đơn hàng.
+Trong 1 group: 1 partition -&gt; tối đa 1 consumer (KHÔNG phải 1-n) 1 consumer -&gt; có thể N partition Trên nhiều group: 1 partition -&gt; N consumer (mỗi group 1 đứa) (pub/sub) Hệ quả thực chiến: số consumer hữu ích tối đa trong một group = số partition. Topic 3 partition, group 5 consumer → 3 đứa làm việc, 2 đứa ngồi không. Partition là trần scale của consumer — muốn xử lý song song hơn phải tăng partition trước.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-03 08:00:00 +0700 +07'>June 3, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 2 — Consumer Group & Rebalance" href="http://localhost:49754/series/kafka/02-consumer-group-rebalance/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 1 — Topic, Partition, Producer &amp; Consumer
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Khái niệm nền tảng Topic là một “kênh” logic chứa message, ví dụ orders chứa các sự kiện đơn hàng.
 Partition là điểm mấu chốt phân biệt Kafka với hàng đợi thường. Mỗi topic được chia thành nhiều partition. Mỗi partition là một log ghi nối tiếp (append-only): message có thứ tự tuyệt đối trong partition, và mỗi message mang một số thứ tự gọi là offset (0, 1, 2, …).
-...</p></div><footer class=entry-footer><span title='2026-06-01 08:00:00 +0700 +07'>June 1, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 1 — Topic, Partition, Producer & Consumer" href=https://thanhhv.github.io/series/01-topic-partition-producer-consumer/></a></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-06-01 08:00:00 +0700 +07'>June 1, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 1 — Topic, Partition, Producer & Consumer" href="http://localhost:49754/series/kafka/01-topic-partition-producer-consumer/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:49754/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

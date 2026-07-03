@@ -1,87 +1,126 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>GCP on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/gcp/</link><description>Recent content in GCP on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Sun, 29 Jun 2025 08:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/gcp/index.xml" rel="self" type="application/rss+xml"/><item><title>Kubernetes Components</title><link>https://thanhhv.github.io/posts/kubernetes-components/</link><pubDate>Sun, 29 Jun 2025 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/kubernetes-components/</guid><description>&lt;p>&lt;img alt="K8s component" loading="lazy" src="https://thanhhv.github.io/posts/kubernetes-components/k8s-components.png">&lt;/p>
-&lt;p>The architecture of Kubernetes is divided into two main parts:&lt;/p>
-&lt;h2 id="1-control-plane-components">1. Control Plane Components&lt;/h2>
-&lt;p>The Control Plane is the &lt;strong>brain of Kubernetes&lt;/strong> — responsible for managing the overall state of the cluster and orchestrating all activities.&lt;/p>
-&lt;h3 id="11-kube-apiserver">1.1 kube-apiserver&lt;/h3>
-&lt;ul>
-&lt;li>Acts as the central communication gateway of the system.&lt;/li>
-&lt;li>All requests from &lt;code>kubectl&lt;/code>, the Dashboard, CI/CD pipelines, etc., are sent through this component.&lt;/li>
-&lt;li>Responsible for:
-&lt;ul>
-&lt;li>Authentication&lt;/li>
-&lt;li>Authorization&lt;/li>
-&lt;li>Reading/writing data from/to &lt;code>etcd&lt;/code>&lt;/li>
-&lt;li>Forwarding requests to other components&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;blockquote>
-&lt;p>Example:&lt;br>
-You run &lt;code>kubectl get pods&lt;/code> → the request goes to the kube-apiserver.&lt;/p></description></item><item><title>Kubernetes Concepts</title><link>https://thanhhv.github.io/posts/kubernetes-concept/</link><pubDate>Sun, 29 Jun 2025 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/kubernetes-concept/</guid><description>&lt;p>When learning Kubernetes, there are two core concepts you should understand: &lt;strong>Kubernetes Object Model&lt;/strong> and &lt;strong>Declarative Management&lt;/strong>. Let&amp;rsquo;s break down both of these.&lt;/p>
-&lt;p>&lt;img alt="K8s concept" loading="lazy" src="https://thanhhv.github.io/posts/kubernetes-concept/k8s-concept.png">&lt;/p>
-&lt;h2 id="1-kubernetes-object-model">1. Kubernetes Object Model&lt;/h2>
-&lt;p>Everything in Kubernetes is an &lt;strong>object&lt;/strong>, and these objects are managed via YAML or JSON definitions. They represent the resources in your system.&lt;/p>
-&lt;h3 id="cluster">Cluster&lt;/h3>
-&lt;p>A &lt;strong>cluster&lt;/strong> is a group of machines (nodes) consisting of:&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>Control Plane (master)&lt;/strong> - responsible for managing the system.&lt;/li>
-&lt;li>&lt;strong>Worker Nodes&lt;/strong> - where your applications run.&lt;/li>
-&lt;/ul>
-&lt;h3 id="node">Node&lt;/h3>
-&lt;p>A &lt;strong>node&lt;/strong> is a physical or virtual machine within a cluster.&lt;br>
-Each node includes:&lt;/p></description></item><item><title>Google Cloud Billing</title><link>https://thanhhv.github.io/posts/google-cloud-billing/</link><pubDate>Tue, 24 Jun 2025 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/google-cloud-billing/</guid><description>&lt;p>&lt;img alt="gg-billing" loading="lazy" src="https://thanhhv.github.io/posts/google-cloud-billing/gg-billing.png">&lt;/p>
-&lt;p>In Google Cloud, &lt;strong>Billing&lt;/strong> is the system that helps you manage &lt;strong>costs, payments, and budgets&lt;/strong> when using services on Google Cloud Platform (GCP), such as Compute Engine, BigQuery, Cloud Storage, and more. Below are the four most important components in Google Cloud Billing:&lt;/p>
-&lt;h2 id="1-budget">1. Budget&lt;/h2>
-&lt;ul>
-&lt;li>Allows you to set a &lt;strong>spending limit&lt;/strong> for a specific time period (e.g., month, quarter) for a project or billing account.&lt;/li>
-&lt;li>&lt;strong>Purpose:&lt;/strong> Avoid spending beyond your planned budget.&lt;/li>
-&lt;li>&lt;strong>Example:&lt;/strong> You&amp;rsquo;re building a backend for a crawling system running on GCP, using multiple VMs or Cloud Functions. To control cost, you set a &lt;strong>$500/month&lt;/strong> budget to track your expenses.&lt;/li>
-&lt;/ul>
-&lt;h2 id="2-alert">2. Alert&lt;/h2>
-&lt;ul>
-&lt;li>Alerts are &lt;strong>automatically triggered&lt;/strong> when spending exceeds a defined percentage of the budget (e.g., 50%, 90%, 100%).&lt;/li>
-&lt;li>&lt;strong>Purpose:&lt;/strong> Notify you when costs spike unexpectedly — possibly due to a bug or misconfiguration.&lt;/li>
-&lt;li>&lt;strong>Example:&lt;/strong> If the cost of your backend on Cloud Run reaches &lt;strong>90% of the $500 budget&lt;/strong>, you’ll receive an email notification to take action.&lt;/li>
-&lt;/ul>
-&lt;p>&lt;img alt="budget-alert" loading="lazy" src="https://thanhhv.github.io/posts/google-cloud-billing/budget-alert.png">&lt;/p></description></item><item><title>Google Cloud Compute Offering</title><link>https://thanhhv.github.io/posts/google-cloud-compute-offering/</link><pubDate>Mon, 23 Jun 2025 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/google-cloud-compute-offering/</guid><description>&lt;p>In Google Cloud, &lt;strong>Compute Offering&lt;/strong> is a set of services that help you run workloads (like applications, APIs, batch jobs, etc.) on Google&amp;rsquo;s host infrastructure. Depending on your workload and requirements, you can choose from the options below:&lt;/p>
-&lt;p>&lt;img alt="gg-cloud-comute-offering" loading="lazy" src="https://thanhhv.github.io/posts/google-cloud-compute-offering/gg-compute-offering.png">&lt;/p>
-&lt;h2 id="1-compute-engine-iaas---infrastructure-as-a-service">1. Compute Engine (IaaS - Infrastructure as a Service)&lt;/h2>
-&lt;ul>
-&lt;li>A virtual machine where you have full permission to configure the environment.&lt;/li>
-&lt;li>High level of control, similar to traditional hosting on the cloud.&lt;/li>
-&lt;li>&lt;strong>Use case:&lt;/strong> Configure OS in detail, install custom software, need full system control.&lt;/li>
-&lt;li>&lt;strong>Example:&lt;/strong> Run a Node.js/Golang server, cron job, or backend AI model training.&lt;/li>
-&lt;li>&lt;strong>AWS equivalent:&lt;/strong> EC2&lt;/li>
-&lt;/ul>
-&lt;h2 id="2-app-engine-paas---platform-as-a-service">2. App Engine (PaaS - Platform as a Service)&lt;/h2>
-&lt;ul>
-&lt;li>A platform for running applications where you only need to deploy code — Google handles everything else (scaling, patching, infrastructure, etc.).&lt;/li>
-&lt;li>Low level of control — just push your code, no need to manage servers.&lt;/li>
-&lt;li>&lt;strong>Use case:&lt;/strong> Rapid development, no infrastructure management needed.&lt;/li>
-&lt;li>&lt;strong>Example:&lt;/strong> Run a small API server, REST API, or MVP web app.&lt;/li>
-&lt;li>&lt;strong>AWS equivalent:&lt;/strong> Elastic Beanstalk&lt;/li>
-&lt;/ul>
-&lt;h2 id="3-cloud-run-serverless-containers">3. Cloud Run (Serverless Containers)&lt;/h2>
-&lt;ul>
-&lt;li>Run containers (e.g., Docker) in a serverless model. Billing is based on request duration.&lt;/li>
-&lt;li>Medium level of control — you manage the container image, while Google handles scaling and infrastructure.&lt;/li>
-&lt;li>&lt;strong>Use case:&lt;/strong> Leverage the benefits of containers + serverless for lightweight backends or microservices.&lt;/li>
-&lt;li>&lt;strong>Example:&lt;/strong> Run an API service, webhook receiver, or AI inference container.&lt;/li>
-&lt;li>&lt;strong>AWS equivalent:&lt;/strong> App Runner / Fargate&lt;/li>
-&lt;/ul>
-&lt;h2 id="4-google-kubernetes-engine-gke-caas---container-as-a-service">4. Google Kubernetes Engine (GKE) (CaaS - Container as a Service)&lt;/h2>
-&lt;ul>
-&lt;li>Run containerized applications with Kubernetes. Google manages the control plane.&lt;/li>
-&lt;li>High level of control — you can fully configure your cluster, while Google manages some parts of it.&lt;/li>
-&lt;li>&lt;strong>Use case:&lt;/strong> Need orchestration, CI/CD pipelines, or complex multi-service applications.&lt;/li>
-&lt;li>&lt;strong>Example:&lt;/strong> Run a microservices system, CI job runners, or real-time data pipelines.&lt;/li>
-&lt;li>&lt;strong>AWS equivalent:&lt;/strong> EKS&lt;/li>
-&lt;/ul>
-&lt;h2 id="5-cloud-functions-faas---function-as-a-service">5. Cloud Functions (FaaS - Function as a Service)&lt;/h2>
-&lt;ul>
-&lt;li>Write and deploy small functions that are triggered by events (HTTP, Pub/Sub, Cloud Storage, etc.).&lt;/li>
-&lt;li>Extremely easy to use — just write a function, no need to manage infrastructure.&lt;/li>
-&lt;li>&lt;strong>Use case:&lt;/strong> Handle small event-driven logic, time-based triggers, or system integration tasks.&lt;/li>
-&lt;li>&lt;strong>Example:&lt;/strong> Auto-resize images, handle webhooks from Telegram/Stripe, send emails on user registration.&lt;/li>
-&lt;li>&lt;strong>AWS equivalent:&lt;/strong> Lambda&lt;/li>
-&lt;/ul></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>GCP on Thanh HV&#39;s Blog</title>
+    <link>http://localhost:49754/tags/gcp/</link>
+    <description>Recent content in GCP on Thanh HV&#39;s Blog</description>
+    <generator>Hugo -- 0.146.7</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 29 Jun 2025 08:00:00 +0700</lastBuildDate>
+    <atom:link href="http://localhost:49754/tags/gcp/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kubernetes Components</title>
+      <link>http://localhost:49754/posts/kubernetes-components/</link>
+      <pubDate>Sun, 29 Jun 2025 08:00:00 +0700</pubDate>
+      <guid>http://localhost:49754/posts/kubernetes-components/</guid>
+      <description>&lt;p&gt;&lt;img alt=&#34;K8s component&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:49754/posts/kubernetes-components/k8s-components.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The architecture of Kubernetes is divided into two main parts:&lt;/p&gt;
+&lt;h2 id=&#34;1-control-plane-components&#34;&gt;1. Control Plane Components&lt;/h2&gt;
+&lt;p&gt;The Control Plane is the &lt;strong&gt;brain of Kubernetes&lt;/strong&gt; — responsible for managing the overall state of the cluster and orchestrating all activities.&lt;/p&gt;
+&lt;h3 id=&#34;11-kube-apiserver&#34;&gt;1.1 kube-apiserver&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Acts as the central communication gateway of the system.&lt;/li&gt;
+&lt;li&gt;All requests from &lt;code&gt;kubectl&lt;/code&gt;, the Dashboard, CI/CD pipelines, etc., are sent through this component.&lt;/li&gt;
+&lt;li&gt;Responsible for:
+&lt;ul&gt;
+&lt;li&gt;Authentication&lt;/li&gt;
+&lt;li&gt;Authorization&lt;/li&gt;
+&lt;li&gt;Reading/writing data from/to &lt;code&gt;etcd&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Forwarding requests to other components&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Example:&lt;br&gt;
+You run &lt;code&gt;kubectl get pods&lt;/code&gt; → the request goes to the kube-apiserver.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Kubernetes Concepts</title>
+      <link>http://localhost:49754/posts/kubernetes-concept/</link>
+      <pubDate>Sun, 29 Jun 2025 08:00:00 +0700</pubDate>
+      <guid>http://localhost:49754/posts/kubernetes-concept/</guid>
+      <description>&lt;p&gt;When learning Kubernetes, there are two core concepts you should understand: &lt;strong&gt;Kubernetes Object Model&lt;/strong&gt; and &lt;strong&gt;Declarative Management&lt;/strong&gt;. Let&amp;rsquo;s break down both of these.&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;K8s concept&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:49754/posts/kubernetes-concept/k8s-concept.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-kubernetes-object-model&#34;&gt;1. Kubernetes Object Model&lt;/h2&gt;
+&lt;p&gt;Everything in Kubernetes is an &lt;strong&gt;object&lt;/strong&gt;, and these objects are managed via YAML or JSON definitions. They represent the resources in your system.&lt;/p&gt;
+&lt;h3 id=&#34;cluster&#34;&gt;Cluster&lt;/h3&gt;
+&lt;p&gt;A &lt;strong&gt;cluster&lt;/strong&gt; is a group of machines (nodes) consisting of:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Control Plane (master)&lt;/strong&gt; - responsible for managing the system.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Worker Nodes&lt;/strong&gt; - where your applications run.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;node&#34;&gt;Node&lt;/h3&gt;
+&lt;p&gt;A &lt;strong&gt;node&lt;/strong&gt; is a physical or virtual machine within a cluster.&lt;br&gt;
+Each node includes:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Google Cloud Billing</title>
+      <link>http://localhost:49754/posts/google-cloud-billing/</link>
+      <pubDate>Tue, 24 Jun 2025 13:00:00 +0700</pubDate>
+      <guid>http://localhost:49754/posts/google-cloud-billing/</guid>
+      <description>&lt;p&gt;&lt;img alt=&#34;gg-billing&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:49754/posts/google-cloud-billing/gg-billing.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In Google Cloud, &lt;strong&gt;Billing&lt;/strong&gt; is the system that helps you manage &lt;strong&gt;costs, payments, and budgets&lt;/strong&gt; when using services on Google Cloud Platform (GCP), such as Compute Engine, BigQuery, Cloud Storage, and more. Below are the four most important components in Google Cloud Billing:&lt;/p&gt;
+&lt;h2 id=&#34;1-budget&#34;&gt;1. Budget&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Allows you to set a &lt;strong&gt;spending limit&lt;/strong&gt; for a specific time period (e.g., month, quarter) for a project or billing account.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Purpose:&lt;/strong&gt; Avoid spending beyond your planned budget.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example:&lt;/strong&gt; You&amp;rsquo;re building a backend for a crawling system running on GCP, using multiple VMs or Cloud Functions. To control cost, you set a &lt;strong&gt;$500/month&lt;/strong&gt; budget to track your expenses.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-alert&#34;&gt;2. Alert&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Alerts are &lt;strong&gt;automatically triggered&lt;/strong&gt; when spending exceeds a defined percentage of the budget (e.g., 50%, 90%, 100%).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Purpose:&lt;/strong&gt; Notify you when costs spike unexpectedly — possibly due to a bug or misconfiguration.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example:&lt;/strong&gt; If the cost of your backend on Cloud Run reaches &lt;strong&gt;90% of the $500 budget&lt;/strong&gt;, you’ll receive an email notification to take action.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img alt=&#34;budget-alert&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:49754/posts/google-cloud-billing/budget-alert.png&#34;&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Google Cloud Compute Offering</title>
+      <link>http://localhost:49754/posts/google-cloud-compute-offering/</link>
+      <pubDate>Mon, 23 Jun 2025 13:00:00 +0700</pubDate>
+      <guid>http://localhost:49754/posts/google-cloud-compute-offering/</guid>
+      <description>&lt;p&gt;In Google Cloud, &lt;strong&gt;Compute Offering&lt;/strong&gt; is a set of services that help you run workloads (like applications, APIs, batch jobs, etc.) on Google&amp;rsquo;s host infrastructure. Depending on your workload and requirements, you can choose from the options below:&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;gg-cloud-comute-offering&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:49754/posts/google-cloud-compute-offering/gg-compute-offering.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-compute-engine-iaas---infrastructure-as-a-service&#34;&gt;1. Compute Engine (IaaS - Infrastructure as a Service)&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;A virtual machine where you have full permission to configure the environment.&lt;/li&gt;
+&lt;li&gt;High level of control, similar to traditional hosting on the cloud.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Use case:&lt;/strong&gt; Configure OS in detail, install custom software, need full system control.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example:&lt;/strong&gt; Run a Node.js/Golang server, cron job, or backend AI model training.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AWS equivalent:&lt;/strong&gt; EC2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-app-engine-paas---platform-as-a-service&#34;&gt;2. App Engine (PaaS - Platform as a Service)&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;A platform for running applications where you only need to deploy code — Google handles everything else (scaling, patching, infrastructure, etc.).&lt;/li&gt;
+&lt;li&gt;Low level of control — just push your code, no need to manage servers.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Use case:&lt;/strong&gt; Rapid development, no infrastructure management needed.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example:&lt;/strong&gt; Run a small API server, REST API, or MVP web app.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AWS equivalent:&lt;/strong&gt; Elastic Beanstalk&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-cloud-run-serverless-containers&#34;&gt;3. Cloud Run (Serverless Containers)&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Run containers (e.g., Docker) in a serverless model. Billing is based on request duration.&lt;/li&gt;
+&lt;li&gt;Medium level of control — you manage the container image, while Google handles scaling and infrastructure.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Use case:&lt;/strong&gt; Leverage the benefits of containers + serverless for lightweight backends or microservices.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example:&lt;/strong&gt; Run an API service, webhook receiver, or AI inference container.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AWS equivalent:&lt;/strong&gt; App Runner / Fargate&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-google-kubernetes-engine-gke-caas---container-as-a-service&#34;&gt;4. Google Kubernetes Engine (GKE) (CaaS - Container as a Service)&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Run containerized applications with Kubernetes. Google manages the control plane.&lt;/li&gt;
+&lt;li&gt;High level of control — you can fully configure your cluster, while Google manages some parts of it.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Use case:&lt;/strong&gt; Need orchestration, CI/CD pipelines, or complex multi-service applications.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example:&lt;/strong&gt; Run a microservices system, CI job runners, or real-time data pipelines.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AWS equivalent:&lt;/strong&gt; EKS&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;5-cloud-functions-faas---function-as-a-service&#34;&gt;5. Cloud Functions (FaaS - Function as a Service)&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Write and deploy small functions that are triggered by events (HTTP, Pub/Sub, Cloud Storage, etc.).&lt;/li&gt;
+&lt;li&gt;Extremely easy to use — just write a function, no need to manage infrastructure.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Use case:&lt;/strong&gt; Handle small event-driven logic, time-based triggers, or system integration tasks.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example:&lt;/strong&gt; Auto-resize images, handle webhooks from Telegram/Stripe, send emails on user registration.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AWS equivalent:&lt;/strong&gt; Lambda&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>

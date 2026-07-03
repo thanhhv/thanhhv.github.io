@@ -1,55 +1,12 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Series on Thanh HV's Blog</title><link>https://thanhhv.github.io/series/</link><description>Recent content in Series on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Thu, 25 Jun 2026 08:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/series/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh</title><link>https://thanhhv.github.io/series/11-storage-internals/</link><pubDate>Thu, 25 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/11-storage-internals/</guid><description>&lt;p>Tốc độ Kafka đến từ &lt;strong>bốn quyết định thiết kế cộng hưởng&lt;/strong>, không phải một mẹo.&lt;/p>
-&lt;h2 id="1-ghi-tuần-tự-sequential-write">1. Ghi tuần tự (sequential write)&lt;/h2>
-&lt;p>Trực giác sai: &amp;ldquo;ghi đĩa chậm, phải dùng RAM&amp;rdquo;. Thực tế: &lt;strong>ghi đĩa &lt;em>tuần tự&lt;/em> nhanh hơn ghi RAM &lt;em>ngẫu nhiên&lt;/em>.&lt;/strong>&lt;/p>
-&lt;ul>
-&lt;li>Random access (DB cập nhật chỗ này chỗ kia): tốn seek, chậm cả HDD lẫn SSD.&lt;/li>
-&lt;li>Sequential write: chỉ ghi nối tiếp vào cuối file, không seek — HDD ~100s MB/s, SSD cao hơn.&lt;/li>
-&lt;/ul>
-&lt;p>Kafka chọn &lt;strong>log append-only&lt;/strong>: message mới luôn ghi vào &lt;em>cuối&lt;/em>, không sửa/chèn. Đây là lý do sâu xa Kafka không cho xóa/sửa message — ràng buộc có chủ đích để đổi lấy tốc độ.&lt;/p></description></item><item><title>Bài 10 — Kiến trúc thực chiến</title><link>https://thanhhv.github.io/series/10-kien-truc-thuc-chien/</link><pubDate>Tue, 23 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/10-kien-truc-thuc-chien/</guid><description>&lt;h2 id="outbox-pattern--giải-bài-toán-dual-write">Outbox Pattern — giải bài toán &amp;ldquo;dual write&amp;rdquo;&lt;/h2>
-&lt;p>Service order phải ghi vào &lt;strong>DB&lt;/strong> và bắn event lên &lt;strong>Kafka&lt;/strong>. Làm tuần tự thì luôn có khe hở:&lt;/p>
-&lt;pre tabindex="0">&lt;code>ghi DB OK -&amp;gt; bắn Kafka FAIL =&amp;gt; DB có đơn, hệ thống khác không biết (lệch)
-bắn Kafka OK -&amp;gt; ghi DB FAIL =&amp;gt; event bắn rồi nhưng đơn không tồn tại (ma)
-&lt;/code>&lt;/pre>&lt;p>Hai hệ thống khác nhau không chia sẻ transaction → không thể &amp;ldquo;cùng thành công hoặc cùng thất bại&amp;rdquo; trực tiếp.&lt;/p></description></item><item><title>Bài 9 — Performance Tuning</title><link>https://thanhhv.github.io/series/09-performance-tuning/</link><pubDate>Sat, 20 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/09-performance-tuning/</guid><description>&lt;blockquote>
-&lt;p>Mọi tinh chỉnh là đánh đổi giữa &lt;strong>throughput&lt;/strong> (số lượng/giây), &lt;strong>latency&lt;/strong> (độ trễ mỗi message), và &lt;strong>durability&lt;/strong>. Không có nút &amp;ldquo;nhanh hơn&amp;rdquo; miễn phí.&lt;/p>&lt;/blockquote>
-&lt;h2 id="phía-producer--gom-để-nhanh">Phía Producer — gom để nhanh&lt;/h2>
-&lt;p>&lt;strong>&lt;code>linger.ms&lt;/code> + &lt;code>batch.size&lt;/code>&lt;/strong> (cặp quan trọng nhất). Mặc định &lt;code>linger.ms=0&lt;/code> = gửi ngay từng message → nhiều request nhỏ. Tăng &lt;code>linger.ms&lt;/code> (5–20ms) cho producer chờ gom batch rồi gửi một lần. &lt;code>batch.size&lt;/code> (mặc định 16KB) là trần mỗi batch.&lt;/p></description></item><item><title>Bài 8 — Schema Registry &amp; Schema Evolution</title><link>https://thanhhv.github.io/series/08-schema-registry-evolution/</link><pubDate>Wed, 17 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/08-schema-registry-evolution/</guid><description>&lt;h2 id="vấn-đề">Vấn đề&lt;/h2>
-&lt;p>Topic được nhiều team ghi/đọc. Một ngày team A đổi cấu trúc message (đổi tên field, đổi kiểu, bỏ field) → consumer của B, C, D &lt;strong>vỡ ngay&lt;/strong>, thường lúc 2h sáng. JSON tự do có 3 điểm yếu ở quy mô lớn: không có schema bắt buộc, tốn băng thông (lặp tên field), không kiểm soát thay đổi.&lt;/p>
-&lt;h2 id="schema-registry-hoạt-động-thế-nào">Schema Registry hoạt động thế nào&lt;/h2>
-&lt;p>Service riêng lưu và đánh version cho schema:&lt;/p></description></item><item><title>Bài 7 — Retry, Backoff &amp; Dead Letter Queue</title><link>https://thanhhv.github.io/series/07-retry-backoff-dlq/</link><pubDate>Sun, 14 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/07-retry-backoff-dlq/</guid><description>&lt;blockquote>
-&lt;p>Triết lý: &lt;strong>fail gracefully, đừng fail catastrophically.&lt;/strong> Một message hỏng là chuyện bình thường; mục tiêu là nó &lt;strong>không kéo cả partition/hệ thống sập&lt;/strong>.&lt;/p>&lt;/blockquote>
-&lt;h2 id="hai-loại-lỗi--phân-biệt-được-mới-xử-lý-đúng">Hai loại lỗi — phân biệt được mới xử lý đúng&lt;/h2>
-&lt;ul>
-&lt;li>&lt;strong>Tạm thời (transient):&lt;/strong> DB timeout, API phụ thuộc down, mạng chập chờn. → &lt;strong>retry&lt;/strong> sẽ qua.&lt;/li>
-&lt;li>&lt;strong>Vĩnh viễn (permanent / &amp;ldquo;poison&amp;rdquo;):&lt;/strong> sai format, thiếu field, vi phạm nghiệp vụ. → retry vô ích, đẩy đi chỗ khác.&lt;/li>
-&lt;/ul>
-&lt;p>Ánh xạ HTTP status hữu ích:&lt;/p></description></item><item><title>Bài 6 — Idempotent Producer &amp; Transactions (Exactly-Once)</title><link>https://thanhhv.github.io/series/06-transactions-exactly-once/</link><pubDate>Fri, 12 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/06-transactions-exactly-once/</guid><description>&lt;h2 id="vấn-đề-1--duplicate-do-producer-retry">Vấn đề 1 — Duplicate do PRODUCER retry&lt;/h2>
-&lt;p>Producer gửi message, broker &lt;strong>đã ghi thành công&lt;/strong> nhưng gói ACK &lt;strong>rớt trên đường về&lt;/strong>. Producer tưởng thất bại → retry → broker ghi &lt;strong>lần hai&lt;/strong>. Message nằm 2 lần trong log dù bạn làm đúng mọi thứ. (Khác với duplicate phía consumer ở Bài 4.)&lt;/p>
-&lt;h3 id="giải-pháp--idempotent-producer">Giải pháp — Idempotent Producer&lt;/h3>
-&lt;p>&lt;code>enable.idempotence=true&lt;/code>: broker cấp mỗi producer một &lt;strong>PID&lt;/strong> và mỗi message một &lt;strong>sequence number&lt;/strong> theo partition. Retry mang sequence đã thấy → broker &lt;strong>lặng lẽ bỏ qua&lt;/strong>. Thêm bảo đảm thứ tự không bị đảo khi retry.&lt;/p></description></item><item><title>Bài 5 — Replication, acks &amp; ISR</title><link>https://thanhhv.github.io/series/05-replication-acks-isr/</link><pubDate>Wed, 10 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/05-replication-acks-isr/</guid><description>&lt;h2 id="replica-leader-follower">Replica, Leader, Follower&lt;/h2>
-&lt;p>Mỗi partition có N bản sao (replication-factor):&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>1 leader&lt;/strong>: phục vụ mọi đọc/ghi của client.&lt;/li>
-&lt;li>&lt;strong>N-1 follower&lt;/strong>: liên tục kéo dữ liệu từ leader để bắt kịp. Ẩn với client.&lt;/li>
-&lt;/ul>
-&lt;p>Client &lt;strong>chỉ làm việc với leader&lt;/strong>. Follower chỉ để chống mất dữ liệu khi broker chứa leader chết.&lt;/p>
-&lt;h2 id="isr-in-sync-replicas">ISR (In-Sync Replicas)&lt;/h2>
-&lt;p>Tập các replica &lt;strong>đang theo kịp&lt;/strong> leader (gồm cả leader). Follower tụt quá &lt;code>replica.lag.time.max.ms&lt;/code> (~30s) bị &lt;strong>đá khỏi ISR&lt;/strong>. Khi leader chết, Kafka chỉ bầu leader mới &lt;strong>từ trong ISR&lt;/strong> (vì chỉ chúng chắc chắn có đủ dữ liệu đã xác nhận).&lt;/p></description></item><item><title>Bài 4 — Offset &amp; Delivery Semantics</title><link>https://thanhhv.github.io/series/04-offset-delivery-semantics/</link><pubDate>Mon, 08 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/04-offset-delivery-semantics/</guid><description>&lt;blockquote>
-&lt;p>Bài quan trọng nhất về độ tin cậy. Hầu hết bug &amp;ldquo;mất message&amp;rdquo; / &amp;ldquo;xử lý trùng&amp;rdquo; ở production nằm ở đây.&lt;/p>&lt;/blockquote>
-&lt;h2 id="offset-commit-là-gì">Offset commit là gì?&lt;/h2>
-&lt;p>Consumer cần báo cho Kafka biết đã xử lý &lt;strong>đến đâu&lt;/strong>, để lần sau (hoặc consumer khác sau rebalance) đọc tiếp đúng chỗ. Việc đó gọi là &lt;strong>commit offset&lt;/strong>, lưu trong topic nội bộ &lt;code>__consumer_offsets&lt;/code>.&lt;/p>
-&lt;p>Mấu chốt sinh ra mọi vấn đề: &lt;strong>xử lý message&lt;/strong> và &lt;strong>commit offset&lt;/strong> là hai hành động riêng biệt, giữa chúng consumer có thể crash. Thứ tự hai hành động này quyết định &amp;ldquo;delivery semantics&amp;rdquo;.&lt;/p></description></item><item><title>Bài 3 — Partitioning &amp; Đảm bảo thứ tự</title><link>https://thanhhv.github.io/series/03-partitioning-thu-tu/</link><pubDate>Sat, 06 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/03-partitioning-thu-tu/</guid><description>&lt;h2 id="producer-chọn-partition-thế-nào">Producer chọn partition thế nào?&lt;/h2>
-&lt;ul>
-&lt;li>&lt;strong>Có key:&lt;/strong> &lt;code>partition = hash(key) % số_partition&lt;/code>. Cùng key + số partition không đổi → luôn cùng partition → giữ thứ tự.&lt;/li>
-&lt;li>&lt;strong>Không key:&lt;/strong> rải đều (sticky/round-robin), tối ưu throughput nhưng &lt;strong>không đảm bảo thứ tự&lt;/strong>.&lt;/li>
-&lt;/ul>
-&lt;h2 id="ba-cạm-bẫy-quanh-partitioning">Ba cạm bẫy quanh partitioning&lt;/h2>
-&lt;h3 id="bẫy-1--hàm-hash-khác-nhau-giữa-các-client">Bẫy 1 — Hàm hash khác nhau giữa các client&lt;/h3>
-&lt;p>Client &lt;strong>Java&lt;/strong> dùng &lt;strong>murmur2&lt;/strong>; &lt;strong>librdkafka&lt;/strong> (confluent-kafka-go, Python, C…) mặc định dùng thuật toán khác (&lt;code>consistent_random&lt;/code>, nền CRC32). → &lt;strong>Cùng một key, producer Java và producer Go có thể đẩy vào hai partition khác nhau!&lt;/strong>&lt;/p></description></item><item><title>Bài 2 — Consumer Group &amp; Rebalance</title><link>https://thanhhv.github.io/series/02-consumer-group-rebalance/</link><pubDate>Wed, 03 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/02-consumer-group-rebalance/</guid><description>&lt;h2 id="khái-niệm">Khái niệm&lt;/h2>
-&lt;p>&lt;strong>Consumer group&lt;/strong> là tập các consumer cùng &lt;code>group.id&lt;/code>, hợp sức tiêu thụ một topic. Kafka tự chia partition cho các thành viên — gọi là &lt;strong>partition assignment&lt;/strong>.&lt;/p>
-&lt;p>Quan hệ then chốt:&lt;/p>
-&lt;pre tabindex="0">&lt;code>Trong 1 group: 1 partition -&amp;gt; tối đa 1 consumer (KHÔNG phải 1-n)
-1 consumer -&amp;gt; có thể N partition
-Trên nhiều group: 1 partition -&amp;gt; N consumer (mỗi group 1 đứa) (pub/sub)
-&lt;/code>&lt;/pre>&lt;p>Hệ quả thực chiến: &lt;strong>số consumer hữu ích tối đa trong một group = số partition.&lt;/strong> Topic 3 partition, group 5 consumer → 3 đứa làm việc, 2 đứa ngồi không. &lt;strong>Partition là trần scale của consumer&lt;/strong> — muốn xử lý song song hơn phải tăng partition trước.&lt;/p></description></item><item><title>Bài 1 — Topic, Partition, Producer &amp; Consumer</title><link>https://thanhhv.github.io/series/01-topic-partition-producer-consumer/</link><pubDate>Mon, 01 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/01-topic-partition-producer-consumer/</guid><description>&lt;h2 id="khái-niệm-nền-tảng">Khái niệm nền tảng&lt;/h2>
-&lt;p>&lt;strong>Topic&lt;/strong> là một &amp;ldquo;kênh&amp;rdquo; logic chứa message, ví dụ &lt;code>orders&lt;/code> chứa các sự kiện đơn hàng.&lt;/p>
-&lt;p>&lt;strong>Partition&lt;/strong> là điểm mấu chốt phân biệt Kafka với hàng đợi thường. Mỗi topic được chia thành nhiều partition. Mỗi partition là một &lt;strong>log ghi nối tiếp (append-only)&lt;/strong>: message có thứ tự tuyệt đối trong partition, và mỗi message mang một số thứ tự gọi là &lt;strong>offset&lt;/strong> (0, 1, 2, …).&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Series on Thanh HV&#39;s Blog</title>
+    <link>http://localhost:49754/series/</link>
+    <description>Recent content in Series on Thanh HV&#39;s Blog</description>
+    <generator>Hugo -- 0.146.7</generator>
+    <language>en-us</language>
+    <lastBuildDate></lastBuildDate>
+    <atom:link href="http://localhost:49754/series/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
