@@ -1,6 +1,6 @@
 +++
 title = "Bài 3 — Partitioning & Đảm bảo thứ tự"
-date = "2026-06-06T08:00:00+07:00"
+date = "2026-05-06T08:00:00+07:00"
 draft = false
 tags = ["backend", "kafka"]
 series = ["Kafka Thực Chiến"]

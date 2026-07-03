@@ -1,6 +1,6 @@
 +++
 title = "Bài 6 — Idempotent Producer & Transactions (Exactly-Once)"
-date = "2026-06-12T08:00:00+07:00"
+date = "2026-05-12T08:00:00+07:00"
 draft = false
 tags = ["backend", "kafka"]
 series = ["Kafka Thực Chiến"]

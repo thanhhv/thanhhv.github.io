@@ -1,6 +1,6 @@
 +++
 title = "Bài 10 — Kiến trúc thực chiến"
-date = "2026-06-23T08:00:00+07:00"
+date = "2026-05-23T08:00:00+07:00"
 draft = false
 tags = ["backend", "kafka"]
 series = ["Kafka Thực Chiến"]

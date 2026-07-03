@@ -1,6 +1,6 @@
 +++
 title = "Bài 2 — Consumer Group & Rebalance"
-date = "2026-06-03T08:00:00+07:00"
+date = "2026-05-03T08:00:00+07:00"
 draft = false
 tags = ["backend", "kafka"]
 series = ["Kafka Thực Chiến"]
