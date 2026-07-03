@@ -1,4 +1,170 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Thanh HV's Blog</title><link>https://thanhhv.github.io/</link><description>Recent content on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Thu, 02 Jul 2026 14:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 6 — Kiến Trúc Thực Tế</title><link>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</link><pubDate>Thu, 02 Jul 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</guid><description>&lt;h1 id="kiến-trúc-thực-tế-chọn-database-cho-12-loại-hệ-thống">Kiến trúc thực tế: chọn database cho 12 loại hệ thống&lt;/h1>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Thanh HV's Blog</title><link>https://thanhhv.github.io/</link><description>Recent content on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Fri, 03 Jul 2026 16:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 9 — System Design Case Studies</title><link>https://thanhhv.github.io/series/backend-interview/09-system-design-case-studies/</link><pubDate>Fri, 03 Jul 2026 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/09-system-design-case-studies/</guid><description>&lt;h1 id="system-design-case-studies">System Design Case Studies&lt;/h1>
+&lt;blockquote>
+&lt;p>Các chương trước dạy &lt;strong>nguyên liệu&lt;/strong> (cache, queue, shard, replication&amp;hellip;). Chương này dạy cách &lt;strong>nấu&lt;/strong> — dẫn dắt một buổi system design 45 phút end-to-end. Khác biệt cốt lõi: system design không kiểm tra bạn biết bao nhiêu công nghệ, mà kiểm tra bạn &lt;strong>dẫn dắt sự mơ hồ thành một thiết kế có cơ sở&lt;/strong> thế nào. Interviewer đóng vai khách hàng mơ hồ; bạn phải hỏi đúng, ước lượng, vẽ, rồi đào sâu.&lt;/p></description></item><item><title>Bài 8 — Networking, Linux &amp; Kubernetes</title><link>https://thanhhv.github.io/series/backend-interview/08-networking-os-container/</link><pubDate>Fri, 03 Jul 2026 15:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/08-networking-os-container/</guid><description>&lt;h1 id="linuxos--containerkubernetes">Linux/OS &amp;amp; Container/Kubernetes&lt;/h1>
+&lt;hr>
+&lt;h2 id="câu-1--fundamental--senior-tcp-hoạt-động-thế-nào-time_wait-là-gì-và-tại-sao-nó-làm-cạn-kiệt-kết-nối">Câu 1 — [Fundamental → Senior] TCP hoạt động thế nào? TIME_WAIT là gì và tại sao nó làm cạn kiệt kết nối?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Trình bày TCP 3-way handshake và connection lifecycle. TIME_WAIT là gì, tại sao tồn tại, và tại sao nó gây sự cố &amp;lsquo;cannot assign requested address&amp;rsquo; trên production?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Kiến thức mạng nền tảng — nền của mọi thứ backend, và là nơi phân biệt người hiểu sâu.&lt;/li>
+&lt;li>Nối được lý thuyết (TCP states) với sự cố thật (port exhaustion, connection pool).&lt;/li>
+&lt;li>Hiểu tại sao connection reuse (keep-alive, pooling) quan trọng.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;TCP thiết lập kết nối qua 3-way handshake (SYN → SYN-ACK → ACK) để hai bên đồng bộ sequence number và xác nhận cả hai gửi/nhận được. Đóng kết nối qua 4 bước (FIN/ACK mỗi chiều). Bên &lt;strong>chủ động đóng&lt;/strong> rơi vào &lt;strong>TIME_WAIT&lt;/strong> ~2×MSL (thường 60s trên Linux) trước khi giải phóng hoàn toàn — để nuốt các packet lạc đường của kết nối cũ và đảm bảo bên kia nhận được ACK cuối. Sự cố: một service mở nhiều kết nối ngắn ra ngoài (mỗi request một connection tới upstream) và chủ động đóng → hàng chục nghìn socket kẹt TIME_WAIT chiếm hết ephemeral port (~28k mặc định) → &amp;lsquo;cannot assign requested address&amp;rsquo;, không mở được kết nối mới dù CPU/RAM rảnh. Fix gốc: &lt;strong>tái sử dụng kết nối&lt;/strong> (keep-alive, connection pool) để đừng tạo-hủy liên tục.&amp;rdquo;&lt;/p></description></item><item><title>Bài 7 — Security &amp; Authentication</title><link>https://thanhhv.github.io/series/backend-interview/07-security-auth/</link><pubDate>Fri, 03 Jul 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/07-security-auth/</guid><description>&lt;h1 id="security--authentication">Security &amp;amp; Authentication&lt;/h1>
+&lt;hr>
+&lt;h2 id="câu-1--fundamental--senior-jwt-vs-session-khác-nhau-bản-chất-ở-đâu-và-tại-sao-thu-hồi-jwt-lại-khó">Câu 1 — [Fundamental → Senior] JWT vs Session: khác nhau bản chất ở đâu, và tại sao thu hồi JWT lại khó?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;So sánh session-based auth và JWT. JWT có ưu điểm stateless — nhưng làm sao anh thu hồi (revoke) một JWT trước khi nó hết hạn?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu bản chất stateful vs stateless của hai mô hình, không chỉ &amp;ldquo;JWT hiện đại hơn&amp;rdquo;.&lt;/li>
+&lt;li>Nhận ra ưu điểm lớn nhất của JWT (stateless) chính là nhược điểm lớn nhất (không revoke được) — câu bẫy kinh điển.&lt;/li>
+&lt;li>Kinh nghiệm thật với refresh token, token rotation, và các đánh đổi.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Session: server lưu trạng thái đăng nhập (session store — Redis/DB), client chỉ giữ session ID; muốn logout/revoke thì xóa ở server — tức thời, nhưng mỗi request phải tra store (stateful, cần chia sẻ store khi scale). JWT: token tự chứa thông tin + chữ ký, server chỉ verify chữ ký không cần tra store — stateless, scale ngang dễ, nhưng &lt;strong>không revoke được&lt;/strong> vì server không giữ trạng thái gì để xóa. Token đã phát là hợp lệ tới khi hết hạn. Giải pháp thực dụng: access token sống ngắn (5–15 phút) + refresh token sống dài lưu ở server (revoke được); muốn revoke ngay thì thêm blocklist — nhưng blocklist khiến JWT không còn stateless nữa, đó chính là nghịch lý.&amp;rdquo;&lt;/p></description></item><item><title>Bài 6 — Architecture &amp; System Design</title><link>https://thanhhv.github.io/series/backend-interview/06-architecture-system-design/</link><pubDate>Fri, 03 Jul 2026 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/06-architecture-system-design/</guid><description>&lt;h1 id="architecture--system-design">Architecture &amp;amp; System Design&lt;/h1>
+&lt;hr>
+&lt;h2 id="câu-1--intermediate--senior-clean-architecture--hexagonal-architecture-giải-quyết-vấn-đề-gì-và-khi-nào-là-over-engineering">Câu 1 — [Intermediate → Senior] Clean Architecture / Hexagonal Architecture: giải quyết vấn đề gì và khi nào là over-engineering?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Trình bày Clean/Hexagonal Architecture. Nó giải quyết vấn đề gì thật sự, và khi nào áp dụng nó là sai lầm?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu nguyên lý gốc (dependency rule) thay vì thuộc tên các vòng tròn.&lt;/li>
+&lt;li>Đủ trưởng thành để nói về mặt trái — ứng viên chỉ ca ngợi pattern là red flag.&lt;/li>
+&lt;li>Kinh nghiệm thật: đã thấy cả codebase được cứu lẫn codebase bị giết bởi nó.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Cả hai chung một nguyên lý: &lt;strong>business logic không được phụ thuộc vào chi tiết hạ tầng&lt;/strong> — dependency chỉ theo một chiều, từ ngoài (DB, HTTP, framework) vào trong (domain), thông qua interface (port) do domain định nghĩa và adapter hiện thực ở ngoài. Lợi ích thật: test business logic không cần DB, đổi hạ tầng không đụng domain, và quan trọng nhất — buộc dev phát biểu nghiệp vụ tách khỏi kỹ thuật. Là over-engineering khi: service CRUD mỏng không có nghiệp vụ (interface + 4 layer để bọc một câu SELECT), hoặc team áp dụng máy móc đủ vòng tròn mà không hiểu mục đích — abstraction có giá, chỉ trả khi domain đủ phức tạp để hoàn vốn.&amp;rdquo;&lt;/p></description></item><item><title>Bài 5 — Message Queue &amp; API</title><link>https://thanhhv.github.io/series/backend-interview/05-message-queue-api/</link><pubDate>Fri, 03 Jul 2026 12:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/05-message-queue-api/</guid><description>&lt;h1 id="message-queue--api">Message Queue &amp;amp; API&lt;/h1>
+&lt;hr>
+&lt;h1 id="phần-a--message-queue">PHẦN A — MESSAGE QUEUE&lt;/h1>
+&lt;h2 id="câu-1--intermediate--senior-kafka-hoạt-động-thế-nào-tại-sao-nó-đạt-throughput-hàng-triệu-messagegiây">Câu 1 — [Intermediate → Senior] Kafka hoạt động thế nào? Tại sao nó đạt throughput hàng triệu message/giây?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Kiến trúc Kafka: topic, partition, consumer group, offset. Điều gì cho phép Kafka nhanh như vậy trên phần cứng thường?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu Kafka là &lt;strong>distributed log&lt;/strong>, không phải message queue truyền thống — khác biệt định hình mọi tính chất.&lt;/li>
+&lt;li>Giải thích được nguồn hiệu năng bằng cơ chế cụ thể (sequential I/O, zero-copy, batching), không phải &amp;ldquo;Kafka nhanh vì được thiết kế tốt&amp;rdquo;.&lt;/li>
+&lt;li>Nắm ordering, rebalance, lag — các khái niệm vận hành hằng ngày.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Kafka là log phân tán: topic chia thành partition, mỗi partition là file log append-only có thứ tự; message không bị xóa khi đọc mà giữ theo retention; consumer tự quản offset của mình. Consumer group chia partition cho các consumer — scale đọc bằng cách thêm consumer tới tối đa = số partition. Nhanh nhờ: ghi/đọc &lt;strong>tuần tự&lt;/strong> trên đĩa (nhanh gần bằng RAM, tận dụng page cache OS), &lt;strong>zero-copy&lt;/strong> (sendfile — dữ liệu từ page cache thẳng ra socket không qua user space), &lt;strong>batching + nén&lt;/strong> cả lô, và broker cực kỳ &amp;rsquo;ngu&amp;rsquo; — không track trạng thái từng message như RabbitMQ, chỉ là cái log có index.&amp;rdquo;&lt;/p></description></item><item><title>Bài 4 — MongoDB, Redis &amp; ClickHouse</title><link>https://thanhhv.github.io/series/backend-interview/04-mongodb-redis-clickhouse/</link><pubDate>Fri, 03 Jul 2026 11:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/04-mongodb-redis-clickhouse/</guid><description>&lt;h1 id="mongodb-redis-clickhouse">MongoDB, Redis, ClickHouse&lt;/h1>
+&lt;hr>
+&lt;h1 id="phần-a--mongodb">PHẦN A — MONGODB&lt;/h1>
+&lt;h2 id="câu-1--intermediate--senior-replica-set-hoạt-động-thế-nào-điều-gì-xảy-ra-khi-failover">Câu 1 — [Intermediate → Senior] Replica Set hoạt động thế nào? Điều gì xảy ra khi failover?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Trình bày cơ chế replica set của MongoDB: bầu chọn, oplog, và các mức write/read concern. Khi primary chết, dữ liệu có thể mất không?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu consensus/election thực tế (Raft-like) chứ không chỉ &amp;ldquo;có 3 node tự failover&amp;rdquo;.&lt;/li>
+&lt;li>Nắm write concern / read concern — nơi ẩn chứa các quyết định mất-hay-không-mất dữ liệu.&lt;/li>
+&lt;li>Kinh nghiệm với rollback sau failover — thứ ít người biết cho tới khi gặp.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Replica set gồm 1 primary nhận ghi và các secondary kéo &lt;strong>oplog&lt;/strong> (log thao tác idempotent) để replay. Election dựa trên giao thức giống Raft: cần đa số phiếu, node có oplog mới nhất được ưu tiên; vì cần majority nên phải có số node lẻ hoặc arbiter. Có mất dữ liệu không phụ thuộc &lt;strong>write concern&lt;/strong>: &lt;code>w:1&lt;/code> (ack từ primary) — ghi chưa kịp replicate sẽ bị &lt;strong>rollback&lt;/strong> khi failover; &lt;code>w:majority&lt;/code> — an toàn qua failover, đổi lấy latency. Read concern và read preference quyết định bạn đọc thấy gì và từ đâu.&amp;rdquo;&lt;/p></description></item><item><title>Bài 3 — PostgreSQL</title><link>https://thanhhv.github.io/series/backend-interview/03-postgresql/</link><pubDate>Fri, 03 Jul 2026 10:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/03-postgresql/</guid><description>&lt;h1 id="postgresql">PostgreSQL&lt;/h1>
+&lt;hr>
+&lt;h2 id="câu-1--fundamental--senior-tại-sao-postgresql-cần-mvcc-nó-hoạt-động-thế-nào-và-cái-giá-phải-trả-là-gì">Câu 1 — [Fundamental → Senior] Tại sao PostgreSQL cần MVCC? Nó hoạt động thế nào và cái giá phải trả là gì?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Tại sao PostgreSQL cần MVCC? Trình bày cơ chế và hệ quả của nó.&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu bài toán gốc: concurrency control — reader và writer tranh chấp thế nào.&lt;/li>
+&lt;li>Hiểu cơ chế bên trong (tuple version, xmin/xmax, snapshot) chứ không chỉ khẩu hiệu &amp;ldquo;reader không chặn writer&amp;rdquo;.&lt;/li>
+&lt;li>Kinh nghiệm production với hệ quả: bloat, vacuum, wraparound.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Không có MVCC, để đọc dữ liệu nhất quán, reader phải lock chặn writer và ngược lại — throughput sụp đổ khi mixed workload. MVCC giải quyết bằng cách: UPDATE/DELETE không ghi đè mà tạo &lt;strong>phiên bản tuple mới&lt;/strong>; mỗi tuple mang xmin/xmax (transaction tạo/xóa nó); mỗi transaction cầm một snapshot và chỉ &amp;rsquo;nhìn thấy&amp;rsquo; các version phù hợp snapshot của mình. Kết quả: reader không bao giờ chặn writer. Cái giá: các version chết tích tụ thành bloat, cần VACUUM dọn dẹp, và transaction ID 32-bit cần chống wraparound — đây là nguồn của phần lớn sự cố vận hành Postgres.&amp;rdquo;&lt;/p></description></item><item><title>Bài 2 — Node.js Internals</title><link>https://thanhhv.github.io/series/backend-interview/02-nodejs/</link><pubDate>Fri, 03 Jul 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/02-nodejs/</guid><description>&lt;h1 id="nodejs-internals">Node.js Internals&lt;/h1>
+&lt;hr>
+&lt;h2 id="câu-1--fundamental--senior-event-loop-hoạt-động-thế-nào-tại-sao-node-single-thread-mà-vẫn-xử-lý-được-hàng-chục-nghìn-kết-nối">Câu 1 — [Fundamental → Senior] Event Loop hoạt động thế nào? Tại sao Node single-thread mà vẫn xử lý được hàng chục nghìn kết nối?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Trình bày các phase của event loop. Node.js &amp;lsquo;single-threaded&amp;rsquo; — điều đó đúng đến mức nào?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu mô hình thực thi nền tảng — mọi bug hiệu năng Node đều quy về đây.&lt;/li>
+&lt;li>Phân biệt được microtask vs macrotask — nguồn của các bug thứ tự thực thi.&lt;/li>
+&lt;li>Biết giới hạn của mô hình: CPU-bound giết Node như thế nào.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Node chạy JavaScript trên một thread duy nhất, nhưng I/O được libuv ủy quyền cho kernel (epoll/kqueue) hoặc thread pool (mặc định 4 thread cho file I/O, DNS, crypto). Event loop quay qua các phase: timers → pending callbacks → poll (chờ I/O) → check (setImmediate) → close. Giữa mỗi callback, toàn bộ microtask queue (promise, &lt;code>process.nextTick&lt;/code>) được xả sạch. Node xử lý được C10K vì thread không bao giờ chờ I/O — nó chỉ chạy callback. Điểm chết: một callback tính toán nặng chặn toàn bộ loop, mọi request khác đứng hình.&amp;rdquo;&lt;/p></description></item><item><title>Bài 1 — Golang Internals</title><link>https://thanhhv.github.io/series/backend-interview/01-golang/</link><pubDate>Fri, 03 Jul 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/01-golang/</guid><description>&lt;h1 id="golang-internals">Golang Internals&lt;/h1>
+&lt;hr>
+&lt;h2 id="câu-1--fundamental--senior-goroutine-khác-gì-os-thread-giải-thích-mô-hình-gpm">Câu 1 — [Fundamental → Senior] Goroutine khác gì OS thread? Giải thích mô hình GPM.&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Goroutine là gì, khác gì OS thread? Trình bày cách Go scheduler hoạt động (mô hình GPM).&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu cơ chế bên trong runtime, không chỉ dùng &lt;code>go func()&lt;/code> như hộp đen.&lt;/li>
+&lt;li>Phân biệt được user-space scheduling vs kernel scheduling.&lt;/li>
+&lt;li>Biết hệ quả thực tế: khi nào goroutine &amp;ldquo;rẻ&amp;rdquo;, khi nào nó gây ra sự cố.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Goroutine là đơn vị thực thi do Go runtime quản lý trong user space, stack khởi đầu ~2KB và co giãn được, chi phí tạo và context switch rẻ hơn OS thread hàng trăm lần. Runtime dùng mô hình GPM: G là goroutine, M là OS thread, P là logical processor giữ run queue. Scheduler multiplex hàng triệu G lên số ít M thông qua P (mặc định P = số CPU core). Nhờ đó Go xử lý được hàng trăm nghìn kết nối đồng thời mà không cần thread pool thủ công.&amp;rdquo;&lt;/p></description></item><item><title>Bài 0 — Giới Thiệu Series</title><link>https://thanhhv.github.io/series/backend-interview/00-introduction/</link><pubDate>Fri, 03 Jul 2026 07:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/00-introduction/</guid><description>&lt;h1 id="bộ-tài-liệu-ôn-phỏng-vấn-senior-backend-engineer">Bộ Tài Liệu Ôn Phỏng Vấn Senior Backend Engineer&lt;/h1>
+&lt;blockquote>
+&lt;p>Viết bởi góc nhìn của một Principal Software Architect đã phỏng vấn hàng trăm ứng viên Senior/Staff/Principal. Mục tiêu: không phải học thuộc đáp án, mà là &lt;strong>học cách tư duy&lt;/strong>.&lt;/p>&lt;/blockquote>
+&lt;h2 id="danh-sách-chương">Danh sách chương&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Chủ đề&lt;/th>
+&lt;th>Trọng tâm&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Golang Internals&lt;/td>
+&lt;td>GPM, Channel, GC, Escape Analysis, Concurrency Patterns&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Node.js Internals&lt;/td>
+&lt;td>Event Loop, Stream, Worker Thread, Memory Leak&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>PostgreSQL&lt;/td>
+&lt;td>MVCC, WAL, Vacuum, Isolation, Planner, Replication&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>MongoDB, Redis, ClickHouse&lt;/td>
+&lt;td>Replica Set, Sharding, Distributed Lock, MergeTree&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Message Queue &amp;amp; API&lt;/td>
+&lt;td>Kafka, RabbitMQ, SQS, NATS, REST/gRPC/GraphQL/WebSocket&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Architecture &amp;amp; System Design&lt;/td>
+&lt;td>DDD, Microservices, CQRS, Saga, HA, Multi-region, Observability&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Security &amp;amp; Authentication&lt;/td>
+&lt;td>JWT/Session, OAuth2/OIDC, OWASP, Password/Secrets, mTLS&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Networking, Linux/OS &amp;amp; K8s&lt;/td>
+&lt;td>TCP/TIME_WAIT, HTTP/2/3, TLS, epoll/OOM, Container, Probes, Deploy&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>System Design Case Studies&lt;/td>
+&lt;td>Framework 45&amp;rsquo;, Rate Limiter, URL Shortener, Notification, Payment&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="cấu-trúc-mỗi-câu-hỏi-11-mục">Cấu trúc mỗi câu hỏi (11 mục)&lt;/h2>
+&lt;ol>
+&lt;li>&lt;strong>Câu hỏi&lt;/strong> — kèm nhãn độ khó: &lt;code>Fundamental → Intermediate → Senior → Staff → Principal&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Interviewer muốn kiểm tra điều gì&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>Câu trả lời ngắn gọn (30 giây)&lt;/strong> — elevator answer&lt;/li>
+&lt;li>&lt;strong>Câu trả lời Senior Level (3–5 phút)&lt;/strong> — Problem → Why → How → Trade-off → Production&lt;/li>
+&lt;li>&lt;strong>Giải thích bản chất&lt;/strong> — first principles&lt;/li>
+&lt;li>&lt;strong>Trade-off&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>Ví dụ Production&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>Những câu trả lời chưa đủ tốt&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>Sai lầm phổ biến của ứng viên&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>Follow-up Questions&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>Liên hệ với Production&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;h2 id="cách-interviewer-thực-sự-tư-duy--đọc-kỹ-trước-khi-ôn">Cách interviewer thực sự tư duy — đọc kỹ trước khi ôn&lt;/h2>
+&lt;h3 id="1-interviewer-không-tìm-người-biết-đáp-án-họ-tìm-người-hiểu-hệ-quả">1. Interviewer không tìm người biết đáp án. Họ tìm người hiểu hệ quả.&lt;/h3>
+&lt;p>Khi tôi hỏi &amp;ldquo;Tại sao PostgreSQL cần MVCC?&amp;rdquo;, tôi không quan tâm bạn định nghĩa MVCC đúng hay không — Google làm được việc đó. Tôi quan tâm:&lt;/p></description></item><item><title>Bài 6 — Kiến Trúc Thực Tế</title><link>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</link><pubDate>Thu, 02 Jul 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</guid><description>&lt;h1 id="kiến-trúc-thực-tế-chọn-database-cho-12-loại-hệ-thống">Kiến trúc thực tế: chọn database cho 12 loại hệ thống&lt;/h1>
 &lt;blockquote>
 &lt;p>&lt;strong>Cách đọc:&lt;/strong> mỗi mục trả lời năm câu hỏi — chọn gì, vì sao, vì sao KHÔNG chọn phương án khác, scale/chi phí dự kiến, và rủi ro chính. Các con số là mức định cỡ (order of magnitude) để lập luận, không phải cam kết hiệu năng.&lt;/p>&lt;/blockquote>
 &lt;hr>

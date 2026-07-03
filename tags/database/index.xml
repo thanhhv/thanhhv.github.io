@@ -1,4 +1,29 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Database on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/database/</link><description>Recent content in Database on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Thu, 02 Jul 2026 14:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/database/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 6 — Kiến Trúc Thực Tế</title><link>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</link><pubDate>Thu, 02 Jul 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</guid><description>&lt;h1 id="kiến-trúc-thực-tế-chọn-database-cho-12-loại-hệ-thống">Kiến trúc thực tế: chọn database cho 12 loại hệ thống&lt;/h1>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Database on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/database/</link><description>Recent content in Database on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Fri, 03 Jul 2026 11:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/database/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 4 — MongoDB, Redis &amp; ClickHouse</title><link>https://thanhhv.github.io/series/backend-interview/04-mongodb-redis-clickhouse/</link><pubDate>Fri, 03 Jul 2026 11:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/04-mongodb-redis-clickhouse/</guid><description>&lt;h1 id="mongodb-redis-clickhouse">MongoDB, Redis, ClickHouse&lt;/h1>
+&lt;hr>
+&lt;h1 id="phần-a--mongodb">PHẦN A — MONGODB&lt;/h1>
+&lt;h2 id="câu-1--intermediate--senior-replica-set-hoạt-động-thế-nào-điều-gì-xảy-ra-khi-failover">Câu 1 — [Intermediate → Senior] Replica Set hoạt động thế nào? Điều gì xảy ra khi failover?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Trình bày cơ chế replica set của MongoDB: bầu chọn, oplog, và các mức write/read concern. Khi primary chết, dữ liệu có thể mất không?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu consensus/election thực tế (Raft-like) chứ không chỉ &amp;ldquo;có 3 node tự failover&amp;rdquo;.&lt;/li>
+&lt;li>Nắm write concern / read concern — nơi ẩn chứa các quyết định mất-hay-không-mất dữ liệu.&lt;/li>
+&lt;li>Kinh nghiệm với rollback sau failover — thứ ít người biết cho tới khi gặp.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Replica set gồm 1 primary nhận ghi và các secondary kéo &lt;strong>oplog&lt;/strong> (log thao tác idempotent) để replay. Election dựa trên giao thức giống Raft: cần đa số phiếu, node có oplog mới nhất được ưu tiên; vì cần majority nên phải có số node lẻ hoặc arbiter. Có mất dữ liệu không phụ thuộc &lt;strong>write concern&lt;/strong>: &lt;code>w:1&lt;/code> (ack từ primary) — ghi chưa kịp replicate sẽ bị &lt;strong>rollback&lt;/strong> khi failover; &lt;code>w:majority&lt;/code> — an toàn qua failover, đổi lấy latency. Read concern và read preference quyết định bạn đọc thấy gì và từ đâu.&amp;rdquo;&lt;/p></description></item><item><title>Bài 3 — PostgreSQL</title><link>https://thanhhv.github.io/series/backend-interview/03-postgresql/</link><pubDate>Fri, 03 Jul 2026 10:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/03-postgresql/</guid><description>&lt;h1 id="postgresql">PostgreSQL&lt;/h1>
+&lt;hr>
+&lt;h2 id="câu-1--fundamental--senior-tại-sao-postgresql-cần-mvcc-nó-hoạt-động-thế-nào-và-cái-giá-phải-trả-là-gì">Câu 1 — [Fundamental → Senior] Tại sao PostgreSQL cần MVCC? Nó hoạt động thế nào và cái giá phải trả là gì?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Tại sao PostgreSQL cần MVCC? Trình bày cơ chế và hệ quả của nó.&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu bài toán gốc: concurrency control — reader và writer tranh chấp thế nào.&lt;/li>
+&lt;li>Hiểu cơ chế bên trong (tuple version, xmin/xmax, snapshot) chứ không chỉ khẩu hiệu &amp;ldquo;reader không chặn writer&amp;rdquo;.&lt;/li>
+&lt;li>Kinh nghiệm production với hệ quả: bloat, vacuum, wraparound.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Không có MVCC, để đọc dữ liệu nhất quán, reader phải lock chặn writer và ngược lại — throughput sụp đổ khi mixed workload. MVCC giải quyết bằng cách: UPDATE/DELETE không ghi đè mà tạo &lt;strong>phiên bản tuple mới&lt;/strong>; mỗi tuple mang xmin/xmax (transaction tạo/xóa nó); mỗi transaction cầm một snapshot và chỉ &amp;rsquo;nhìn thấy&amp;rsquo; các version phù hợp snapshot của mình. Kết quả: reader không bao giờ chặn writer. Cái giá: các version chết tích tụ thành bloat, cần VACUUM dọn dẹp, và transaction ID 32-bit cần chống wraparound — đây là nguồn của phần lớn sự cố vận hành Postgres.&amp;rdquo;&lt;/p></description></item><item><title>Bài 6 — Kiến Trúc Thực Tế</title><link>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</link><pubDate>Thu, 02 Jul 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</guid><description>&lt;h1 id="kiến-trúc-thực-tế-chọn-database-cho-12-loại-hệ-thống">Kiến trúc thực tế: chọn database cho 12 loại hệ thống&lt;/h1>
 &lt;blockquote>
 &lt;p>&lt;strong>Cách đọc:&lt;/strong> mỗi mục trả lời năm câu hỏi — chọn gì, vì sao, vì sao KHÔNG chọn phương án khác, scale/chi phí dự kiến, và rủi ro chính. Các con số là mức định cỡ (order of magnitude) để lập luận, không phải cam kết hiệu năng.&lt;/p>&lt;/blockquote>
 &lt;hr>
