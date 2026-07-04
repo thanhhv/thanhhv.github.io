@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Infrastructure &amp; Networking on Thanh HV's Blog</title><link>https://thanhhv.github.io/series/infrastructure-networking/</link><description>Recent content in Infrastructure &amp; Networking on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Sun, 01 Feb 2026 17:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/series/infrastructure-networking/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 11 — Kiến Trúc Thực Tế</title><link>https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/</link><pubDate>Sun, 01 Feb 2026 17:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/</guid><description>&lt;h1 id="module-11--kiến-trúc-thực-tế-các-hệ-thống-lớn-được-xây-thế-nào-và-vì-sao">Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao&lt;/h1>
+&lt;blockquote>
+&lt;p>Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là &lt;strong>chuỗi suy luận từ workload ra kiến trúc&lt;/strong>.&lt;/p></description></item><item><title>Bài 10 — Security cho Backend Systems</title><link>https://thanhhv.github.io/series/infrastructure-networking/10-security/</link><pubDate>Sun, 01 Feb 2026 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/10-security/</guid><description>&lt;h1 id="module-10--security-cho-backend-systems">Module 10 — Security cho Backend Systems&lt;/h1>
+&lt;blockquote>
+&lt;p>Nguyên tắc chi phối toàn module: &lt;strong>defense in depth&lt;/strong> (nhiều lớp — vì mỗi lớp SẼ có lỗ) và &lt;strong>least privilege&lt;/strong> (mọi thứ chỉ được quyền tối thiểu — để khi bị xuyên, blast radius nhỏ nhất). Security không phải tính năng thêm sau; nó là thuộc tính kiến trúc như latency.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-authentication--authorization-tlsmtls-jwt-oauth2">1. Authentication &amp;amp; Authorization: TLS/mTLS, JWT, OAuth2&lt;/h2>
+&lt;h3 id="mtls--máy-xác-thực-máy">mTLS — máy xác thực máy&lt;/h3>
+&lt;p>TLS thường: client xác thực server (module 01). &lt;strong>mTLS&lt;/strong>: cả hai chiều — client cũng trình certificate. Đây là nền của &lt;strong>zero-trust nội bộ&lt;/strong>: không tin &amp;ldquo;vì cùng mạng nội bộ&amp;rdquo; (perimeter model chết khi một máy bên trong bị chiếm — kẻ tấn công di chuyển ngang tự do). Vấn đề thật của mTLS không phải crypto mà là &lt;strong>vận hành vòng đời cert&lt;/strong>: cấp phát, xoay ngắn hạn, thu hồi cho hàng nghìn service. Làm tay = bất khả thi; đây chính là lý do dùng service mesh (Istio/Linkerd tự động toàn bộ: SPIFFE identity, cert 24h, xoay tự động) hoặc SPIRE. Nếu không có nhu cầu compliance/zero-trust thật, cân nhắc kỹ trước khi trả chi phí vận hành mesh.&lt;/p></description></item><item><title>Bài 9 — Reliability Engineering</title><link>https://thanhhv.github.io/series/infrastructure-networking/09-reliability-engineering/</link><pubDate>Sun, 01 Feb 2026 15:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/09-reliability-engineering/</guid><description>&lt;h1 id="module-09--reliability-engineering">Module 09 — Reliability Engineering&lt;/h1>
+&lt;blockquote>
+&lt;p>Tiên đề: &lt;strong>mọi thứ đều hỏng&lt;/strong>. Disk hỏng, mạng phân mảnh, process bị OOM, con người gõ nhầm lệnh, và một ngày nào đó cả region sập. Reliability engineering không phải ngăn hỏng hóc — đó là thiết kế để &lt;strong>hệ thống vẫn phục vụ được user khi từng phần của nó đang hỏng&lt;/strong>.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-high-availability-và-fault-tolerance">1. High Availability và Fault Tolerance&lt;/h2>
+&lt;h3 id="toán-học-nền-tảng">Toán học nền tảng&lt;/h3>
+&lt;p>Availability chuỗi nối tiếp NHÂN với nhau: 5 service 99.9% nối tiếp = 99.5% (43 phút → 3.6 giờ downtime/tháng). Hệ quả khắc nghiệt: &lt;strong>chuỗi phụ thuộc càng dài, availability càng tệ hơn mắt xích tệ nhất&lt;/strong>, và mọi dependency đồng bộ trong critical path đều phải &amp;ldquo;trả thuế&amp;rdquo; này. Ngược lại, redundancy song song: 2 bản 99% độc lập = 99.99% — &lt;strong>nếu thật sự độc lập&lt;/strong>.&lt;/p></description></item><item><title>Bài 8 — Observability</title><link>https://thanhhv.github.io/series/infrastructure-networking/08-observability/</link><pubDate>Sun, 01 Feb 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/08-observability/</guid><description>&lt;h1 id="module-08--observability">Module 08 — Observability&lt;/h1>
+&lt;blockquote>
+&lt;p>Monitoring trả lời &amp;ldquo;hệ thống có đang hỏng theo cách tôi đã đoán trước không?&amp;rdquo;. Observability trả lời &amp;ldquo;hệ thống đang làm cái quái gì vậy?&amp;rdquo; — kể cả với lỗi chưa ai từng đoán. Trong hệ phân tán, lỗi thú vị luôn là lỗi chưa ai đoán trước.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Một request đi qua 15 service. User báo &amp;ldquo;chậm&amp;rdquo;. Không có observability: 15 team nhìn 15 dashboard riêng, ai cũng &amp;ldquo;service tôi bình thường&amp;rdquo;, 4 tiếng meeting để tìm ra một connection pool cạn ở service thứ 9. Chi phí thật của thiếu observability đo bằng &lt;strong>MTTR&lt;/strong> (giờ thay vì phút) và bằng những sự cố âm ỉ không ai biết (lỗi 0.5% user suốt 3 tuần).&lt;/p></description></item><item><title>Bài 7 — Cloud Infrastructure</title><link>https://thanhhv.github.io/series/infrastructure-networking/07-cloud-infrastructure/</link><pubDate>Sun, 01 Feb 2026 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/07-cloud-infrastructure/</guid><description>&lt;h1 id="module-07--cloud-infrastructure">Module 07 — Cloud Infrastructure&lt;/h1>
+&lt;blockquote>
+&lt;p>Cloud không phải &amp;ldquo;máy tính của người khác cho thuê&amp;rdquo;. Nó là một mô hình kinh tế + vận hành khác: đổi CAPEX thành OPEX, đổi &amp;ldquo;quản lý phần cứng&amp;rdquo; thành &amp;ldquo;quản lý cấu hình và chi phí&amp;rdquo;. Module này lấy AWS làm hệ quy chiếu; khái niệm ánh xạ 1-1 sang GCP/Azure.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-vpc--mạng-riêng-ảo-nền-của-mọi-thứ">1. VPC — mạng riêng ảo, nền của mọi thứ&lt;/h2>
+&lt;h3 id="problem-statement">Problem Statement&lt;/h3>
+&lt;p>Trong datacenter chung của cloud, khách hàng cần một mạng cách ly logic hoàn toàn: tự chọn dải IP, tự quyết định gì nói chuyện với gì, gì thấy Internet. VPC = software-defined network cung cấp đúng điều đó — mọi tài nguyên bạn tạo đều sống trong một VPC, mọi quyết định security/network đầu tiên là quyết định topology VPC.&lt;/p></description></item><item><title>Bài 6 — CI/CD &amp; Deployment Strategy</title><link>https://thanhhv.github.io/series/infrastructure-networking/06-cicd/</link><pubDate>Sun, 01 Feb 2026 12:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/06-cicd/</guid><description>&lt;h1 id="module-06--cicd-và-deployment-strategy">Module 06 — CI/CD và Deployment Strategy&lt;/h1>
+&lt;blockquote>
+&lt;p>CI/CD không phải chuyện công cụ (Jenkins vs GitHub Actions). Nó là bài toán &lt;strong>quản lý rủi ro thay đổi&lt;/strong>: thay đổi là nguồn sự cố số 1 của mọi hệ thống production, và cũng là thứ duy nhất tạo ra giá trị. Mục tiêu: tăng tần suất thay đổi VÀ giảm blast radius của mỗi thay đổi — hai thứ tưởng mâu thuẫn nhưng thực ra cộng hưởng.&lt;/p></description></item><item><title>Bài 5 — Kubernetes</title><link>https://thanhhv.github.io/series/infrastructure-networking/05-kubernetes/</link><pubDate>Sun, 01 Feb 2026 11:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/05-kubernetes/</guid><description>&lt;h1 id="module-05--kubernetes">Module 05 — Kubernetes&lt;/h1>
+&lt;blockquote>
+&lt;p>Kubernetes không phải &amp;ldquo;công cụ chạy container&amp;rdquo;. Nó là một &lt;strong>hệ điều khiển hội tụ trạng thái&lt;/strong> (desired state reconciliation). Nắm được mô hình đó, mọi thứ còn lại là chi tiết.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-tại-sao-kubernetes-tồn-tại-và-mô-hình-tư-duy-cốt-lõi">1. Tại sao Kubernetes tồn tại và mô hình tư duy cốt lõi&lt;/h2>
+&lt;h3 id="problem-statement">Problem Statement&lt;/h3>
+&lt;p>Container giải bài toán đóng gói cho MỘT máy. Ở quy mô nhiều máy, các câu hỏi mới xuất hiện: đặt container nào lên máy nào (bin packing)? Máy chết thì container đi đâu? Traffic tìm container đang di chuyển thế nào? Rollout 200 instance không downtime bằng cách nào? Trước Kubernetes, mỗi công ty tự viết script/orchestrator riêng — Google đúc kết 15 năm chạy Borg thành Kubernetes.&lt;/p></description></item><item><title>Bài 4 — Container</title><link>https://thanhhv.github.io/series/infrastructure-networking/04-container/</link><pubDate>Sun, 01 Feb 2026 10:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/04-container/</guid><description>&lt;h1 id="module-04--container">Module 04 — Container&lt;/h1>
+&lt;blockquote>
+&lt;p>Điều kiện tiên quyết: Module 03 (namespace, cgroup, OOM). Container không phải VM nhẹ — nó là process Linux được cách ly. Toàn bộ module này triển khai từ câu đó.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-tại-sao-container-tồn-tại">1. Tại sao container tồn tại&lt;/h2>
+&lt;h3 id="problem-statement">Problem Statement&lt;/h3>
+&lt;p>Trước container, deploy có 2 lựa chọn tệ:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Cài trực tiếp lên máy&lt;/strong>: &amp;ldquo;works on my machine&amp;rdquo; — app phụ thuộc phiên bản libc, Python, thư viện hệ thống của máy đó. Hai app cần 2 phiên bản khác nhau của cùng thư viện = xung đột. Môi trường dev/staging/prod lệch nhau = lớp bug riêng.&lt;/li>
+&lt;li>&lt;strong>VM&lt;/strong>: cách ly tốt nhưng mỗi VM chở nguyên một kernel + OS: boot hàng phút, tốn GB RAM cho phần không phải app, mật độ thấp.&lt;/li>
+&lt;/ol>
+&lt;p>Container giải cả hai: &lt;strong>đóng gói app + toàn bộ userspace dependency thành một artifact bất biến&lt;/strong> (giải quyết &amp;ldquo;works on my machine&amp;rdquo;), chạy như &lt;strong>process thường trên kernel chung&lt;/strong> (giải quyết chi phí VM — khởi động ms, overhead ~0).&lt;/p></description></item><item><title>Bài 3 — Linux Internals</title><link>https://thanhhv.github.io/series/infrastructure-networking/03-linux-internals/</link><pubDate>Sun, 01 Feb 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/03-linux-internals/</guid><description>&lt;h1 id="module-03--linux-internals">Module 03 — Linux Internals&lt;/h1>
+&lt;blockquote>
+&lt;p>Mọi thứ bạn deploy cuối cùng đều là process trên Linux. Container, Kubernetes, &amp;ldquo;serverless&amp;rdquo; — tất cả là abstraction trên các cơ chế trong module này. Hiểu chúng = debug được mọi tầng phía trên.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-process-thread-và-scheduler">1. Process, Thread và Scheduler&lt;/h2>
+&lt;h3 id="problem-statement">Problem Statement&lt;/h3>
+&lt;p>Một CPU chỉ chạy được một luồng lệnh tại một thời điểm, nhưng hệ thống cần chạy hàng nghìn việc &amp;ldquo;đồng thời&amp;rdquo;, cách ly lỗi giữa các chương trình, và phân phối CPU công bằng. Process/thread + scheduler là câu trả lời của kernel.&lt;/p></description></item><item><title>Bài 2 — Backend Networking</title><link>https://thanhhv.github.io/series/infrastructure-networking/02-backend-networking/</link><pubDate>Sun, 01 Feb 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/02-backend-networking/</guid><description>&lt;h1 id="module-02--backend-networking">Module 02 — Backend Networking&lt;/h1>
+&lt;blockquote>
+&lt;p>Từ &amp;ldquo;mạng hoạt động thế nào&amp;rdquo; sang &amp;ldquo;hệ thống backend nói chuyện với nhau thế nào cho đáng tin cậy ở quy mô lớn&amp;rdquo;.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-connection-lifecycle-keep-alive-và-connection-pooling">1. Connection Lifecycle, Keep-Alive và Connection Pooling&lt;/h2>
+&lt;h3 id="problem-statement">Problem Statement&lt;/h3>
+&lt;p>Mỗi connection mới có chi phí cố định: TCP handshake (1 RTT) + TLS handshake (1–2 RTT) + slow start (nhiều RTT để đạt throughput). Với RTT 50ms, một HTTPS connection mới tốn ~150–250ms &lt;strong>trước khi gửi byte đầu tiên&lt;/strong>. Service gọi nhau 1000 req/s mà mỗi request mở connection mới thì: latency cộng thêm hàng trăm ms, CPU đốt vào handshake, ephemeral port cạn (TIME_WAIT), file descriptor cạn.&lt;/p></description></item><item><title>Bài 1 — Networking Fundamentals</title><link>https://thanhhv.github.io/series/infrastructure-networking/01-networking-fundamentals/</link><pubDate>Sun, 01 Feb 2026 07:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/01-networking-fundamentals/</guid><description>&lt;h1 id="module-01--networking-fundamentals">Module 01 — Networking Fundamentals&lt;/h1>
+&lt;blockquote>
+&lt;p>Đối tượng: Backend/Senior Engineer trở lên. Mục tiêu: hiểu mạng từ góc nhìn người thiết kế hệ thống — không phải người dùng công cụ.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-osi-model-và-tcpip--tại-sao-phải-chia-tầng">1. OSI Model và TCP/IP — Tại sao phải chia tầng?&lt;/h2>
+&lt;h3 id="problem-statement">Problem Statement&lt;/h3>
+&lt;p>Nếu mọi ứng dụng tự lo từ tín hiệu điện đến format dữ liệu, mỗi phần mềm phải viết lại toàn bộ stack mạng, và không phần mềm nào nói chuyện được với phần mềm khác. Bài toán cốt lõi: &lt;strong>tách trách nhiệm (separation of concerns) để các hệ thống khác nhau tương tác được mà không cần biết chi tiết của nhau&lt;/strong>.&lt;/p></description></item><item><title>Bài 0 — Giới Thiệu Series</title><link>https://thanhhv.github.io/series/infrastructure-networking/00-instruction/</link><pubDate>Sun, 01 Feb 2026 06:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/infrastructure-networking/00-instruction/</guid><description>&lt;h1 id="infrastructure-handbook--từ-first-principles-đến-production">Infrastructure Handbook — Từ First Principles đến Production&lt;/h1>
+&lt;p>Bộ tài liệu chuyên sâu về hạ tầng cho hệ thống backend, viết cho Software/Backend/Senior Engineer, Tech Lead và Architect. Mục tiêu không phải liệt kê khái niệm — mà là giúp bạn &lt;strong>hiểu tại sao mỗi công nghệ tồn tại, nó đánh đổi điều gì, và làm sao thiết kế/vận hành/debug hệ thống production&lt;/strong>.&lt;/p>
+&lt;h2 id="cấu-trúc">Cấu trúc&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Module&lt;/th>
+&lt;th>Nội dung&lt;/th>
+&lt;th>Vì sao đọc&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/01-networking-fundamentals/">01 — Networking Fundamentals&lt;/a>&lt;/td>
+&lt;td>OSI/TCP-IP, IP/CIDR/NAT, TCP, UDP, DNS, HTTP 1.1→3, QUIC, TLS&lt;/td>
+&lt;td>Nền của mọi thứ; 80% sự cố &amp;ldquo;bí ẩn&amp;rdquo; nằm ở đây&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/02-backend-networking/">02 — Backend Networking&lt;/a>&lt;/td>
+&lt;td>Connection pooling, LB, CDN, WebSocket, gRPC, service discovery, timeout/retry/circuit breaker&lt;/td>
+&lt;td>Cách service nói chuyện với nhau cho đáng tin cậy&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/03-linux-internals/">03 — Linux Internals&lt;/a>&lt;/td>
+&lt;td>Process/thread/scheduler, memory, fd, epoll, signal, cgroup/namespace, OOM&lt;/td>
+&lt;td>Mọi thứ deploy đều là process Linux; hiểu nó = debug được mọi tầng trên&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/04-container/">04 — Container&lt;/a>&lt;/td>
+&lt;td>Docker/containerd/runc, image/layer/overlayfs, networking, storage, security&lt;/td>
+&lt;td>Container = process được cách ly, không phải VM nhẹ&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/05-kubernetes/">05 — Kubernetes&lt;/a>&lt;/td>
+&lt;td>Reconciliation model, Pod/probe, controllers, Service/Ingress, scheduler, autoscaling, volume&lt;/td>
+&lt;td>Hệ điều khiển hội tụ trạng thái — nắm mô hình, chi tiết tự sáng&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/06-cicd/">06 — CI/CD&lt;/a>&lt;/td>
+&lt;td>Pipeline, artifact bất biến, rolling/blue-green/canary, rollback, feature flag, GitOps&lt;/td>
+&lt;td>Quản lý rủi ro thay đổi — nguồn sự cố số 1&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/07-cloud-infrastructure/">07 — Cloud Infrastructure&lt;/a>&lt;/td>
+&lt;td>VPC/subnet/routing, SG, NAT, managed services, autoscaling, multi-region, cost&lt;/td>
+&lt;td>Topology và kinh tế học của cloud&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/08-observability/">08 — Observability&lt;/a>&lt;/td>
+&lt;td>Logging, metrics/Prometheus, tracing/OTel, SLI/SLO/SLA, alerting&lt;/td>
+&lt;td>Không đo được thì không vận hành được&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/09-reliability-engineering/">09 — Reliability Engineering&lt;/a>&lt;/td>
+&lt;td>HA, DR/RTO/RPO, bulkhead, degradation, load shedding, chaos engineering, postmortem&lt;/td>
+&lt;td>Thiết kế để phục vụ user khi mọi thứ đang hỏng&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/10-security/">10 — Security&lt;/a>&lt;/td>
+&lt;td>TLS/mTLS, JWT/OAuth2, secret management, WAF/DDoS, container &amp;amp; K8s security&lt;/td>
+&lt;td>Defense in depth + least privilege như thuộc tính kiến trúc&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/">11 — Kiến trúc thực tế&lt;/a>&lt;/td>
+&lt;td>E-commerce, FinTech, Social, SaaS, Video, Messaging, Blockchain, AI Platform&lt;/td>
+&lt;td>Bài tập tổng hợp: từ workload suy ra kiến trúc&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="cách-đọc">Cách đọc&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Đọc tuần tự lần đầu&lt;/strong>: các module xây trên nhau có chủ đích (TCP slow start ở module 01 giải thích connection pooling ở module 02; cgroup ở module 03 giải thích CPU throttling ở module 05; retry ở module 02 quay lại trong FinTech ở module 11).&lt;/li>
+&lt;li>&lt;strong>Lộ trình theo vai trò&lt;/strong>:
+&lt;ul>
+&lt;li>Backend Engineer: 01 → 02 → 03 → 08, rồi phần còn lại.&lt;/li>
+&lt;li>Tiếp quản vận hành Kubernetes: 03 → 04 → 05 → 08 → 09.&lt;/li>
+&lt;li>Chuẩn bị lên Architect: đọc hết, dừng lâu ở mọi bảng trade-off và module 11.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Dùng làm tài liệu tra cứu sự cố&lt;/strong>: mỗi module có bảng troubleshooting/lệnh Linux; module 03 có bảng &amp;ldquo;triệu chứng → lệnh đầu tiên&amp;rdquo; đáng in ra.&lt;/li>
+&lt;/ul>
+&lt;h2 id="triết-lý-của-bộ-tài-liệu">Triết lý của bộ tài liệu&lt;/h2>
+&lt;p>Mỗi chủ đề đi theo mạch: &lt;strong>vấn đề gì → vì sao giải pháp cũ không đủ → công nghệ này hoạt động thế nào bên trong → đánh đổi cái gì → dùng ở production ra sao → khi nào KHÔNG dùng → hỏng thì debug thế nào&lt;/strong>. Mọi kết luận kỹ thuật đều phải trả lời được: tại sao, đánh đổi gì, và điều gì xảy ra nếu làm ngược lại.&lt;/p></description></item></channel></rss>
