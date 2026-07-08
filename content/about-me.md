@@ -27,15 +27,15 @@ I enjoy solving complex system design problems, ensuring reliability and perform
 
 ### 💼 Work Experience
 
-**Cloudverse (2025)** — *Senior Backend Engineer (Contractor)*  
+**Cloudverse (2025)** — *Software Engineer (Contractor)*  
 Built **Virtual Tag** and **Dynamic Perspective** modules in a FinOps management platform.  
 Optimized APIs, upgraded Node.js environments, and mentored new team members.
 
-**Coin98 (2023-2025)** — *Backend Engineer*  
+**Coin98 (2023-2025)** — *Software Engineer*  
 Developed services for blockchain content management (AmberBlocks), OneID identity system, and Superwallet crypto portfolio analytics.  
 Worked extensively with **NestJS, GraphQL, PostgreSQL, Redis, gRPC, Web3.js, AWS**.
 
-**Finviet (2020-2023)** — *Backend Engineer*  
+**Finviet (2020-2023)** — *Software Engineer*  
 Designed and implemented loyalty and payment microservices for Eco App ecosystem.  
 Handled **MongoDB optimization**, system monitoring, and real-time communication via WebSocket.
 
@@ -54,7 +54,7 @@ Bachelor's in Information Technology
 ### 🌱 A Bit More About Me
 
 I'm passionate about **clean architecture, cloud-native systems, and Web3 technologies**.  
-Outside of coding, I love **reading, traveling, and creating music**.  
+Outside of coding, I love **reading and traveling**.  
 
 You can find my work and writing here:  
 - 🌐 [Blog](https://thanhhv.github.io)  
