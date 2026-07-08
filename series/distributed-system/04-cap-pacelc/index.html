@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 04 – CAP &amp; PACELC: Hiểu đúng, dùng đúng, và biết giới hạn | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, distributed-systems">
+<meta name="description" content="1. Problem Statement
+Khi thiết kế hệ thống có replication, sớm muộn bạn phải trả lời: khi mạng giữa các replica đứt (network partition), hệ thống làm gì? Từ chối phục vụ để giữ dữ liệu đúng, hay tiếp tục phục vụ và chấp nhận dữ liệu phân kỳ? CAP Theorem là công cụ tư duy chuẩn hóa cho câu hỏi đó — nhưng nó cũng là định lý bị hiểu sai nhiều nhất trong ngành, và hiểu sai dẫn đến quyết định kiến trúc sai (&ldquo;chọn 2 trong 3&rdquo; là cách đọc sai phổ biến nhất).">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:54040/series/distributed-system/04-cap-pacelc/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:54040/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:54040/series/distributed-system/04-cap-pacelc/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:54040/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/distributed-system/">Distributed Systems</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 04 – CAP &amp; PACELC: Hiểu đúng, dùng đúng, và biết giới hạn
+    </h1>
+    <div class="post-meta"><span title='2026-07-08 20:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Khi thiết kế hệ thống có replication, sớm muộn bạn phải trả lời: <strong>khi mạng giữa các replica đứt (network partition), hệ thống làm gì?</strong> Từ chối phục vụ để giữ dữ liệu đúng, hay tiếp tục phục vụ và chấp nhận dữ liệu phân kỳ? CAP Theorem là công cụ tư duy chuẩn hóa cho câu hỏi đó — nhưng nó cũng là định lý <strong>bị hiểu sai nhiều nhất</strong> trong ngành, và hiểu sai dẫn đến quyết định kiến trúc sai (&ldquo;chọn 2 trong 3&rdquo; là cách đọc sai phổ biến nhất).</p>
+<h2 id="2-tại-sao-cap-tồn-tại">2. Tại sao CAP tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-cap-tồn-tại">#</a></h2>
+<p>Cuối thập niên 1990, Eric Brewer quan sát: các hệ web quy mô lớn liên tục phải chọn giữa &ldquo;đúng tuyệt đối&rdquo; và &ldquo;sống sót&rdquo;. Ông phát biểu thành phỏng đoán (2000), Gilbert &amp; Lynch chứng minh hình thức (2002). Giá trị lịch sử của CAP không nằm ở toán — nằm ở chỗ nó <strong>hợp pháp hóa</strong> việc xây hệ thống không-strong-consistency một cách có chủ đích (mở đường cho Dynamo, Cassandra, và cả phong trào NoSQL).</p>
+<h2 id="3-bản-chất--cap-nói-gì-chính-xác">3. Bản chất — CAP nói gì, chính xác<a hidden class="anchor" aria-hidden="true" href="#3-bản-chất--cap-nói-gì-chính-xác">#</a></h2>
+<h3 id="31-ba-chữ-cái-định-nghĩa-chặt">3.1. Ba chữ cái, định nghĩa chặt<a hidden class="anchor" aria-hidden="true" href="#31-ba-chữ-cái-định-nghĩa-chặt">#</a></h3>
+<ul>
+<li><strong>C — Consistency</strong>: linearizability (nghĩa hẹp của chương 03, <em>không phải</em> &ldquo;dữ liệu đúng&rdquo; chung chung).</li>
+<li><strong>A — Availability</strong>: <strong>mọi</strong> request đến node còn sống <strong>phải</strong> nhận được response (không lỗi, không treo vô hạn). Định nghĩa rất mạnh — 99.99% không phải là A của CAP.</li>
+<li><strong>P — Partition tolerance</strong>: hệ tiếp tục hoạt động khi mạng chia các node thành các nhóm không liên lạc được nhau.</li>
+</ul>
+<h3 id="32-chứng-minh-trong-5-dòng">3.2. Chứng minh trong 5 dòng<a hidden class="anchor" aria-hidden="true" href="#32-chứng-minh-trong-5-dòng">#</a></h3>
+<pre tabindex="0"><code>Partition chia hệ thành hai phía:   [G1: n1]  ═╪═  [G2: n2]   (không liên lạc được)
+
+Client ghi x=2 vào n1 (G1) → thành công (vì hệ chọn Available)
+Client đọc x từ n2 (G2):
+  • Trả lời ngay → trả x=1 (cũ) → VI PHẠM C
+  • Chờ hỏi n1  → chờ vô hạn (partition) → VI PHẠM A
+Không tồn tại lựa chọn thứ ba. ∎
+</code></pre><h3 id="33-cách-đọc-đúng-không-phải-chọn-2-trong-3">3.3. Cách đọc ĐÚNG: không phải &ldquo;chọn 2 trong 3&rdquo;<a hidden class="anchor" aria-hidden="true" href="#33-cách-đọc-đúng-không-phải-chọn-2-trong-3">#</a></h3>
+<p><strong>P không phải lựa chọn.</strong> Mạng thật <em>sẽ</em> partition — switch hỏng, config sai, cáp đứt, GC pause dài cũng tương đương partition. &ldquo;Từ bỏ P&rdquo; nghĩa là hệ thống được phép sai tùy ý khi mạng lỗi — không ai chấp nhận điều đó. Vậy lựa chọn thật chỉ là:</p>
+<blockquote>
+<p><strong>Khi partition xảy ra: chọn C (từ chối một phần request) hay chọn A (phục vụ, chấp nhận phân kỳ)?</strong></p></blockquote>
+<ul>
+<li><strong>CP</strong>: phía thiểu số (minority) ngừng phục vụ; phía đa số (majority) tiếp tục — nhờ quorum. Ví dụ: etcd, ZooKeeper, HBase, Spanner. Lưu ý tinh tế: hệ CP <em>vẫn phục vụ được</em> ở phía majority — CP không có nghĩa &ldquo;sập toàn bộ khi partition&rdquo;.</li>
+<li><strong>AP</strong>: mọi phía tiếp tục nhận read/write; sau khi mạng lành, hòa giải xung đột (vector clock, LWW, CRDT). Ví dụ: Cassandra, DynamoDB (chế độ mặc định), CouchDB, DNS.</li>
+</ul>
+<h3 id="34-giới-hạn-của-cap--vì-sao-nó-không-đủ-để-thiết-kế">3.4. Giới hạn của CAP — vì sao nó KHÔNG đủ để thiết kế<a hidden class="anchor" aria-hidden="true" href="#34-giới-hạn-của-cap--vì-sao-nó-không-đủ-để-thiết-kế">#</a></h3>
+<ol>
+<li><strong>CAP chỉ nói về lúc partition</strong> — vốn hiếm. 99.9% thời gian còn lại, trade-off chi phối là <strong>latency vs consistency</strong>, CAP im lặng hoàn toàn về điều này.</li>
+<li><strong>C và A đều là định nghĩa cực đoan</strong>: giữa linearizability và &ldquo;không cam kết gì&rdquo; có cả một phổ (chương 03); giữa &ldquo;mọi request đều được trả lời&rdquo; và &ldquo;sập&rdquo; có mọi mức degraded service. Hệ thật sống ở vùng giữa, CAP chỉ mô tả hai góc.</li>
+<li><strong>Granularity</strong>: một hệ thống có thể CP cho thao tác này, AP cho thao tác kia (DynamoDB: <code>ConsistentRead=true</code> là CP-read, mặc định là AP-read). Dán nhãn cả DB là &ldquo;CP&rdquo; hay &ldquo;AP&rdquo; là lười tư duy.</li>
+</ol>
+<h2 id="4-pacelc--bản-nâng-cấp-thực-dụng">4. PACELC — bản nâng cấp thực dụng<a hidden class="anchor" aria-hidden="true" href="#4-pacelc--bản-nâng-cấp-thực-dụng">#</a></h2>
+<p>Daniel Abadi (2012):</p>
+<blockquote>
+<p><strong>P</strong>artition ⇒ chọn <strong>A</strong> hay <strong>C</strong>; <strong>E</strong>lse (bình thường) ⇒ chọn <strong>L</strong>atency hay <strong>C</strong>onsistency.</p></blockquote>
+<p>Vế &ldquo;Else&rdquo; chính là phần CAP thiếu — và là trade-off bạn trả tiền <strong>mỗi request, mỗi ngày</strong>: muốn strong consistency lúc bình thường vẫn phải chờ quorum/round-trip; muốn latency thấp nhất thì đọc replica gần nhất và chịu dữ liệu cũ.</p>
+<table>
+  <thead>
+      <tr>
+          <th>Hệ thống</th>
+          <th>Khi Partition</th>
+          <th>Khi bình thường</th>
+          <th>Ghi chú</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>DynamoDB / Cassandra (mặc định)</td>
+          <td>PA</td>
+          <td>EL</td>
+          <td>Tunable từng request</td>
+      </tr>
+      <tr>
+          <td>MongoDB (mặc định)</td>
+          <td>PC*</td>
+          <td>EC</td>
+          <td>*majority write concern; cấu hình yếu từng gây mất ghi (Jepsen)</td>
+      </tr>
+      <tr>
+          <td>etcd / ZooKeeper</td>
+          <td>PC</td>
+          <td>EC</td>
+          <td>Đúng vai: metadata, lock, election</td>
+      </tr>
+      <tr>
+          <td><strong>Spanner / CockroachDB</strong></td>
+          <td><strong>PC</strong></td>
+          <td><strong>EC</strong></td>
+          <td>Chấp nhận trả latency để có C toàn cầu</td>
+      </tr>
+      <tr>
+          <td>PostgreSQL async replica</td>
+          <td>PC (mặc định failover thủ công)</td>
+          <td>EL (đọc replica)</td>
+          <td>Tùy topology triển khai</td>
+      </tr>
+      <tr>
+          <td>Kafka</td>
+          <td>Tunable: <code>acks=all</code> PC / <code>acks=1</code> PA</td>
+          <td>Tunable</td>
+          <td>min.insync.replicas quyết định</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="case-các-hệ-thực-tế-đối-xử-với-cap-thế-nào">Case: các hệ thực tế &ldquo;đối xử&rdquo; với CAP thế nào<a hidden class="anchor" aria-hidden="true" href="#case-các-hệ-thực-tế-đối-xử-với-cap-thế-nào">#</a></h3>
+<p><strong>Google Spanner — &ldquo;CA có phải không?&rdquo;</strong> Google từng viết bài &ldquo;Spanner, TrueTime &amp; The CAP Theorem&rdquo; nói Spanner &ldquo;về hiệu quả là CA&rdquo;. Đọc kỹ: Spanner <strong>là CP về nguyên tắc</strong> — khi partition thật, minority từ chối write. Nhưng Google sở hữu mạng riêng toàn cầu với redundancy đủ dày để partition hiếm tới mức availability đo được vẫn &gt;5 số 9. Bài học đúng: <strong>không phá được CAP, nhưng mua được xác suất P nhỏ bằng tiền hạ tầng</strong>. Cạnh đó, TrueTime (chương 12) giúp Spanner có external consistency với chi phí latency được kiểm soát (chờ độ bất định đồng hồ ~vài ms).</p>
+<p><strong>DynamoDB</strong>: bản Dynamo gốc 2007 là AP thuần (sloppy quorum, vector clock, conflict do app xử lý — giỏ hàng Amazon hợp nhất bằng union). DynamoDB thương mại ngày nay cho <em>chọn</em>: eventually consistent read (rẻ, nhanh, AP) hoặc strongly consistent read (đắt gấp đôi RCU, không phục vụ được nếu partition chạm leader của partition đó — CP). Trade-off được đưa thẳng vào <strong>bảng giá</strong> — minh họa đẹp nhất rằng consistency là thứ có đơn giá.</p>
+<p><strong>Kafka</strong>: <code>acks=all</code> + <code>min.insync.replicas=2</code> + <code>unclean.leader.election.enable=false</code> → nghiêng C (không mất message đã ack, nhưng partition có thể ngừng nhận ghi). <code>acks=1</code> + unclean election = nghiêng A (luôn nhận ghi, có thể mất message khi failover). Một dòng config, đổi cả vị trí trên bản đồ CAP — trade-off nằm ở <strong>cấu hình</strong>, không ở logo sản phẩm.</p>
+<p><strong>PostgreSQL</strong>: <code>synchronous_commit = on</code> với sync replica → C, nhưng replica chết là write treo (nên thường cấu hình ANY 1 trong 2 sync standby). <code>synchronous_commit = local</code> → nhanh, mất dữ liệu nếu leader chết trước khi replica kịp nhận. Failover tự động vội vàng + async replication = <strong>split brain hoặc mất dữ liệu</strong> — sự cố kinh điển của GitHub (2018, 43 giây partition → 24h degraded).</p>
+<h2 id="5-trade-off--quyết-định-thế-nào-trong-thực-tế">5. Trade-off — quyết định thế nào trong thực tế<a hidden class="anchor" aria-hidden="true" href="#5-trade-off--quyết-định-thế-nào-trong-thực-tế">#</a></h2>
+<p>Khung câu hỏi thay thế cho &ldquo;chọn CA/CP/AP&rdquo;:</p>
+<ol>
+<li><strong>Với từng thao tác ghi</strong>: nếu hai bản ghi xung đột được tạo ở hai phía partition, hòa giải được không, chi phí bao nhiêu? Giỏ hàng: union được → nghiêng A. Trừ tồn kho món hàng cuối: không hòa giải được (đã giao cho 2 người) → nghiêng C.</li>
+<li><strong>Với từng thao tác đọc</strong>: dữ liệu cũ X giây gây thiệt hại gì? Feed mạng xã hội: 0 đồng. Số dư trước lệnh chuyển: rất nhiều tiền.</li>
+<li><strong>Lúc bình thường</strong>: chịu thêm bao nhiêu ms latency cho consistency? Đa region thì con số là 50–300ms — thường quyết định luôn kiến trúc (chương 13).</li>
+<li><strong>Blast radius khi chọn C</strong>: minority ngừng phục vụ ảnh hưởng bao nhiêu % user? Thiết kế topology (3 AZ, quorum 2/3) để &ldquo;minority&rdquo; luôn là phần nhỏ.</li>
+</ol>
+<h2 id="69-production-best-practices-anti-patterns-khi-nào-không-cần-quan-tâm">6–9. Production, Best Practices, Anti-patterns, Khi nào không cần quan tâm<a hidden class="anchor" aria-hidden="true" href="#69-production-best-practices-anti-patterns-khi-nào-không-cần-quan-tâm">#</a></h2>
+<p><strong>Production considerations:</strong></p>
+<ul>
+<li><strong>Diễn tập partition</strong> (chaos engineering): chặn traffic giữa các AZ trong game day và xem hệ thống làm đúng thiết kế không. Đa số hệ &ldquo;CP trên giấy&rdquo; hóa ra sập cả hai phía, hoặc &ldquo;AP trên giấy&rdquo; hóa ra mất dữ liệu không hòa giải được.</li>
+<li><strong>Giám sát split-brain risk</strong>: cảnh báo khi hai node cùng nhận mình là leader (fencing token mismatch, epoch tụt lùi — chương 07).</li>
+<li><strong>Định nghĩa degraded mode tường minh</strong>: khi chọn C và minority ngừng ghi, UX là gì? (đọc-only banner? hàng đợi offline?) — quyết định lúc thiết kế, đừng để lúc 3 giờ sáng.</li>
+</ul>
+<p><strong>Anti-patterns:</strong></p>
+<ul>
+<li>Dán nhãn CA cho hệ thống của mình (&ldquo;mạng nội bộ em ổn lắm&rdquo;) — nghĩa là chưa thiết kế hành vi khi partition, tức là hành vi sẽ là <em>ngẫu nhiên</em>.</li>
+<li>Chọn AP rồi không xây conflict resolution — phân kỳ âm thầm, phát hiện sau 6 tháng bằng khiếu nại khách hàng.</li>
+<li>Chọn CP cho mọi thứ vì &ldquo;an toàn&rdquo; — trả latency và availability cho cả những dữ liệu chẳng cần.</li>
+<li>Tranh luận CAP ở tầng cả-hệ-thống thay vì tầng từng-thao-tác.</li>
+</ul>
+<p><strong>Khi nào không cần quan tâm</strong>: hệ một node (không replication) — không có P thì không có CAP; dữ liệu immutable — không có write xung đột; hệ bất đồng bộ thuần túy nơi mọi consumer đều idempotent và hòa giải được.</p>
+<h2 id="10-troubleshooting-dưới-lăng-kính-cap">10. Troubleshooting dưới lăng kính CAP<a hidden class="anchor" aria-hidden="true" href="#10-troubleshooting-dưới-lăng-kính-cap">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Tình huống</th>
+          <th>Phân tích</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Một AZ mất kết nối, service ở AZ đó vẫn nhận write vào cache cục bộ</td>
+          <td>Bạn đang chạy AP ngoài ý muốn → kiểm kê phân kỳ, xây reconciliation</td>
+      </tr>
+      <tr>
+          <td>etcd cluster 2 node, 1 chết, toàn cluster đọc-ghi tê liệt</td>
+          <td>Quorum 2/2 bất khả → <strong>luôn chạy số lẻ node</strong> (3/5); 2 node tệ hơn 1 node</td>
+      </tr>
+      <tr>
+          <td>Failover PostgreSQL xong mất 30 giây dữ liệu</td>
+          <td>Async replication + promote replica trễ → cần sync replica hoặc chấp nhận RPO&gt;0 tường minh (chương 13)</td>
+      </tr>
+      <tr>
+          <td>Cassandra hai DC ghi xung đột, LWW chọn &ldquo;kẻ thắng&rdquo; sai</td>
+          <td>Clock skew giữa DC + Last-Write-Wins = mất write âm thầm (chương 12)</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="tổng-kết-chương">Tổng kết chương<a hidden class="anchor" aria-hidden="true" href="#tổng-kết-chương">#</a></h2>
+<h3 id="những-điều-bắt-buộc-phải-nhớ">Những điều bắt buộc phải nhớ<a hidden class="anchor" aria-hidden="true" href="#những-điều-bắt-buộc-phải-nhớ">#</a></h3>
+<ol>
+<li>P không phải lựa chọn; câu hỏi thật là <strong>khi partition, hy sinh C hay A</strong> — và trả lời <strong>per-operation</strong>.</li>
+<li>PACELC quan trọng hơn CAP trong vận hành hằng ngày: <strong>latency vs consistency là trade-off bạn trả mỗi request</strong>.</li>
+<li>CP không nghĩa là sập khi partition (majority vẫn chạy); AP không nghĩa là dữ liệu sai mãi (cần reconciliation).</li>
+<li>Vị trí trên bản đồ CAP nằm ở <strong>cấu hình</strong> (acks, write concern, consistency level), không ở tên sản phẩm.</li>
+<li>Spanner không phá CAP — Google mua xác suất partition thấp bằng mạng riêng, và vẫn là CP khi partition thật.</li>
+</ol>
+<h3 id="hiểu-lầm-phổ-biến">Hiểu lầm phổ biến<a hidden class="anchor" aria-hidden="true" href="#hiểu-lầm-phổ-biến">#</a></h3>
+<ul>
+<li>&ldquo;Chọn 2 trong 3&rdquo; — cách đọc sai phổ biến nhất.</li>
+<li>&ldquo;CA tồn tại cho hệ phân tán&rdquo; — chỉ khi mạng không bao giờ lỗi, tức là không tồn tại.</li>
+<li>&ldquo;MongoDB/Cassandra là AP, hết chuyện&rdquo; — tunable; và cấu hình mặc định của bạn có thể không phải cái bạn tưởng.</li>
+<li>&ldquo;CAP bảo eventual consistency là bắt buộc để scale&rdquo; — CAP không nói gì về scale; đó là chuyện của partitioning (chương 06).</li>
+</ul>
+<h3 id="câu-hỏi-tự-kiểm-tra">Câu hỏi tự kiểm tra<a hidden class="anchor" aria-hidden="true" href="#câu-hỏi-tự-kiểm-tra">#</a></h3>
+<ol>
+<li>Hệ đặt vé máy bay: thao tác nào phải CP, thao tác nào nên AP? Khi partition giữa 2 DC, UX cụ thể của từng loại?</li>
+<li>Giải thích vì sao cluster consensus 4 node không tốt hơn 3 node (gợi ý: quorum size và số node chịu chết được).</li>
+<li>Kafka của bạn <code>acks=1</code>, unclean election bật. Vẽ timeline một kịch bản mất message đã ack.</li>
+<li>PACELC của Redis Sentinel (async replication, tự động failover) là gì? Hệ quả với dữ liệu?</li>
+</ol>
+<h3 id="tài-liệu-kinh-điển-nên-đọc">Tài liệu kinh điển nên đọc<a hidden class="anchor" aria-hidden="true" href="#tài-liệu-kinh-điển-nên-đọc">#</a></h3>
+<ul>
+<li><strong>&ldquo;Brewer&rsquo;s Conjecture and the Feasibility of&hellip;&rdquo; (Gilbert &amp; Lynch, 2002)</strong> — chứng minh hình thức, đọc để biết chính xác định lý nói gì (hẹp hơn folklore nhiều).</li>
+<li><strong>&ldquo;CAP Twelve Years Later&rdquo; (Brewer, 2012)</strong> — chính tác giả sửa cách hiểu &ldquo;2 trong 3&rdquo;, giới thiệu tư duy &ldquo;quản lý partition&rdquo; thay vì &ldquo;chọn phe&rdquo;.</li>
+<li><strong>&ldquo;Consistency Tradeoffs in Modern Distributed Database System Design&rdquo; (Abadi, 2012)</strong> — PACELC gốc.</li>
+<li><strong>&ldquo;Spanner, TrueTime &amp; The CAP Theorem&rdquo; (Brewer, 2017)</strong> — case study &ldquo;mua&rdquo; availability bằng hạ tầng.</li>
+<li><strong>&ldquo;Please stop calling databases CP or AP&rdquo; (Kleppmann)</strong> — phê phán sắc bén việc dán nhãn; thuốc giải cho design review.</li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:54040/tags/distributed-systems/">Distributed-Systems</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:54040/series/distributed-system/05-replication/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 05 – Replication: Nhiều bản sao, một sự thật (hoặc không)</span>
+  </a>
+  <a class="next" href="http://localhost:54040/series/distributed-system/03-consistency/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 03 – Consistency Models: &#34;Đọc thấy gì&#34; là một hợp đồng</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2004%20%e2%80%93%20CAP%20%26%20PACELC%3a%20Hi%e1%bb%83u%20%c4%91%c3%bang%2c%20d%c3%b9ng%20%c4%91%c3%bang%2c%20v%c3%a0%20bi%e1%ba%bft%20gi%e1%bb%9bi%20h%e1%ba%a1n&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f&amp;hashtags=backend%2cdistributed-systems">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f&amp;title=Ch%c6%b0%c6%a1ng%2004%20%e2%80%93%20CAP%20%26%20PACELC%3a%20Hi%e1%bb%83u%20%c4%91%c3%bang%2c%20d%c3%b9ng%20%c4%91%c3%bang%2c%20v%c3%a0%20bi%e1%ba%bft%20gi%e1%bb%9bi%20h%e1%ba%a1n&amp;summary=Ch%c6%b0%c6%a1ng%2004%20%e2%80%93%20CAP%20%26%20PACELC%3a%20Hi%e1%bb%83u%20%c4%91%c3%bang%2c%20d%c3%b9ng%20%c4%91%c3%bang%2c%20v%c3%a0%20bi%e1%ba%bft%20gi%e1%bb%9bi%20h%e1%ba%a1n&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f&title=Ch%c6%b0%c6%a1ng%2004%20%e2%80%93%20CAP%20%26%20PACELC%3a%20Hi%e1%bb%83u%20%c4%91%c3%bang%2c%20d%c3%b9ng%20%c4%91%c3%bang%2c%20v%c3%a0%20bi%e1%ba%bft%20gi%e1%bb%9bi%20h%e1%ba%a1n">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2004%20%e2%80%93%20CAP%20%26%20PACELC%3a%20Hi%e1%bb%83u%20%c4%91%c3%bang%2c%20d%c3%b9ng%20%c4%91%c3%bang%2c%20v%c3%a0%20bi%e1%ba%bft%20gi%e1%bb%9bi%20h%e1%ba%a1n%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2004%20%e2%80%93%20CAP%20%26%20PACELC%3a%20Hi%e1%bb%83u%20%c4%91%c3%bang%2c%20d%c3%b9ng%20%c4%91%c3%bang%2c%20v%c3%a0%20bi%e1%ba%bft%20gi%e1%bb%9bi%20h%e1%ba%a1n&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2004%20%e2%80%93%20CAP%20%26%20PACELC%3a%20Hi%e1%bb%83u%20%c4%91%c3%bang%2c%20d%c3%b9ng%20%c4%91%c3%bang%2c%20v%c3%a0%20bi%e1%ba%bft%20gi%e1%bb%9bi%20h%e1%ba%a1n&u=http%3a%2f%2flocalhost%3a54040%2fseries%2fdistributed-system%2f04-cap-pacelc%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

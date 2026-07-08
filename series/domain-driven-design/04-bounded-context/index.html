@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Chương 04 — Bounded Context: Ranh Giới Ngữ Nghĩa Của Model
+
+Vị trí chương này trong chuỗi tài liệu: Ở chương 02, chúng ta đã mổ xẻ domain và subdomain — tức là bài toán mà business đang phải giải. Ở chương 03, chúng ta thống nhất rằng ngôn ngữ chung giữa engineer và domain expert là nền móng của mọi model tốt. Chương này trả lời câu hỏi tiếp theo, và cũng là câu hỏi quan trọng bậc nhất của DDD chiến lược: ngôn ngữ đó, model đó, có hiệu lực đến đâu? Ranh giới của nó nằm ở chỗ nào? Nếu bạn chỉ được đọc một chương duy nhất trong toàn bộ phần strategic design, hãy đọc chương này. Chương kế tiếp — 05: Context Mapping — sẽ nói về chuyện gì xảy ra giữa các ranh giới đó.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/domain-driven-design/04-bounded-context/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/domain-driven-design/04-bounded-context/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/domain-driven-design/"></a></div>
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">63 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="chương-04--bounded-context-ranh-giới-ngữ-nghĩa-của-model">Chương 04 — Bounded Context: Ranh Giới Ngữ Nghĩa Của Model<a hidden class="anchor" aria-hidden="true" href="#chương-04--bounded-context-ranh-giới-ngữ-nghĩa-của-model">#</a></h1>
+<blockquote>
+<p><strong>Vị trí chương này trong chuỗi tài liệu:</strong> Ở <a href="02-domain-va-subdomain.md">chương 02</a>, chúng ta đã mổ xẻ domain và subdomain — tức là <em>bài toán</em> mà business đang phải giải. Ở <a href="03-ubiquitous-language.md">chương 03</a>, chúng ta thống nhất rằng ngôn ngữ chung giữa engineer và domain expert là nền móng của mọi model tốt. Chương này trả lời câu hỏi tiếp theo, và cũng là câu hỏi quan trọng bậc nhất của DDD chiến lược: <strong>ngôn ngữ đó, model đó, có hiệu lực đến đâu? Ranh giới của nó nằm ở chỗ nào?</strong> Nếu bạn chỉ được đọc một chương duy nhất trong toàn bộ phần strategic design, hãy đọc chương này. Chương kế tiếp — <a href="05-context-mapping.md">05: Context Mapping</a> — sẽ nói về chuyện gì xảy ra <em>giữa</em> các ranh giới đó.</p></blockquote>
+<hr>
+<h2 id="mục-lục-chương">Mục lục chương<a hidden class="anchor" aria-hidden="true" href="#mục-lục-chương">#</a></h2>
+<ol>
+<li><a href="#1-c%C3%A2u-chuy%E1%BB%87n-m%E1%BB%9F-%C4%91%E1%BA%A7u-cu%E1%BB%99c-h%E1%BB%8Dp-4-ti%E1%BA%BFng-v%E1%BB%81-ch%E1%BB%AF-customer">Câu chuyện mở đầu: cuộc họp 4 tiếng về chữ &ldquo;Customer&rdquo;</a></li>
+<li><a href="#2-v%C3%AC-sao-enterprise-model--m%E1%BB%99t-model-th%E1%BB%91ng-nh%E1%BA%A5t-cho-to%C3%A0n-c%C3%B4ng-ty--lu%C3%B4n-th%E1%BA%A5t-b%E1%BA%A1i">Vì sao Enterprise Model — một model thống nhất cho toàn công ty — luôn thất bại</a></li>
+<li><a href="#3-t%E1%BA%A1i-sao-ddd-%C4%91%C6%B0a-ra-kh%C3%A1i-ni%E1%BB%87m-bounded-context">Tại sao DDD đưa ra khái niệm Bounded Context</a></li>
+<li><a href="#4-b%E1%BA%A3n-ch%E1%BA%A5t-c%E1%BB%A7a-bounded-context-ranh-gi%E1%BB%9Bi-ng%E1%BB%AF-ngh%C4%A9a-kh%C3%B4ng-ph%E1%BA%A3i-ranh-gi%E1%BB%9Bi-k%E1%BB%B9-thu%E1%BA%ADt">Bản chất của Bounded Context: ranh giới ngữ nghĩa, không phải ranh giới kỹ thuật</a></li>
+<li><a href="#5-m%E1%BB%99t-kh%C3%A1i-ni%E1%BB%87m--nhi%E1%BB%81u-ngh%C4%A9a-order-customer-product-qua-t%E1%BB%ABng-context">Một khái niệm — nhiều nghĩa: Order, Customer, Product qua từng context</a></li>
+<li><a href="#6-bounded-context-vs-subdomain-problem-space-vs-solution-space">Bounded Context vs Subdomain: problem space vs solution space</a></li>
+<li><a href="#7-bounded-context-vs-microservice-kh%C3%B4ng-ph%E1%BA%A3i-quan-h%E1%BB%87-1-1">Bounded Context vs Microservice: KHÔNG phải quan hệ 1-1</a></li>
+<li><a href="#8-c%C3%A1ch-x%C3%A1c-%C4%91%E1%BB%8Bnh-ranh-gi%E1%BB%9Bi-linguistic-team-business-capability">Cách xác định ranh giới: linguistic, team, business capability</a></li>
+<li><a href="#9-shared-database--k%E1%BA%BB-ph%C3%A1-ho%E1%BA%A1i-ranh-gi%E1%BB%9Bi-th%E1%BA%A7m-l%E1%BA%B7ng">Shared Database — kẻ phá hoại ranh giới thầm lặng</a></li>
+<li><a href="#10-case-study-h%E1%BB%87-th%E1%BB%91ng-e-commerce-chia-context">Case study: hệ thống e-commerce chia context</a></li>
+<li><a href="#11-v%C3%AD-d%E1%BB%A5-thi%E1%BA%BFt-k%E1%BA%BF-sai-b%E1%BA%A3ng-products-80-c%E1%BB%99t-d%C3%B9ng-chung">Ví dụ thiết kế SAI: bảng <code>products</code> 80 cột dùng chung</a></li>
+<li><a href="#12-v%C3%AD-d%E1%BB%A5-refactor-t%C3%A1ch-b%E1%BA%A3ng-80-c%E1%BB%99t-th%C3%A0nh-c%C3%A1c-context">Ví dụ refactor: tách bảng 80 cột thành các context</a></li>
+<li><a href="#13-module-nestjs--package-go-kh%C3%B4ng-t%E1%BB%B1-%C4%91%E1%BB%99ng-l%C3%A0-bounded-context">Module NestJS / package Go KHÔNG tự động là Bounded Context</a></li>
+<li><a href="#14-%C4%91i%E1%BB%83m-m%E1%BA%A1nh--%C4%91i%E1%BB%83m-y%E1%BA%BFu--trade-off">Điểm mạnh — Điểm yếu — Trade-off</a></li>
+<li><a href="#15-production-considerations">Production Considerations</a></li>
+<li><a href="#16-best-practices">Best Practices</a></li>
+<li><a href="#17-anti-patterns-v%C3%A0-v%C3%AC-sao-ch%C3%BAng-nguy-hi%E1%BB%83m">Anti-patterns và vì sao chúng nguy hiểm</a></li>
+<li><a href="#18-khi-n%C3%A0o-kh%C3%B4ng-n%C3%AAn-t%C3%A1ch-bounded-context">Khi nào KHÔNG nên tách Bounded Context</a></li>
+<li><a href="#19-t%C3%B3m-t%E1%BA%AFt-cho-ng%C6%B0%E1%BB%9Di-b%E1%BA%ADn-r%E1%BB%99n">Tóm tắt cho người bận rộn</a></li>
+</ol>
+<hr>
+<h2 id="1-câu-chuyện-mở-đầu-cuộc-họp-4-tiếng-về-chữ-customer">1. Câu chuyện mở đầu: cuộc họp 4 tiếng về chữ &ldquo;Customer&rdquo;<a hidden class="anchor" aria-hidden="true" href="#1-câu-chuyện-mở-đầu-cuộc-họp-4-tiếng-về-chữ-customer">#</a></h2>
+<p>Tôi từng ngồi trong một cuộc họp thiết kế hệ thống cho một công ty bán lẻ đa kênh. Mục tiêu buổi họp rất &ldquo;đơn giản&rdquo;: thống nhất schema cho entity <code>Customer</code> dùng chung toàn công ty. Có mặt: team CRM, team Ordering, team Kế toán, team Logistics, và team Data.</p>
+<p>Bốn tiếng sau, whiteboard trông như thế này:</p>
+<ul>
+<li>Team <strong>CRM</strong> khăng khăng <code>Customer</code> phải có <code>leadSource</code>, <code>lifecycleStage</code>, <code>assignedSalesRep</code>, lịch sử tương tác. Với họ, một &ldquo;customer&rdquo; có thể là người <em>chưa từng mua gì</em> — chỉ cần để lại số điện thoại là đã thành customer.</li>
+<li>Team <strong>Ordering</strong> nói customer chưa mua hàng thì không phải customer. Họ cần <code>defaultPaymentMethod</code>, <code>shippingAddresses</code>, <code>orderHistory</code>. Và quan trọng: với họ, customer <em>không được phép xóa</em> nếu còn đơn hàng đang xử lý.</li>
+<li>Team <strong>Kế toán</strong> chỉ quan tâm <code>taxCode</code>, <code>legalName</code>, <code>billingAddress</code>, công nợ. Họ gọi thứ đó là &ldquo;khách hàng&rdquo; nhưng thực chất là <em>pháp nhân xuất hóa đơn</em> — một công ty mẹ có thể là một &ldquo;customer&rdquo; kế toán duy nhất trong khi CRM đếm 15 người liên hệ.</li>
+<li>Team <strong>Logistics</strong> thậm chí không cần biết customer là ai — họ chỉ cần <em>một cái tên và một địa chỉ để in lên vận đơn</em>. Đổi số điện thoại người nhận cho một đơn cụ thể không được phép làm thay đổi &ldquo;customer&rdquo; gốc.</li>
+</ul>
+<p>Kết cục của buổi họp: một entity <code>Customer</code> với <strong>47 field</strong>, trong đó khoảng 40 field là nullable vì &ldquo;không phải team nào cũng dùng&rdquo;. Sáu tháng sau, không team nào dám sửa entity đó vì không ai biết field nào của ai, migration nào sẽ làm vỡ team nào. Mỗi thay đổi cần họp liên team. Velocity của cả bốn team giảm dần theo từng quý.</p>
+<p><strong>Vấn đề không nằm ở kỹ thuật. Vấn đề nằm ở một giả định sai lầm: rằng tồn tại MỘT khái niệm &ldquo;Customer&rdquo; thống nhất cho toàn công ty.</strong> Không tồn tại. Chưa bao giờ tồn tại. Business tự nó đã dùng cùng một từ cho những khái niệm khác nhau — và điều đó <em>hoàn toàn bình thường</em> đối với business, chỉ trở thành thảm họa khi engineer cố ép tất cả vào một model.</p>
+<p>Bounded Context là câu trả lời của DDD cho vấn đề này. Nhưng trước khi nói về giải pháp, hãy hiểu thật kỹ vì sao con đường &ldquo;một model cho tất cả&rdquo; chắc chắn thất bại.</p>
+<hr>
+<h2 id="2-vì-sao-enterprise-model--một-model-thống-nhất-cho-toàn-công-ty--luôn-thất-bại">2. Vì sao Enterprise Model — một model thống nhất cho toàn công ty — luôn thất bại<a hidden class="anchor" aria-hidden="true" href="#2-vì-sao-enterprise-model--một-model-thống-nhất-cho-toàn-công-ty--luôn-thất-bại">#</a></h2>
+<h3 id="21-problem-statement">2.1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#21-problem-statement">#</a></h3>
+<p>Ý tưởng Enterprise Model (hay Canonical Data Model, Unified Model) nghe cực kỳ hợp lý trên giấy:</p>
+<blockquote>
+<p>&ldquo;Nếu cả công ty dùng chung một định nghĩa về Customer, Order, Product&hellip; thì sẽ không còn chuyện dữ liệu lệch nhau, không còn duplicate, tích hợp giữa các hệ thống sẽ dễ dàng, báo cáo sẽ nhất quán.&rdquo;</p></blockquote>
+<p>Ý tưởng này đã được thử đi thử lại suốt 30 năm — dưới các tên gọi: Enterprise Data Model, Canonical Schema trên ESB, Master Data Management làm &ldquo;single source of truth&rdquo; cho <em>mọi</em> thuộc tính, &ldquo;One Platform To Rule Them All&rdquo;. Và nó thất bại lặp đi lặp lại, ở những công ty có ngân sách và nhân tài hàng đầu thế giới. Đây không phải thất bại do thực thi kém. Đây là thất bại do <strong>bản chất bài toán</strong>.</p>
+<h3 id="22-tại-sao-thất-bại--phân-tích-từ-first-principles">2.2. Tại sao thất bại — phân tích từ first principles<a hidden class="anchor" aria-hidden="true" href="#22-tại-sao-thất-bại--phân-tích-từ-first-principles">#</a></h3>
+<p><strong>Lý do 1 — Ngữ nghĩa phụ thuộc mục đích sử dụng.</strong> Một model không phải là &ldquo;bản chụp thực tại&rdquo;. Model là <strong>công cụ giải một bài toán cụ thể</strong>. Bản đồ tàu điện ngầm bóp méo khoảng cách địa lý một cách cố ý — và nhờ thế nó <em>tốt hơn</em> bản đồ vệ tinh cho mục đích đi tàu. Không có bản đồ &ldquo;đúng tuyệt đối&rdquo;, chỉ có bản đồ đúng cho mục đích. Team Kế toán và team CRM giải hai bài toán khác nhau, nên model tối ưu của họ <em>phải</em> khác nhau. Ép chung một model nghĩa là ép ít nhất một bên dùng bản đồ sai mục đích.</p>
+<p><strong>Lý do 2 — Model hợp nhất là union của mọi yêu cầu, nên nó là model tồi cho tất cả.</strong> Khi gộp yêu cầu của N team, model kết quả chứa mọi field, mọi ràng buộc, mọi trạng thái của cả N team. Nó không tối ưu cho bất kỳ ai. Entity <code>Customer</code> 47 field ở câu chuyện mở đầu là ví dụ: nó <em>đủ</em> cho mọi team về mặt dữ liệu, nhưng <em>sai</em> cho mọi team về mặt hành vi — invariant của team này là điều vô nghĩa (hoặc cản trở) với team kia.</p>
+<p><strong>Lý do 3 — Chi phí phối hợp tăng theo bình phương.</strong> Với một model dùng chung bởi N team, mỗi thay đổi cần sự đồng thuận của N team. Số kênh giao tiếp cần thiết là N(N-1)/2. Ở 3 team, còn chịu được. Ở 8 team, mọi thay đổi vào model chung trở thành dự án chính trị. Kết quả thực tế quan sát được ở mọi công ty: <strong>model chung bị đóng băng</strong>. Không ai dám sửa. Các team bắt đầu &ldquo;làm lậu&rdquo;: thêm bảng phụ, thêm JSON column <code>metadata</code>, thêm service riêng cache lại dữ liệu theo cách mình muốn. Enterprise Model chết về mặt thực tế nhưng vẫn tồn tại về mặt hình thức — trường hợp tệ nhất có thể.</p>
+<p><strong>Lý do 4 — Business tự nó không thống nhất, và không cần thống nhất.</strong> Đây là điểm mấu chốt mà engineer hay bỏ qua. Phòng Sales và phòng Kế toán đã dùng từ &ldquo;khách hàng&rdquo; theo nghĩa khác nhau <em>hàng chục năm</em> mà công ty vẫn vận hành tốt. Sự &ldquo;mâu thuẫn&rdquo; ngữ nghĩa này không phải là bug của tổ chức — nó là <strong>feature</strong>: mỗi phòng ban tối ưu ngôn ngữ cho công việc của mình. Phần mềm cố &ldquo;sửa&rdquo; sự đa nghĩa này là phần mềm đang chống lại cách business vận hành, và business luôn thắng.</p>
+<p><strong>Lý do 5 — Định luật Conway.</strong> Cấu trúc hệ thống phần mềm phản chiếu cấu trúc giao tiếp của tổ chức làm ra nó. Một model thống nhất đòi hỏi một cấu trúc giao tiếp thống nhất — tức mọi team liên quan phải giao tiếp mật thiết, liên tục, với chi phí thấp. Điều đó không tồn tại ở tổ chức trên ~20 người. Bạn không thể dựng một artifact kỹ thuật (unified model) đi ngược lại cấu trúc giao tiếp thực tế của tổ chức và mong nó sống sót. (Chúng ta sẽ quay lại Conway&rsquo;s Law kỹ hơn ở <a href="05-context-mapping.md">chương 05</a>.)</p>
+<h3 id="23-câu-hỏi-kiểm-chứng">2.3. Câu hỏi kiểm chứng<a hidden class="anchor" aria-hidden="true" href="#23-câu-hỏi-kiểm-chứng">#</a></h3>
+<p>Mỗi khi ai đó đề xuất &ldquo;chuẩn hóa một model Customer/Product dùng chung toàn công ty&rdquo;, hãy hỏi bốn câu:</p>
+<ol>
+<li><strong>Tại sao</strong> ta tin rằng các team khác nhau có cùng nhu cầu ngữ nghĩa? (Thường là không có bằng chứng, chỉ có mong muốn.)</li>
+<li><strong>Đánh đổi gì?</strong> Ta đổi tính nhất quán bề mặt lấy chi phí phối hợp N², model tồi cho mọi bên, và velocity giảm dài hạn.</li>
+<li><strong>Không làm thì sao?</strong> Các team giữ model riêng và tích hợp qua contract — đúng là có chi phí translation, nhưng chi phí đó <em>cục bộ và kiểm soát được</em>.</li>
+<li><strong>Làm sai thì hậu quả gì?</strong> Model chung bị đóng băng, các team làm lậu, dữ liệu &ldquo;chuẩn&rdquo; trở thành dữ liệu không ai tin — tình trạng tệ hơn cả trước khi chuẩn hóa.</li>
+</ol>
+<blockquote>
+<p><strong>Lưu ý công bằng:</strong> Master Data Management <em>có</em> chỗ đứng — cho một tập rất hẹp các thuộc tính định danh (mã số thuế, mã sản phẩm quốc tế GTIN, ID định danh khách hàng để nối dữ liệu). Cái thất bại là việc kéo dài MDM thành &ldquo;một model đầy đủ dùng chung&rdquo;. Chia sẻ <em>định danh</em> thì được; chia sẻ <em>toàn bộ model và hành vi</em> thì không.</p></blockquote>
+<hr>
+<h2 id="3-tại-sao-ddd-đưa-ra-khái-niệm-bounded-context">3. Tại sao DDD đưa ra khái niệm Bounded Context<a hidden class="anchor" aria-hidden="true" href="#3-tại-sao-ddd-đưa-ra-khái-niệm-bounded-context">#</a></h2>
+<p>Eric Evans quan sát thấy nghịch lý sau ở các dự án lớn:</p>
+<ul>
+<li>Muốn model hữu ích, model phải <strong>thống nhất nội bộ</strong> (internally consistent) — mỗi thuật ngữ chỉ một nghĩa, mỗi khái niệm chỉ một cách biểu diễn, không mâu thuẫn. DDD gọi tính chất này là <em>unification</em>.</li>
+<li>Nhưng như phần trên đã chứng minh, <strong>không thể</strong> duy trì tính thống nhất đó trên phạm vi toàn doanh nghiệp — chi phí tăng phi tuyến và ngữ nghĩa vốn dĩ khác nhau giữa các nhóm.</li>
+</ul>
+<p>Nếu không thể thống nhất <em>toàn cục</em>, và không thống nhất thì model vô dụng, vậy lối thoát là gì? Câu trả lời của Evans mang tính nhảy vọt về tư duy:</p>
+<blockquote>
+<p><strong>Đừng cố thống nhất model. Hãy thống nhất model TRONG MỘT RANH GIỚI ĐƯỢC TUYÊN BỐ RÕ RÀNG, và chấp nhận — thậm chí chào đón — việc các ranh giới khác nhau có model khác nhau.</strong></p></blockquote>
+<p>Tức là: thay vì chiến đấu vô vọng cho một model toàn cục, ta <strong>hạ mục tiêu xuống mức khả thi</strong> (thống nhất cục bộ) và <strong>nâng tính tường minh lên mức tối đa</strong> (ranh giới phải được tuyên bố, vẽ ra, ai cũng biết). Bounded Context chính là ranh giới đó: phạm vi mà trong đó một model cụ thể, một Ubiquitous Language cụ thể, có hiệu lực và được giữ nhất quán.</p>
+<p>Điểm tinh tế nhất: Bounded Context không phải là công cụ <em>chia nhỏ</em> hệ thống. Nó là công cụ <strong>bảo vệ tính toàn vẹn ngữ nghĩa</strong> của từng model. Việc chia nhỏ chỉ là hệ quả.</p>
+<hr>
+<h2 id="4-bản-chất-của-bounded-context-ranh-giới-ngữ-nghĩa-không-phải-ranh-giới-kỹ-thuật">4. Bản chất của Bounded Context: ranh giới ngữ nghĩa, không phải ranh giới kỹ thuật<a hidden class="anchor" aria-hidden="true" href="#4-bản-chất-của-bounded-context-ranh-giới-ngữ-nghĩa-không-phải-ranh-giới-kỹ-thuật">#</a></h2>
+<h3 id="41-định-nghĩa-làm-việc">4.1. Định nghĩa làm việc<a hidden class="anchor" aria-hidden="true" href="#41-định-nghĩa-làm-việc">#</a></h3>
+<p><strong>Bounded Context là ranh giới (về ngôn ngữ, về code, về team, và thường về dữ liệu) mà bên trong đó một domain model cụ thể được định nghĩa, nhất quán và có hiệu lực. Bước qua ranh giới, cùng một từ có thể mang nghĩa khác, và model bên này không có quyền lực gì với bên kia.</strong></p>
+<p>Hãy chú ý ba tính chất bản chất:</p>
+<p><strong>Thứ nhất — nó là ranh giới của NGHĨA, không phải của dữ liệu.</strong> Câu hỏi định hình Bounded Context không phải &ldquo;dữ liệu này lưu ở đâu?&rdquo; mà là &ldquo;<strong>khi tôi nói từ X trong phòng này, mọi người hiểu là gì?</strong>&rdquo;. Trong context Ordering, &ldquo;Product&rdquo; nghĩa là &ldquo;một thứ có giá, có thể đặt mua&rdquo;. Trong context Shipping, &ldquo;Product&rdquo; nghĩa là &ldquo;một kiện hàng có cân nặng và kích thước&rdquo;. Hai nghĩa, hai model, hai vòng đời — dù ngoài đời chúng trỏ về cùng một chiếc điện thoại trên kệ kho.</p>
+<p><strong>Thứ hai — nó là ranh giới ĐƯỢC TUYÊN BỐ, không phải ranh giới tự phát.</strong> Mọi codebase đều có các &ldquo;vùng nghĩa&rdquo; ngầm định — chỗ này <code>status</code> nghĩa là trạng thái thanh toán, chỗ kia <code>status</code> nghĩa là trạng thái giao hàng. Cái làm nên Bounded Context là việc ranh giới được <strong>nói ra thành lời, vẽ lên context map, và được bảo vệ có chủ đích</strong>: có team sở hữu, có contract ở biên, có quy tắc &ldquo;model bên trong không rò ra ngoài&rdquo;.</p>
+<p><strong>Thứ ba — bên trong ranh giới, tính nhất quán là LUẬT.</strong> Trong một Bounded Context, không được phép có hai class <code>Order</code> mang nghĩa khác nhau, không được phép có hai cách tính <code>totalAmount</code>. Nếu bạn phát hiện điều đó đang xảy ra, thì hoặc là model đang mục nát, hoặc là — thú vị hơn — bạn vừa phát hiện ra rằng nơi đó thực chất là <em>hai</em> context đang bị nhốt chung một chuồng.</p>
+<h3 id="42-cách-hoạt-động--nhìn-tổng-thể">4.2. Cách hoạt động — nhìn tổng thể<a hidden class="anchor" aria-hidden="true" href="#42-cách-hoạt-động--nhìn-tổng-thể">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
+    subgraph BC_Sales[&#34;Bounded Context: Sales/CRM&#34;]
+        direction TB
+        C1[&#34;Customer&lt;br/&gt;= người có tiềm năng mua&lt;br/&gt;leadSource, lifecycleStage,&lt;br/&gt;assignedRep&#34;]
+        L1[&#34;Ngôn ngữ: lead, opportunity,&lt;br/&gt;pipeline, conversion&#34;]
+    end
+
+    subgraph BC_Ordering[&#34;Bounded Context: Ordering&#34;]
+        direction TB
+        C2[&#34;Customer&lt;br/&gt;= người đặt hàng&lt;br/&gt;paymentMethods, addresses,&lt;br/&gt;orderHistory&#34;]
+        L2[&#34;Ngôn ngữ: order, cart,&lt;br/&gt;checkout, payment&#34;]
+    end
+
+    subgraph BC_Billing[&#34;Bounded Context: Billing&#34;]
+        direction TB
+        C3[&#34;BillingParty&lt;br/&gt;= pháp nhân xuất hóa đơn&lt;br/&gt;taxCode, legalName,&lt;br/&gt;outstandingBalance&#34;]
+        L3[&#34;Ngôn ngữ: invoice, debit,&lt;br/&gt;credit note, tax&#34;]
+    end
+
+    BC_Sales -- &#34;contract/event:&lt;br/&gt;LeadConverted { customerId }&#34; --&gt; BC_Ordering
+    BC_Ordering -- &#34;contract/event:&lt;br/&gt;OrderPlaced { orderId, billingInfo }&#34; --&gt; BC_Billing
+
+    style BC_Sales fill:#e8f4e8,stroke:#2e7d32
+    style BC_Ordering fill:#e8eef8,stroke:#1565c0
+    style BC_Billing fill:#f8ede8,stroke:#c62828
+</code></pre><p>Ba context, ba model &ldquo;Customer&rdquo; khác nhau (context Billing thậm chí không gọi nó là Customer). Giữa các context là <strong>contract tường minh</strong> — event hoặc API — chứ không phải là truy cập trực tiếp vào model của nhau. Mỗi mũi tên trên hình là một quan hệ cần quản trị: đó chính là chủ đề của <a href="05-context-mapping.md">chương 05 — Context Mapping</a>.</p>
+<h3 id="43-hệ-quả-tư-duy-quan-trọng-trùng-lặp-khái-niệm-là-bình-thường-trùng-lặp-trong-một-context-là-bệnh">4.3. Hệ quả tư duy quan trọng: trùng lặp khái niệm là bình thường, trùng lặp trong một context là bệnh<a hidden class="anchor" aria-hidden="true" href="#43-hệ-quả-tư-duy-quan-trọng-trùng-lặp-khái-niệm-là-bình-thường-trùng-lặp-trong-một-context-là-bệnh">#</a></h3>
+<p>Nhiều engineer được huấn luyện phản xạ DRY (Don&rsquo;t Repeat Yourself) đến mức thấy hai class <code>Product</code> ở hai module là ngứa mắt, muốn gom lại ngay. Bounded Context đảo ngược trực giác đó:</p>
+<ul>
+<li>Hai class <code>Product</code> ở <strong>hai context khác nhau</strong> không phải là duplication — chúng là <strong>hai khái niệm khác nhau tình cờ trùng tên</strong>. Gom chúng lại mới là bug.</li>
+<li>Hai class <code>Product</code> trong <strong>cùng một context</strong> mới là bệnh — vi phạm tính thống nhất nội bộ.</li>
+</ul>
+<p>DRY áp dụng cho <em>tri thức</em> (knowledge), không phải cho <em>chữ giống nhau</em>. &ldquo;Product của Catalog&rdquo; và &ldquo;Product của Shipping&rdquo; là hai mảnh tri thức khác nhau. Đây là một trong những điều chỉnh tư duy giá trị nhất mà DDD mang lại cho senior engineer.</p>
+<hr>
+<h2 id="5-một-khái-niệm--nhiều-nghĩa-order-customer-product-qua-từng-context">5. Một khái niệm — nhiều nghĩa: Order, Customer, Product qua từng context<a hidden class="anchor" aria-hidden="true" href="#5-một-khái-niệm--nhiều-nghĩa-order-customer-product-qua-từng-context">#</a></h2>
+<p>Phần này đi sâu vào hiện tượng trung tâm: <strong>polysemy</strong> — một từ, nhiều nghĩa. Đây không phải hiện tượng hiếm; nó là <em>mặc định</em> ở mọi doanh nghiệp đủ lớn.</p>
+<h3 id="51-order--sáu-bộ-mặt-của-một-từ">5.1. &ldquo;Order&rdquo; — sáu bộ mặt của một từ<a hidden class="anchor" aria-hidden="true" href="#51-order--sáu-bộ-mặt-của-một-từ">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Context</th>
+          <th>&ldquo;Order&rdquo; nghĩa là gì</th>
+          <th>Thuộc tính cốt lõi</th>
+          <th>Vòng đời</th>
+          <th>Invariant đặc thù</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Ordering / Checkout</strong></td>
+          <td>Cam kết mua hàng của khách</td>
+          <td>line items, tổng tiền, discount, payment status</td>
+          <td>Placed → Confirmed → Completed/Cancelled</td>
+          <td>Tổng tiền = Σ(line items) − discount; không sửa items sau khi Confirmed</td>
+      </tr>
+      <tr>
+          <td><strong>Fulfillment / Warehouse</strong></td>
+          <td>Danh sách món cần nhặt và đóng gói</td>
+          <td>pick list, vị trí kệ, packing slip</td>
+          <td>Received → Picking → Packed</td>
+          <td>Không pick quá số lượng đã reserve</td>
+      </tr>
+      <tr>
+          <td><strong>Shipping</strong></td>
+          <td>Lô hàng cần vận chuyển</td>
+          <td>kiện, cân nặng, địa chỉ, carrier, tracking</td>
+          <td>LabelCreated → InTransit → Delivered</td>
+          <td>Một order có thể tách thành nhiều shipment</td>
+      </tr>
+      <tr>
+          <td><strong>Billing / Accounting</strong></td>
+          <td>Căn cứ ghi nhận doanh thu</td>
+          <td>invoice lines, thuế suất, kỳ kế toán</td>
+          <td>Invoiced → Paid → (Refunded)</td>
+          <td>Bút toán bất biến; sửa sai bằng bút toán đảo, không sửa đè</td>
+      </tr>
+      <tr>
+          <td><strong>Customer Support</strong></td>
+          <td>Chuỗi sự kiện để giải quyết khiếu nại</td>
+          <td>timeline, tickets liên quan, SLA</td>
+          <td>mở theo ticket, không có &ldquo;trạng thái order&rdquo; riêng</td>
+          <td>Chỉ đọc; không được thay đổi order thật</td>
+      </tr>
+      <tr>
+          <td><strong>Analytics</strong></td>
+          <td>Một dòng fact trong data warehouse</td>
+          <td>denormalized snapshot tại thời điểm đặt</td>
+          <td>ghi một lần, không sửa</td>
+          <td>Immutable; đúng-tại-thời-điểm, không đúng-hiện-tại</td>
+      </tr>
+  </tbody>
+</table>
+<p>Hãy để ý cột <strong>Invariant</strong>: đây là bằng chứng mạnh nhất cho việc phải tách model. Invariant &ldquo;không sửa items sau khi Confirmed&rdquo; (Ordering) và invariant &ldquo;một order tách thành nhiều shipment&rdquo; (Shipping) không thể sống chung trong một class mà không biến class đó thành một mớ if-else theo &ldquo;chế độ&rdquo;. Khi các invariant xung đột nhau, đó là ranh giới context đang gào lên đòi được công nhận.</p>
+<h3 id="52-customer--như-đã-thấy-ở-câu-chuyện-mở-đầu">5.2. &ldquo;Customer&rdquo; — như đã thấy ở câu chuyện mở đầu<a hidden class="anchor" aria-hidden="true" href="#52-customer--như-đã-thấy-ở-câu-chuyện-mở-đầu">#</a></h3>
+<p>Tóm tắt lại bằng góc nhìn model:</p>
+<ul>
+<li><strong>CRM:</strong> <code>Customer</code> là aggregate giàu hành vi vòng đời sales (qualify, convert, churn). Có thể tồn tại mà chưa từng mua gì.</li>
+<li><strong>Ordering:</strong> <code>Customer</code> gần như chỉ là identity + sổ địa chỉ + phương thức thanh toán. Hành vi thật nằm ở <code>Order</code>.</li>
+<li><strong>Billing:</strong> không phải <code>Customer</code> mà là <code>BillingParty</code> — pháp nhân. Quan hệ nhiều-nhiều với &ldquo;người&rdquo; ở CRM.</li>
+<li><strong>Shipping:</strong> không có customer. Chỉ có <code>Recipient</code> — value object gồm tên + số điện thoại + địa chỉ, sống trong từng shipment, sửa được cho từng đơn mà không ảnh hưởng ai.</li>
+</ul>
+<p>Điểm cuối rất đáng ngẫm: đôi khi cách model đúng nhất cho &ldquo;Customer&rdquo; ở một context là <strong>không model nó</strong>. Shipping không cần khái niệm customer — cố nhét vào chỉ tạo coupling vô ích.</p>
+<h3 id="53-product--sẽ-được-mổ-xẻ-toàn-diện-ở-mục-10">5.3. &ldquo;Product&rdquo; — sẽ được mổ xẻ toàn diện ở mục 10<a hidden class="anchor" aria-hidden="true" href="#53-product--sẽ-được-mổ-xẻ-toàn-diện-ở-mục-10">#</a></h3>
+<p>Chúng ta dành riêng case study e-commerce (mục 10) cho &ldquo;Product&rdquo;, vì nó là ví dụ giàu chi tiết nhất. Trước đó, cần làm rõ hai cặp phân biệt mà gần như mọi team đều nhầm: Bounded Context vs Subdomain, và Bounded Context vs Microservice.</p>
+<hr>
+<h2 id="6-bounded-context-vs-subdomain-problem-space-vs-solution-space">6. Bounded Context vs Subdomain: problem space vs solution space<a hidden class="anchor" aria-hidden="true" href="#6-bounded-context-vs-subdomain-problem-space-vs-solution-space">#</a></h2>
+<p>Đây là <strong>điểm bị nhầm lẫn nhiều nhất trong toàn bộ DDD chiến lược</strong> — kể cả trong sách vở và bài nói hội thảo. Đáng nhầm, vì trong trường hợp lý tưởng chúng trùng nhau 1-1, khiến người ta tưởng chúng là một.</p>
+<h3 id="61-phân-biệt-cốt-lõi">6.1. Phân biệt cốt lõi<a hidden class="anchor" aria-hidden="true" href="#61-phân-biệt-cốt-lõi">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th><strong>Subdomain</strong></th>
+          <th><strong>Bounded Context</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Thuộc về</td>
+          <td><strong>Problem space</strong> — không gian bài toán</td>
+          <td><strong>Solution space</strong> — không gian giải pháp</td>
+      </tr>
+      <tr>
+          <td>Là gì</td>
+          <td>Một mảng hoạt động của business, tồn tại <strong>khách quan</strong> dù có phần mềm hay không</td>
+          <td>Một ranh giới model <strong>do ta thiết kế</strong> để giải bài toán</td>
+      </tr>
+      <tr>
+          <td>Ai quyết định</td>
+          <td>Business quyết định (bằng cách nó vận hành)</td>
+          <td>Architect/team quyết định (bằng thiết kế)</td>
+      </tr>
+      <tr>
+          <td>Ta có thể thay đổi không</td>
+          <td>Không — chỉ có thể <em>khám phá</em> nó đúng hay sai</td>
+          <td>Có — ta vẽ lại ranh giới khi cần</td>
+      </tr>
+      <tr>
+          <td>Ví dụ</td>
+          <td>&ldquo;Công ty này phải quản lý tồn kho&rdquo;</td>
+          <td>&ldquo;Hệ thống Inventory với model riêng, team riêng, ngôn ngữ riêng&rdquo;</td>
+      </tr>
+      <tr>
+          <td>Câu hỏi đặc trưng</td>
+          <td>&ldquo;Business cần giải quyết những gì?&rdquo;</td>
+          <td>&ldquo;Ta tổ chức model và code thành những vùng nào?&rdquo;</td>
+      </tr>
+  </tbody>
+</table>
+<p>Một câu ghi nhớ: <strong>Subdomain là thứ bạn TÌM THẤY. Bounded Context là thứ bạn VẼ RA.</strong> Bạn không &ldquo;thiết kế&rdquo; subdomain, cũng không &ldquo;khám phá&rdquo; bounded context.</p>
+<h3 id="62-quan-hệ-giữa-hai-bên--không-phải-lúc-nào-cũng-1-1">6.2. Quan hệ giữa hai bên — không phải lúc nào cũng 1-1<a hidden class="anchor" aria-hidden="true" href="#62-quan-hệ-giữa-hai-bên--không-phải-lúc-nào-cũng-1-1">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph LR
+    subgraph PS[&#34;PROBLEM SPACE — tồn tại khách quan&#34;]
+        SD1[&#34;Subdomain:&lt;br/&gt;Quản lý đơn hàng&lt;br/&gt;(Core)&#34;]
+        SD2[&#34;Subdomain:&lt;br/&gt;Quản lý tồn kho&lt;br/&gt;(Supporting)&#34;]
+        SD3[&#34;Subdomain:&lt;br/&gt;Kế toán&lt;br/&gt;(Generic)&#34;]
+    end
+
+    subgraph SS[&#34;SOLUTION SPACE — do ta thiết kế&#34;]
+        BC1[&#34;BC: Ordering&#34;]
+        BC2[&#34;BC: Pricing &amp;amp; Promotion&#34;]
+        BC3[&#34;BC: Inventory&#34;]
+        SAAS[&#34;Mua SaaS kế toán&lt;br/&gt;(không tự xây BC)&#34;]
+    end
+
+    SD1 --&gt;|&#34;được giải bởi 2 BC&#34;| BC1
+    SD1 --&gt; BC2
+    SD2 --&gt;|&#34;1-1 (lý tưởng)&#34;| BC3
+    SD3 --&gt;|&#34;giải bằng mua, không xây&#34;| SAAS
+
+    style PS fill:#fdf6e3,stroke:#b58900
+    style SS fill:#eee8f5,stroke:#6c71c4
+</code></pre><p>Các cấu hình gặp trong thực tế:</p>
+<ul>
+<li><strong>1 subdomain ↔ 1 bounded context:</strong> trạng thái lý tưởng, nên hướng tới cho core subdomain.</li>
+<li><strong>1 subdomain → nhiều bounded context:</strong> subdomain &ldquo;Quản lý đơn hàng&rdquo; có thể phức tạp đến mức tách thành BC Ordering và BC Pricing — hai model, hai ngôn ngữ, dù cùng phục vụ một bài toán. Hợp lệ và phổ biến.</li>
+<li><strong>1 bounded context ôm nhiều subdomain:</strong> thường là dấu hiệu xấu (model phục vụ nhiều bài toán sẽ bị kéo giãn), nhưng chấp nhận được ở hệ thống nhỏ hoặc với các generic subdomain gộp chung. Ví dụ: một BC &ldquo;Back-office&rdquo; ôm cả quản lý user nội bộ lẫn cấu hình hệ thống.</li>
+<li><strong>Subdomain không có bounded context nào:</strong> vì ta mua ngoài (SaaS kế toán) — quyết định <em>không xây</em> cũng là một quyết định solution space.</li>
+</ul>
+<h3 id="63-vì-sao-nhầm-lẫn-này-nguy-hiểm-trong-thực-tế">6.3. Vì sao nhầm lẫn này nguy hiểm trong thực tế<a hidden class="anchor" aria-hidden="true" href="#63-vì-sao-nhầm-lẫn-này-nguy-hiểm-trong-thực-tế">#</a></h3>
+<p>Hậu quả thực tế của việc đánh đồng hai khái niệm:</p>
+<p><strong>Nhầm kiểu 1 — coi bounded context là &ldquo;khách quan&rdquo;, đi &ldquo;tìm&rdquo; nó như tìm subdomain.</strong> Team ngồi tranh cãi bất tận &ldquo;ranh giới ĐÚNG của context là gì&rdquo; như thể có đáp án duy nhất trong tự nhiên. Không có. Bounded context là quyết định thiết kế với trade-off; câu hỏi đúng là &ldquo;ranh giới nào <em>phù hợp nhất</em> với đội hình team, mức độ thay đổi, và chiến lược của ta <em>lúc này</em>&rdquo; — và câu trả lời được phép thay đổi theo thời gian.</p>
+<p><strong>Nhầm kiểu 2 — coi subdomain là thứ tùy ý vẽ.</strong> Team &ldquo;quyết định&rdquo; rằng công ty mình không có subdomain tồn kho vì&hellip; không thích làm. Subdomain không biến mất chỉ vì bạn không model nó — nó sẽ quay lại dưới dạng những cục logic tồn kho rải rác trong BC Ordering, không ai sở hữu, không ai hiểu toàn cảnh.</p>
+<p><strong>Nhầm kiểu 3 — ánh xạ máy móc phân loại core/supporting/generic sang chất lượng code.</strong> Phân loại core/supporting/generic là thuộc tính của <em>subdomain</em> (bài toán), giúp quyết định đầu tư: core thì xây kỹ với đội mạnh nhất, generic thì mua. Nó không tự động quy định kiến trúc bên trong từng BC. Một BC giải supporting subdomain vẫn cần ranh giới sạch — nó chỉ không cần model tinh xảo bằng.</p>
+<blockquote>
+<p><strong>Quy tắc bỏ túi:</strong> Khi thảo luận, hãy tự hỏi &ldquo;câu này đang nói về bài toán hay về giải pháp?&rdquo;. &ldquo;Chúng ta có cần tính phí ship theo vùng không?&rdquo; — problem space, hỏi business. &ldquo;Logic tính phí ship nên nằm ở BC Shipping hay BC Ordering?&rdquo; — solution space, hỏi architect. Trộn hai loại câu hỏi trong một cuộc tranh luận là nguồn gốc của 90% cuộc họp không lối ra.</p></blockquote>
+<hr>
+<h2 id="7-bounded-context-vs-microservice-không-phải-quan-hệ-1-1">7. Bounded Context vs Microservice: KHÔNG phải quan hệ 1-1<a hidden class="anchor" aria-hidden="true" href="#7-bounded-context-vs-microservice-không-phải-quan-hệ-1-1">#</a></h2>
+<p>Nhầm lẫn phổ biến thứ hai, và đắt tiền hơn nhiều: <strong>&ldquo;mỗi bounded context = một microservice&rdquo;</strong>. Câu này sai theo cả hai chiều.</p>
+<h3 id="71-vì-sao-người-ta-hay-đánh-đồng">7.1. Vì sao người ta hay đánh đồng<a hidden class="anchor" aria-hidden="true" href="#71-vì-sao-người-ta-hay-đánh-đồng">#</a></h3>
+<p>Có lý do lịch sử: phong trào microservices (~2014) mượn DDD làm công cụ trả lời câu hỏi &ldquo;cắt service theo đường nào?&rdquo;. Câu trả lời &ldquo;cắt theo bounded context&rdquo; tốt hơn hẳn &ldquo;cắt theo entity&rdquo; (kiểu UserService, ProductService, OrderService — thảm họa distributed CRUD). Nhưng &ldquo;bounded context là <em>đường cắt tốt</em> cho microservice&rdquo; bị truyền miệng thành &ldquo;bounded context <em>là</em> microservice&rdquo;. Từ một heuristic đúng thành một đẳng thức sai.</p>
+<h3 id="72-phân-biệt-bản-chất">7.2. Phân biệt bản chất<a hidden class="anchor" aria-hidden="true" href="#72-phân-biệt-bản-chất">#</a></h3>
+<ul>
+<li><strong>Bounded Context là ranh giới NGỮ NGHĨA / THIẾT KẾ</strong> — trả lời câu hỏi &ldquo;model nào có hiệu lực ở đâu, từ này nghĩa là gì ở đây&rdquo;. Nó tồn tại độc lập với cách deploy.</li>
+<li><strong>Microservice là ranh giới TRIỂN KHAI / VẬN HÀNH</strong> — trả lời câu hỏi &ldquo;cái gì được deploy, scale, fail độc lập với cái gì&rdquo;. Nó là quyết định về process, network, và operations.</li>
+</ul>
+<p>Hai loại ranh giới này <em>có thể</em> trùng nhau, nhưng không <em>bắt buộc</em> trùng nhau:</p>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
+    subgraph M1[&#34;Deployment: MODULAR MONOLITH (1 process)&#34;]
+        BCa[&#34;BC: Catalog&#34;]
+        BCb[&#34;BC: Ordering&#34;]
+        BCc[&#34;BC: Inventory&#34;]
+    end
+
+    subgraph M2[&#34;Deployment: 1 BC = 1 service&#34;]
+        S1[&#34;Service: Shipping&lt;br/&gt;(= BC Shipping)&#34;]
+    end
+
+    subgraph M3[&#34;Deployment: 1 BC = NHIỀU service&#34;]
+        S2[&#34;Service: payment-api&#34;]
+        S3[&#34;Service: payment-webhook-worker&#34;]
+        S4[&#34;Service: payment-reconciliation-job&#34;]
+        NOTE1[&#34;Cả 3 cùng thuộc BC Payment:&lt;br/&gt;chung model, chung team,&lt;br/&gt;chung ngôn ngữ — tách process&lt;br/&gt;chỉ vì lý do scaling/isolation&#34;]
+    end
+
+    style M1 fill:#e8f4e8,stroke:#2e7d32
+    style M2 fill:#e8eef8,stroke:#1565c0
+    style M3 fill:#f8ede8,stroke:#c62828
+</code></pre><p><strong>Hợp lệ: nhiều BC trong một monolith.</strong> Ba context Catalog, Ordering, Inventory sống trong cùng một process, mỗi context một module với ranh giới ngữ nghĩa nghiêm ngặt, giao tiếp qua interface tường minh. Đây là modular monolith — với đa số công ty, đây là điểm khởi đầu <em>đúng</em>. Bạn nhận được 80% lợi ích của bounded context (model sạch, ngôn ngữ rõ, team tự chủ về thiết kế) mà không trả chi phí distributed systems (network partition, eventual consistency, distributed tracing, on-call phức tạp).</p>
+<p><strong>Hợp lệ: một BC gồm nhiều service.</strong> BC Payment có thể gồm ba deployable: API đồng bộ, worker xử lý webhook, job đối soát chạy đêm. Chúng chung model, chung team, chung ngôn ngữ — chỉ tách process vì đặc tính vận hành khác nhau (latency-sensitive vs throughput-oriented vs batch). Vẫn là <em>một</em> bounded context.</p>
+<p><strong>KHÔNG hợp lệ: một service chứa nhiều model lẫn lộn không ranh giới.</strong> Đó không phải &ldquo;một BC lớn&rdquo; — đó là big ball of mud có REST API.</p>
+<h3 id="73-hệ-quả-thực-tiễn--thứ-tự-quyết-định-đúng">7.3. Hệ quả thực tiễn — thứ tự quyết định đúng<a hidden class="anchor" aria-hidden="true" href="#73-hệ-quả-thực-tiễn--thứ-tự-quyết-định-đúng">#</a></h3>
+<ol>
+<li><strong>Xác định bounded context trước</strong> — thuần túy bằng phân tích ngữ nghĩa, team, business capability (mục 8). Chưa nói gì đến deploy.</li>
+<li><strong>Chọn deployment topology sau</strong> — dựa trên nhu cầu <em>vận hành</em>: scale độc lập? fault isolation? tech stack khác? team release độc lập? Nếu không có nhu cầu nào đủ mạnh, để chung process.</li>
+<li><strong>Ranh giới BC là bất biến thiết kế; topology là quyết định có thể đổi.</strong> Tách một BC từ monolith ra service riêng là việc <em>tương đối</em> an toàn <em>nếu</em> ranh giới ngữ nghĩa đã sạch từ trước. Ngược lại, gộp hai service vốn chung một BC lại thành một cũng dễ. Cái đắt nhất là <strong>vẽ lại ranh giới ngữ nghĩa</strong> — dù trong monolith hay giữa các service.</li>
+</ol>
+<p><strong>Không áp dụng phân biệt này thì sao?</strong> Bạn sẽ rơi vào một trong hai hố: (a) tách 40 microservice theo entity/bảng, mỗi request đi qua 8 service, mọi thay đổi business chạm 5 repo — distributed monolith; hoặc (b) sợ hố (a) nên giữ monolith nhưng không giữ ranh giới bên trong — big ball of mud. Cả hai đều bắt nguồn từ việc trộn câu hỏi ngữ nghĩa với câu hỏi triển khai.</p>
+<blockquote>
+<p><strong>Kinh nghiệm 20 năm gói trong một câu:</strong> ranh giới ngữ nghĩa sai thì microservices biến nó thành thảm họa phân tán, monolith biến nó thành thảm họa tập trung — công cụ deploy không cứu được thiết kế. Ngược lại, ranh giới ngữ nghĩa đúng thì deploy kiểu gì cũng sống được.</p></blockquote>
+<hr>
+<h2 id="8-cách-xác-định-ranh-giới-linguistic-team-business-capability">8. Cách xác định ranh giới: linguistic, team, business capability<a hidden class="anchor" aria-hidden="true" href="#8-cách-xác-định-ranh-giới-linguistic-team-business-capability">#</a></h2>
+<p>Đây là phần &ldquo;làm thế nào&rdquo;. Không có thuật toán cơ học, nhưng có ba lăng kính hội tụ — khi cả ba chỉ về cùng một đường cắt, bạn có thể tự tin cao độ.</p>
+<h3 id="81-lăng-kính-1--linguistic-boundary-ranh-giới-ngôn-ngữ">8.1. Lăng kính 1 — Linguistic boundary (ranh giới ngôn ngữ)<a hidden class="anchor" aria-hidden="true" href="#81-lăng-kính-1--linguistic-boundary-ranh-giới-ngôn-ngữ">#</a></h3>
+<p>Nguyên lý: <strong>ranh giới context nằm ở chỗ nghĩa của từ thay đổi</strong>. Cách dò:</p>
+<p><strong>Dấu hiệu A — cùng từ, khác nghĩa (polysemy).</strong> Ngồi với domain expert của hai phòng ban, hỏi cùng một câu: &ldquo;Một Product có thể hết hàng không?&rdquo;. Người Catalog nói &ldquo;Product không bao giờ hết hàng, nó chỉ là thông tin mô tả&rdquo;. Người Inventory nói &ldquo;tất nhiên, đó là chuyện tôi lo cả ngày&rdquo;. Hai câu trả lời trái ngược cho cùng một từ → hai context.</p>
+<p><strong>Dấu hiệu B — cùng nghĩa, khác từ (synonymy).</strong> Team A gọi &ldquo;shipment&rdquo;, team B gọi &ldquo;delivery&rdquo;, team C gọi &ldquo;consignment&rdquo; cho cùng một thứ. Thường tiết lộ các nhóm ngôn ngữ khác nhau đã hình thành tự nhiên → ứng viên ranh giới.</p>
+<p><strong>Dấu hiệu C — từ cần tính từ bổ nghĩa để khỏi hiểu lầm.</strong> Khi mọi người trong họp phải nói &ldquo;à ý tôi là <em>sales</em> order chứ không phải <em>purchase</em> order&rdquo;, &ldquo;customer theo nghĩa <em>kế toán</em>&rdquo; — ngôn ngữ đang tự vá víu cho sự thiếu vắng ranh giới. Mỗi cụm tính từ ổn định (&ldquo;billing customer&rdquo;, &ldquo;shipping address rules&rdquo;) là một context tiềm năng.</p>
+<p><strong>Dấu hiệu D — trong code: field vô nghĩa theo ngữ cảnh.</strong> Mở entity ra và hỏi từng field: &ldquo;nghiệp vụ nào đọc/ghi field này?&rdquo;. Nếu câu trả lời chia entity thành các cụm field rời nhau (cluster A chỉ dùng bởi luồng catalog, cluster B chỉ dùng bởi luồng kho) — entity đó đang là nơi giam giữ nhiều model.</p>
+<p><strong>Dấu hiệu E — trạng thái enum &ldquo;nở&rdquo; theo nhiều trục.</strong> <code>OrderStatus</code> có 23 giá trị trộn lẫn <code>PAYMENT_PENDING</code>, <code>PICKING</code>, <code>SHIPPED</code>, <code>INVOICE_ISSUED</code>, <code>REFUND_REQUESTED</code>? Đó là 4 state machine của 4 context bị ép chung một enum. Mỗi trục trạng thái độc lập là một context tiềm năng.</p>
+<h3 id="82-lăng-kính-2--team-boundary-ranh-giới-tổ-chức">8.2. Lăng kính 2 — Team boundary (ranh giới tổ chức)<a hidden class="anchor" aria-hidden="true" href="#82-lăng-kính-2--team-boundary-ranh-giới-tổ-chức">#</a></h3>
+<p>Nguyên lý: <strong>một bounded context nên được sở hữu bởi đúng một team; một team có thể sở hữu vài context, nhưng một context không nên bị chia cho nhiều team.</strong></p>
+<p>Lý do từ first principles: tính thống nhất nội bộ của model chỉ duy trì được khi những người sửa model giao tiếp với nhau <em>hàng ngày, chi phí thấp</em>. Đó chính là định nghĩa của một team. Hai team sửa chung một model thì model sẽ phân mảnh ngữ nghĩa trong vòng vài quý — Conway&rsquo;s Law không phải là lời khuyên, nó là lực hấp dẫn.</p>
+<p>Cách dò theo lăng kính này:</p>
+<ul>
+<li><strong>Ai trả lời được câu hỏi nghiệp vụ?</strong> Nếu mọi thắc mắc về pricing đều phải hỏi chị A team X, còn thắc mắc về tồn kho phải hỏi anh B team Y — ranh giới tri thức đã tồn tại, hãy công nhận nó.</li>
+<li><strong>Luồng phê duyệt thay đổi.</strong> Thay đổi nào cần một team duyệt → trong một context. Thay đổi nào cần hai team ngồi lại thương lượng → đang vắt qua ranh giới (và nên biến cuộc thương lượng đó thành contract tường minh — chương 05).</li>
+<li><strong>Cảnh giác chiều ngược lại:</strong> đừng để cấu trúc team <em>hiện tại</em> (vốn có thể là kết quả của lịch sử tuyển dụng lộn xộn) đóng đinh ranh giới ngữ nghĩa sai. Nếu lăng kính linguistic và capability cùng chỉ ra ranh giới khác với đội hình team hiện tại, phương án đúng thường là <strong>đổi đội hình team</strong> (Inverse Conway Maneuver) chứ không phải bẻ cong model theo team.</li>
+</ul>
+<h3 id="83-lăng-kính-3--business-capability-năng-lực-nghiệp-vụ">8.3. Lăng kính 3 — Business capability (năng lực nghiệp vụ)<a hidden class="anchor" aria-hidden="true" href="#83-lăng-kính-3--business-capability-năng-lực-nghiệp-vụ">#</a></h3>
+<p>Nguyên lý: <strong>cắt theo &ldquo;khả năng làm được việc gì&rdquo; của business, không cắt theo dữ liệu, không cắt theo layer kỹ thuật.</strong></p>
+<p>Một business capability là một việc business làm được, có đầu vào — đầu ra — thước đo riêng: &ldquo;định giá sản phẩm&rdquo;, &ldquo;quản lý tồn kho&rdquo;, &ldquo;thực hiện giao hàng&rdquo;, &ldquo;thu tiền&rdquo;. Đặc điểm nhận dạng capability tốt:</p>
+<ul>
+<li>Diễn đạt bằng <strong>động từ nghiệp vụ</strong>, không phải danh từ dữ liệu. &ldquo;Fulfill orders&rdquo; là capability; &ldquo;Order data&rdquo; không phải.</li>
+<li>Có <strong>KPI riêng</strong>: tỉ lệ giao đúng hẹn (Shipping), độ chính xác tồn kho (Inventory), conversion rate (Catalog/Search). KPI khác nhau → áp lực tiến hóa khác nhau → nên tách model để mỗi bên tiến hóa theo nhịp riêng.</li>
+<li><strong>Ổn định hơn quy trình và cơ cấu tổ chức.</strong> Công ty tái cơ cấu phòng ban thường xuyên, nhưng &ldquo;phải thu được tiền&rdquo; và &ldquo;phải giao được hàng&rdquo; thì bất biến hàng thập kỷ. Ranh giới bám theo capability sẽ bền hơn ranh giới bám theo sơ đồ tổ chức tháng này.</li>
+</ul>
+<p>Anti-pattern đối chiếu: cắt theo <strong>layer kỹ thuật</strong> (&ldquo;API context&rdquo;, &ldquo;database context&rdquo;, &ldquo;frontend context&rdquo;) hoặc theo <strong>entity</strong> (&ldquo;User context&rdquo; chứa mọi thứ đụng đến user). Cả hai đều đảm bảo mọi thay đổi nghiệp vụ vắt ngang tất cả các &ldquo;context&rdquo; — tức là bạn không có bounded context nào cả, chỉ có big ball of mud được sắp xếp ngăn nắp.</p>
+<h3 id="84-quy-trình-thực-dụng-khi-ba-lăng-kính-mâu-thuẫn">8.4. Quy trình thực dụng khi ba lăng kính mâu thuẫn<a hidden class="anchor" aria-hidden="true" href="#84-quy-trình-thực-dụng-khi-ba-lăng-kính-mâu-thuẫn">#</a></h3>
+<p>Thực tế ba lăng kính không phải lúc nào cũng hội tụ. Thứ tự ưu tiên tôi dùng:</p>
+<ol>
+<li><strong>Linguistic là trọng tài cuối cùng cho ranh giới ngữ nghĩa</strong> — vì nó phản ánh bản chất bài toán. Nếu nghĩa của từ khác nhau, model <em>phải</em> khác nhau, bất kể team hay capability nói gì.</li>
+<li><strong>Capability quyết định độ thô của đường cắt</strong> — linguistic có thể chỉ ra 15 vi-sai ngữ nghĩa, nhưng không phải vi-sai nào cũng đáng một context riêng; gom theo capability để có số context quản trị được.</li>
+<li><strong>Team là ràng buộc thực thi</strong> — ranh giới đẹp mấy mà không có team sở hữu thì chỉ là hình vẽ. Nếu chỉ có 2 team, đừng vẽ 9 context; hãy vẽ 3-4 context và ghi chú các đường tách tương lai.</li>
+</ol>
+<p>Công cụ workshop hiệu quả nhất cho việc này theo kinh nghiệm của tôi: <strong>EventStorming</strong> (big picture) — trải toàn bộ domain event lên tường, các cụm event + các điểm &ldquo;đổi ngôn ngữ&rdquo; trong cuộc thảo luận sẽ lộ ra ranh giới tự nhiên nhanh hơn bất kỳ buổi phân tích schema nào.</p>
+<hr>
+<h2 id="9-shared-database--kẻ-phá-hoại-ranh-giới-thầm-lặng">9. Shared Database — kẻ phá hoại ranh giới thầm lặng<a hidden class="anchor" aria-hidden="true" href="#9-shared-database--kẻ-phá-hoại-ranh-giới-thầm-lặng">#</a></h2>
+<h3 id="91-problem-statement">9.1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#91-problem-statement">#</a></h3>
+<p>Đây là tình huống tôi gặp ở <em>đa số</em> công ty tự nhận &ldquo;đã áp dụng DDD&rdquo;: code chia module/service đẹp đẽ theo context — Catalog, Ordering, Inventory — nhưng tất cả trỏ vào <strong>cùng một database, đọc ghi cùng những bảng</strong>. Team tự hào về kiến trúc. Rồi một ngày team Catalog thêm ràng buộc NOT NULL vào cột <code>weight</code> của bảng <code>products</code>, và service Ordering sập lúc 2 giờ sáng.</p>
+<p>Câu hỏi đặt ra: nếu các context đã tách ở tầng code, tại sao shared database vẫn phá hỏng mọi thứ?</p>
+<h3 id="92-bản-chất-schema-là-model-và-database-biến-model-thành-contract-ngầm">9.2. Bản chất: schema là model, và database biến model thành contract ngầm<a hidden class="anchor" aria-hidden="true" href="#92-bản-chất-schema-là-model-và-database-biến-model-thành-contract-ngầm">#</a></h3>
+<p>Trả lời từ first principles: <strong>ranh giới của bounded context là ranh giới của model, và schema database chính là một dạng biểu diễn của model.</strong> Khi hai context đọc ghi chung một bảng, chúng đang <strong>chia sẻ model</strong> — bất kể code được xếp vào thư mục nào. Ranh giới trên sơ đồ kiến trúc là giả; ranh giới thật nằm ở chỗ dữ liệu.</p>
+<p>Cụ thể, shared database phá hoại theo bốn cơ chế:</p>
+<p><strong>Cơ chế 1 — Coupling cấu trúc không nhìn thấy.</strong> Mọi cột, mọi kiểu dữ liệu, mọi constraint của bảng chung trở thành <strong>contract công khai giữa các context — nhưng là contract không được tuyên bố, không versioning, không ai review</strong>. API thay đổi thì có contract test bắt được; schema chung thay đổi thì chỉ có production bắt được. Đây là lý do sự cố &ldquo;NOT NULL lúc 2 giờ sáng&rdquo; ở trên: team Catalog không hề biết Ordering ghi vào bảng đó với <code>weight = null</code>.</p>
+<p><strong>Cơ chế 2 — Phá tính thống nhất ngữ nghĩa bằng cách ép chung một biểu diễn.</strong> Bảng chung buộc mọi context chấp nhận <em>một</em> cách biểu diễn. Catalog muốn <code>price</code> là cấu trúc phức tạp (giá theo phân khúc, theo thời gian); Ordering chỉ cần giá chốt tại thời điểm đặt. Bảng chung ép cả hai vào một cột <code>price DECIMAL</code> — cả hai model đều bị thui chột. Tệ hơn: khi Ordering đọc <code>products.price</code> <em>lúc fulfil đơn</em> thay vì lúc đặt đơn, giá thay đổi giữa chừng sẽ tính sai tiền — bug ngữ nghĩa kinh điển của shared table, compiler và test đều không bắt được.</p>
+<p><strong>Cơ chế 3 — Vô hiệu hóa invariant của aggregate.</strong> Context Ordering bảo vệ invariant &ldquo;không sửa line items sau khi confirm&rdquo; bằng logic trong aggregate. Nhưng nếu context khác (hoặc một anh backend &ldquo;fix nhanh&rdquo; bằng SQL console) ghi thẳng vào bảng <code>order_items</code>, invariant bị bypass hoàn toàn. Database chung nghĩa là <strong>quyền ghi không kiểm soát được</strong> — mọi công sức thiết kế aggregate trở thành trang trí.</p>
+<p><strong>Cơ chế 4 — Đóng băng tiến hóa.</strong> Muốn refactor model Catalog? Phải kiểm tra xem Ordering, Inventory, Reporting, và ba cái cron job không ai nhớ có đọc bảng này không. Không ai dám chắc → không ai dám sửa → schema chung trở thành tầng trầm tích. Đây chính là số phận của Enterprise Model (mục 2) tái hiện ở tầng dữ liệu.</p>
+<h3 id="93-nguyên-tắc-và-các-mức-thực-dụng">9.3. Nguyên tắc và các mức thực dụng<a hidden class="anchor" aria-hidden="true" href="#93-nguyên-tắc-và-các-mức-thực-dụng">#</a></h3>
+<p>Nguyên tắc chuẩn: <strong>mỗi bounded context sở hữu dữ liệu của mình; không context nào đọc/ghi trực tiếp vào dữ liệu của context khác; mọi trao đổi đi qua contract (API, event, published language).</strong></p>
+<p>Lưu ý quan trọng cho người làm thực tế — &ldquo;database riêng&rdquo; không nhất thiết là &ldquo;server riêng&rdquo;. Các mức tách, từ nhẹ đến nặng:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Mức</th>
+          <th>Cách làm</th>
+          <th>Ngăn được gì</th>
+          <th>Phù hợp</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>0</td>
+          <td>Chung bảng, chung schema</td>
+          <td>Không ngăn được gì — đây là shared database đúng nghĩa</td>
+          <td>Không khuyến nghị giữa các context</td>
+      </tr>
+      <tr>
+          <td>1</td>
+          <td>Chung DB instance, <strong>mỗi context một schema/namespace riêng</strong>, user DB riêng không có quyền cross-schema</td>
+          <td>Ngăn coupling cấu trúc và ghi chéo; chưa ngăn join lén nếu cấp quyền ẩu</td>
+          <td>Modular monolith — điểm khởi đầu tốt</td>
+      </tr>
+      <tr>
+          <td>2</td>
+          <td>Mỗi context một database riêng trên hạ tầng chung</td>
+          <td>Như mức 1 + ngăn tuyệt đối join chéo</td>
+          <td>Đa số hệ thống vừa</td>
+      </tr>
+      <tr>
+          <td>3</td>
+          <td>Mỗi context DB riêng, công nghệ tùy chọn (Postgres/Redis/Elasticsearch&hellip;)</td>
+          <td>Tự do tiến hóa hoàn toàn</td>
+          <td>Hệ scale lớn, team đông</td>
+      </tr>
+  </tbody>
+</table>
+<p>Điều thực sự quan trọng không phải số server, mà là <strong>kỷ luật quyền truy cập</strong>: context A không có credential để chạm vào dữ liệu của context B. Kỷ luật này phải được thực thi bằng cơ chế (grant, network policy, lint kiến trúc) chứ không phải bằng lời hứa.</p>
+<p><strong>Còn Reporting/Analytics thì sao?</strong> Nhu cầu &ldquo;join dữ liệu mọi context để báo cáo&rdquo; là chính đáng — nhưng lời giải không phải shared database, mà là mỗi context <strong>publish dữ liệu ra</strong> (event stream, CDC → data warehouse), và analytics xây model <em>riêng của nó</em> (chính analytics cũng là một context, với model dạng fact/dimension). Đừng để nhu cầu đọc báo cáo trở thành cái cớ giữ shared database cho luồng transactional.</p>
+<p><strong>Đánh đổi phải trả khi tách dữ liệu (nói thẳng, không tô hồng):</strong></p>
+<ul>
+<li>Mất JOIN chéo context → phải composition ở tầng ứng dụng hoặc build read model riêng. Tốn công thật.</li>
+<li>Mất transaction ACID chéo context → phải chấp nhận eventual consistency + saga/outbox cho luồng liên context. Độ phức tạp tăng đáng kể (<a href="13-ddd-va-distributed-systems.md">chương 13</a> bàn kỹ).</li>
+<li>Dữ liệu duplicate có kiểm soát giữa các context → cần cơ chế đồng bộ qua event và chấp nhận độ trễ.</li>
+</ul>
+<p>Nếu hệ của bạn nhỏ (một team, vài module), các chi phí này có thể chưa đáng trả — xem mục 18. Nhưng hãy trả lời trung thực: bạn đang <em>chọn</em> hoãn tách dữ liệu như một trade-off có ý thức, hay đang <em>trôi</em> vào shared database vì tiện?</p>
+<hr>
+<h2 id="10-case-study-hệ-thống-e-commerce-chia-context">10. Case study: hệ thống e-commerce chia context<a hidden class="anchor" aria-hidden="true" href="#10-case-study-hệ-thống-e-commerce-chia-context">#</a></h2>
+<p>Đây là ví dụ xương sống của chương. Hệ thống e-commerce cỡ vừa (nghĩ đến một sàn bán lẻ nội địa: vài trăm nghìn SKU, vài chục nghìn đơn/ngày), chia thành 5 bounded context: <strong>Catalog, Ordering, Inventory, Shipping, Payment</strong>.</p>
+<h3 id="101-bức-tranh-tổng-thể">10.1. Bức tranh tổng thể<a hidden class="anchor" aria-hidden="true" href="#101-bức-tranh-tổng-thể">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
+    subgraph Catalog[&#34;BC: CATALOG — &#39;bán mặt hàng gì, kể chuyện gì về nó&#39;&#34;]
+        P1[&#34;Product: title, description, images,&lt;br/&gt;brand, categories, attributes, SEO&lt;br/&gt;listPrice (giá niêm yết)&#34;]
+    end
+
+    subgraph Ordering[&#34;BC: ORDERING — &#39;khách cam kết mua gì, giá bao nhiêu&#39;&#34;]
+        P2[&#34;OrderLine: productId (ref), &lt;br/&gt;productTitleSnapshot, unitPriceAtOrder,&lt;br/&gt;quantity — BẤT BIẾN sau confirm&#34;]
+    end
+
+    subgraph Inventory[&#34;BC: INVENTORY — &#39;thực sự còn bao nhiêu, ở đâu&#39;&#34;]
+        P3[&#34;StockItem: sku, warehouseId,&lt;br/&gt;onHand, reserved, available,&lt;br/&gt;reorderPoint&#34;]
+    end
+
+    subgraph Shipping[&#34;BC: SHIPPING — &#39;món đồ vật lý cần chở đi&#39;&#34;]
+        P4[&#34;ParcelItem: sku, weightGrams,&lt;br/&gt;dimensions, fragile, hazmat&#34;]
+    end
+
+    subgraph Payment[&#34;BC: PAYMENT — &#39;thu tiền thế nào&#39;&#34;]
+        P5[&#34;Không có Product!&lt;br/&gt;Chỉ có Charge: amount, currency,&lt;br/&gt;orderId (ref), method, status&#34;]
+    end
+
+    Catalog -- &#34;event: ProductPublished&#34; --&gt; Ordering
+    Ordering -- &#34;event: OrderPlaced&#34; --&gt; Inventory
+    Ordering -- &#34;event: OrderConfirmed&#34; --&gt; Shipping
+    Ordering -- &#34;command: AuthorizePayment&#34; --&gt; Payment
+    Inventory -- &#34;event: StockReserved / StockDepleted&#34; --&gt; Ordering
+    Inventory -. &#34;event: LowStock (ẩn khỏi search)&#34; .-&gt; Catalog
+    Payment -- &#34;event: PaymentCaptured&#34; --&gt; Ordering
+
+    style Catalog fill:#e8f4e8,stroke:#2e7d32
+    style Ordering fill:#e8eef8,stroke:#1565c0
+    style Inventory fill:#fdf6e3,stroke:#b58900
+    style Shipping fill:#f3e8f8,stroke:#7b1fa2
+    style Payment fill:#f8ede8,stroke:#c62828
+</code></pre><h3 id="102-cùng-là-product--năm-model-khác-nhau">10.2. Cùng là &ldquo;Product&rdquo; — năm model khác nhau<a hidden class="anchor" aria-hidden="true" href="#102-cùng-là-product--năm-model-khác-nhau">#</a></h3>
+<p>Đây là trái tim của case study. Cùng một chiếc &ldquo;iPhone 15 Pro 256GB Titan Tự Nhiên&rdquo; ngoài đời:</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>Catalog</th>
+          <th>Ordering</th>
+          <th>Inventory</th>
+          <th>Shipping</th>
+          <th>Payment</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Tên khái niệm</strong></td>
+          <td><code>Product</code></td>
+          <td><code>OrderLine</code> (product chỉ là snapshot)</td>
+          <td><code>StockItem</code></td>
+          <td><code>ParcelItem</code></td>
+          <td><em>(không tồn tại)</em></td>
+      </tr>
+      <tr>
+          <td><strong>Nó là gì</strong></td>
+          <td>Nội dung để bán và tìm kiếm</td>
+          <td>Cam kết thương mại tại một thời điểm</td>
+          <td>Số đếm vật lý tại một kho</td>
+          <td>Vật thể có khối lượng cần vận chuyển</td>
+          <td>—</td>
+      </tr>
+      <tr>
+          <td><strong>Identity</strong></td>
+          <td><code>productId</code></td>
+          <td><code>orderId + lineNo</code></td>
+          <td><code>sku + warehouseId</code></td>
+          <td><code>parcelId + lineNo</code></td>
+          <td>—</td>
+      </tr>
+      <tr>
+          <td><strong>Giá</strong></td>
+          <td><code>listPrice</code> — có thể đổi mỗi giờ</td>
+          <td><code>unitPriceAtOrder</code> — <strong>đóng băng vĩnh viễn</strong></td>
+          <td>không có giá</td>
+          <td>khai giá trị để bảo hiểm</td>
+          <td><code>amount</code> tổng, không quan tâm từng món</td>
+      </tr>
+      <tr>
+          <td><strong>Có thể &ldquo;hết&rdquo; không</strong></td>
+          <td>Không — chỉ có <code>published/unpublished</code></td>
+          <td>Không — line đã đặt là đã đặt</td>
+          <td><strong>Có</strong> — đây là toàn bộ lẽ sống của nó</td>
+          <td>Không</td>
+          <td>—</td>
+      </tr>
+      <tr>
+          <td><strong>Ai sửa được</strong></td>
+          <td>Team content/merchandising</td>
+          <td>Không ai, sau confirm</td>
+          <td>Hệ thống kho + kiểm kê</td>
+          <td>Nhân viên đóng gói (cân thực tế)</td>
+          <td>—</td>
+      </tr>
+      <tr>
+          <td><strong>Tần suất thay đổi model</strong></td>
+          <td>Cao (thuộc tính mới, SEO, biến thể)</td>
+          <td>Thấp (nghiệp vụ đặt hàng ổn định)</td>
+          <td>Trung bình</td>
+          <td>Thấp</td>
+          <td>Trung bình (phương thức thanh toán mới)</td>
+      </tr>
+  </tbody>
+</table>
+<p>Bốn quan sát rút ra:</p>
+<p><strong>Một — Snapshot thay vì reference sống.</strong> <code>OrderLine</code> lưu <code>productTitleSnapshot</code> và <code>unitPriceAtOrder</code> thay vì join sang Catalog lúc cần. Vì sao? Vì <strong>đơn hàng là tài liệu pháp lý tại một thời điểm</strong> — khách mua với giá 29.990.000₫ thì hóa đơn mãi mãi là 29.990.000₫, dù Catalog tăng giá ngay phút sau. Nếu dùng shared database và join lấy giá hiện hành, bạn có bug sai tiền — loại bug làm mất niềm tin khách hàng và tiền thật. Ranh giới context ở đây không phải &ldquo;kiến trúc đẹp&rdquo;, nó là <strong>tính đúng đắn nghiệp vụ</strong>.</p>
+<p><strong>Hai — Identity khác nhau tiết lộ model khác nhau.</strong> Catalog định danh bằng <code>productId</code>. Inventory định danh bằng <code>sku + warehouseId</code> — cùng SKU ở hai kho là hai StockItem, vì tồn kho là thuộc tính của <em>vị trí</em>. Không cách gì ép hai identity scheme này vào một entity mà không làm hỏng một trong hai.</p>
+<p><strong>Ba — Sự vắng mặt cũng là thiết kế.</strong> Payment không có khái niệm product. Nó thu 31.240.000₫ cho order X — xong. Nếu ai đó &ldquo;cho đủ&rdquo; thêm quan hệ Payment→Product, mỗi thay đổi model product sẽ lan sang hệ thanh toán, hệ nhạy cảm nhất về compliance, để đổi lấy đúng con số 0 giá trị.</p>
+<p><strong>Bốn — Tần suất thay đổi khác nhau biện minh cho ranh giới.</strong> Catalog đổi model liên tục theo nhu cầu marketing; Ordering cần ổn định như bàn thạch. Nhốt chung một model nghĩa là mỗi lần marketing thêm thuộc tính SEO, bạn phải regression test luồng đặt hàng. Tách context = tách nhịp tiến hóa.</p>
+<h3 id="103-luồng-nghiệp-vụ-xuyên-context-đặt-hàng">10.3. Luồng nghiệp vụ xuyên context: đặt hàng<a hidden class="anchor" aria-hidden="true" href="#103-luồng-nghiệp-vụ-xuyên-context-đặt-hàng">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    participant KH as Khách hàng
+    participant CAT as BC Catalog
+    participant ORD as BC Ordering
+    participant INV as BC Inventory
+    participant PAY as BC Payment
+    participant SHIP as BC Shipping
+
+    KH-&gt;&gt;CAT: Xem sản phẩm (đọc read model Catalog)
+    KH-&gt;&gt;ORD: Đặt hàng (items + giá hiển thị)
+    ORD-&gt;&gt;ORD: Tạo Order (PENDING), snapshot giá &amp; title
+    ORD-&gt;&gt;INV: Yêu cầu reserve stock (command)
+    INV--&gt;&gt;ORD: StockReserved (hoặc StockInsufficient)
+    ORD-&gt;&gt;PAY: AuthorizePayment(orderId, amount)
+    PAY--&gt;&gt;ORD: PaymentAuthorized
+    ORD-&gt;&gt;ORD: Order → CONFIRMED
+    ORD--&gt;&gt;SHIP: event OrderConfirmed { orderId, items[sku,qty], recipient }
+    SHIP-&gt;&gt;SHIP: Tạo Shipment, cân đo thực tế, chọn carrier
+    Note over ORD,SHIP: Shipping KHÔNG đọc bảng orders.&lt;br/&gt;Nó dựng model riêng từ dữ liệu trong event.
+    SHIP--&gt;&gt;ORD: event ShipmentDelivered
+    ORD-&gt;&gt;ORD: Order → COMPLETED
+</code></pre><p>Chú ý điểm ghi trong Note: khi Shipping nhận <code>OrderConfirmed</code>, nó <strong>không quay lại query database của Ordering</strong>. Toàn bộ dữ liệu nó cần nằm trong event (hoặc lấy qua API công khai của Ordering), và nó <strong>dịch</strong> sang model riêng (<code>Shipment</code>, <code>ParcelItem</code>, <code>Recipient</code>). Ordering có refactor nội bộ kiểu gì, Shipping không hề hấn — miễn contract event giữ nguyên. Đây chính là điều shared database không bao giờ cho bạn.</p>
+<h3 id="104-phiên-bản-scale-lớn-các-context-tiếp-tục-phân-bào">10.4. Phiên bản scale lớn: các context tiếp tục phân bào<a hidden class="anchor" aria-hidden="true" href="#104-phiên-bản-scale-lớn-các-context-tiếp-tục-phân-bào">#</a></h3>
+<p>Khi hệ thống lớn lên (hàng triệu SKU, trăm nghìn đơn/ngày, 15+ team), các context trên sẽ tách tiếp — và điều đó lành mạnh:</p>
+<ul>
+<li><strong>Catalog</strong> tách ra <strong>Search &amp; Discovery</strong> (model tối ưu cho Elasticsearch, ngôn ngữ là &ldquo;relevance, ranking, facet&rdquo;) và <strong>Pricing &amp; Promotion</strong> (ngôn ngữ là &ldquo;campaign, price rule, flash sale&rdquo; — với sàn lớn đây là core subdomain đúng nghĩa, có team riêng).</li>
+<li><strong>Ordering</strong> tách ra <strong>Cart</strong> (dữ liệu nóng, sống ngắn, chấp nhận mất mát nhất định) và <strong>Order Management</strong> (dữ liệu pháp lý, sống dài, không được mất).</li>
+<li><strong>Inventory</strong> tách ra <strong>Warehouse Operations</strong> (pick/pack, vị trí kệ, ca kíp — bài toán vận hành vật lý) khỏi <strong>Stock Availability</strong> (con số available phục vụ bán hàng — bài toán đếm với độ trễ thấp).</li>
+</ul>
+<p>Nhận xét quan trọng: các đường tách này <em>không đoán trước được</em> từ ngày đầu, và <strong>không cần đoán trước</strong>. Chúng lộ ra khi ngôn ngữ trong team bắt đầu phân hóa (&ldquo;stock theo nghĩa vận hành kho hay theo nghĩa hiển thị web?&rdquo;) — đúng lúc đó mới tách. Bounded context là living design, không phải bản vẽ đóng khung ngày kickoff.</p>
+<hr>
+<h2 id="11-ví-dụ-thiết-kế-sai-bảng-products-80-cột-dùng-chung">11. Ví dụ thiết kế SAI: bảng <code>products</code> 80 cột dùng chung<a hidden class="anchor" aria-hidden="true" href="#11-ví-dụ-thiết-kế-sai-bảng-products-80-cột-dùng-chung">#</a></h2>
+<p>Bây giờ nhìn mặt còn lại. Đây là thiết kế tôi gặp nhiều lần trong đời, ở những công ty rất khác nhau — nó phổ biến đến mức đáng được giải phẫu chi tiết.</p>
+<h3 id="111-hiện-trường">11.1. Hiện trường<a hidden class="anchor" aria-hidden="true" href="#111-hiện-trường">#</a></h3>
+<p>Một bảng <code>products</code> — trái tim của hệ thống, mọi module đều đọc ghi:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> products (
+</span></span><span style="display:flex;"><span>    id                      BIGINT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- Cụm Catalog (team Content sở hữu... trên lý thuyết)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    name                    VARCHAR(<span style="color:#ae81ff">500</span>),
+</span></span><span style="display:flex;"><span>    slug                    VARCHAR(<span style="color:#ae81ff">500</span>),
+</span></span><span style="display:flex;"><span>    description             TEXT,
+</span></span><span style="display:flex;"><span>    short_description       TEXT,
+</span></span><span style="display:flex;"><span>    brand_id                BIGINT,
+</span></span><span style="display:flex;"><span>    category_id             BIGINT,
+</span></span><span style="display:flex;"><span>    meta_title              VARCHAR(<span style="color:#ae81ff">255</span>),        <span style="color:#75715e">-- SEO
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    meta_description        VARCHAR(<span style="color:#ae81ff">500</span>),        <span style="color:#75715e">-- SEO
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    images                  JSON,
+</span></span><span style="display:flex;"><span>    attributes              JSON,                <span style="color:#75715e">-- &#34;thuộc tính động&#34;, không ai biết schema
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">-- Cụm Pricing (team nào sở hữu? không rõ)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    price                   DECIMAL(<span style="color:#ae81ff">15</span>,<span style="color:#ae81ff">2</span>),       <span style="color:#75715e">-- giá gì? niêm yết? sale? không ai chắc
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    original_price          DECIMAL(<span style="color:#ae81ff">15</span>,<span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>    cost_price              DECIMAL(<span style="color:#ae81ff">15</span>,<span style="color:#ae81ff">2</span>),       <span style="color:#75715e">-- giá vốn — lộ cho cả frontend đọc!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    sale_price              DECIMAL(<span style="color:#ae81ff">15</span>,<span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>    sale_start_at           <span style="color:#66d9ef">TIMESTAMP</span>,
+</span></span><span style="display:flex;"><span>    sale_end_at             <span style="color:#66d9ef">TIMESTAMP</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- Cụm Inventory
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    stock_quantity          INT,                 <span style="color:#75715e">-- kho nào?? tổng mọi kho??
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    reserved_quantity       INT,
+</span></span><span style="display:flex;"><span>    low_stock_threshold     INT,
+</span></span><span style="display:flex;"><span>    warehouse_location      VARCHAR(<span style="color:#ae81ff">100</span>),        <span style="color:#75715e">-- chỉ đúng khi có 1 kho (hết đúng từ 2022)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    allow_backorder         BOOLEAN,
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- Cụm Shipping
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    weight                  DECIMAL(<span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">3</span>),
+</span></span><span style="display:flex;"><span>    width                   DECIMAL(<span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>    height                  DECIMAL(<span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">length</span>                  DECIMAL(<span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>    is_fragile              BOOLEAN,
+</span></span><span style="display:flex;"><span>    shipping_class          VARCHAR(<span style="color:#ae81ff">50</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- Cụm Tax/Accounting
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    tax_class               VARCHAR(<span style="color:#ae81ff">50</span>),
+</span></span><span style="display:flex;"><span>    tax_rate                DECIMAL(<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">2</span>),        <span style="color:#75715e">-- duplicate với bảng tax_rules, lệch nhau từ lâu
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    accounting_code         VARCHAR(<span style="color:#ae81ff">50</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- Cụm Marketplace (thêm 2023 khi mở bán trên sàn ngoài)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    marketplace_sku         VARCHAR(<span style="color:#ae81ff">100</span>),
+</span></span><span style="display:flex;"><span>    marketplace_price       DECIMAL(<span style="color:#ae81ff">15</span>,<span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>    marketplace_sync_status VARCHAR(<span style="color:#ae81ff">20</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- Cụm trạng thái — enum trộn nhiều trục
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    status                  VARCHAR(<span style="color:#ae81ff">30</span>),         <span style="color:#75715e">-- draft/active/out_of_stock/discontinued/
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                                 <span style="color:#75715e">-- pending_review/hidden/deleted...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    is_active               BOOLEAN,             <span style="color:#75715e">-- quan hệ với status? 3 dev, 4 câu trả lời
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    is_featured             BOOLEAN,
+</span></span><span style="display:flex;"><span>    is_new                  BOOLEAN,             <span style="color:#75715e">-- &#34;new&#34; theo định nghĩa của ai?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">-- ... thêm ~35 cột nữa cùng thể loại, tổng cộng 80 ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    created_at              <span style="color:#66d9ef">TIMESTAMP</span>,
+</span></span><span style="display:flex;"><span>    updated_at              <span style="color:#66d9ef">TIMESTAMP</span>,
+</span></span><span style="display:flex;"><span>    deleted_at              <span style="color:#66d9ef">TIMESTAMP</span>            <span style="color:#75715e">-- soft delete... nhưng vài luồng quên filter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>);
+</span></span></code></pre></div><h3 id="112-giải-phẫu-vì-sao-đây-là-thảm-họa-từng-triệu-chứng-một">11.2. Giải phẫu: vì sao đây là thảm họa, từng triệu chứng một<a hidden class="anchor" aria-hidden="true" href="#112-giải-phẫu-vì-sao-đây-là-thảm-họa-từng-triệu-chứng-một">#</a></h3>
+<p><strong>Triệu chứng 1 — <code>status</code> trộn nhiều state machine.</strong> <code>out_of_stock</code> (trục tồn kho) đứng cạnh <code>pending_review</code> (trục biên tập nội dung) và <code>discontinued</code> (trục vòng đời thương mại). Một sản phẩm có thể <em>đồng thời</em> hết hàng VÀ đang chờ duyệt nội dung — nhưng cột chỉ chứa được một giá trị. Kết quả thực tế: sản phẩm hết hàng, nhân viên kho set <code>out_of_stock</code>, đè mất trạng thái <code>pending_review</code>, sản phẩm chưa duyệt nội dung tự động hiện lên web khi có hàng lại. Bug này <em>không thể fix triệt để</em> trong thiết kế này — chỉ có thể vá bằng thêm cờ boolean (và bảng này đã có <code>is_active</code> là kết quả của một lần vá như thế).</p>
+<p><strong>Triệu chứng 2 — <code>stock_quantity</code> là con số dối trá.</strong> Khi công ty mở kho thứ hai, con số này trở thành &ldquo;tổng mọi kho&rdquo; — vô dụng cho việc hứa ngày giao (cần biết kho <em>nào</em> có hàng) và cho vận hành kho. Team Inventory bèn tạo bảng <code>warehouse_stocks</code> riêng, nhưng <em>không dám bỏ</em> cột cũ vì 14 chỗ trong code và 3 cái báo cáo đang đọc nó. Từ đó tồn tại hai nguồn số tồn kho, lệch nhau, và câu cửa miệng của CS là &ldquo;anh check giúp em số nào đúng&rdquo;.</p>
+<p><strong>Triệu chứng 3 — Ghi đè chéo và lock contention.</strong> Nhân viên content sửa description, hệ thống kho cập nhật <code>stock_quantity</code> mỗi khi có đơn, cron đồng bộ marketplace ghi <code>marketplace_sync_status</code> mỗi 5 phút — tất cả <code>UPDATE products SET ... WHERE id = ?</code>. Ba luồng nghiệp vụ không liên quan gì nhau tranh nhau lock trên cùng row. ORM nào dùng &ldquo;save cả object&rdquo; (rất phổ biến) còn gây lost update: content editor mở form lúc 9:00, bấm lưu lúc 9:05, đè <code>stock_quantity</code> bằng giá trị cũ lúc 9:00. Đơn hàng oversell. Truy vết mất ba ngày vì &ldquo;không ai đụng vào tồn kho cả&rdquo;.</p>
+<p><strong>Triệu chứng 4 — Rò rỉ dữ liệu nhạy cảm.</strong> <code>cost_price</code> (giá vốn) nằm cùng bảng với dữ liệu hiển thị web. Chỉ cần một endpoint serialize thiếu cẩn thận (<code>SELECT *</code> + toJSON) là giá vốn lộ ra API công khai. Đã xảy ra. Ở thiết kế đúng, giá vốn thuộc context Procurement/Accounting và <em>về mặt vật lý</em> không nằm trong tầm với của code phục vụ web.</p>
+<p><strong>Triệu chứng 5 — Không ai sở hữu, nên không ai dám sửa.</strong> Hỏi &ldquo;team nào own bảng <code>products</code>?&rdquo; và nhận về sự im lặng. Migration lên bảng này cần thông báo cho 5 team, test regression 4 luồng. Kết quả: mọi nhu cầu mới được giải bằng cách <em>thêm cột nullable</em> hoặc <em>nhét vào JSON <code>attributes</code></em> — bảng phình từ 40 cột (2019) lên 80 cột (2024), và đà này không có điểm dừng. Đây chính là Enterprise Model chết từ từ như mô tả ở mục 2 — hiện hình bằng DDL.</p>
+<p><strong>Điểm cần thẳng thắn:</strong> thiết kế này <em>không</em> ra đời vì team ngu ngốc. Nó ra đời vì ở năm thứ nhất, một bảng products là thiết kế <em>hợp lý</em> — hệ nhỏ, một team, một kho. Sai lầm không nằm ở điểm xuất phát; sai lầm nằm ở chỗ <strong>không ai công nhận các ranh giới ngữ nghĩa khi chúng xuất hiện</strong> (kho thứ hai, kênh marketplace, team content tách riêng) — mỗi lần như vậy chỉ thêm cột thay vì tách model. Bounded context không phải để phán xét quá khứ; nó là kỷ luật nhận diện <em>thời điểm phải tách</em>.</p>
+<hr>
+<h2 id="12-ví-dụ-refactor-tách-bảng-80-cột-thành-các-context">12. Ví dụ refactor: tách bảng 80 cột thành các context<a hidden class="anchor" aria-hidden="true" href="#12-ví-dụ-refactor-tách-bảng-80-cột-thành-các-context">#</a></h2>
+<p>Refactor một bảng nằm giữa tim hệ thống đang chạy là ca mổ tim hở. Nguyên tắc: <strong>không big-bang</strong>. Lộ trình thực chiến, từng bước có thể dừng và thu lợi ích ngay:</p>
+<h3 id="121-bước-0--vẽ-bản-đồ-sở-hữu-2-4-tuần-không-sửa-dòng-code-nào">12.1. Bước 0 — Vẽ bản đồ sở hữu (2-4 tuần, không sửa dòng code nào)<a hidden class="anchor" aria-hidden="true" href="#121-bước-0--vẽ-bản-đồ-sở-hữu-2-4-tuần-không-sửa-dòng-code-nào">#</a></h3>
+<p>Liệt kê 80 cột, với mỗi cột trả lời: luồng nghiệp vụ nào <em>ghi</em>? luồng nào <em>đọc</em>? team nào hiểu nghĩa của nó? Công cụ: grep codebase + query log + hỏi từng team. Kết quả là ma trận cột × context — và thường tự nó đã gây sốc (&ldquo;cột này 3 năm không ai ghi&rdquo;, &ldquo;cột này hai team hiểu hai nghĩa khác nhau&rdquo;). Đây chính là áp dụng lăng kính linguistic (mục 8.1, dấu hiệu D) vào dữ liệu.</p>
+<h3 id="122-bước-1--dựng-ranh-giới-trong-code-trước-giữ-nguyên-database">12.2. Bước 1 — Dựng ranh giới trong code trước, giữ nguyên database<a hidden class="anchor" aria-hidden="true" href="#122-bước-1--dựng-ranh-giới-trong-code-trước-giữ-nguyên-database">#</a></h3>
+<p>Tạo các module theo context (Catalog, Inventory, Shipping&hellip;), mỗi module có repository riêng chỉ đọc/ghi <em>các cột thuộc về nó</em>, map vào model riêng của nó. Cấm mọi truy cập bảng <code>products</code> ngoài các repository này (enforce bằng lint/review). Database chưa đổi một cột nào — nhưng từ giờ, mọi phụ thuộc đã đi qua cửa có kiểm soát. Riêng bước này đã diệt được lost update (mỗi repo chỉ UPDATE cột của mình) và rò rỉ <code>cost_price</code> (model Catalog không có field đó).</p>
+<h3 id="123-bước-2--tách-dữ-liệu-từng-context-một-theo-độ-đau-giảm-dần">12.3. Bước 2 — Tách dữ liệu từng context một, theo độ đau giảm dần<a hidden class="anchor" aria-hidden="true" href="#123-bước-2--tách-dữ-liệu-từng-context-một-theo-độ-đau-giảm-dần">#</a></h3>
+<p>Thứ tự chọn theo <em>độ đau hiện tại</em> nhân <em>độ rõ ranh giới</em>. Với bảng trên: <strong>Inventory tách trước</strong> (đau nhất — oversell mất tiền thật; ranh giới rõ nhất — <code>sku + warehouse</code>). Kỹ thuật chuẩn: expand → migrate → contract.</p>
+<ol>
+<li><strong>Expand:</strong> tạo bảng mới <code>inventory.stock_items (sku, warehouse_id, on_hand, reserved, ...)</code> trong schema riêng. Dual-write từ code Inventory module (ghi cả bảng cũ và mới), backfill dữ liệu cũ.</li>
+<li><strong>Migrate:</strong> chuyển dần các luồng <em>đọc</em> sang bảng mới, so số hai nguồn chạy song song (reconciliation job) cho đến khi tin cậy.</li>
+<li><strong>Contract:</strong> ngừng ghi cột cũ; cột <code>stock_quantity</code> trên <code>products</code> được giữ thêm một thời gian như <strong>read model được đồng bộ từ event <code>StockLevelChanged</code></strong> (cho các báo cáo cũ), rồi khai tử hẳn.</li>
+</ol>
+<p>Lặp lại chu trình với Shipping (cụm cân nặng/kích thước → <code>shipping.parcel_profiles</code>), Pricing, Marketplace-sync&hellip; Mỗi chu trình kéo dài vài sprint và <strong>có thể dừng giữa chừng</strong> — hệ thống ở mọi thời điểm đều chạy được, tốt hơn hôm trước.</p>
+<h3 id="124-bước-3--cái-còn-lại-chính-là-catalog">12.4. Bước 3 — Cái còn lại chính là Catalog<a hidden class="anchor" aria-hidden="true" href="#124-bước-3--cái-còn-lại-chính-là-catalog">#</a></h3>
+<p>Sau khi các cụm rời đi, bảng <code>products</code> teo lại còn ~20 cột thuần nội dung — và bây giờ nó <em>chính là</em> bảng của context Catalog, có chủ sở hữu rõ ràng (team Content Platform), có quyền tiến hóa độc lập. Enum <code>status</code> được tách thành hai trục rõ nghĩa: <code>editorial_status</code> (draft/in_review/approved) thuộc Catalog và khái niệm &ldquo;còn bán được không&rdquo; trở thành <strong>suy diễn lúc đọc</strong> từ dữ liệu Inventory + Catalog, không lưu trùng nữa.</p>
+<p><strong>Chi phí thật của toàn bộ cuộc refactor này</strong> (để bạn ước lượng khi thuyết phục stakeholder): với hệ cỡ đã tả, đội 2-3 engineer chủ lực, 2-3 quý, chưa kể chi phí cơ hội. Không rẻ. Đó là lý do bài học lớn nhất của mục này không phải &ldquo;cách refactor&rdquo; mà là: <strong>chi phí công nhận một ranh giới lúc nó mới xuất hiện nhỏ hơn hàng chục lần chi phí khai quật nó sau 5 năm.</strong></p>
+<hr>
+<h2 id="13-module-nestjs--package-go-không-tự-động-là-bounded-context">13. Module NestJS / package Go KHÔNG tự động là Bounded Context<a hidden class="anchor" aria-hidden="true" href="#13-module-nestjs--package-go-không-tự-động-là-bounded-context">#</a></h2>
+<p>Cạm bẫy cuối cùng, dành riêng cho người viết code hàng ngày: tưởng rằng cứ dùng cơ chế module hóa của framework là có bounded context. Không. Module/package là <strong>công cụ đóng gói code</strong>; bounded context là <strong>cam kết về ngữ nghĩa</strong>. Cái sau có thể <em>dùng</em> cái trước làm vỏ, nhưng không được sinh ra tự động từ cái trước.</p>
+<h3 id="131-nestjs-module-giả--module-thật">13.1. NestJS: module giả — module thật<a hidden class="anchor" aria-hidden="true" href="#131-nestjs-module-giả--module-thật">#</a></h3>
+<p><strong>Thiết kế SAI — module chỉ là thư mục, model chung xuyên thấu:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ❌ SAI: shared/entities/product.entity.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Một entity TypeORM 80-field dùng chung, export cho mọi module — 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// đây là bảng 80 cột của mục 11, phiên bản code.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Entity</span>(<span style="color:#e6db74">&#39;products&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Product</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@PrimaryGeneratedColumn</span>() <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">number</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>(<span style="color:#e6db74">&#39;decimal&#39;</span>) <span style="color:#a6e22e">price</span>: <span style="color:#66d9ef">number</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>(<span style="color:#e6db74">&#39;int&#39;</span>) <span style="color:#a6e22e">stockQuantity</span>: <span style="color:#66d9ef">number</span>;      <span style="color:#75715e">// của Inventory
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">@Column</span>(<span style="color:#e6db74">&#39;decimal&#39;</span>) <span style="color:#a6e22e">weight</span>: <span style="color:#66d9ef">number</span>;          <span style="color:#75715e">// của Shipping
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">@Column</span>(<span style="color:#e6db74">&#39;decimal&#39;</span>) <span style="color:#a6e22e">costPrice</span>: <span style="color:#66d9ef">number</span>;       <span style="color:#75715e">// của Accounting — lộ khắp nơi
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// ... 75 field nữa
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ❌ ordering/ordering.service.ts — module Ordering ghi thẳng field của Inventory
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderingService</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(<span style="color:#66d9ef">@InjectRepository</span>(<span style="color:#a6e22e">Product</span>) <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">products</span>: <span style="color:#66d9ef">Repository</span>&lt;<span style="color:#f92672">Product</span>&gt;) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">placeOrder</span>(<span style="color:#a6e22e">items</span>: <span style="color:#66d9ef">CartItem</span>[]) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">item</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">items</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">p</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">products</span>.<span style="color:#a6e22e">findOneBy</span>({ <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">item.productId</span> });
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">stockQuantity</span> <span style="color:#f92672">-=</span> <span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">quantity</span>;  <span style="color:#75715e">// Ordering tự tay trừ kho — bypass mọi
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">products</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">p</span>);       <span style="color:#75715e">// invariant của Inventory (không âm? reserve? kho nào?)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Có <code>OrderingModule</code>, <code>InventoryModule</code> trên sơ đồ — nhưng cả hai import chung <code>Product</code> entity, nghĩa là <strong>một model, không ranh giới</strong>. NestJS hoàn toàn hài lòng với code này; framework không biết gì về ngữ nghĩa của bạn.</p>
+<p><strong>Thiết kế ĐÚNG — mỗi context một model riêng, giao tiếp qua contract:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ✅ contexts/inventory/domain/stock-item.ts — model RIÊNG của Inventory
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Không import gì từ context khác. Identity riêng: sku + warehouseId.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">StockItem</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">sku</span>: <span style="color:#66d9ef">Sku</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">warehouseId</span>: <span style="color:#66d9ef">WarehouseId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">onHand</span>: <span style="color:#66d9ef">number</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">reserved</span>: <span style="color:#66d9ef">number</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">available</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">number</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">onHand</span> <span style="color:#f92672">-</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reserved</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/** Invariant sống ở đây và CHỈ ở đây — không ai trừ kho từ bên ngoài. */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">reserve</span>(<span style="color:#a6e22e">qty</span>: <span style="color:#66d9ef">number</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">DomainEvent</span>[] {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">qty</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">InvalidQuantityError</span>(<span style="color:#a6e22e">qty</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">available</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">qty</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">InsufficientStockError</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">sku</span>, <span style="color:#a6e22e">qty</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">available</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reserved</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">qty</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> [<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">StockReserved</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">sku</span>.<span style="color:#a6e22e">value</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">warehouseId</span>.<span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">qty</span>)];
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ contexts/inventory/inventory.module.ts — biên giới công khai của context
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Module</span>({
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">providers</span><span style="color:#f92672">:</span> [<span style="color:#a6e22e">ReserveStockHandler</span>, <span style="color:#a6e22e">StockItemRepository</span>],
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">exports</span><span style="color:#f92672">:</span> [<span style="color:#a6e22e">InventoryFacade</span>],   <span style="color:#75715e">// CHỈ export facade — không export entity,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>})                              <span style="color:#75715e">// không export repository, không export service nội bộ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">InventoryModule</span> {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ contexts/inventory/inventory.facade.ts — contract mà context khác được thấy
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Nhận/trả DTO nguyên thủy, KHÔNG BAO GIỜ nhận/trả domain object nội bộ.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">InventoryFacade</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">reserveStock</span>: <span style="color:#66d9ef">ReserveStockHandler</span>) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">reserve</span>(<span style="color:#a6e22e">req</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">sku</span>: <span style="color:#66d9ef">string</span>; <span style="color:#a6e22e">quantity</span>: <span style="color:#66d9ef">number</span> })<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">ReservationResult</span>&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reserveStock</span>.<span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">req</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ contexts/ordering/application/place-order.handler.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Ordering chỉ biết InventoryFacade — không biết StockItem tồn tại trên đời.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PlaceOrderHandler</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">orders</span>: <span style="color:#66d9ef">OrderRepository</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">inventory</span>: <span style="color:#66d9ef">InventoryFacade</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">cmd</span>: <span style="color:#66d9ef">PlaceOrderCommand</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">OrderId</span>&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Order</span>.<span style="color:#a6e22e">place</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">customerId</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">lines</span>); <span style="color:#75715e">// snapshot giá &amp; title tại đây
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">line</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">lines</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">r</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">reserve</span>({ <span style="color:#a6e22e">sku</span>: <span style="color:#66d9ef">line.sku</span>, <span style="color:#a6e22e">quantity</span>: <span style="color:#66d9ef">line.quantity</span> });
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">ok</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">reject</span>(<span style="color:#e6db74">`Hết hàng: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">line</span>.<span style="color:#a6e22e">sku</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">order</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">id</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Khác biệt cốt lõi giữa hai phiên bản không phải là số file — mà là <strong>ba cam kết</strong>: (1) mỗi context có model riêng với invariant riêng; (2) <code>exports</code> của module chỉ chứa facade/contract, không bao giờ chứa domain model; (3) dữ liệu qua biên là DTO, buộc mỗi bên tự dịch sang model của mình. Trong monolith NestJS, ba cam kết này nên được <strong>thực thi bằng máy</strong>: <code>eslint-plugin-boundaries</code> hoặc dependency-cruiser với rule &ldquo;context A không được import từ <code>contexts/b/**</code> ngoại trừ <code>contexts/b/api/**</code>&rdquo;. Ranh giới không được lint là ranh giới sẽ mục — không phải vì team thiếu ý thức, mà vì deadline luôn thắng ý thức.</p>
+<h3 id="132-go-package-không-cứu-bạn-khỏi-model-chung">13.2. Go: package không cứu bạn khỏi model chung<a hidden class="anchor" aria-hidden="true" href="#132-go-package-không-cứu-bạn-khỏi-model-chung">#</a></h3>
+<p>Cùng bài học trong Go — nơi cám dỗ còn lớn hơn vì văn hóa Go chuộng struct đơn giản dùng chung:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ❌ SAI: internal/models/product.go — package &#34;models&#34; dùng chung toàn repo</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Đây là anti-pattern phổ biến nhất trong các codebase Go tôi từng audit:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// một package models/ (hoặc entities/) chứa struct 1-1 với bảng DB,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// import bởi tất cả mọi nơi. Package đó CHÍNH LÀ shared database dạng code.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">models</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Product</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ID</span>            <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Name</span>          <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Price</span>         <span style="color:#a6e22e">decimal</span>.<span style="color:#a6e22e">Decimal</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">StockQuantity</span> <span style="color:#66d9ef">int</span>     <span style="color:#75715e">// của Inventory</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">WeightGrams</span>   <span style="color:#66d9ef">int</span>     <span style="color:#75715e">// của Shipping</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CostPrice</span>     <span style="color:#a6e22e">decimal</span>.<span style="color:#a6e22e">Decimal</span> <span style="color:#75715e">// của Accounting</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ... 70 field nữa</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ✅ ĐÚNG: mỗi context một cây package, model riêng, biên giới là interface.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// internal/inventory/domain/stockitem.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">domain</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// StockItem là model riêng của Inventory — package ordering không import được</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// kiểu này (enforce bằng go-arch-lint / depguard, xem dưới).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StockItem</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sku</span>         <span style="color:#a6e22e">SKU</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">warehouseID</span> <span style="color:#a6e22e">WarehouseID</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">onHand</span>      <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reserved</span>    <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">StockItem</span>) <span style="color:#a6e22e">Available</span>() <span style="color:#66d9ef">int</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">onHand</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">reserved</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Reserve là NƠI DUY NHẤT được phép tăng reserved — invariant có một địa chỉ nhà.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">StockItem</span>) <span style="color:#a6e22e">Reserve</span>(<span style="color:#a6e22e">qty</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">qty</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ErrInvalidQuantity</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Available</span>() &lt; <span style="color:#a6e22e">qty</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">InsufficientStockError</span>{<span style="color:#a6e22e">SKU</span>: <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sku</span>, <span style="color:#a6e22e">Requested</span>: <span style="color:#a6e22e">qty</span>, <span style="color:#a6e22e">Available</span>: <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Available</span>()}
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">reserved</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">qty</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/ordering/app/place_order.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">app</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// StockReserver là contract do ORDERING định nghĩa (consumer-side interface,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// idiom chuẩn Go): Ordering tuyên bố nó cần gì, không import gì của Inventory.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StockReserver</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Reserve</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">sku</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">qty</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">ReservationResult</span>, <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">PlaceOrderHandler</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">orders</span> <span style="color:#a6e22e">OrderRepository</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">stock</span>  <span style="color:#a6e22e">StockReserver</span> <span style="color:#75715e">// interface — không biết Inventory hiện thực ra sao</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/platform/wiring/inventory_adapter.go — mảnh ghép ở tầng composition root</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">wiring</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Adapter dịch contract của Ordering sang lời gọi vào Inventory.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Đây là điểm DUY NHẤT trong toàn codebase biết đến cả hai context.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">inventoryAdapter</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">facade</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">Facade</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">inventoryAdapter</span>) <span style="color:#a6e22e">Reserve</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">sku</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">qty</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">ReservationResult</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">res</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">facade</span>.<span style="color:#a6e22e">Reserve</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">ReserveRequest</span>{<span style="color:#a6e22e">SKU</span>: <span style="color:#a6e22e">sku</span>, <span style="color:#a6e22e">Quantity</span>: <span style="color:#a6e22e">qty</span>})
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">ReservationResult</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;inventory reserve: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">ReservationResult</span>{<span style="color:#a6e22e">OK</span>: <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">OK</span>, <span style="color:#a6e22e">Reason</span>: <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">Reason</span>}, <span style="color:#66d9ef">nil</span> <span style="color:#75715e">// dịch model</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Ba idiom Go phục vụ bounded context đáng thuộc lòng: (1) <strong>consumer-side interface</strong> — context tiêu dùng tự định nghĩa interface nó cần, phá chiều import; (2) <strong><code>internal/</code> package</strong> — Go compiler tự chặn import từ ngoài cây, dùng <code>internal/inventory/internal/domain</code> nếu muốn chặt chẽ tuyệt đối; (3) <strong>kiểm tra kiến trúc bằng máy</strong>: <code>depguard</code>/<code>go-arch-lint</code> trong CI với rule &ldquo;package <code>ordering/**</code> cấm import <code>inventory/**</code> trừ <code>inventory/api</code>&rdquo;. Một lần nữa: <strong>ranh giới thật là ranh giới được enforce</strong>, còn lại là quy ước sẽ bay hơi sau ba lần đổi nhân sự.</p>
+<hr>
+<h2 id="14-điểm-mạnh--điểm-yếu--trade-off">14. Điểm mạnh — Điểm yếu — Trade-off<a hidden class="anchor" aria-hidden="true" href="#14-điểm-mạnh--điểm-yếu--trade-off">#</a></h2>
+<h3 id="141-điểm-mạnh">14.1. Điểm mạnh<a hidden class="anchor" aria-hidden="true" href="#141-điểm-mạnh">#</a></h3>
+<ol>
+<li><strong>Model nhỏ, sâu, đúng mục đích.</strong> Mỗi context chỉ model cái nó cần → model đơn giản hơn <em>và</em> giàu hành vi hơn cùng lúc. <code>StockItem</code> 4 field với invariant chặt đánh bại <code>Product</code> 80 field không invariant ở mọi tiêu chí.</li>
+<li><strong>Team tự chủ, giảm chi phí phối hợp từ N² về tuyến tính.</strong> Thay đổi trong ranh giới không cần hỏi ai; chỉ thay đổi contract mới cần đàm phán. Đây là lợi ích <em>tổ chức</em>, và nó lớn hơn lợi ích kỹ thuật.</li>
+<li><strong>Cô lập thay đổi và cô lập rủi ro.</strong> Refactor Catalog không làm regression Ordering. Dữ liệu nhạy cảm (giá vốn, thông tin thanh toán) nằm ngoài tầm với vật lý của code không liên quan.</li>
+<li><strong>Tự do tiến hóa theo nhịp riêng.</strong> Context thay đổi nhanh (Catalog) và context cần ổn định (Payment) không còn trói vào nhau.</li>
+<li><strong>Là điều kiện tiên quyết cho mọi lộ trình kiến trúc.</strong> Muốn đi microservices? Cần ranh giới trước. Muốn giữ monolith khỏe mạnh? Cũng cần ranh giới. Bounded context là khoản đầu tư không hối tiếc (no-regret move) hiếm hoi trong kiến trúc.</li>
+</ol>
+<h3 id="142-điểm-yếu">14.2. Điểm yếu<a hidden class="anchor" aria-hidden="true" href="#142-điểm-yếu">#</a></h3>
+<ol>
+<li><strong>Chi phí translation thường trực.</strong> Mỗi biên giới là code dịch model (mapper, adapter, ACL) phải viết và bảo trì. Với N context liên thông nhiều, tổng lượng &ldquo;code không mang logic nghiệp vụ&rdquo; là đáng kể.</li>
+<li><strong>Dữ liệu trùng lặp có kiểm soát + eventual consistency.</strong> Ordering giữ snapshot của Catalog; Shipping giữ bản sao địa chỉ. Cần cơ chế đồng bộ, cần trả lời &ldquo;số nào đúng tại thời điểm nào&rdquo; — độ phức tạp nhận thức tăng thật.</li>
+<li><strong>Vẽ sai ranh giới thì rất đắt để vẽ lại.</strong> Hai context bị tách sai (thực chất là một) sẽ chat với nhau liên tục, thay đổi nào cũng chạm cả hai — bạn nhận đủ chi phí của phân tách mà không nhận lợi ích nào. Gộp lại hay vẽ lại đều là dự án lớn.</li>
+<li><strong>Đòi hỏi kỷ luật liên tục.</strong> Ranh giới bị xói mòn từng ngày bởi các &ldquo;shortcut hợp lý&rdquo; (một cái join nhỏ thôi mà, một import tạm thôi mà). Không có enforcement tự động + văn hóa review, ranh giới chết trong 12-18 tháng.</li>
+<li><strong>Mất khả năng nhìn xuyên suốt bằng một câu query.</strong> &ldquo;Cho anh danh sách đơn hàng kèm tồn kho hiện tại và trạng thái giao&rdquo; giờ cần composition hoặc read model riêng, không còn là một câu JOIN.</li>
+</ol>
+<h3 id="143-trade-off-trung-tâm-1-shared-database-vs-bounded-context-dữ-liệu-riêng">14.3. Trade-off trung tâm 1: Shared Database vs Bounded Context (dữ liệu riêng)<a hidden class="anchor" aria-hidden="true" href="#143-trade-off-trung-tâm-1-shared-database-vs-bounded-context-dữ-liệu-riêng">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Tiêu chí</th>
+          <th>Shared Database</th>
+          <th>Dữ liệu riêng theo context</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Consistency</td>
+          <td>ACID mạnh, JOIN thoải mái</td>
+          <td>Eventual giữa các context; ACID chỉ trong context</td>
+      </tr>
+      <tr>
+          <td>Tốc độ ban đầu</td>
+          <td>Nhanh hơn rõ rệt</td>
+          <td>Chậm hơn (contract, mapper, đồng bộ)</td>
+      </tr>
+      <tr>
+          <td>Tốc độ sau 2-3 năm</td>
+          <td>Giảm dần đều (coupling tích tụ)</td>
+          <td>Giữ được (thay đổi cục bộ)</td>
+      </tr>
+      <tr>
+          <td>Coupling</td>
+          <td>Ẩn, không kiểm soát, phát nổ ở production</td>
+          <td>Tường minh, kiểm soát tại contract</td>
+      </tr>
+      <tr>
+          <td>Khả năng sửa schema</td>
+          <td>Tiến dần về 0</td>
+          <td>Tự do trong ranh giới</td>
+      </tr>
+      <tr>
+          <td>Rủi ro chính</td>
+          <td>Đóng băng tiến hóa, bug ngữ nghĩa xuyên module</td>
+          <td>Vẽ sai ranh giới, chi phí đồng bộ</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Kết luận có điều kiện, không giáo điều:</strong> hệ một team, một sản phẩm, tuổi đời dự kiến ngắn hoặc domain chưa rõ — shared database (trong một context lớn duy nhất) là lựa chọn <em>đúng</em>, đừng để ai làm bạn xấu hổ vì nó. Điểm gãy nằm ở khoảng <strong>2-3 team trở lên cùng sửa một schema, hoặc khi các cụm ngữ nghĩa đã phân hóa rõ</strong> — từ đó trở đi, mỗi tháng trì hoãn tách là mỗi tháng lãi suất kép của technical debt.</p>
+<h3 id="144-trade-off-trung-tâm-2-monolith-vs-microservices--dưới-ánh-sáng-của-bounded-context">14.4. Trade-off trung tâm 2: Monolith vs Microservices — dưới ánh sáng của bounded context<a hidden class="anchor" aria-hidden="true" href="#144-trade-off-trung-tâm-2-monolith-vs-microservices--dưới-ánh-sáng-của-bounded-context">#</a></h3>
+<p>Bounded context làm câu hỏi này <em>dễ hơn</em> vì nó tách hai quyết định vốn bị trộn lẫn: ranh giới ngữ nghĩa (bắt buộc phải có, mọi kịch bản) và ranh giới triển khai (tùy chọn, theo nhu cầu vận hành).</p>
+<ul>
+<li><strong>Modular monolith với context rõ ràng</strong>: đủ cho đại đa số hệ thống dưới ~10 team. Chi phí vận hành thấp, refactor ranh giới còn rẻ, transaction nội bộ dễ. Điểm yếu: cần kỷ luật lint/review để giữ ranh giới; scale toàn khối.</li>
+<li><strong>Microservices theo context</strong>: trả thêm chi phí distributed systems (network, observability, deploy, on-call, eventual consistency <em>bắt buộc</em> thay vì tùy chọn) để mua fault isolation, scale độc lập, release độc lập, đa dạng tech stack. Chỉ đáng khi các nhu cầu đó <em>có thật và đo được</em>.</li>
+<li><strong>Con đường khuyến nghị mặc định</strong>: modular monolith với ranh giới nghiêm → tách dần từng context ra service <em>khi và chỉ khi</em> xuất hiện áp lực vận hành cụ thể (context này cần scale 50x các context khác; context kia cần release 20 lần/ngày trong khi khối còn lại release tuần). Ranh giới ngữ nghĩa tốt làm cho cuộc tách sau này rẻ; đó là giá trị thật của việc đầu tư sớm vào bounded context — <strong>nó giữ cho các cánh cửa tương lai mở, mà không bắt bạn bước qua cửa nào sớm.</strong></li>
+</ul>
+<hr>
+<h2 id="15-production-considerations">15. Production Considerations<a hidden class="anchor" aria-hidden="true" href="#15-production-considerations">#</a></h2>
+<h3 id="151-team-organization">15.1. Team organization<a hidden class="anchor" aria-hidden="true" href="#151-team-organization">#</a></h3>
+<ul>
+<li><strong>Một context — một team sở hữu (một team có thể own nhiều context).</strong> Ghi rõ ownership vào CODEOWNERS/service catalog. Context &ldquo;của chung&rdquo; là context của không ai — nó sẽ mục nhanh nhất.</li>
+<li><strong>Ranh giới context nên xuất hiện trong on-call và SLO</strong>: alert của Inventory đổ về team own Inventory. Nếu một sự cố thường trực đòi hỏi 3 team cùng dậy lúc 2h sáng, đó là tín hiệu ranh giới sai (hoặc quan hệ giữa các context sai — xem chương 05).</li>
+<li><strong>Inverse Conway Maneuver khi cần</strong>: nếu ranh giới ngữ nghĩa đúng đắn đòi hỏi đội hình khác hiện tại, đề xuất đổi đội hình là việc của architect/tech lead — và cần trình bày bằng ngôn ngữ business (velocity, lead time, số sự cố liên team) chứ không phải bằng thuật ngữ DDD.</li>
+</ul>
+<h3 id="152-versioning-và-tiến-hóa-contract">15.2. Versioning và tiến hóa contract<a hidden class="anchor" aria-hidden="true" href="#152-versioning-và-tiến-hóa-contract">#</a></h3>
+<ul>
+<li>Model <strong>bên trong</strong> context: tự do thay đổi, không cần thông báo ai — đó là toàn bộ ý nghĩa của ranh giới.</li>
+<li>Contract <strong>ở biên</strong> (API, event schema): quản trị như sản phẩm công khai — semantic versioning, backward compatibility mặc định (chỉ thêm field optional), consumer-driven contract test (Pact hoặc tương đương) trong CI, deprecation policy có thời hạn và có đo lường ai còn dùng version cũ.</li>
+<li>Event schema đáng đầu tư schema registry (dù là Avro/Protobuf registry hay chỉ một repo JSON Schema có CI check) ngay khi có consumer thứ hai.</li>
+</ul>
+<h3 id="153-integration">15.3. Integration<a hidden class="anchor" aria-hidden="true" href="#153-integration">#</a></h3>
+<ul>
+<li>Chi tiết các pattern quan hệ (ai theo ai, ai bảo vệ model bằng ACL, khi nào dùng chung kernel) là toàn bộ <a href="05-context-mapping.md">chương 05</a>. Ở mức chương này, một nguyên tắc: <strong>mọi tương tác xuyên context phải đi qua cửa được tuyên bố</strong> — facade/API/event — và dữ liệu qua cửa là DTO/schema, không phải domain object.</li>
+<li>Chuẩn bị sẵn &ldquo;khớp nối đo được&rdquo;: log/trace gắn context name, dashboard cho lưu lượng xuyên biên. Hai context chat với nhau quá dày đặc là chỉ báo sớm nhất của ranh giới vẽ sai — hãy đo nó thay vì tranh cãi cảm tính.</li>
+<li>Trong monolith: enforce ranh giới bằng lint kiến trúc (mục 13) và tách schema DB theo context (mục 9.3, mức 1) ngay từ khi còn rẻ.</li>
+</ul>
+<h3 id="154-tài-liệu-hóa">15.4. Tài liệu hóa<a hidden class="anchor" aria-hidden="true" href="#154-tài-liệu-hóa">#</a></h3>
+<ul>
+<li>Duy trì <strong>một trang context map</strong> (Mermaid trong repo là đủ) + với mỗi context một đoạn &ldquo;context charter&rdquo;: tên, mục đích một câu, ngôn ngữ đặc trưng (5-10 thuật ngữ kèm nghĩa <em>trong context này</em>), team sở hữu, contract công khai. Tổng cộng vài trang — nhưng là vài trang được đọc nhiều nhất bởi người mới.</li>
+<li>Cập nhật context map là nghi thức mỗi quý của nhóm tech lead. Bản đồ sai còn tệ hơn không có bản đồ.</li>
+</ul>
+<hr>
+<h2 id="16-best-practices">16. Best Practices<a hidden class="anchor" aria-hidden="true" href="#16-best-practices">#</a></h2>
+<ol>
+<li><strong>Bắt đầu từ ngôn ngữ, không phải từ dữ liệu.</strong> Ngồi vào các cuộc họp nghiệp vụ và nghe chỗ nào nghĩa của từ gãy. Đường gãy ngôn ngữ là đường vẽ context đáng tin hơn mọi sơ đồ ERD.</li>
+<li><strong>Thà ít context mà thật, còn hơn nhiều context mà giả.</strong> Bắt đầu với 3-5 context thô; tách tiếp khi ngôn ngữ phân hóa. Mười lăm context cho 8 engineer là tự sát bằng chi phí biên giới.</li>
+<li><strong>Đặt tên context theo capability (động từ hóa được), không theo entity.</strong> &ldquo;Ordering&rdquo;, &ldquo;Fulfillment&rdquo;, &ldquo;Pricing&rdquo; — không phải &ldquo;ProductService&rdquo;, &ldquo;UserService&rdquo;. Tên theo entity kéo tư duy về CRUD và về enterprise model.</li>
+<li><strong>Mỗi context một identity scheme riêng, tham chiếu chéo bằng ID + snapshot.</strong> Không truyền domain object qua biên. Không FK vật lý chéo context.</li>
+<li><strong>Enforce bằng máy từ ngày đầu</strong>: lint import trong monolith, quyền DB theo schema, contract test ở biên. Quy ước không được máy kiểm là quy ước đã chết, chỉ chưa chôn.</li>
+<li><strong>Chấp nhận duplication giữa các context như cái giá của tự chủ.</strong> Hai hàm format địa chỉ ở hai context không phải nợ kỹ thuật; import chung một &ldquo;AddressUtils&rdquo; kéo theo transitive dependency giữa hai context mới là nợ.</li>
+<li><strong>Ghi lại quyết định ranh giới bằng ADR</strong> (Architecture Decision Record): vì sao tách/không tách, tín hiệu nào sẽ khiến xét lại. Sáu tháng sau bạn sẽ cảm ơn chính mình.</li>
+<li><strong>Nuôi dưỡng ranh giới như nuôi cây, không xây như xây tường.</strong> Review định kỳ: context nào đang phình ngôn ngữ (đến lúc tách)? cặp context nào chat quá dày (ranh giới sai hoặc nên gộp)? Bounded context tốt nhất tôi từng thấy đều đã được vẽ lại ít nhất một lần.</li>
+</ol>
+<hr>
+<h2 id="17-anti-patterns-và-vì-sao-chúng-nguy-hiểm">17. Anti-patterns và vì sao chúng nguy hiểm<a hidden class="anchor" aria-hidden="true" href="#17-anti-patterns-và-vì-sao-chúng-nguy-hiểm">#</a></h2>
+<h3 id="171-shared-domain-chung-domain-model-giữa-các-context">17.1. Shared Domain (chung domain model giữa các context)<a hidden class="anchor" aria-hidden="true" href="#171-shared-domain-chung-domain-model-giữa-các-context">#</a></h3>
+<p>Package <code>shared-domain</code>/<code>common-entities</code> chứa <code>Product</code>, <code>Customer</code>, <code>Money</code>&hellip; import bởi mọi context. Nguy hiểm vì nó <strong>tái lập enterprise model bằng cửa sau</strong>: mọi context giờ coupling qua package chung; một thay đổi cho nhu cầu của Catalog buộc Ordering re-test và re-deploy; và tệ nhất, nó <strong>ngăn mỗi context phát triển ngôn ngữ riêng</strong> — mọi người lại tư duy bằng một model &ldquo;trung bình cộng&rdquo; tồi cho tất cả. Nếu thật sự có mảnh model đáng chia sẻ (hiếm), hãy làm Shared Kernel <em>có chủ đích, có hợp đồng, phạm vi tối thiểu</em> — chương 05 sẽ chỉ ra vì sao ngay cả Shared Kernel cũng là pattern phải dè chừng. Lưu ý: thư viện kỹ thuật thuần túy (logger, HTTP client, kiểu <code>Money</code> <em>dạng cấu trúc dữ liệu không mang nghiệp vụ</em>) không phải shared domain — lằn ranh là <em>có tri thức nghiệp vụ hay không</em>.</p>
+<h3 id="172-shared-database-giữa-các-context">17.2. Shared Database giữa các context<a hidden class="anchor" aria-hidden="true" href="#172-shared-database-giữa-các-context">#</a></h3>
+<p>Đã mổ xẻ toàn bộ ở mục 9. Tóm tắt mức độ nguy hiểm: nó vô hiệu hóa ranh giới <em>trong im lặng</em> — kiến trúc trên giấy vẫn đẹp trong khi coupling thật tích tụ dưới hầm, và bạn chỉ biết khi migration của team này đánh sập service của team kia.</p>
+<h3 id="173-context-theo-layer-kỹ-thuật-hoặc-theo-entity">17.3. Context theo layer kỹ thuật hoặc theo entity<a hidden class="anchor" aria-hidden="true" href="#173-context-theo-layer-kỹ-thuật-hoặc-theo-entity">#</a></h3>
+<p>&ldquo;API context / DB context / batch context&rdquo;, hoặc &ldquo;User context / Product context / Order context&rdquo; kiểu một-entity-một-service. Nguy hiểm vì <strong>mọi thay đổi nghiệp vụ đều vắt ngang tất cả các ranh giới</strong> — bạn trả đủ chi phí phân tách (contract, translation, phối hợp) và nhận về đúng con số 0 lợi ích cô lập. Đây là nguồn gốc số một của &ldquo;distributed monolith&rdquo;.</p>
+<h3 id="174-ranh-giới-danh-nghĩa-context-trên-slide-không-trên-code">17.4. Ranh giới danh nghĩa (context trên slide, không trên code)<a hidden class="anchor" aria-hidden="true" href="#174-ranh-giới-danh-nghĩa-context-trên-slide-không-trên-code">#</a></h3>
+<p>Context map treo trên Confluence, nhưng code import chéo thoải mái, DB chung, không lint, không contract test. Nguy hiểm kép: chịu chi phí <em>nhận thức</em> của kiến trúc phức tạp mà không có lợi ích nào, <strong>và</strong> tạo niềm tin sai — các quyết định sau đó (&ldquo;mình tách service X ra nhé, ranh giới có sẵn rồi&rdquo;) được xây trên nền không tồn tại.</p>
+<h3 id="175-nanocontext--chia-vụn-theo-mốt">17.5. Nanocontext — chia vụn theo mốt<a hidden class="anchor" aria-hidden="true" href="#175-nanocontext--chia-vụn-theo-mốt">#</a></h3>
+<p>Mười lăm &ldquo;context&rdquo; cho một sản phẩm 6 engineer, thường do copy kiến trúc của các bài blog công ty nghìn kỹ sư. Nguy hiểm vì chi phí biên giới (translation, contract, đồng bộ, cognitive load) là chi phí <em>cố định trên mỗi ranh giới</em> — chia càng vụn tổng chi phí càng lớn, trong khi lợi ích tự chủ team bằng 0 (làm gì có 15 team). Triệu chứng dễ nhận: một user story chạm 4 &ldquo;context&rdquo; trở lên là chuyện thường tuần.</p>
+<h3 id="176-god-context">17.6. God Context<a hidden class="anchor" aria-hidden="true" href="#176-god-context">#</a></h3>
+<p>Một context &ldquo;Core&rdquo; phình ra ôm 70% hệ thống, các context khác chỉ là vệ tinh mỏng. Thường do mọi thứ khó phân loại đều bị ném vào Core. Nguy hiểm vì nó chính là big ball of mud đội mũ DDD — và vì cái tên &ldquo;Core&rdquo; tạo cảm giác chính danh cho sự phình to. Thuốc: mỗi quý nhìn vào context to nhất và hỏi &ldquo;ngôn ngữ trong này còn thống nhất không?&rdquo;.</p>
+<hr>
+<h2 id="18-khi-nào-không-nên-tách-bounded-context">18. Khi nào KHÔNG nên tách Bounded Context<a hidden class="anchor" aria-hidden="true" href="#18-khi-nào-không-nên-tách-bounded-context">#</a></h2>
+<p>Không thần thánh hóa: bounded context là công cụ có giá. Những tình huống <em>không nên</em> tách, hoặc nên tối thiểu hóa:</p>
+<ol>
+<li><strong>Hệ nhỏ, một team, domain đơn giản.</strong> Một ứng dụng quản lý nội bộ 5 màn hình CRUD không cần 4 context — nó cần <em>một</em> context được đặt tên đàng hoàng và một schema sạch. Chi phí biên giới sẽ lớn hơn toàn bộ độ phức tạp của domain.</li>
+<li><strong>Domain chưa hiểu rõ / sản phẩm đang tìm product-market fit.</strong> Ranh giới vẽ lúc mù mờ gần như chắc chắn sai, và ranh giới sai đắt hơn không có ranh giới (mục 14.2). Giai đoạn này: một context, model linh hoạt, tốc độ học là vua. Vẽ context map <em>nháp</em> để suy nghĩ thì tốt; bê tông hóa nó thì chưa.</li>
+<li><strong>Startup giai đoạn sống còn với runway tính bằng tháng.</strong> Trả trước chi phí kiến trúc cho tương lai 3 năm khi chưa chắc sống qua năm nay là phân bổ vốn sai. Kỷ luật tối thiểu đáng giữ: đặt tên module theo capability và tránh God Object — để cánh cửa refactor sau này còn mở.</li>
+<li><strong>Generic subdomain sắp mua ngoài.</strong> Đừng thiết kế context tinh xảo cho mảng kế toán nếu quý sau mua SaaS. Thứ cần thiết kế là <em>lớp tích hợp</em> với SaaS đó (và đó là chuyện của chương 05 — ACL).</li>
+<li><strong>Khi động cơ tách là kỹ thuật thuần túy</strong> (&ldquo;cho dễ scale&rdquo;, &ldquo;cho giống Netflix&rdquo;) mà không chỉ ra được đường gãy <em>ngữ nghĩa</em> hoặc <em>tổ chức</em> nào. Scale giải quyết được bằng nhiều cách rẻ hơn (cache, read replica, sharding); ranh giới ngữ nghĩa sai thì không cách nào rẻ để sửa.</li>
+<li><strong>Khi tổ chức không có khả năng duy trì kỷ luật biên giới.</strong> Nghe phũ, nhưng thật: nếu văn hóa hiện tại là &ldquo;fix nhanh bằng SQL console vào thẳng production&rdquo;, thì tách 6 database chỉ tạo ra 6 chỗ để fix nhanh. Sửa văn hóa vận hành trước, hoặc song song, rồi hãy nhân số ranh giới lên.</li>
+</ol>
+<p>Nguyên tắc tổng: <strong>số bounded context đúng là số nhỏ nhất mà tại đó các ngôn ngữ nghiệp vụ khác nhau không còn giẫm chân nhau và các team không còn chờ nhau.</strong> Không nhỏ hơn — và không lớn hơn.</p>
+<hr>
+<h2 id="19-tóm-tắt-cho-người-bận-rộn">19. Tóm tắt cho người bận rộn<a hidden class="anchor" aria-hidden="true" href="#19-tóm-tắt-cho-người-bận-rộn">#</a></h2>
+<ul>
+<li><strong>Enterprise model thất bại vì bản chất</strong>, không phải vì thực thi: ngữ nghĩa phụ thuộc mục đích, model hợp nhất là model tồi cho mọi bên, chi phí phối hợp N², và Conway&rsquo;s Law. Đừng thử lại lần nữa.</li>
+<li><strong>Bounded Context = ranh giới hiệu lực của một model và một ngôn ngữ.</strong> Thống nhất tuyệt đối bên trong; chấp nhận khác biệt bên ngoài; ranh giới phải được tuyên bố và enforce.</li>
+<li><strong>Cùng một từ — &ldquo;Order&rdquo;, &ldquo;Customer&rdquo;, &ldquo;Product&rdquo; — mang nghĩa khác nhau ở context khác nhau.</strong> Đó không phải duplication cần diệt; đó là tri thức nghiệp vụ cần tôn trọng. DRY áp dụng cho tri thức, không cho chữ trùng nhau.</li>
+<li><strong>Subdomain là bài toán (tìm thấy); Bounded Context là giải pháp (vẽ ra).</strong> Trộn hai câu hỏi này là nguồn của các cuộc họp không lối thoát.</li>
+<li><strong>Bounded Context ≠ Microservice.</strong> Ngữ nghĩa trước, deployment sau. Nhiều context trong một monolith: tốt. Một context gồm nhiều service: hợp lệ. Quyết định ngược thứ tự: thảm họa ở cả hai hướng.</li>
+<li><strong>Xác định ranh giới bằng ba lăng kính hội tụ</strong>: linguistic (nghĩa gãy ở đâu), team (ai own được), business capability (KPI và nhịp tiến hóa riêng).</li>
+<li><strong>Shared database là kẻ phá ranh giới nguy hiểm nhất</strong> vì nó phá trong im lặng: schema chung = model chung = không có context nào cả, bất kể code chia module đẹp đến đâu.</li>
+<li><strong>Module NestJS / package Go chỉ là vỏ.</strong> Bounded context là cam kết ngữ nghĩa + enforcement bằng máy (lint import, quyền DB, contract test). Không enforce = không tồn tại.</li>
+<li><strong>Đừng tách khi</strong>: hệ nhỏ, domain mù mờ, team đơn lẻ, hoặc động cơ chỉ là thời trang kiến trúc. Số context đúng là số nhỏ nhất đủ để ngôn ngữ và team không giẫm chân nhau.</li>
+</ul>
+<p>Ranh giới đã vẽ xong. Nhưng các context không sống cô lập — chúng phải nói chuyện với nhau, và <em>cách</em> chúng nói chuyện (ai theo ai, ai bảo vệ mình bằng lớp chống nhiễm, ai chia sẻ gì với ai) là một tập pattern hoàn chỉnh, nơi kỹ thuật gặp chính trị tổ chức.</p>
+<hr>
+<h2 id="đọc-tiếp">Đọc tiếp<a hidden class="anchor" aria-hidden="true" href="#đọc-tiếp">#</a></h2>
+<ul>
+<li><strong>Chương tiếp theo: <a href="05-context-mapping.md">05 — Context Mapping: Các Pattern Quan Hệ Giữa Các Bounded Context</a></strong> — Partnership, Shared Kernel, Customer/Supplier, Conformist, Anti-Corruption Layer, Open Host Service, Published Language, Separate Ways, Big Ball of Mud — và vì sao context map là tài liệu chính trị quan trọng nhất mà một architect có thể vẽ.</li>
+<li>Chương trước: <a href="03-ubiquitous-language.md">03 — Ubiquitous Language</a></li>
+<li>Về mục lục: <a href="00-muc-luc.md">00 — Mục lục</a></li>
+<li>Nhảy tới tactical design: <a href="06-entity-va-value-object.md">06 — Entity và Value Object</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/domain-driven-design/03-ubiquitous-language/">
+    <span class="title">« Prev</span>
+    <br>
+    <span></span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/domain-driven-design/05-context-mapping/">
+    <span class="title">Next »</span>
+    <br>
+    <span></span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on x"
+            href="https://x.com/intent/tweet/?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f&amp;title=&amp;summary=&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f&title=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on whatsapp"
+            href="https://api.whatsapp.com/send?text=%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on telegram"
+            href="https://telegram.me/share/url?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f04-bounded-context%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

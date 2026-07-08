@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Chương 9: Domain Service và Application Service — Tách &ldquo;nồi lẩu&rdquo; Service ra đúng tầng
+
+Vị trí chương này: Bạn đã đi qua Entity, Value Object (chương 6), Aggregate (chương 7), Repository và Factory (chương 8). Đến đây, mô hình domain của bạn đã có &ldquo;xương sống&rdquo;. Nhưng thực tế sẽ nhanh chóng ném vào mặt bạn một câu hỏi: có những nghiệp vụ không thuộc về bất kỳ Entity nào cả — nhét nó vào đâu? Chương này trả lời câu hỏi đó, và quan trọng hơn: mổ xẻ cái OrderService 500 dòng mà gần như mọi codebase NestJS/Go đều có, rồi tách nó ra từng lớp một. Đây là chương &ldquo;bẩn tay&rdquo; nhất từ đầu tài liệu đến giờ.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/domain-driven-design/09-domain-service-va-application-service/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/domain-driven-design/09-domain-service-va-application-service/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/domain-driven-design/"></a></div>
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">33 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="chương-9-domain-service-và-application-service--tách-nồi-lẩu-service-ra-đúng-tầng">Chương 9: Domain Service và Application Service — Tách &ldquo;nồi lẩu&rdquo; Service ra đúng tầng<a hidden class="anchor" aria-hidden="true" href="#chương-9-domain-service-và-application-service--tách-nồi-lẩu-service-ra-đúng-tầng">#</a></h1>
+<blockquote>
+<p><strong>Vị trí chương này</strong>: Bạn đã đi qua Entity, Value Object (chương 6), Aggregate (chương 7), Repository và Factory (chương 8). Đến đây, mô hình domain của bạn đã có &ldquo;xương sống&rdquo;. Nhưng thực tế sẽ nhanh chóng ném vào mặt bạn một câu hỏi: <em>có những nghiệp vụ không thuộc về bất kỳ Entity nào cả — nhét nó vào đâu?</em> Chương này trả lời câu hỏi đó, và quan trọng hơn: mổ xẻ cái <code>OrderService</code> 500 dòng mà gần như mọi codebase NestJS/Go đều có, rồi tách nó ra từng lớp một. Đây là chương &ldquo;bẩn tay&rdquo; nhất từ đầu tài liệu đến giờ.</p></blockquote>
+<hr>
+<h2 id="1-problem-statement-nghiệp-vụ-không-có-nhà">1. Problem Statement: Nghiệp vụ không có &ldquo;nhà&rdquo;<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement-nghiệp-vụ-không-có-nhà">#</a></h2>
+<p>Hãy bắt đầu bằng bài toán kinh điển nhất của mọi tài liệu DDD, nhưng lần này ta đi đến tận cùng của nó: <strong>chuyển tiền giữa hai tài khoản</strong>.</p>
+<p>Bạn đã học chương 7: logic nghiệp vụ nên nằm trong Aggregate. Vậy thử đặt logic chuyển tiền vào <code>Account</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// Phương án 1: đặt vào account nguồn?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Account</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">transferTo</span>(<span style="color:#a6e22e">target</span>: <span style="color:#66d9ef">Account</span>, <span style="color:#a6e22e">amount</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">withdraw</span>(<span style="color:#a6e22e">amount</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">deposit</span>(<span style="color:#a6e22e">amount</span>); <span style="color:#75715e">// Account này đang SỬA một Aggregate khác!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Có ba vấn đề nghiêm trọng:</p>
+<ol>
+<li><strong>Vi phạm ranh giới Aggregate</strong>. Chương 7 đã nói rất rõ: một transaction chỉ nên sửa một Aggregate. <code>account.transferTo(target)</code> sửa hai Aggregate trong một lời gọi — ranh giới nhất quán bị phá.</li>
+<li><strong>Ngôn ngữ sai</strong>. Trong nghiệp vụ ngân hàng, &ldquo;chuyển tiền&rdquo; không phải là hành vi <em>của một tài khoản</em>. Nó là một <strong>nghiệp vụ liên quan đến hai tài khoản, chính sách phí, hạn mức, và quy định chống rửa tiền</strong>. Domain expert không nói &ldquo;tài khoản A chuyển tiền&rdquo; — họ nói &ldquo;<strong>thực hiện một giao dịch chuyển tiền</strong> từ A sang B&rdquo;. Chủ ngữ của câu không phải là Account.</li>
+<li><strong>Kiến thức lạc chỗ</strong>. Quy tắc &ldquo;phí chuyển liên ngân hàng là 0.05%, tối thiểu 10.000đ, miễn phí nếu khách hàng hạng Platinum&rdquo; — quy tắc này biết về <em>cả hai</em> tài khoản, biết về <em>chính sách phí</em>, biết về <em>hạng khách hàng</em>. Nhét nó vào <code>Account</code> nghĩa là bắt <code>Account</code> biết quá nhiều thứ không phải của nó.</li>
+</ol>
+<p>Ví dụ thứ hai, đời thường hơn: <strong>tính giá đơn hàng</strong>. Giá cuối cùng phụ thuộc vào: bảng giá theo khu vực, khuyến mãi đang chạy, hạng thành viên, số lượng mua, chính sách giá sàn của ngành hàng. Logic này cần dữ liệu từ <code>Order</code>, <code>Customer</code>, <code>Promotion</code>, <code>PricingPolicy</code> — bốn Aggregate khác nhau. Đặt vào Aggregate nào cũng khiên cưỡng.</p>
+<p>Và đây là lúc 90% team làm điều tự nhiên nhất: <strong>nhét vào Service</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderService</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ... 500 dòng sau đó
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Vấn đề không phải là &ldquo;dùng service&rdquo;. Vấn đề là chữ &ldquo;service&rdquo; trong NestJS/Spring/Go idiom <strong>không phân biệt gì cả</strong> — nó là cái thùng chứa mọi thứ: business rule, transaction, gọi repository, gửi email, check quyền, map DTO. Sáu tháng sau, bạn có một class mà:</p>
+<ul>
+<li>Không ai dám sửa vì không biết dòng nào là business rule, dòng nào là plumbing.</li>
+<li>Không test được business rule mà không mock 8 dependency.</li>
+<li>Business rule bị <strong>lặp</strong> ở service khác vì không ai biết nó đã tồn tại.</li>
+</ul>
+<p>DDD trả lời vấn đề này bằng cách <strong>tách chữ &ldquo;service&rdquo; thành hai khái niệm khác nhau về bản chất</strong>: Domain Service và Application Service.</p>
+<p><strong>Nếu không giải quyết vấn đề này thì sao?</strong> Codebase của bạn vẫn chạy. Nhưng chi phí thay đổi tăng theo hàm mũ: mỗi rule mới phải đọc lại toàn bộ service để chắc chắn không phá rule cũ; mỗi bug fix ở một chỗ có nguy cơ bỏ sót bản copy của rule ở chỗ khác. Đây chính xác là con đường dẫn về Big Ball of Mud mà chương 1 đã cảnh báo.</p>
+<hr>
+<h2 id="2-tại-sao-ddd-đưa-ra-hai-khái-niệm-này">2. Tại sao DDD đưa ra hai khái niệm này<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-ddd-đưa-ra-hai-khái-niệm-này">#</a></h2>
+<p>Eric Evans đưa ra <strong>Domain Service</strong> trong Blue Book với một quan sát rất first-principles:</p>
+<blockquote>
+<p>Một số khái niệm trong domain vốn dĩ là <strong>hành động/hoạt động (activity)</strong>, không phải <strong>vật (thing)</strong>. Ép chúng thành trách nhiệm của một Entity hay Value Object sẽ bóp méo mô hình.</p></blockquote>
+<p>Nói cách khác: mô hình domain phải phản ánh cách domain expert <em>nói</em>. Khi expert nói &ldquo;hệ thống định tuyến chọn tuyến đường rẻ nhất&rdquo;, chủ ngữ là &ldquo;hệ thống định tuyến&rdquo; (Routing Service) — không phải Cargo, không phải Route. Cố nhét logic đó vào Cargo là <strong>bẻ cong ngôn ngữ để chiều framework</strong>, đi ngược lại Ubiquitous Language (chương 3).</p>
+<p>Còn <strong>Application Service</strong> đến từ kiến trúc phân tầng (Layered Architecture / Hexagonal — sẽ đào sâu ở chương 12): cần một nơi đứng giữa thế giới bên ngoài (HTTP, message queue, cron) và domain model, để:</p>
+<ul>
+<li>Dịch input thô (DTO, request) thành lời gọi domain.</li>
+<li>Quản lý những thứ domain <strong>không được biết</strong>: transaction, authorization, retry, logging, publish event ra ngoài.</li>
+</ul>
+<p>Hai khái niệm, hai lý do tồn tại khác nhau:</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>Domain Service</th>
+          <th>Application Service</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Tồn tại vì</td>
+          <td>Nghiệp vụ không có &ldquo;nhà&rdquo; tự nhiên trong Entity/VO</td>
+          <td>Cần lớp điều phối giữa thế giới ngoài và domain</td>
+      </tr>
+      <tr>
+          <td>Trả lời câu hỏi</td>
+          <td>&ldquo;Nghiệp vụ này tính toán/quyết định <strong>thế nào</strong>?&rdquo;</td>
+          <td>&ldquo;Use case này <strong>gồm những bước gì</strong>?&rdquo;</td>
+      </tr>
+      <tr>
+          <td>Thuộc tầng</td>
+          <td>Domain layer</td>
+          <td>Application layer</td>
+      </tr>
+      <tr>
+          <td>Có business rule?</td>
+          <td><strong>Có — đó là toàn bộ lý do nó tồn tại</strong></td>
+          <td><strong>Không — tuyệt đối không</strong></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Tại sao phải tách?</strong> Vì hai loại code này thay đổi vì hai lý do khác nhau (Single Responsibility hiểu theo nghĩa gốc: <em>one reason to change</em>). Business rule đổi khi nghiệp vụ đổi. Orchestration đổi khi hạ tầng/quy trình kỹ thuật đổi (thêm cache, đổi cách publish event, thêm audit log). Trộn chúng nghĩa là mỗi thay đổi hạ tầng đều rủi ro chạm vào business rule và ngược lại.</p>
+<p><strong>Đánh đổi gì?</strong> Nhiều file hơn, nhiều lớp hơn, đường đi của một request dài hơn khi debug. Với CRUD đơn giản, đây là chi phí không đáng trả — xem mục 11.</p>
+<hr>
+<h2 id="3-bản-chất-của-từng-loại">3. Bản chất của từng loại<a hidden class="anchor" aria-hidden="true" href="#3-bản-chất-của-từng-loại">#</a></h2>
+<h3 id="31-domain-service--nghiệp-vụ-thuần-stateless-nói-ngôn-ngữ-domain">3.1. Domain Service — nghiệp vụ thuần, stateless, nói ngôn ngữ domain<a hidden class="anchor" aria-hidden="true" href="#31-domain-service--nghiệp-vụ-thuần-stateless-nói-ngôn-ngữ-domain">#</a></h3>
+<p>Một Domain Service đúng nghĩa có 4 đặc tính, và <strong>thiếu một trong bốn thì nó không phải Domain Service</strong>:</p>
+<ol>
+<li><strong>Chứa business rule thật sự</strong> — nó tính toán, quyết định, kiểm tra một chính sách nghiệp vụ. Nếu bỏ nó đi, domain expert sẽ hỏi &ldquo;thế quy tắc X nằm ở đâu?&rdquo;.</li>
+<li><strong>Stateless</strong> — không giữ trạng thái giữa các lần gọi. Mọi dữ liệu cần thiết được truyền vào qua tham số (thường là các Aggregate/VO đã được load sẵn). Stateless không có nghĩa là không có dependency — nó có thể phụ thuộc vào một <em>domain interface</em> (ví dụ <code>ExchangeRateProvider</code>), nhưng bản thân nó không nhớ gì.</li>
+<li><strong>Tên là động từ/hoạt động trong Ubiquitous Language</strong> — <code>TransferFundsService</code>, <code>PricingService</code>, <code>RoutingService</code>, <code>OverbookingPolicy</code>. Nếu bạn không tìm được cái tên nghiệp vụ cho nó mà chỉ nghĩ ra được <code>OrderHelper</code>, <code>OrderManager</code>, <code>OrderUtils</code> — đó là dấu hiệu bạn chưa hiểu nó làm gì, hoặc nó không phải Domain Service.</li>
+<li><strong>Không biết gì về hạ tầng</strong> — không import ORM, không biết HTTP, không mở transaction, không publish message ra Kafka. Nó chỉ biết Entity, Value Object, và các interface thuần domain.</li>
+</ol>
+<p>Một cách kiểm tra nhanh: <strong>Domain Service phải chạy được trong unit test không cần mock framework nào</strong>. Nếu test nó cần <code>TestingModule</code> của NestJS hay <code>sqlmock</code> của Go, nó đã lai tạp.</p>
+<h3 id="32-application-service--kịch-bản-của-use-case">3.2. Application Service — kịch bản của use case<a hidden class="anchor" aria-hidden="true" href="#32-application-service--kịch-bản-của-use-case">#</a></h3>
+<p>Application Service (một số tài liệu gọi là Use Case, Interactor — trong Clean Architecture) là <strong>kịch bản điều phối</strong>. Mỗi public method của nó tương ứng một use case: <code>placeOrder</code>, <code>cancelOrder</code>, <code>transferFunds</code>. Trách nhiệm của nó:</p>
+<ul>
+<li><strong>Transaction boundary</strong>: mở/đóng transaction, quyết định cái gì atomic.</li>
+<li><strong>Load và persist Aggregate</strong> qua Repository.</li>
+<li><strong>Authorization</strong>: user này có được thực hiện use case này không (lưu ý: đây là <em>access control kỹ thuật</em>; còn quy tắc kiểu &ldquo;chỉ manager mới được duyệt đơn trên 100 triệu&rdquo; là <em>business rule</em> — thuộc domain).</li>
+<li><strong>Điều phối</strong>: gọi Aggregate method, gọi Domain Service, theo đúng thứ tự của use case.</li>
+<li><strong>Publish event</strong> sau khi persist thành công (chi tiết ở chương 10).</li>
+<li><strong>Dịch kết quả</strong> về DTO/response.</li>
+</ul>
+<p>Và một điều nó <strong>tuyệt đối không làm: chứa business rule</strong>. Phép thử đơn giản: nếu trong Application Service xuất hiện <code>if</code> mà điều kiện là một khái niệm nghiệp vụ (<code>if (order.total &gt; 500_000)</code>, <code>if (customer.tier === 'GOLD')</code>) — business rule đang rò rỉ. <code>if</code> hợp lệ trong Application Service chỉ là điều phối kỹ thuật: <code>if (!order) throw new NotFoundException()</code>, <code>if (!(await this.auth.can(user, 'order:cancel'))) throw new ForbiddenException()</code>.</p>
+<p>Một Application Service tốt đọc như <strong>mục lục của use case</strong>, không phải nội dung:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#a6e22e">placeOrder</span>(<span style="color:#a6e22e">cmd</span>: <span style="color:#66d9ef">PlaceOrderCommand</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">OrderId</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 1. Load những gì cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 2. Gọi domain (Aggregate + Domain Service) để ra quyết định nghiệp vụ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 3. Persist
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 4. Publish event
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 5. Trả kết quả
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Bất kỳ ai đọc method này phải hiểu use case gồm những bước gì trong 30 giây, mà <strong>không cần hiểu bất kỳ quy tắc nghiệp vụ nào</strong>.</p>
+<h3 id="33-bảng-phân-định-trách-nhiệm--dán-lên-tường-team">3.3. Bảng phân định trách nhiệm — dán lên tường team<a hidden class="anchor" aria-hidden="true" href="#33-bảng-phân-định-trách-nhiệm--dán-lên-tường-team">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Câu hỏi</th>
+          <th>Nơi trả lời</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Đơn hàng này có hợp lệ không?</td>
+          <td>Aggregate (<code>Order</code>)</td>
+      </tr>
+      <tr>
+          <td>Phí chuyển khoản là bao nhiêu?</td>
+          <td>Domain Service (<code>TransferFeePolicy</code>)</td>
+      </tr>
+      <tr>
+          <td>Hai tài khoản này chuyển tiền cho nhau thế nào?</td>
+          <td>Domain Service (<code>FundsTransferService</code>)</td>
+      </tr>
+      <tr>
+          <td>Use case &ldquo;đặt hàng&rdquo; gồm những bước gì?</td>
+          <td>Application Service (<code>PlaceOrderUseCase</code>)</td>
+      </tr>
+      <tr>
+          <td>Lưu order vào Postgres thế nào?</td>
+          <td>Repository implementation (infrastructure)</td>
+      </tr>
+      <tr>
+          <td>User có quyền gọi API này không?</td>
+          <td>Application Service (+ Guard/Middleware)</td>
+      </tr>
+      <tr>
+          <td>Sau khi đặt hàng thì gửi email thế nào?</td>
+          <td>Event handler (chương 10)</td>
+      </tr>
+      <tr>
+          <td>Request JSON map sang command thế nào?</td>
+          <td>Controller / Presentation layer</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="4-cách-hoạt-động-dòng-chảy-của-một-use-case">4. Cách hoạt động: dòng chảy của một use case<a hidden class="anchor" aria-hidden="true" href="#4-cách-hoạt-động-dòng-chảy-của-một-use-case">#</a></h2>
+<p>Dòng chảy chuẩn của một use case có cả hai loại service:</p>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    participant C as Controller (HTTP)
+    participant AS as Application Service&lt;br/&gt;(TransferFundsUseCase)
+    participant R as AccountRepository
+    participant DS as Domain Service&lt;br/&gt;(FundsTransferService)
+    participant A1 as Account (nguồn)
+    participant A2 as Account (đích)
+    participant EB as Event Publisher
+
+    C-&gt;&gt;AS: transferFunds(cmd)
+    Note over AS: Bắt đầu transaction&lt;br/&gt;Check authorization
+    AS-&gt;&gt;R: findById(sourceId)
+    R--&gt;&gt;AS: Account nguồn
+    AS-&gt;&gt;R: findById(targetId)
+    R--&gt;&gt;AS: Account đích
+    AS-&gt;&gt;DS: transfer(source, target, amount)
+    Note over DS: TOÀN BỘ business rule ở đây:&lt;br/&gt;kiểm tra hạn mức, tính phí,&lt;br/&gt;rule chống rửa tiền
+    DS-&gt;&gt;A1: withdraw(amount + fee)
+    DS-&gt;&gt;A2: deposit(amount)
+    DS--&gt;&gt;AS: TransferResult (kèm domain events)
+    AS-&gt;&gt;R: save(source), save(target)
+    Note over AS: Commit transaction
+    AS-&gt;&gt;EB: publish(FundsTransferred)
+    AS--&gt;&gt;C: TransferReceiptDto
+</code></pre><p>Mấy điểm cần soi kỹ trên diagram:</p>
+<ul>
+<li><strong>Application Service không biết phí tính thế nào</strong> — nó chỉ biết &ldquo;bước 3 là gọi FundsTransferService&rdquo;.</li>
+<li><strong>Domain Service không biết transaction tồn tại</strong> — nó nhận hai Aggregate đã load sẵn, thao tác trên object in-memory.</li>
+<li><strong>Domain Service không tự save</strong> — persist là việc của Application Service. Đây là điểm nhiều người làm sai: inject Repository vào Domain Service rồi gọi <code>save()</code> bên trong, khiến Domain Service dính vào vòng đời persistence. (Inject Repository vào Domain Service để <em>đọc</em> thì tranh cãi được — xem Best Practices; để <em>ghi</em> thì gần như luôn sai.)</li>
+<li>Chuyển tiền sửa 2 Aggregate trong 1 transaction — đây là <strong>ngoại lệ có chủ đích</strong> của rule chương 7, chấp nhận được khi cả hai Aggregate cùng nằm trong một database và nghiệp vụ đòi hỏi atomic thật sự (ngân hàng nội bộ). Ở hệ phân tán, bạn sẽ cần saga/process manager — chương 13.</li>
+</ul>
+<hr>
+<h2 id="5-mổ-xẻ-nồi-lẩu-orderservice-500-dòng-điển-hình">5. Mổ xẻ &ldquo;nồi lẩu&rdquo;: OrderService 500 dòng điển hình<a hidden class="anchor" aria-hidden="true" href="#5-mổ-xẻ-nồi-lẩu-orderservice-500-dòng-điển-hình">#</a></h2>
+<p>Đây là phần quan trọng nhất chương. Dưới đây là một <code>OrderService</code> NestJS được rút gọn nhưng <strong>giữ nguyên cấu trúc tội lỗi</strong> của phiên bản 500 dòng ngoài đời — kiểu class bạn mở ra ở bất kỳ công ty nào cũng thấy:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ======== TRƯỚC: order.service.ts — cái nồi lẩu ========
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderService</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">@InjectRepository</span>(<span style="color:#a6e22e">OrderEntity</span>) <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">orderRepo</span>: <span style="color:#66d9ef">Repository</span>&lt;<span style="color:#f92672">OrderEntity</span>&gt;,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">@InjectRepository</span>(<span style="color:#a6e22e">CustomerEntity</span>) <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">customerRepo</span>: <span style="color:#66d9ef">Repository</span>&lt;<span style="color:#f92672">CustomerEntity</span>&gt;,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">@InjectRepository</span>(<span style="color:#a6e22e">ProductEntity</span>) <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">productRepo</span>: <span style="color:#66d9ef">Repository</span>&lt;<span style="color:#f92672">ProductEntity</span>&gt;,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">@InjectRepository</span>(<span style="color:#a6e22e">PromotionEntity</span>) <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">promoRepo</span>: <span style="color:#66d9ef">Repository</span>&lt;<span style="color:#f92672">PromotionEntity</span>&gt;,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">dataSource</span>: <span style="color:#66d9ef">DataSource</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">mailerService</span>: <span style="color:#66d9ef">MailerService</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">smsService</span>: <span style="color:#66d9ef">SmsService</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">inventoryClient</span>: <span style="color:#66d9ef">InventoryHttpClient</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">logger</span>: <span style="color:#66d9ef">Logger</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">createOrder</span>(<span style="color:#a6e22e">dto</span>: <span style="color:#66d9ef">CreateOrderDto</span>, <span style="color:#a6e22e">userId</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">OrderResponseDto</span>&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [P] Authorization lẫn vào giữa
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">customer</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">customerRepo</span>.<span style="color:#a6e22e">findOne</span>({ <span style="color:#a6e22e">where</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">userId</span> } });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">customer</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">UnauthorizedException</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;BLOCKED&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ForbiddenException</span>(<span style="color:#e6db74">&#39;Customer is blocked&#39;</span>); <span style="color:#75715e">// [B?] rule hay access control?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [P] Load dữ liệu
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">products</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">productRepo</span>.<span style="color:#a6e22e">findBy</span>({ <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">In</span>(<span style="color:#a6e22e">dto</span>.<span style="color:#a6e22e">items</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">i</span> <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">productId</span>)) });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [B] Business rule 1: kiểm tra tồn kho — trộn với gọi HTTP [I]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">item</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">dto</span>.<span style="color:#a6e22e">items</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">stock</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">inventoryClient</span>.<span style="color:#a6e22e">getStock</span>(<span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">productId</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">stock</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">quantity</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>(<span style="color:#e6db74">`Product </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">productId</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> out of stock`</span>);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [B] Business rule 2: tính giá — 80 dòng if/else trong bản thật
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">subtotal</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">item</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">dto</span>.<span style="color:#a6e22e">items</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">product</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">products</span>.<span style="color:#a6e22e">find</span>(<span style="color:#a6e22e">p</span> <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">productId</span>)<span style="color:#f92672">!</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">price</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">product</span>.<span style="color:#a6e22e">basePrice</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">tier</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;GOLD&#39;</span>) <span style="color:#a6e22e">price</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">price</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.95</span>;        <span style="color:#75715e">// rule hạng thành viên
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">quantity</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">10</span>) <span style="color:#a6e22e">price</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">price</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.97</span>;             <span style="color:#75715e">// rule số lượng
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">subtotal</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">price</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">quantity</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [B] Business rule 3: khuyến mãi
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">promo</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">dto</span>.<span style="color:#a6e22e">promoCode</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">?</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">promoRepo</span>.<span style="color:#a6e22e">findOne</span>({ <span style="color:#a6e22e">where</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">code</span>: <span style="color:#66d9ef">dto.promoCode</span> } })
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">discount</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">promo</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">expiresAt</span> <span style="color:#f92672">&lt;</span> <span style="color:#66d9ef">new</span> Date()) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>(<span style="color:#e6db74">&#39;Promo expired&#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">subtotal</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">minOrderValue</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>(<span style="color:#e6db74">&#39;Order too small&#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">usedCount</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">maxUsage</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>(<span style="color:#e6db74">&#39;Promo exhausted&#39;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">discount</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">min</span>(<span style="color:#a6e22e">subtotal</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">percent</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">100</span>, <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">maxDiscount</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [B] Business rule 4: phí ship
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">shippingFee</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span><span style="color:#a6e22e">_000</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">subtotal</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">discount</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">500</span><span style="color:#a6e22e">_000</span>) <span style="color:#a6e22e">shippingFee</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;         <span style="color:#75715e">// freeship
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">tier</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;PLATINUM&#39;</span>) <span style="color:#a6e22e">shippingFee</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// [P] Transaction + persist — trộn với business rule 5
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">dataSource</span>.<span style="color:#a6e22e">transaction</span>(<span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">em</span>) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">em</span>.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">OrderEntity</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">customerId</span>: <span style="color:#66d9ef">customer.id</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">items</span>: <span style="color:#66d9ef">dto.items</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">subtotal</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">discount</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">shippingFee</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">total</span>: <span style="color:#66d9ef">subtotal</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">discount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">shippingFee</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">subtotal</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">discount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">shippingFee</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">20</span><span style="color:#a6e22e">_000_000</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;PENDING_APPROVAL&#39;</span>                                   <span style="color:#75715e">// [B] rule 5: đơn to phải duyệt
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;CONFIRMED&#39;</span>,
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">em</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">order</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">promo</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">usedCount</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>;                                    <span style="color:#75715e">// [B] rule 6, giấu trong transaction
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">em</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">promo</span>);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// [I] Side effects trong transaction — chương 10 sẽ chửi đoạn này
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">mailerService</span>.<span style="color:#a6e22e">sendOrderConfirmation</span>(<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">email</span>, <span style="color:#a6e22e">order</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">tier</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;PLATINUM&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">smsService</span>.<span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">phone</span>, <span style="color:#e6db74">`Đơn </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">id</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> đã xác nhận`</span>);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Order </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">id</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> created`</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">toDto</span>(<span style="color:#a6e22e">order</span>); <span style="color:#75715e">// [P] mapping
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    });
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Ký hiệu: <code>[B]</code> = business rule (domain), <code>[P]</code> = plumbing/orchestration (application), <code>[I]</code> = infrastructure. Hãy đếm: <strong>6 business rule, 4 loại plumbing, 3 loại infrastructure</strong> — trong MỘT method. Bản 500 dòng ngoài đời còn có thêm <code>updateOrder</code>, <code>cancelOrder</code>, <code>getOrders</code> với các rule <em>lặp lại một phần</em> của <code>createOrder</code> (ví dụ tính lại giá khi update — và lệch nhau sau vài lần sửa).</p>
+<h3 id="dấu-hiệu-nhận-biết-logic-đặt-sai-chỗ">Dấu hiệu nhận biết logic đặt sai chỗ<a hidden class="anchor" aria-hidden="true" href="#dấu-hiệu-nhận-biết-logic-đặt-sai-chỗ">#</a></h3>
+<p>Trước khi tách, hãy học cách <strong>ngửi</strong>. Các dấu hiệu sau gần như luôn đúng:</p>
+<ol>
+<li><strong><code>if</code> nghiệp vụ trong Application Service / Controller</strong> — <code>customer.tier === 'GOLD'</code> nằm cạnh <code>dataSource.transaction</code> → rule đang ở tầng application.</li>
+<li><strong>Entity chỉ có getter/setter, mọi tính toán ở service</strong> — anemic model (chương 6). <code>order.status = 'CONFIRMED'</code> gán từ bên ngoài thay vì <code>order.confirm()</code>.</li>
+<li><strong>Cùng một rule xuất hiện ≥ 2 chỗ</strong> — freeship trên 500k được check ở <code>createOrder</code>, ở <code>updateOrder</code>, và ở&hellip; frontend. Khi rule đổi thành 600k, ai nhớ đủ 3 chỗ?</li>
+<li><strong>Test business rule phải mock repository/mailer</strong> — muốn test &ldquo;GOLD được giảm 5%&rdquo; mà phải dựng <code>TestingModule</code> với 9 provider → rule đang chôn dưới plumbing.</li>
+<li><strong>Domain Service có <code>await this.repo.save(...)</code></strong> — chiều ngược lại: plumbing rò xuống domain.</li>
+<li><strong>Tên method không có trong ngôn ngữ nghiệp vụ</strong> — <code>processOrderData()</code>, <code>handleOrderLogic()</code> — nếu domain expert nghe tên method mà không hiểu, tầng đã lẫn.</li>
+<li><strong>Sửa cấu hình hạ tầng (đổi mailer, thêm cache) buộc phải đụng file chứa business rule</strong> — hai lý do thay đổi đang sống chung một file.</li>
+</ol>
+<h3 id="tách-từng-bước">Tách từng bước<a hidden class="anchor" aria-hidden="true" href="#tách-từng-bước">#</a></h3>
+<p><strong>Bước 1 — Đẩy rule về Aggregate trước, Domain Service sau.</strong> Nguyên tắc: Domain Service là <em>phương án cuối</em>, không phải phương án đầu. Rule nào chỉ cần dữ liệu của Order → vào <code>Order</code>. Rule &ldquo;đơn &gt; 20 triệu phải duyệt&rdquo; chỉ cần total của order → <code>Order.place()</code> tự quyết định status. Rule &ldquo;promo hết hạn/hết lượt&rdquo; chỉ cần dữ liệu Promotion → <code>Promotion.redeem()</code>.</p>
+<p><strong>Bước 2 — Rule cần nhiều Aggregate → Domain Service.</strong> Tính giá cần Product + Customer tier + quantity → <code>PricingService</code>. Phí ship cần subtotal + tier → <code>ShippingFeePolicy</code>. Đây là những &ldquo;hoạt động&rdquo; thật sự trong ngôn ngữ nghiệp vụ.</p>
+<p><strong>Bước 3 — Application Service chỉ còn kịch bản.</strong> Load, gọi domain, persist, publish, map.</p>
+<p><strong>Bước 4 — Side effect ra khỏi transaction, thành event handler.</strong> Email/SMS không được nằm trong transaction — nếu mailer chậm 5 giây, bạn giữ lock DB 5 giây; nếu mailer lỗi, đơn hàng hợp lệ bị rollback. Chi tiết chương 10.</p>
+<p>Kết quả sau khi tách:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ======== SAU (1): Domain layer — order.ts ========
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Rule chỉ cần dữ liệu của Order → nằm TRONG Order
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">OrderId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">customerId</span>: <span style="color:#66d9ef">CustomerId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">lines</span>: <span style="color:#66d9ef">OrderLine</span>[],
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">pricing</span>: <span style="color:#66d9ef">OrderPricing</span>,   <span style="color:#75715e">// VO: subtotal, discount, shippingFee, total
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">OrderStatus</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">place</span>(<span style="color:#a6e22e">customerId</span>: <span style="color:#66d9ef">CustomerId</span>, <span style="color:#a6e22e">lines</span>: <span style="color:#66d9ef">OrderLine</span>[], <span style="color:#a6e22e">pricing</span>: <span style="color:#66d9ef">OrderPricing</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">EmptyOrderError</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pricing</span>.<span style="color:#a6e22e">total</span>.<span style="color:#a6e22e">greaterThan</span>(<span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">vnd</span>(<span style="color:#ae81ff">20</span><span style="color:#a6e22e">_000_000</span>))
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">?</span> <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">PendingApproval</span>          <span style="color:#75715e">// rule 5: sống ở đây
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#f92672">:</span> <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">Confirmed</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Order</span>(<span style="color:#a6e22e">OrderId</span>.<span style="color:#a6e22e">generate</span>(), <span style="color:#a6e22e">customerId</span>, <span style="color:#a6e22e">lines</span>, <span style="color:#a6e22e">pricing</span>, <span style="color:#a6e22e">status</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderPlaced</span>(<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">customerId</span>, <span style="color:#a6e22e">pricing</span>.<span style="color:#a6e22e">total</span>)); <span style="color:#75715e">// chương 10
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ======== SAU (2): Domain Service — pricing.service.ts ========
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Rule cần Product + Customer + Promotion → Domain Service, THUẦN, stateless
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PricingService</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">price</span>(<span style="color:#a6e22e">lines</span>: <span style="color:#66d9ef">PricingLine</span>[], <span style="color:#a6e22e">customer</span>: <span style="color:#66d9ef">Customer</span>, <span style="color:#a6e22e">promo</span>: <span style="color:#66d9ef">Promotion</span> <span style="color:#f92672">|</span> <span style="color:#66d9ef">null</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">OrderPricing</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">subtotal</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lines</span>
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">l</span> <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">unitPrice</span>(<span style="color:#a6e22e">l</span>, <span style="color:#a6e22e">customer</span>).<span style="color:#a6e22e">multiply</span>(<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">quantity</span>))
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">b</span>), <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">zero</span>(<span style="color:#e6db74">&#39;VND&#39;</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">discount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">promo</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">discountFor</span>(<span style="color:#a6e22e">subtotal</span>) <span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">zero</span>(<span style="color:#e6db74">&#39;VND&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Promotion.discountFor() tự kiểm tra hết hạn/hết lượt/min order — rule của NÓ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">shippingFee</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ShippingFeePolicy</span>.<span style="color:#a6e22e">feeFor</span>(<span style="color:#a6e22e">subtotal</span>.<span style="color:#a6e22e">subtract</span>(<span style="color:#a6e22e">discount</span>), <span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">tier</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">OrderPricing</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">subtotal</span>, <span style="color:#a6e22e">discount</span>, <span style="color:#a6e22e">shippingFee</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">unitPrice</span>(<span style="color:#a6e22e">line</span>: <span style="color:#66d9ef">PricingLine</span>, <span style="color:#a6e22e">customer</span>: <span style="color:#66d9ef">Customer</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">price</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">line</span>.<span style="color:#a6e22e">basePrice</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">tier</span>.<span style="color:#a6e22e">isGold</span>()) <span style="color:#a6e22e">price</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">price</span>.<span style="color:#a6e22e">multiply</span>(<span style="color:#ae81ff">0.95</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">line</span>.<span style="color:#a6e22e">quantity</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">10</span>) <span style="color:#a6e22e">price</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">price</span>.<span style="color:#a6e22e">multiply</span>(<span style="color:#ae81ff">0.97</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">price</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ======== SAU (3): Application Service — place-order.usecase.ts ========
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PlaceOrderUseCase</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">orders</span>: <span style="color:#66d9ef">OrderRepository</span>,        <span style="color:#75715e">// interface, chương 8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">customers</span>: <span style="color:#66d9ef">CustomerRepository</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">catalog</span>: <span style="color:#66d9ef">CatalogReader</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">promotions</span>: <span style="color:#66d9ef">PromotionRepository</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">pricing</span>: <span style="color:#66d9ef">PricingService</span>,        <span style="color:#75715e">// domain service
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">stockChecker</span>: <span style="color:#66d9ef">StockAvailabilityChecker</span>, <span style="color:#75715e">// domain interface, infra implement
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">uow</span>: <span style="color:#66d9ef">UnitOfWork</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">events</span>: <span style="color:#66d9ef">EventPublisher</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">cmd</span>: <span style="color:#66d9ef">PlaceOrderCommand</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">OrderId</span>&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">customer</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">customers</span>.<span style="color:#a6e22e">findByUserId</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">userId</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">customer</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">UnauthorizedException</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">lines</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">catalog</span>.<span style="color:#a6e22e">pricingLinesFor</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">items</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">stockChecker</span>.<span style="color:#a6e22e">ensureAvailable</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">items</span>);  <span style="color:#75715e">// rule &#34;phải còn hàng&#34; — domain
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                                          <span style="color:#75715e">// interface; gọi HTTP — infra implement
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">promo</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">promoCode</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">?</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">promotions</span>.<span style="color:#a6e22e">findByCode</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">promoCode</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Toàn bộ quyết định nghiệp vụ dồn vào 2 dòng — không một if nghiệp vụ nào ở đây
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">pricingResult</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">pricing</span>.<span style="color:#a6e22e">price</span>(<span style="color:#a6e22e">lines</span>, <span style="color:#a6e22e">customer</span>, <span style="color:#a6e22e">promo</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Order</span>.<span style="color:#a6e22e">place</span>(<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">toOrderLines</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">items</span>), <span style="color:#a6e22e">pricingResult</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">promo</span>) <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">redeem</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">uow</span>.<span style="color:#a6e22e">commit</span>(<span style="color:#66d9ef">async</span> () <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">order</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">promo</span>) <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">promotions</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">promo</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">publishAll</span>(<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">pullDomainEvents</span>()); <span style="color:#75715e">// email/SMS thành handler — chương 10
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">id</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>So sánh trước/sau:</p>
+<ul>
+<li><code>PlaceOrderUseCase.execute</code> đọc như mục lục: load → check stock → tính giá → tạo order → persist → publish. <strong>Không một con số nghiệp vụ nào</strong> (500k, 5%, 20 triệu) xuất hiện ở tầng application.</li>
+<li>Muốn biết freeship tính thế nào? Mở <code>ShippingFeePolicy</code> — một file, một trách nhiệm, một chỗ để sửa.</li>
+<li>Muốn test rule GOLD giảm 5%? <code>new PricingService().price(...)</code> — không mock gì cả.</li>
+<li>Email/SMS biến mất khỏi transaction — chúng thành event handler của <code>OrderPlaced</code>.</li>
+</ul>
+<p><strong>Cảnh báo trung thực</strong>: số file tăng từ 1 lên ~7. Với team 2 người làm MVP, đây có thể là over-engineering. Giá trị của việc tách tỉ lệ thuận với: tuổi thọ dự kiến của code, số người cùng sửa, tần suất rule thay đổi. Cả ba thấp → đừng tách vội.</p>
+<h3 id="cùng-ca-mổ-đó-phiên-bản-go">Cùng ca mổ đó, phiên bản Go<a hidden class="anchor" aria-hidden="true" href="#cùng-ca-mổ-đó-phiên-bản-go">#</a></h3>
+<p>Go không có <code>@Injectable()</code>, nhưng &ldquo;nồi lẩu&rdquo; thì giống hệt — một struct ôm <code>*sql.DB</code>, <code>*http.Client</code>, SMTP client và 500 dòng trộn lẫn:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ======== TRƯỚC: service/order.go — nồi lẩu phiên bản Go ========</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderService</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span>        <span style="color:#f92672">*</span><span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">DB</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">inventory</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Client</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mailer</span>    <span style="color:#f92672">*</span><span style="color:#a6e22e">smtp</span>.<span style="color:#a6e22e">Client</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cfg</span>       <span style="color:#f92672">*</span><span style="color:#a6e22e">Config</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">OrderService</span>) <span style="color:#a6e22e">CreateOrder</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">userID</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">req</span> <span style="color:#a6e22e">CreateOrderRequest</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// query customer, check BLOCKED...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// loop items: gọi HTTP check stock GIỮA lúc tính giá...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// if customer.Tier == &#34;GOLD&#34; { price *= 0.95 }  // rule chôn giữa sql.Rows.Scan</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// tx, _ := s.db.BeginTx(ctx, nil)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ... 15 câu Exec, rule &#34;đơn &gt; 20tr phải duyệt&#34; viết inline trong câu INSERT</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// s.mailer.SendMail(...) TRONG transaction</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// tx.Commit()</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#66d9ef">nil</span> <span style="color:#75715e">// bản thật: 500 dòng, 9 return err khác nhau</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Sau khi tách — điểm mấu chốt ở Go là <strong>ranh giới được compiler cưỡng chế bằng package</strong>: package <code>domain</code> không import <code>database/sql</code>, <code>net/http</code>, hay package <code>app</code>. Một dòng import sai là thấy ngay trong review, thậm chí lint (<code>depguard</code>) chặn được từ CI:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ======== SAU (1): domain/pricing.go — DOMAIN SERVICE ========</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// package domain: KHÔNG import database/sql, net/http, smtp</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">domain</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">PricingService</span> <span style="color:#66d9ef">struct</span>{}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">PricingService</span>) <span style="color:#a6e22e">Price</span>(<span style="color:#a6e22e">lines</span> []<span style="color:#a6e22e">PricingLine</span>, <span style="color:#a6e22e">customer</span> <span style="color:#a6e22e">Customer</span>, <span style="color:#a6e22e">promo</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Promotion</span>) (<span style="color:#a6e22e">OrderPricing</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">subtotal</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ZeroVND</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">l</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">lines</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">price</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">BasePrice</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">Tier</span>.<span style="color:#a6e22e">IsGold</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">price</span> = <span style="color:#a6e22e">price</span>.<span style="color:#a6e22e">MultiplyPercent</span>(<span style="color:#ae81ff">95</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">Quantity</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">10</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">price</span> = <span style="color:#a6e22e">price</span>.<span style="color:#a6e22e">MultiplyPercent</span>(<span style="color:#ae81ff">97</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">subtotal</span> = <span style="color:#a6e22e">subtotal</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">price</span>.<span style="color:#a6e22e">MultiplyQty</span>(<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">Quantity</span>))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">discount</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ZeroVND</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">promo</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">DiscountFor</span>(<span style="color:#a6e22e">subtotal</span>) <span style="color:#75715e">// Promotion tự giữ rule hết hạn/hết lượt</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">OrderPricing</span>{}, <span style="color:#a6e22e">err</span> <span style="color:#75715e">// domain error: ErrPromoExpired, ErrPromoExhausted...</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">discount</span> = <span style="color:#a6e22e">d</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">shipping</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ShippingFeeFor</span>(<span style="color:#a6e22e">subtotal</span>.<span style="color:#a6e22e">Subtract</span>(<span style="color:#a6e22e">discount</span>), <span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">Tier</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">NewOrderPricing</span>(<span style="color:#a6e22e">subtotal</span>, <span style="color:#a6e22e">discount</span>, <span style="color:#a6e22e">shipping</span>), <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// domain/stock.go — domain INTERFACE, hạ tầng implement (dependency inversion)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StockAvailabilityChecker</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">EnsureAvailable</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">items</span> []<span style="color:#a6e22e">OrderItem</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ======== SAU (2): app/place_order.go — APPLICATION SERVICE ========</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">app</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">PlaceOrderUseCase</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">orders</span>     <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderRepository</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">customers</span>  <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">CustomerRepository</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">catalog</span>    <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">CatalogReader</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">promotions</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">PromotionRepository</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pricing</span>    <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">PricingService</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">stock</span>      <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">StockAvailabilityChecker</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">tx</span>         <span style="color:#a6e22e">TxManager</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">events</span>     <span style="color:#a6e22e">EventPublisher</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">uc</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">PlaceOrderUseCase</span>) <span style="color:#a6e22e">Execute</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">cmd</span> <span style="color:#a6e22e">PlaceOrderCommand</span>) (<span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">customer</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">customers</span>.<span style="color:#a6e22e">FindByUserID</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">UserID</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">lines</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">catalog</span>.<span style="color:#a6e22e">PricingLinesFor</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Items</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">stock</span>.<span style="color:#a6e22e">EnsureAvailable</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Items</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">promo</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Promotion</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">PromoCode</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">promo</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">promotions</span>.<span style="color:#a6e22e">FindByCode</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">PromoCode</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Toàn bộ quyết định nghiệp vụ: 2 lời gọi, 0 chữ if nghiệp vụ</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pricing</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">pricing</span>.<span style="color:#a6e22e">Price</span>(<span style="color:#a6e22e">lines</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">customer</span>, <span style="color:#a6e22e">promo</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">order</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">customer</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#a6e22e">toOrderLines</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Items</span>), <span style="color:#a6e22e">pricing</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">promo</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">promo</span>.<span style="color:#a6e22e">Redeem</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">tx</span>.<span style="color:#a6e22e">Within</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">order</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">promo</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">promotions</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">promo</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>	}); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">OrderID</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">PublishAll</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">PullDomainEvents</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Nhận xét riêng cho Go: đống <code>if err != nil</code> làm Application Service <em>trông</em> dài hơn bản TypeScript, nhưng đừng nhầm — đó là plumbing của ngôn ngữ, không phải business rule. Phép thử vẫn nguyên giá trị: trong <code>Execute</code> không có một phép so sánh nào trên số tiền, hạng khách, hay trạng thái đơn.</p>
+<h3 id="hai-lát-cắt-thực-tế-để-đối-chiếu">Hai lát cắt thực tế để đối chiếu<a hidden class="anchor" aria-hidden="true" href="#hai-lát-cắt-thực-tế-để-đối-chiếu">#</a></h3>
+<p><strong>Ví dụ production — pricing ở một sàn TMĐT cỡ vừa.</strong> Giá hiển thị = giá gốc theo khu vực → trừ khuyến mãi tốt nhất đang active → cộng phụ phí giao nhanh → làm tròn theo quy tắc kế toán. Cùng một công thức được dùng ở <strong>năm nơi</strong>: trang sản phẩm, giỏ hàng, checkout, admin preview, batch re-price ban đêm. Trước khi có <code>PricingService</code> domain thuần, công thức tồn tại ở ba bản copy và đã từng gây sự cố thật: giỏ hàng hiển thị một giá, checkout tính giá khác — khách khiếu nại, CS tra tay từng đơn. Sau khi gom về một Domain Service nhận <code>(lines, buyerProfile, activePromotions, deliveryOptions)</code> và trả <code>PriceQuote</code> (VO có breakdown từng dòng): khi marketing đổi rule &ldquo;chỉ áp 1 khuyến mãi tốt nhất&rdquo; thành &ldquo;cộng dồn tối đa 2&rdquo;, diff là <strong>một class + một bộ unit test</strong>, cả năm nơi đổi theo trong một lần deploy. Việc <em>lấy</em> promotion active từ đâu (Redis cache ở trang sản phẩm, DB ở checkout) vẫn khác nhau giữa các use case — vì đó là việc của từng Application Service, đúng như phân vai.</p>
+<p><strong>Ví dụ scale lớn — chuyển tiền liên ngân hàng.</strong> Ở scale ngân hàng, chuyển khoản qua Napas không thể là một transaction: trừ tiền bên gửi là Aggregate trong hệ mình, ghi có bên nhận nằm ở ngân hàng khác. Kiến trúc khi đó đổi hẳn ở tầng application: Application Service không còn mở một transaction bao hai account, mà tạo Aggregate <code>TransferInstruction</code> (PENDING) rồi điều phối saga với compensation (chương 13). Nhưng nhìn vào diff của đợt chuyển đổi đó: <code>TransferFeePolicy</code>, rule hạn mức, rule chống rửa tiền — <strong>không đổi một dòng</strong>, vì luật kinh doanh không đổi khi topology hạ tầng đổi. Nếu hai tầng này trộn nhau từ đầu, đợt chuyển đổi đồng nghĩa viết lại nghiệp vụ phí và hạn mức — và viết lại nghiệp vụ tài chính là đúng chỗ bug đắt nhất chui vào. Đây là lý do thực dụng nhất, đo đếm được, của toàn bộ chương này: <strong>phần phải viết lại khi hệ thống lớn lên là Application Service; phần được phép sống sót nguyên vẹn là Domain Service.</strong></p>
+<hr>
+<h2 id="6-testing-hai-loại-service-hai-chiến-lược-khác-hẳn-nhau">6. Testing: hai loại service, hai chiến lược khác hẳn nhau<a hidden class="anchor" aria-hidden="true" href="#6-testing-hai-loại-service-hai-chiến-lược-khác-hẳn-nhau">#</a></h2>
+<p>Sự tách bạch chỉ trả cổ tức thật sự khi bạn test đúng cách cho từng loại. Nếu bạn test cả hai giống nhau, bạn đã trả chi phí tách mà không nhận về gì.</p>
+<h3 id="61-domain-service-unit-test-thuần-phủ-dày-chạy-tính-bằng-mili-giây">6.1. Domain Service: unit test thuần, phủ dày, chạy tính bằng mili giây<a hidden class="anchor" aria-hidden="true" href="#61-domain-service-unit-test-thuần-phủ-dày-chạy-tính-bằng-mili-giây">#</a></h3>
+<p>Mỗi test case là một dòng trong &ldquo;bảng chính sách&rdquo; của phòng nghiệp vụ. Không TestingModule, không mock, không DB:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// pricing.service.spec.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">describe</span>(<span style="color:#e6db74">&#39;PricingService&#39;</span>, () <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">pricing</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">PricingService</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">it</span>.<span style="color:#a6e22e">each</span>([
+</span></span><span style="display:flex;"><span>    { <span style="color:#a6e22e">tier</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;STANDARD&#39;</span>, <span style="color:#a6e22e">qty</span>: <span style="color:#66d9ef">1</span>,  <span style="color:#a6e22e">base</span>: <span style="color:#66d9ef">100_000</span>, <span style="color:#a6e22e">want</span>: <span style="color:#66d9ef">100_000</span> },
+</span></span><span style="display:flex;"><span>    { <span style="color:#a6e22e">tier</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;GOLD&#39;</span>,     <span style="color:#a6e22e">qty</span>: <span style="color:#66d9ef">1</span>,  <span style="color:#a6e22e">base</span>: <span style="color:#66d9ef">100_000</span>, <span style="color:#a6e22e">want</span>: <span style="color:#66d9ef">95_000</span>  },
+</span></span><span style="display:flex;"><span>    { <span style="color:#a6e22e">tier</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;GOLD&#39;</span>,     <span style="color:#a6e22e">qty</span>: <span style="color:#66d9ef">10</span>, <span style="color:#a6e22e">base</span>: <span style="color:#66d9ef">100_000</span>, <span style="color:#a6e22e">want</span>: <span style="color:#66d9ef">92_150</span>  }, <span style="color:#75715e">// chồng ưu đãi: 0.95 * 0.97
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    { <span style="color:#a6e22e">tier</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;STANDARD&#39;</span>, <span style="color:#a6e22e">qty</span>: <span style="color:#66d9ef">9</span>,  <span style="color:#a6e22e">base</span>: <span style="color:#66d9ef">100_000</span>, <span style="color:#a6e22e">want</span>: <span style="color:#66d9ef">100_000</span> }, <span style="color:#75715e">// biên: dưới ngưỡng sỉ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  ])(<span style="color:#e6db74">&#39;tier=$tier qty=$qty&#39;</span>, ({ <span style="color:#a6e22e">tier</span>, <span style="color:#a6e22e">qty</span>, <span style="color:#a6e22e">base</span>, <span style="color:#a6e22e">want</span> }) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pricing</span>.<span style="color:#a6e22e">price</span>(
+</span></span><span style="display:flex;"><span>      [<span style="color:#a6e22e">lineWith</span>({ <span style="color:#a6e22e">basePrice</span>: <span style="color:#66d9ef">Money.vnd</span>(<span style="color:#a6e22e">base</span>), <span style="color:#a6e22e">quantity</span>: <span style="color:#66d9ef">qty</span> })],
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">customerWith</span>({ <span style="color:#a6e22e">tier</span> }),
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">expect</span>(<span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">unitPriceOf</span>(<span style="color:#ae81ff">0</span>).<span style="color:#a6e22e">equals</span>(<span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">vnd</span>(<span style="color:#a6e22e">want</span>))).<span style="color:#a6e22e">toBe</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">it</span>(<span style="color:#e6db74">&#39;freeship xét trên số tiền SAU giảm giá, không phải trước&#39;</span>, () <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 520k, promo giảm 50k -&gt; còn 470k -&gt; KHÔNG freeship.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// Test này là biên bản chốt một cuộc tranh cãi nghiệp vụ có thật —
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// unit test domain là tài liệu nghiệp vụ có thể chạy được.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pricing</span>.<span style="color:#a6e22e">price</span>(
+</span></span><span style="display:flex;"><span>      [<span style="color:#a6e22e">lineWith</span>({ <span style="color:#a6e22e">basePrice</span>: <span style="color:#66d9ef">Money.vnd</span>(<span style="color:#ae81ff">520</span><span style="color:#a6e22e">_000</span>), <span style="color:#a6e22e">quantity</span>: <span style="color:#66d9ef">1</span> })],
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">customerWith</span>({ <span style="color:#a6e22e">tier</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;STANDARD&#39;</span> }),
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">promoFlat</span>(<span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">vnd</span>(<span style="color:#ae81ff">50</span><span style="color:#a6e22e">_000</span>)),
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">expect</span>(<span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">shippingFee</span>.<span style="color:#a6e22e">equals</span>(<span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">vnd</span>(<span style="color:#ae81ff">30</span><span style="color:#a6e22e">_000</span>))).<span style="color:#a6e22e">toBe</span>(<span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// domain/pricing_test.go — table-driven, style Go chuẩn, không sqlmock</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestPricingService</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pricing</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">PricingService</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cases</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">tier</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Tier</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">qty</span>  <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">want</span> <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>	}{
+</span></span><span style="display:flex;"><span>		{<span style="color:#e6db74">&#34;standard no discount&#34;</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">TierStandard</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">100_000</span>},
+</span></span><span style="display:flex;"><span>		{<span style="color:#e6db74">&#34;gold 5 percent off&#34;</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">TierGold</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">95_000</span>},
+</span></span><span style="display:flex;"><span>		{<span style="color:#e6db74">&#34;gold stacks with bulk&#34;</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">TierGold</span>, <span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">92_150</span>},
+</span></span><span style="display:flex;"><span>		{<span style="color:#e6db74">&#34;one below bulk threshold&#34;</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">TierStandard</span>, <span style="color:#ae81ff">9</span>, <span style="color:#ae81ff">100_000</span>},
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">tc</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">cases</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Run</span>(<span style="color:#a6e22e">tc</span>.<span style="color:#a6e22e">name</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">got</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">pricing</span>.<span style="color:#a6e22e">Price</span>(<span style="color:#a6e22e">linesQty</span>(<span style="color:#a6e22e">tc</span>.<span style="color:#a6e22e">qty</span>, <span style="color:#ae81ff">100_000</span>), <span style="color:#a6e22e">customerTier</span>(<span style="color:#a6e22e">tc</span>.<span style="color:#a6e22e">tier</span>), <span style="color:#66d9ef">nil</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">require</span>.<span style="color:#a6e22e">NoError</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">require</span>.<span style="color:#a6e22e">Equal</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">tc</span>.<span style="color:#a6e22e">want</span>, <span style="color:#a6e22e">got</span>.<span style="color:#a6e22e">UnitPrice</span>(<span style="color:#ae81ff">0</span>).<span style="color:#a6e22e">Amount</span>())
+</span></span><span style="display:flex;"><span>		})
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Bộ test này chạy vài nghìn case trong dưới một giây, chạy được offline, chạy được trong pre-commit hook. Với domain có tiền bạc, đây là điều kiện để dám deploy chiều thứ Sáu.</p>
+<h3 id="62-application-service-test-kịch-bản-không-test-lại-nghiệp-vụ">6.2. Application Service: test kịch bản, KHÔNG test lại nghiệp vụ<a hidden class="anchor" aria-hidden="true" href="#62-application-service-test-kịch-bản-không-test-lại-nghiệp-vụ">#</a></h3>
+<p>Sai lầm phổ biến nhất: viết lại toàn bộ test giá/phí/promo ở tầng use case với mock. Kết quả là bộ test chậm, giòn (đổi chữ ký repository là gãy 40 test), và trùng lặp. Ở tầng này chỉ assert <strong>kịch bản</strong>:</p>
+<ul>
+<li>Đúng thứ được lưu (order + promo trong cùng transaction).</li>
+<li>Event được publish <strong>sau</strong> khi commit, không publish khi rollback.</li>
+<li>Stock check fail → không có gì được lưu.</li>
+<li>Authorization fail → dừng trước khi chạm domain.</li>
+</ul>
+<p>Dùng <strong>fake in-memory</strong> thay vì mock từng call — fake mô phỏng hành vi (một <code>InMemoryOrderRepository</code> với map bên trong), mock thì đóng đinh kỳ vọng vào từng lời gọi và gãy mỗi lần refactor:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#a6e22e">it</span>(<span style="color:#e6db74">&#39;không publish event nếu save thất bại&#39;</span>, <span style="color:#66d9ef">async</span> () <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">orders</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">InMemoryOrderRepository</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">failNextSave</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;db down&#39;</span>));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">events</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RecordingEventPublisher</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">uc</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">PlaceOrderUseCase</span>(<span style="color:#a6e22e">orders</span>, <span style="color:#a6e22e">customers</span>, <span style="color:#a6e22e">catalog</span>, <span style="color:#a6e22e">promos</span>,
+</span></span><span style="display:flex;"><span>                                   <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">PricingService</span>(), <span style="color:#a6e22e">passingStock</span>, <span style="color:#a6e22e">uow</span>, <span style="color:#a6e22e">events</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">expect</span>(<span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">execute</span>(<span style="color:#a6e22e">validCommand</span>())).<span style="color:#a6e22e">rejects</span>.<span style="color:#a6e22e">toThrow</span>(<span style="color:#e6db74">&#39;db down&#39;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">expect</span>(<span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">published</span>).<span style="color:#a6e22e">toHaveLength</span>(<span style="color:#ae81ff">0</span>); <span style="color:#75715e">// kịch bản, không phải nghiệp vụ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>});
+</span></span></code></pre></div><p>Tỷ lệ lành mạnh trong thực tế: test domain nhiều gấp 3–5 lần test application. Nếu tỷ lệ của bạn đang ngược lại, đó là chỉ báo định lượng rằng nghiệp vụ nằm sai tầng — quay lại mục 5 và soi checklist &ldquo;ngửi&rdquo;.</p>
+<p>Tầng thứ ba — integration test cho repository implementation thật (testcontainers + Postgres) — đã bàn ở chương 8; ở đây chỉ nhắc: đừng bắt use case test gánh việc đó.</p>
+<hr>
+<h2 id="7-điểm-mạnh">7. Điểm mạnh<a hidden class="anchor" aria-hidden="true" href="#7-điểm-mạnh">#</a></h2>
+<ol>
+<li><strong>Business rule test được với chi phí gần bằng không.</strong> Như trên — và hệ quả ít ai nói: khi test rẻ, người ta <em>viết</em> test cho case biên. Khi test đắt, người ta viết một happy path rồi thôi. Chất lượng test không phải vấn đề đạo đức, nó là vấn đề kinh tế.</li>
+<li><strong>Thay đổi được định vị trước khi mở code.</strong> &ldquo;Đổi biểu phí ship&rdquo; → mở <code>ShippingFeePolicy</code>. &ldquo;Thêm audit log khi đặt hàng&rdquo; → mở <code>PlaceOrderUseCase</code>. Thời gian <em>tìm chỗ sửa</em> — thứ chiếm phần lớn thời gian maintain — giảm hẳn.</li>
+<li><strong>Nghiệp vụ sống sót qua thay đổi kiến trúc.</strong> Monolith lên microservice, REST sang gRPC, Postgres thêm shard: viết lại Application Service, còn <code>PricingService</code> và <code>Order</code> không đổi một dòng. Nghiệp vụ là phần đắt nhất để viết lại đúng — sự tách bạch này là bảo hiểm rẻ nhất cho phần đắt nhất.</li>
+<li><strong>Code trở thành nơi đối chiếu nghiệp vụ.</strong> Khi audit hỏi &ldquo;phí chuyển khoản tính thế nào&rdquo;, bạn chỉ vào một class có tên nghiệp vụ, thay vì grep <code>0.05</code> khắp repo.</li>
+<li><strong>Song song hóa công việc trong team.</strong> Người giỏi nghiệp vụ làm domain, người giỏi hạ tầng làm application/infrastructure, gặp nhau tại interface — ít giẫm chân hơn hẳn so với 5 người cùng sửa một god service.</li>
+</ol>
+<h2 id="8-điểm-yếu">8. Điểm yếu<a hidden class="anchor" aria-hidden="true" href="#8-điểm-yếu">#</a></h2>
+<ol>
+<li><strong>Nhiều file, nhiều indirection.</strong> Flow đặt hàng trước đây đọc một mạch trong một file; giờ nhảy qua use case → domain service → aggregate → repository interface → implementation. IDE hỗ trợ tốt, nhưng chi phí nhận thức là thật, đặc biệt với người mới vào codebase lần đầu.</li>
+<li><strong>Ranh giới đòi hỏi phán đoán.</strong> &ldquo;Customer bị BLOCKED không được đặt hàng&rdquo; — là access control (application) hay business rule (domain)? Câu trả lời phụ thuộc <em>ai sở hữu rule</em>: nếu phòng vận hành khóa khách gian lận theo chính sách kinh doanh → domain; nếu là cơ chế an ninh kỹ thuật → application. Team thiếu người phân xử sẽ hoặc tranh cãi kéo dài, hoặc đặt bừa.</li>
+<li><strong>Nguy cơ nghi lễ hóa.</strong> Team &ldquo;học được pattern mới&rdquo; có xu hướng tạo Domain Service cho mọi thứ, kể cả những logic một hàm thuần là đủ, sinh ra hàng chục class một method.</li>
+<li><strong>Chi phí mapping.</strong> Domain Service nhận domain object → phải load và map từ persistence model. Nếu chỉ cần <code>tier</code> mà load cả aggregate <code>Customer</code> 12 quan hệ, bạn trả giá bằng query. (Thuốc: input hẹp — nhận <code>CustomerProfile</code> VO thay vì cả aggregate.)</li>
+</ol>
+<h2 id="9-trade-off--trả-gì-nhận-gì-và-khi-nào-lỗ">9. Trade-off — trả gì, nhận gì, và khi nào lỗ<a hidden class="anchor" aria-hidden="true" href="#9-trade-off--trả-gì-nhận-gì-và-khi-nào-lỗ">#</a></h2>
+<p><strong>Trả:</strong> số file nhân ba, một tầng interface, thời gian tranh luận ranh giới, learning curve.</p>
+<p><strong>Nhận:</strong> nghiệp vụ tập trung một chỗ + test rẻ + miễn nhiễm thay đổi hạ tầng + code đối thoại được với domain expert.</p>
+<p>Bài toán hòa vốn, nói thẳng:</p>
+<ul>
+<li><strong>Domain phức tạp, sống lâu, nhiều người sửa, rule đổi thường xuyên</strong> (pricing, billing, ledger, risk, loyalty): hòa vốn trong vài tháng. Một bug biểu phí ra production thường đắt hơn toàn bộ chi phí tách.</li>
+<li><strong>CRUD + vài validation</strong> (danh mục, cấu hình, admin nội bộ): không bao giờ hòa vốn. Service gọi thẳng ORM là thiết kế <em>đúng</em> cho lớp bài toán đó.</li>
+<li><strong>Không áp dụng khi lẽ ra phải áp dụng thì sao?</strong> God service lớn dần theo feature, test suite chậm dần vì mọi test cần DB, rule nhân bản và lệch nhau, và &ldquo;đổi biểu phí&rdquo; trở thành task ba ngày kèm hai regression bug — đúng quỹ đạo Big Ball of Mud chương 1.</li>
+<li><strong>Áp dụng sai thì sao?</strong> Hai kịch bản: (a) <em>tách vỏ không tách ruột</em> — có thư mục <code>domain/</code> nhưng rule vẫn ở use case: trả đủ chi phí, nhận về con số không; (b) <em>Domain Service hút sạch logic khỏi Entity</em> — anemic model đội mũ DDD, nguy hiểm hơn cả không tách vì nó trông có vẻ đúng. Chi tiết ở mục Anti-patterns.</li>
+</ul>
+<h2 id="10-production-considerations">10. Production Considerations<a hidden class="anchor" aria-hidden="true" href="#10-production-considerations">#</a></h2>
+<p><strong>Performance.</strong> Domain Service stateless → singleton an toàn, không lock, scale ngang miễn phí. Điểm nghẽn thật nằm ở Application Service: nó quyết định load gì. Nguyên tắc: tối ưu query ở application/infrastructure (projection, batch load), <strong>không bao giờ</strong> tối ưu bằng cách cho Domain Service tự query — đó là cánh cửa để hạ tầng nhiễm ngược vào domain. Nếu Domain Service cần dữ liệu ngoài (tỷ giá, bảng giá), inject qua <em>domain interface</em> (<code>ExchangeRateProvider</code>) và để Application Service quyết định lấy trước hay lazy.</p>
+<p><strong>Versioning chính sách.</strong> Biểu phí đổi từ 01/08 nhưng đơn đặt trước đó tính theo biểu cũ. Đừng rải <code>if (date &gt; ...)</code> khắp policy. Hai kỹ thuật, thứ tự ưu tiên rõ ràng: (1) <strong>snapshot kết quả</strong> — lưu nguyên <code>OrderPricing</code> breakdown vào đơn tại thời điểm đặt; mọi nghiệp vụ sau đó (refund, đối soát) đọc snapshot, không tính lại. Tính-lại-quá-khứ là nguồn bug đối soát kinh điển. (2) Chỉ khi nghiệp vụ <em>thật sự</em> cần re-price, dùng provider theo hiệu lực: <code>pricingPolicyFor(effectiveDate)</code> trả về đúng version của policy.</p>
+<p><strong>Cưỡng chế ranh giới bằng công cụ, không bằng lời hứa.</strong> Go: package layout + <code>depguard</code>/<code>go vet</code> custom. TypeScript: <code>dependency-cruiser</code> hoặc ESLint <code>import/no-restricted-paths</code> cấm <code>src/domain/**</code> import từ <code>src/application/**</code> và <code>src/infrastructure/**</code>, chạy trong CI. Ranh giới không được máy kiểm tra sẽ mòn dần sau mỗi lần &ldquo;cho tiện, deadline gấp&rdquo;.</p>
+<p><strong>Observability.</strong> Log, trace, metric là việc của Application Service (và middleware) — span <code>PlaceOrder</code> với các attribute kỹ thuật. Domain không import logger; nếu cần dấu vết nghiệp vụ (&ldquo;vì sao đơn này bị chuyển PENDING_APPROVAL?&rdquo;), câu trả lời đúng là Domain Event (chương 10) hoặc kết quả trả về có breakdown — không phải <code>logger.info</code> rải trong policy.</p>
+<h2 id="11-best-practices">11. Best Practices<a hidden class="anchor" aria-hidden="true" href="#11-best-practices">#</a></h2>
+<ol>
+<li><strong>Entity/Aggregate trước, Domain Service sau.</strong> Mỗi lần định viết Domain Service, hỏi: &ldquo;logic này có thật sự cần dữ liệu của nhiều hơn một Aggregate không?&rdquo; Không → nó thuộc về Aggregate. Domain Service là phương án cuối, không phải phương án mặc định.</li>
+<li><strong>Một use case = một Application Service</strong> (hoặc một method), đặt tên theo hành động của người dùng: <code>PlaceOrderUseCase</code>, <code>CancelOrderUseCase</code>. Cái tên <code>OrderService</code> là lời mời gọi mở rộng vô hạn — tránh ngay từ đầu.</li>
+<li><strong>Domain Service nhận object, không nhận ID.</strong> Nhận ID nghĩa là nó phải tự load → phải có repository → nhiễm hạ tầng, khó test. Load là việc của Application Service.</li>
+<li><strong>Domain error riêng, map ở rìa.</strong> Domain throw <code>PromoExpiredError</code>; presentation layer map sang 422. <code>BadRequestException</code> xuất hiện trong <code>domain/</code> là dấu hiệu nhiễm.</li>
+<li><strong>Giữ Application Service dưới ~30 dòng logic/use case</strong> (Go: không tính <code>if err != nil</code>). Vượt ngưỡng → hoặc nghiệp vụ đang rò vào, hoặc use case cần tách.</li>
+<li><strong>Review tên Domain Service với domain expert</strong> như review public API. <code>PricingService</code> phải là từ họ dùng trong họp. <code>OrderCalculationManager</code> thì không.</li>
+<li><strong>Authorization ở application, business precondition ở domain.</strong> Câu hỏi phân xử: &ldquo;nếu rule này đổi, ai ký quyết định?&rdquo; Phòng nghiệp vụ → domain. Engineering/security → application.</li>
+<li><strong>Application Service không gọi Application Service khác.</strong> Logic chung giữa hai use case hoặc là domain (kéo vào policy/aggregate) hoặc là hạ tầng (kéo xuống gateway) — không gọi ngang, vì gọi ngang tạo lưới phụ thuộc và transaction lồng nhau khó lường.</li>
+</ol>
+<h2 id="12-anti-patterns--và-vì-sao-nguy-hiểm">12. Anti-patterns — và vì sao nguy hiểm<a hidden class="anchor" aria-hidden="true" href="#12-anti-patterns--và-vì-sao-nguy-hiểm">#</a></h2>
+<h3 id="121-domain-service-hút-hết-logic-khỏi-entity--anemic-model-quay-lại-bằng-cửa-sau">12.1. Domain Service hút hết logic khỏi Entity → anemic model quay lại bằng cửa sau<a hidden class="anchor" aria-hidden="true" href="#121-domain-service-hút-hết-logic-khỏi-entity--anemic-model-quay-lại-bằng-cửa-sau">#</a></h3>
+<p>Anti-pattern nguy hiểm nhất chương, vì nó <strong>trông giống DDD</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// SAI: OrderDomainService làm hết, Order chỉ còn là túi getter/setter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderDomainService</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">addLine</span>(<span style="color:#a6e22e">order</span>: <span style="color:#66d9ef">Order</span>, <span style="color:#a6e22e">line</span>: <span style="color:#66d9ef">OrderLine</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">getStatus</span>() <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;PENDING&#39;</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;cannot modify&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">getLines</span>().<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">line</span>);                      <span style="color:#75715e">// thò tay vào ruột Order
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">setTotal</span>(<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">getTotal</span>().<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">line</span>.<span style="color:#a6e22e">total</span>)); <span style="color:#75715e">// invariant do NGƯỜI NGOÀI giữ hộ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">confirm</span>(<span style="color:#a6e22e">order</span>: <span style="color:#66d9ef">Order</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> { <span style="color:#75715e">/* ... */</span> }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cancel</span>(<span style="color:#a6e22e">order</span>: <span style="color:#66d9ef">Order</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> { <span style="color:#75715e">/* ... */</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Đây chính là anemic domain model (chương 6) khoác áo mới — procedural code mang tên &ldquo;DomainService&rdquo; nên không ai dám nghi ngờ trong review. Hậu quả kép: (1) mất encapsulation — bất kỳ ai cũng gọi được <code>setTotal</code> mà quên cộng line, vì invariant sống <em>bên ngoài</em> object sở hữu state; (2) Domain Service phình thành god class thứ hai, đúng thứ bạn vừa chạy trốn. <strong>Phép thử:</strong> xóa Domain Service đi — nếu Entity không còn cách nào tự bảo vệ invariant của nó, logic đó thuộc về Entity, trả về. Domain Service hợp lệ chỉ <em>phối hợp nhiều</em> domain object hoặc chứa phép toán không có nhà; nó <strong>không bao giờ sở hữu invariant của một Aggregate</strong>.</p>
+<h3 id="122-application-service-béo--business-rule-trá-hình-dưới-lốt-orchestration">12.2. Application Service &ldquo;béo&rdquo; — business rule trá hình dưới lốt orchestration<a hidden class="anchor" aria-hidden="true" href="#122-application-service-béo--business-rule-trá-hình-dưới-lốt-orchestration">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// SAI: trông như plumbing, thực chất là 3 business rule
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">async</span> <span style="color:#a6e22e">cancelOrder</span>(<span style="color:#a6e22e">orderId</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">void</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">findById</span>(<span style="color:#a6e22e">orderId</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;SHIPPED&#39;</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>();      <span style="color:#75715e">// rule 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">daysSince</span>(<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">placedAt</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">7</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>();   <span style="color:#75715e">// rule 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">refund</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">paidByCard</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">?</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">total</span>.<span style="color:#a6e22e">multiply</span>(<span style="color:#ae81ff">0.98</span>)                                        <span style="color:#75715e">// rule 3: phí hoàn thẻ 2%
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#f92672">:</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">total</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Nguy hiểm vì ba rule này <strong>vô hình với domain model</strong>: ai đọc class <code>Order</code> sẽ tin cancel là vô điều kiện. Ngày batch job hủy đơn tự động gọi thẳng <code>order.cancel()</code>, cả ba rule bị bypass — và đó là bug loại &ldquo;chạy êm 6 tháng rồi nổ vào mùa sale&rdquo;. Sửa: <code>order.cancel(clock)</code> tự giữ rule 1–2; phí hoàn thẻ vào <code>RefundPolicy</code>.</p>
+<h3 id="123-domain-service-nhiễm-hạ-tầng">12.3. Domain Service nhiễm hạ tầng<a hidden class="anchor" aria-hidden="true" href="#123-domain-service-nhiễm-hạ-tầng">#</a></h3>
+<p><code>PricingService</code> nhận <code>EntityManager</code> &ldquo;để tiện query khuyến mãi đang chạy&rdquo;. Từ hôm đó: test cần DB, không tái sử dụng được trong worker, mọi lần nâng version ORM chạm vào file nghiệp vụ. Con đường nhiễm luôn bắt đầu bằng một lần &ldquo;cho tiện&rdquo; — vì thế mới cần lint rule chặn import, không trông vào kỷ luật.</p>
+<h3 id="124-service-gọi-service-gọi-service">12.4. Service gọi Service gọi Service<a hidden class="anchor" aria-hidden="true" href="#124-service-gọi-service-gọi-service">#</a></h3>
+<p><code>OrderService</code> → <code>CustomerService</code> → <code>LoyaltyService</code> → quay lại <code>OrderService</code>. Vòng phụ thuộc giữa các <code>@Injectable()</code> là triệu chứng của việc <em>không tồn tại ranh giới nào cả</em>: không aggregate rõ, không use case rõ, chỉ có lưới mì. NestJS còn &ldquo;giúp&rdquo; bạn sống chung với nó bằng <code>forwardRef()</code> — coi mỗi lần gõ <code>forwardRef</code> là một chuông báo cháy thiết kế.</p>
+<h3 id="125-helper-util-manager-mang-nghiệp-vụ">12.5. <code>Helper</code>, <code>Util</code>, <code>Manager</code> mang nghiệp vụ<a hidden class="anchor" aria-hidden="true" href="#125-helper-util-manager-mang-nghiệp-vụ">#</a></h3>
+<p><code>OrderHelper.calculateDiscount()</code> — business rule trốn trong static util: không domain expert nào tìm thấy, không ai test tử tế, và ba tháng sau có <code>OrderHelper2</code>. Nếu nó là nghiệp vụ, nó xứng đáng một cái tên nghiệp vụ và một mái nhà trong <code>domain/</code>.</p>
+<h2 id="13-khi-nào-không-nên-dùng-sự-tách-bạch-này">13. Khi nào KHÔNG nên dùng sự tách bạch này<a hidden class="anchor" aria-hidden="true" href="#13-khi-nào-không-nên-dùng-sự-tách-bạch-này">#</a></h2>
+<ul>
+<li><strong>CRUD thuần / form-over-data</strong>: admin panel, quản lý danh mục, màn hình cấu hình. <code>CategoryService</code> gọi thẳng Prisma là thiết kế đúng — đừng để ai chê nó &ldquo;chưa đủ DDD&rdquo;.</li>
+<li><strong>Prototype, tính năng đang dò product-market fit</strong>: khi chưa biết rule sống được mấy tuần, transaction script vứt đi rẻ hơn. Tách khi rule chứng minh nó ở lại và phức tạp lên — refactor từ nồi lẩu sang tách tầng (mục 5) là con đường bình thường, không phải thất bại.</li>
+<li><strong>Supporting/generic subdomain (chương 2)</strong>: dồn nỗ lực mô hình hóa cho core domain; chỗ khác, &ldquo;đơn giản và chạy được&rdquo; là tiêu chuẩn đúng.</li>
+<li><strong>Team chưa vững Entity/Aggregate (chương 6–7)</strong>: tách service khi domain model còn anemic chỉ tạo ra ba tầng anemic thay vì một. Thứ tự học các chương của tài liệu này không ngẫu nhiên.</li>
+<li><strong>Batch/script một lần, glue code</strong>: không có domain thì không có gì để tách.</li>
+</ul>
+<p>Câu chốt của chương: <strong>Domain Service và Application Service là công cụ quản lý độ phức tạp nghiệp vụ. Nơi không có độ phức tạp nghiệp vụ, công cụ này chỉ còn lại đúng cái giá của nó.</strong></p>
+<hr>
+<h2 id="đọc-tiếp">Đọc tiếp<a hidden class="anchor" aria-hidden="true" href="#đọc-tiếp">#</a></h2>
+<p>Suốt chương này, mỗi lần đụng đến email, SMS, cộng điểm, ta đều nói &ldquo;chương 10 sẽ xử lý&rdquo;. Đến lúc trả nợ: Application Service đã gọi <code>publishAll(order.pullDomainEvents())</code> — cơ chế đằng sau dòng code đó, và vì sao side effect phải rời khỏi transaction, là toàn bộ nội dung của <strong><a href="./10-domain-event.md">10-domain-event.md</a></strong>.</p>
+<ul>
+<li>Chương trước: <a href="./08-repository-va-factory.md">08-repository-va-factory.md</a></li>
+<li>Chương sau: <a href="./10-domain-event.md">10-domain-event.md</a> → <a href="./11-specification.md">11-specification.md</a> → <a href="./12-ddd-va-kien-truc.md">12-ddd-va-kien-truc.md</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/domain-driven-design/08-repository-va-factory/">
+    <span class="title">« Prev</span>
+    <br>
+    <span></span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/domain-driven-design/10-domain-event/">
+    <span class="title">Next »</span>
+    <br>
+    <span></span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on x"
+            href="https://x.com/intent/tweet/?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f&amp;title=&amp;summary=&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f&title=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on whatsapp"
+            href="https://api.whatsapp.com/send?text=%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on telegram"
+            href="https://telegram.me/share/url?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f09-domain-service-va-application-service%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

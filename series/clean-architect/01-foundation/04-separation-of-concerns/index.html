@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 1.4 — Separation of Concerns &amp; Composition over Inheritance | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, golang, clean-architecture">
+<meta name="description" content="
+Level 1 – Foundation · Hai nguyên lý cuối của phần nền tảng.
+
+Phần A — Separation of Concerns (SoC)
+1. Problem Statement
+Một hàm handler điển hình trong dự án &ldquo;chạy được là được&rdquo;:
+func CreateOrder(w http.ResponseWriter, r *http.Request) {
+	// 1. Parse JSON (concern: giao thức)
+	// 2. Validate input (concern: hợp lệ dữ liệu vào)
+	// 3. Check quyền user (concern: bảo mật)
+	// 4. Tính giá, áp khuyến mãi (concern: NGHIỆP VỤ)
+	// 5. Mở transaction, ghi 3 bảng (concern: lưu trữ, nhất quán)
+	// 6. Ghi log, đẩy metric (concern: vận hành)
+	// 7. Render JSON response (concern: giao thức)
+}
+Bảy mối quan tâm (concern), bảy tốc độ thay đổi khác nhau, bảy loại chuyên môn khác nhau — trộn trong một hàm. Muốn sửa một concern phải đọc và hiểu cả bảy; muốn test concern 4 phải dựng đủ 1–7. Đây là dạng tổng quát của mọi vấn đề đã nêu ở các chương trước.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:54040/series/clean-architect/01-foundation/04-separation-of-concerns/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:54040/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:54040/series/clean-architect/01-foundation/04-separation-of-concerns/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:54040/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/clean-architect/">Clean Architecture với Golang</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 1.4 — Separation of Concerns &amp; Composition over Inheritance
+    </h1>
+    <div class="post-meta"><span title='2026-07-07 22:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;6 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p><strong>Level 1 – Foundation</strong> · Hai nguyên lý cuối của phần nền tảng.</p></blockquote>
+<hr>
+<h2 id="phần-a--separation-of-concerns-soc">Phần A — Separation of Concerns (SoC)<a hidden class="anchor" aria-hidden="true" href="#phần-a--separation-of-concerns-soc">#</a></h2>
+<h3 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h3>
+<p>Một hàm handler điển hình trong dự án &ldquo;chạy được là được&rdquo;:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">CreateOrder</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. Parse JSON (concern: giao thức)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. Validate input (concern: hợp lệ dữ liệu vào)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 3. Check quyền user (concern: bảo mật)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 4. Tính giá, áp khuyến mãi (concern: NGHIỆP VỤ)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 5. Mở transaction, ghi 3 bảng (concern: lưu trữ, nhất quán)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 6. Ghi log, đẩy metric (concern: vận hành)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 7. Render JSON response (concern: giao thức)</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Bảy mối quan tâm (concern), bảy tốc độ thay đổi khác nhau, bảy loại chuyên môn khác nhau — trộn trong một hàm. Muốn sửa <strong>một</strong> concern phải đọc và hiểu <strong>cả bảy</strong>; muốn test concern 4 phải dựng đủ 1–7. Đây là dạng tổng quát của mọi vấn đề đã nêu ở các chương trước.</p>
+<p>Nếu không tách: mỗi thay đổi có bán kính ảnh hưởng bằng cả hàm; kiến thức chuyên môn không tách được theo team (security team phải đọc code khuyến mãi để review một dòng authorization); mọi test đều là integration test.</p>
+<p>Cách cũ — comment phân đoạn (<code>// --- validation ---</code>) — chỉ tách <em>thị giác</em>, không tách <em>phụ thuộc</em>: các đoạn vẫn chung biến cục bộ, chung transaction, chung vòng đời.</p>
+<h3 id="2-bản-chất">2. Bản chất<a hidden class="anchor" aria-hidden="true" href="#2-bản-chất">#</a></h3>
+<p>SoC (Dijkstra, 1974) là nguyên lý mẹ: <strong>mỗi đơn vị code chỉ nên buộc người đọc suy nghĩ về một khía cạnh của hệ thống</strong>. Coupling/cohesion là thước đo; SRP là SoC áp cho một module; layer là SoC áp cho toàn hệ thống theo trục kỹ thuật; bounded context (DDD) là SoC theo trục nghiệp vụ.</p>
+<p>Câu hỏi thiết kế trung tâm không phải &ldquo;có tách không&rdquo; mà là <strong>&ldquo;tách theo trục nào&rdquo;</strong>. Hai trục chính:</p>
+<ul>
+<li><strong>Trục kỹ thuật</strong> (giao thức / chính sách / lưu trữ): cho phép chuyên môn hóa và thay công nghệ độc lập → sinh ra <em>layer</em>.</li>
+<li><strong>Trục nghiệp vụ</strong> (order / payment / shipping): cho phép team ownership và thay đổi tính năng độc lập → sinh ra <em>module/bounded context</em>.</li>
+</ul>
+<p>Hệ thống trưởng thành cần <strong>cả hai</strong>: chia module theo nghiệp vụ trước, trong mỗi module chia layer theo kỹ thuật. Chia một trục mà bỏ trục kia đều tạo ra ma sát (chương 3 sẽ so sánh cụ thể các cách tổ chức package).</p>
+<h3 id="3-hình-dạng-trong-go--cross-cutting-concerns-bằng-middlewaredecorator">3. Hình dạng trong Go — cross-cutting concerns bằng middleware/decorator<a hidden class="anchor" aria-hidden="true" href="#3-hình-dạng-trong-go--cross-cutting-concerns-bằng-middlewaredecorator">#</a></h3>
+<p>Các concern &ldquo;ngang&rdquo; (log, metric, auth, retry) cắt qua mọi tính năng. Tách chúng bằng decorator để nghiệp vụ không biết đến chúng:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Concern vận hành tách khỏi nghiệp vụ bằng decorator quanh interface domain</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">instrumentedRepo</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">next</span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Repository</span> <span style="color:#75715e">// decorate contract của DOMAIN</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">metrics</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">prometheus</span>.<span style="color:#a6e22e">HistogramVec</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">instrumentedRepo</span>) <span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">next</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">metrics</span>.<span style="color:#a6e22e">WithLabelValues</span>(<span style="color:#e6db74">&#34;save&#34;</span>, <span style="color:#a6e22e">status</span>(<span style="color:#a6e22e">err</span>)).<span style="color:#a6e22e">Observe</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>).<span style="color:#a6e22e">Seconds</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// main.go: svc := order.NewService(instrument(postgres.NewOrderRepo(db)), ...)</span>
+</span></span></code></pre></div><p>Package <code>order</code> không đổi một dòng khi bạn thêm/bỏ metric, retry, cache — tất cả là lớp vỏ compose ở composition root. HTTP middleware (<code>func(http.Handler) http.Handler</code>) là cùng một pattern ở tầng delivery.</p>
+<h3 id="4-anti-patterns">4. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#4-anti-patterns">#</a></h3>
+<ul>
+<li><strong>Tách theo trục sai</strong>: chia project thành <code>controllers/</code>, <code>services/</code>, <code>models/</code> toàn cục (chỉ trục kỹ thuật) → một feature trải qua 3 thư mục, mọi team đụng mọi thư mục. Ngược lại chia theo feature nhưng bên trong trộn SQL với business rule → không test được. Cần cả hai trục, đúng thứ tự.</li>
+<li><strong>Tách quá hạt mịn</strong>: 12 package cho một feature 400 dòng — chi phí điều hướng vượt lợi ích cô lập.</li>
+<li><strong>Concern &ldquo;vô chủ&rdquo;</strong>: transaction, cache, authorization không được xếp tầng rõ ràng nên mỗi nơi tự xử một kiểu (chương 5 và 11 giải quyết cụ thể).</li>
+</ul>
+<hr>
+<h2 id="phần-b--composition-over-inheritance">Phần B — Composition over Inheritance<a hidden class="anchor" aria-hidden="true" href="#phần-b--composition-over-inheritance">#</a></h2>
+<h3 id="1-problem-statement-1">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement-1">#</a></h3>
+<p>Trong các hệ thống OOP cổ điển, tái sử dụng bằng kế thừa tạo ra:</p>
+<ul>
+<li><strong>Fragile base class</strong>: sửa class cha, vỡ ngầm class con ở nơi khác — coupling mạnh nhất có thể (content coupling xuyên vòng đời).</li>
+<li><strong>Cây phân loại cứng</strong>: <code>Animal → Dog → RobotDog?</code> — thực thể đa chiều không xếp được vào cây một chiều.</li>
+<li><strong>Kế thừa để lấy code, trả giá bằng contract</strong>: con thừa hưởng cả những method vô nghĩa với nó (vi phạm LSP kinh điển).</li>
+</ul>
+<h3 id="2-go-đã-quyết-định-thay-bạn">2. Go đã quyết định thay bạn<a hidden class="anchor" aria-hidden="true" href="#2-go-đã-quyết-định-thay-bạn">#</a></h3>
+<p>Go <strong>không có inheritance</strong> — quyết định thiết kế có chủ đích, không phải thiếu sót. Go cung cấp hai cơ chế compose:</p>
+<p><strong>Embedding (compose struct/behavior):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Không phải &#34;BaseRepository&#34; để kế thừa — mà là các mảnh ghép độc lập</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">retryPolicy</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">maxAttempts</span> <span style="color:#66d9ef">int</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#a6e22e">retryPolicy</span>) <span style="color:#a6e22e">do</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">fn</span> <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">error</span>) <span style="color:#66d9ef">error</span> { <span style="color:#f92672">...</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderRepo</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">retryPolicy</span>          <span style="color:#75715e">// embed: có method do() — quan hệ HAS-A, không phải IS-A</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">DB</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Điểm khác biệt then chốt với inheritance: <strong>không có override ảo</strong>. Nếu <code>retryPolicy.do</code> gọi hàm khác, nó gọi phiên bản <em>của chính nó</em>, không bao giờ bị struct ngoài &ldquo;đè&rdquo; — loại bỏ fragile base class ngay ở mức ngôn ngữ.</p>
+<p><strong>Interface composition (compose contract):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Reader</span> <span style="color:#66d9ef">interface</span>{ <span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">p</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">error</span>) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Writer</span> <span style="color:#66d9ef">interface</span>{ <span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">p</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">error</span>) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">ReadWriter</span> <span style="color:#66d9ef">interface</span> { <span style="color:#a6e22e">Reader</span>; <span style="color:#a6e22e">Writer</span> } <span style="color:#75715e">// contract lớn = tổng các contract nhỏ</span>
+</span></span></code></pre></div><h3 id="3-ý-nghĩa-kiến-trúc">3. Ý nghĩa kiến trúc<a hidden class="anchor" aria-hidden="true" href="#3-ý-nghĩa-kiến-trúc">#</a></h3>
+<p>Composition là cơ chế thực thi của mọi nguyên lý đã học: decorator (SoC), adapter (DIP), strategy qua interface (OCP) — tất cả đều là &ldquo;ghép các mảnh nhỏ qua contract hẹp&rdquo; thay vì &ldquo;thừa hưởng khối lớn&rdquo;. Trong Clean Architecture bằng Go, bạn sẽ không bao giờ cần <code>BaseService</code>, <code>BaseController</code>, <code>AbstractRepository</code>. Nếu thấy mình muốn viết chúng — đó là tín hiệu đang bê tư duy Java vào Go; câu trả lời đúng luôn là một mảnh compose được: middleware, decorator, hàm helper, hoặc embedded struct nhỏ.</p>
+<h3 id="4-anti-patterns-1">4. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#4-anti-patterns-1">#</a></h3>
+<ul>
+<li><strong>Embedding để giả lập inheritance</strong>: embed struct lớn chỉ để &ldquo;thừa hưởng&rdquo; 10 method rồi override vài cái bằng cách định nghĩa lại — người đọc không còn biết method nào chạy. Embed các mảnh <em>nhỏ, đơn nhiệm</em>.</li>
+<li><strong>Embed mutex/kiểu unexported lộ API</strong>: <code>type Cache struct { sync.Mutex }</code> làm <code>cache.Lock()</code> thành public API. Dùng field thường: <code>mu sync.Mutex</code>.</li>
+<li><strong>God helper được embed khắp nơi</strong>: <code>type common struct{ log, cfg, db, cache }</code> embed vào mọi service — biến global đội lốt composition.</li>
+</ul>
+<hr>
+<h2 id="tổng-kết-level-1--foundation">Tổng kết Level 1 — Foundation<a hidden class="anchor" aria-hidden="true" href="#tổng-kết-level-1--foundation">#</a></h2>
+<p>Năm chương nền tảng quy về một chuỗi nhân quả:</p>
+<pre tabindex="0"><code>Phần mềm phải thay đổi liên tục (business)
+  → chi phí thay đổi do coupling &amp; cohesion quyết định (1.1)
+  → SOLID: quy tắc hành động để quản trị chúng (1.2)
+  → DIP: cơ chế kỹ thuật đảo mũi tên về phía ổn định (1.3)
+  → SoC: chọn trục tách; Composition: cách ghép lại (1.4)
+</code></pre><p>Bạn đã có đủ nền để trả lời câu hỏi mà Clean Architecture sinh ra để trả lời: <em>&ldquo;Sắp xếp các mũi tên phụ thuộc của cả hệ thống như thế nào để business logic sống lâu hơn mọi công nghệ quanh nó?&rdquo;</em></p>
+<p><strong>Tiếp theo:</strong> <a href="/series/clean-architect/02-clean-architecture-core/01-vi-sao-clean-architecture-ra-doi/">Level 2 — Clean Architecture Core</a></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:54040/tags/golang/">Golang</a></li>
+      <li><a href="http://localhost:54040/tags/clean-architecture/">Clean-Architecture</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:54040/series/clean-architect/02-clean-architecture-core/01-vi-sao-clean-architecture-ra-doi/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 2.1 — Vì sao Clean Architecture ra đời</span>
+  </a>
+  <a class="next" href="http://localhost:54040/series/clean-architect/01-foundation/03-dependency-inversion/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.4 — Separation of Concerns & Composition over Inheritance on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%201.4%20%e2%80%94%20Separation%20of%20Concerns%20%26%20Composition%20over%20Inheritance&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f&amp;hashtags=backend%2cgolang%2cclean-architecture">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.4 — Separation of Concerns & Composition over Inheritance on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f&amp;title=Ch%c6%b0%c6%a1ng%201.4%20%e2%80%94%20Separation%20of%20Concerns%20%26%20Composition%20over%20Inheritance&amp;summary=Ch%c6%b0%c6%a1ng%201.4%20%e2%80%94%20Separation%20of%20Concerns%20%26%20Composition%20over%20Inheritance&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.4 — Separation of Concerns & Composition over Inheritance on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f&title=Ch%c6%b0%c6%a1ng%201.4%20%e2%80%94%20Separation%20of%20Concerns%20%26%20Composition%20over%20Inheritance">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.4 — Separation of Concerns & Composition over Inheritance on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.4 — Separation of Concerns & Composition over Inheritance on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%201.4%20%e2%80%94%20Separation%20of%20Concerns%20%26%20Composition%20over%20Inheritance%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.4 — Separation of Concerns & Composition over Inheritance on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%201.4%20%e2%80%94%20Separation%20of%20Concerns%20%26%20Composition%20over%20Inheritance&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.4 — Separation of Concerns & Composition over Inheritance on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%201.4%20%e2%80%94%20Separation%20of%20Concerns%20%26%20Composition%20over%20Inheritance&u=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f01-foundation%2f04-separation-of-concerns%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

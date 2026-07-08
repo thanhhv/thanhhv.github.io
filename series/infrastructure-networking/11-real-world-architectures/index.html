@@ -1,11 +1,457 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Bài 11 — Kiến Trúc Thực Tế | Thanh HV's Blog</title>
-<meta name=keywords content="backend,infrastructure,networking"><meta name=description content="Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao
+<!DOCTYPE html>
+<html lang="en" dir="auto">
 
-Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là chuỗi suy luận từ workload ra kiến trúc."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Bài 11 — Kiến Trúc Thực Tế"><meta property="og:description" content="Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là chuỗi suy luận từ workload ra kiến trúc."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-02-01T17:00:00+07:00"><meta property="article:modified_time" content="2026-02-01T17:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Infrastructure"><meta property="article:tag" content="Networking"><meta name=twitter:card content="summary"><meta name=twitter:title content="Bài 11 — Kiến Trúc Thực Tế"><meta name=twitter:description content="Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Bài 11 — Kiến Trúc Thực Tế | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, infrastructure, networking">
+<meta name="description" content="Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao
 
-Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là chuỗi suy luận từ workload ra kiến trúc."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Infrastructure \u0026 Networking","item":"https://thanhhv.github.io/series/infrastructure-networking/"},{"@type":"ListItem","position":3,"name":"Bài 11 — Kiến Trúc Thực Tế","item":"https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Bài 11 — Kiến Trúc Thực Tế","name":"Bài 11 — Kiến Trúc Thực Tế","description":"Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là chuỗi suy luận từ workload ra kiến trúc.\n","keywords":["backend","infrastructure","networking"],"articleBody":"Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là chuỗi suy luận từ workload ra kiến trúc.\n1. E-commerce Platform Đặc trưng workload: đọc/ghi lệch cực đoan (duyệt:mua ~100:1); burst có thể 10–50× trong sale event (thứ giết hệ thống không phải tải trung bình mà là 10 phút đầu của flash sale); một chuỗi nghiệp vụ trộn lẫn phần chịu được sai lệch (catalog, review) và phần tuyệt đối không (thanh toán, tồn kho).\nKiến trúc bị ép ra:\nTách đường đọc và đường ghi triệt để. Đường đọc (catalog/search): CDN + cache nhiều tầng + search engine (Elasticsearch) + DB replica — chấp nhận stale vài phút, đổi lấy hấp thụ 99% traffic bằng hạ tầng rẻ. Đường ghi (order/payment): DB transactional, không cache, bảo vệ bằng queue. Checkout qua queue: nhận đơn = ghi message (nhanh, hấp thụ burst) → xử lý payment/tồn kho theo tốc độ ổn định phía sau; user nhận “đang xử lý” thay vì timeout. Đây là backpressure (module 09) áp vào nghiệp vụ. Tồn kho là bài consistency kinh điển: khóa chặt (không oversell — mất doanh thu vì báo hết hàng oan trong burst) vs lạc quan (oversell rồi xin lỗi — chi phí xử lý ngoại lệ). Đa số chọn: reserve lạc quan + xác nhận khi thanh toán, oversell hiếm xử lý bằng quy trình. Trade-off nghiệp vụ quyết định, không phải kỹ thuật. Flash sale đúng nghĩa: thêm hàng chờ ảo (queue page) + load shedding có ưu tiên — thà phục vụ tốt 50k người trong hàng còn hơn 500k người cùng thấy 500. Failure case tiêu biểu: sale event → autoscaling không kịp (bài học trễ 3–5 phút, module 05) → phải pre-scale theo lịch; cache stampede khi hot item hết TTL đúng giờ vàng (module 02); và “recommendation service chết kéo sập checkout” — thiếu bulkhead, lỗi kinh điển nhất của ngành này.\n2. FinTech / Payment Platform Đặc trưng workload: đúng \u003e nhanh \u003e rẻ, theo thứ tự tuyệt đối. Mỗi thao tác tiền phải: không mất, không nhân đôi, audit được, và tuân thủ pháp lý (PCI-DSS, data residency).\nKiến trúc bị ép ra:\nLedger append-only + double-entry làm nguồn sự thật: không UPDATE số dư — ghi bút toán, số dư là tổng dẫn xuất. Sửa sai bằng bút toán đảo, không sửa lịch sử. Điều này cho audit trail miễn phí và loại bỏ cả lớp bug race condition trên số dư. Idempotency key ở mọi API ghi (module 02 — retry chỉ an toàn khi idempotent, và mạng LUÔN mơ hồ: timeout không cho biết lệnh đã chạy hay chưa). Client tạo key, server dedupe. Không có nó, retry + double-click = chuyển tiền 2 lần. Giao dịch xuyên hệ thống (với ngân hàng, đối tác): không có distributed transaction với bên thứ ba → saga + reconciliation: mỗi bước có bù trừ (compensation), và một hệ đối soát chạy định kỳ so khớp hai sổ — chấp nhận sự thật rằng hệ phân tán sẽ lệch, thiết kế quy trình phát hiện + sửa lệch thay vì giả vờ không lệch. DB: consistency chọn trước availability (CP) cho đường tiền — thà từ chối giao dịch còn hơn nhận mơ hồ. RPO ~0 bằng synchronous replication trong region (trả giá latency ghi), cross-region async + đối soát. Cô lập PCI scope: dữ liệu thẻ vào một vùng nhỏ tách biệt (tokenization — hệ chính chỉ giữ token), thu nhỏ phạm vi audit từ “cả công ty” xuống “một service”. Failure case tiêu biểu: double-spend qua retry không idempotent; lệch sổ âm thầm do bug saga không có reconciliation (phát hiện sau 3 tháng = ác mộng); và outage do chính cơ chế an toàn — synchronous replication treo khi replica chậm (trade-off consistency-availability hiện nguyên hình).\n3. Social Network / Feed Đặc trưng workload: đồ thị quan hệ + fan-out khổng lồ (1 post của người có 10M follower phải xuất hiện ở 10M feed); read nhiều áp đảo; chịu được eventual consistency gần như mọi nơi (thấy post trễ 30 giây không ai kiện).\nKiến trúc bị ép ra:\nBài toán trung tâm: fan-out on write (đẩy post vào feed cache của từng follower lúc đăng — đọc rẻ, ghi đắt với celebrity) vs fan-out on read (gom lúc đọc — ghi rẻ, đọc đắt). Lời giải thực tế là hybrid: user thường = fan-out on write; celebrity = fan-out on read, merge lúc phục vụ. Bài học lớn: phân phối power-law phá mọi thiết kế đồng nhất — thiết kế cho trung bình chết vì đuôi. Cache là hạ tầng chính chứ không phải phụ trợ (cache-hit 95%+ là điều kiện sống): mọi bài học cache stampede, hot key (một celebrity = một hot key làm nóng một shard cache) áp dụng cực đại. Giải hot key: replicate key nóng ra nhiều node + local cache tầng app. Eventual consistency mặc định, trừ vài chỗ bắt buộc mạnh hơn (block user phải có hiệu lực NGAY — an toàn cá nhân; đây là ví dụ đẹp về consistency theo từng nghiệp vụ thay vì toàn hệ). Failure case: thundering herd khi cache cluster restart (mất cache = DB nhận 20× tải = chết ngay — vì thế cache warm-up và restart từng phần là quy trình nghiêm ngặt); tin nổi bật toàn cầu tạo hot partition mà không shard scheme nào đỡ sẵn.\n4. SaaS Platform (B2B, multi-tenant) Đặc trưng workload: nhiều khách hàng chia sẻ hạ tầng; một tenant lớn có thể bằng 1000 tenant nhỏ; yêu cầu cách ly (dữ liệu + hiệu năng) và đôi khi residency/compliance theo từng khách.\nKiến trúc bị ép ra — trục quyết định là mức độ cách ly tenant:\nMô hình Cách ly Chi phí/tenant Vận hành Pool (chung DB, cột tenant_id) Logic (RLS) Thấp nhất 1 fleet, dễ; rủi ro bug rò dữ liệu chéo cao nhất Bridge (chung app, DB/schema riêng) Dữ liệu vật lý Trung bình Migration × N database Silo (stack riêng từng tenant) Hoàn toàn Cao nhất Phù hợp enterprise trả đậm/compliance Thực tế trưởng thành: hỗn hợp theo tier — long tail ở pool, enterprise ở bridge/silo. Kèm theo bắt buộc: (1) tenant_id trong mọi truy vấn được enforce ở tầng nền (RLS/middleware — không dựa vào kỷ luật dev; một WHERE thiếu = rò dữ liệu khách A cho khách B = sự cố tồn vong của công ty SaaS); (2) noisy neighbor control: rate limit + quota theo tenant, không để 1 tenant chạy report nặng làm chậm 999 tenant (bulkhead theo tenant); (3) mọi metric/log gắn tenant_id — “khách X kêu chậm” phải trả lời được trong phút.\nFailure case: bug rò dữ liệu chéo tenant (kinh khủng nhất); migration schema chạy trên 5000 DB bridge kẹt giữa chừng ở DB thứ 3021 (tooling migration theo fleet là hạ tầng nghiêm túc); một tenant bật tính năng export và DDoS chính hệ thống từ bên trong.\n5. Video Streaming Đặc trưng workload: băng thông là chi phí và giới hạn số 1 (video = ~85% traffic Internet); latency giao hàng quan trọng hơn latency tính toán; nội dung bất biến sau khi encode → cache được gần tuyệt đối.\nKiến trúc bị ép ra:\nPipeline offline: ingest → transcode thành bậc thang bitrate (240p→4K, mỗi bậc cắt segment 2–6s) → đẩy ra CDN. Player làm ABR (adaptive bitrate): đo throughput thực tế, tự chọn bậc cho segment kế — chất lượng thích nghi từng vài giây với mạng của từng user. Toàn bộ “streaming” thực chất là HTTP GET các file tĩnh nhỏ — thiết kế thiên tài ở chỗ biến bài toán streaming thành bài toán CDN đã giải. CDN không chỉ là mua dịch vụ: ở quy mô Netflix là đặt appliance cache trong ISP (Open Connect) — đưa nội dung đến sát user đến mức traffic không ra khỏi ISP; kèm pre-position nội dung dự đoán hot vào giờ thấp điểm. Bài học: ở quy mô đủ lớn, chi phí bandwidth biện minh cho việc xây hạ tầng vật lý riêng. Transcode là bài batch compute khổng lồ → spot instance + queue (chịu chết hoàn hảo — module 07); phần live streaming khó hơn VOD nhiều (không pre-position được, latency giây, spike đồng thời). Failure case: sự kiện live lớn (chung kết bóng đá) = hàng chục triệu client cùng xin segment MỚI NHẤT mỗi 2s — cache hit cao nhưng origin vẫn nhận sóng đều đặn mỗi segment mới, và một nhịp origin chậm = hàng triệu player cùng downshift/rebuffer; đó là lý do live có kiến trúc origin shield + request coalescing riêng biệt và được diễn tập như chiến dịch.\n6. Messaging Platform (chat) Đặc trưng workload: hàng triệu connection dài đồng thời (WebSocket) nhưng mỗi connection thưa (idle 99%); message nhỏ, latency cảm nhận được (\u003c1s); yêu cầu ordering theo hội thoại và delivery guarantee.\nKiến trúc bị ép ra:\nGateway tier giữ connection (bài C10K/epoll module 03 ở dạng thuần khiết nhất — mỗi node giữ 500k–1M connection idle) tách khỏi logic tier stateless: connection đắt vì số lượng, logic đắt vì CPU — tách ra để scale độc lập. Cần bảng định tuyến user→gateway node (Redis/registry) để đẩy message tới đúng connection. Ordering: tổng thứ tự toàn cục là bất khả thi và không cần — chỉ cần thứ tự TRONG một hội thoại → gán sequence per-conversation (shard theo conversation_id, mỗi hội thoại một dòng ghi tuần tự). Chọn scope consistency nhỏ nhất mà nghiệp vụ cần là bài học tổng quát. Delivery: at-least-once + dedupe bằng message ID phía client (exactly-once end-to-end là ảo tưởng — module 02 idempotency một lần nữa); trạng thái sent/delivered/read là ACK ba tầng. Deploy gateway tier là nghi lễ (bài học WebSocket module 02): drain chậm, reconnect với jitter, và dimension hóa “connection churn rate” như một metric hạng nhất. Failure case: mất một gateway node = trăm nghìn reconnect đồng loạt (thundering herd vào auth + registry — phải có jitter và rate limit reconnect); vòng lặp notification→mở app→connection→presence update→notification khuếch đại chính nó.\n7. Blockchain Infrastructure Đặc trưng workload: node phân tán không tin nhau; state machine replication qua consensus; yêu cầu về key management và tính bất biến cao nhất trong mọi ngành.\nĐiều thú vị về hạ tầng (bỏ qua tranh luận về ứng dụng): đây là hệ thù địch by design — mọi bài học security module 10 ở mức cực đại. Hạ tầng thực tế của một công ty vận hành trong ngành này: (1) node fleet (full/archive node) là StatefulSet ác mộng — state hàng TB, sync ban đầu hàng ngày/tuần, nâng cấp client phải theo lịch hard-fork toàn mạng (deadline không thể xin hoãn — hiếm có trong ngành hạ tầng); (2) key management là sống còn tuyệt đối: private key = tiền, mất là mất không kháng cáo → HSM, multi-sig/MPC, ceremony có nghi thức cho cold key — mô hình secret management (module 10) với hậu quả sai lầm không thể đảo ngược; (3) RPC tier cho ứng dụng đọc chain: cache + LB trước node fleet, vì node không được thiết kế để chịu query load — mọi bài học reverse proxy áp dụng.\nFailure case: chain reorg làm dữ liệu “đã confirm” biến mất (phải thiết kế số confirmation chờ theo giá trị giao dịch); node client có bug consensus = fork ngoài ý muốn — chạy đa client (client diversity) chính là redundancy chống correlated failure (module 09) ở tầng phần mềm.\n8. AI Platform Đặc trưng workload: hai thế giới khác hẳn nhau chung một chữ AI — training (batch, chiếm GPU hàng tuần, checkpoint lớn, chịu restart) và inference/serving (online, latency-sensitive, autoscale theo traffic). Tài nguyên trung tâm là GPU: đắt, khan hiếm, không chia sẻ mượt như CPU.\nKiến trúc bị ép ra:\nGPU phá các giả định của scheduler thường: không “nén” được như CPU (module 03/05 — không có throttle, chỉ có được/không), bin packing theo card/MIG partition, và utilization là KPI số 1 (GPU $30k+/card nằm im là đốt tiền) → queue + gang scheduling cho training (job 64 GPU cần đủ 64 cùng lúc — partial allocation là deadlock), ưu tiên + preemption giữa team. Training: checkpoint thường xuyên là bắt buộc (spot GPU + job dài ngày = chắc chắn có restart; bài học “thiết kế cho hỏng hóc” module 09 áp vào batch); data pipeline (đọc dataset TB) thường là bottleneck thật chứ không phải GPU — đo trước khi mua thêm card. Inference: model lớn = image/artifact hàng chục GB → cold start hàng phút phá autoscaling truyền thống (module 05 chuỗi trễ nhân 10) → giải bằng warm pool, model cache trên node, hoặc chấp nhận over-provision; batching động (gom request vài ms để GPU xử lý theo lô — đổi p50 latency lấy throughput 5–10×) là trade-off đặc trưng của serving. LLM serving thêm đặc thù: KV-cache làm mỗi request chiếm GPU memory theo độ dài context → capacity planning theo token, không theo request; streaming response (SSE) quay lại bài connection dài module 02. Failure case: một team chiếm cả cụm GPU bằng job ưu tiên thấp không preempt được (thiếu quota + preemption từ đầu); cập nhật model mới có latency tệ hơn dưới tải thật mà offline benchmark không lộ (cần canary cho model như cho code — module 06, shadow traffic là kỹ thuật chuẩn); GPU node “chết một nửa” (ECC error, thermal throttle) làm job chậm bí ẩn — health check GPU chuyên biệt là hạng mục riêng.\nTổng kết: các bất biến xuyên suốt 8 kiến trúc Workload quyết định kiến trúc — không có kiến trúc tốt phổ quát, chỉ có kiến trúc khớp với hình dạng tải + yêu cầu consistency + cấu trúc chi phí của bài toán. Đường nóng được tách khỏi đường lạnh ở mọi hệ: đọc/ghi, connection/logic, online/batch — tách để scale, bảo vệ và định giá độc lập. Queue xuất hiện ở mọi ranh giới chịu tải — hấp thụ burst, cách ly nhịp độ, đổi latency lấy sống sót. Consistency được chọn theo từng mẩu nghiệp vụ, không theo toàn hệ thống — và phần “chịu được sai lệch tạm” luôn lớn hơn trực giác ban đầu. Phân phối power-law (hot key, celebrity, tenant lớn, event lớn) phá thiết kế đồng nhất — mọi hệ trưởng thành đều có đường xử lý riêng cho đuôi. Cái giá của mọi cơ chế an toàn là có thật (latency, chi phí, độ phức tạp) — kiến trúc sư giỏi không phải người thêm nhiều lớp bảo vệ nhất, mà là người biết chỗ nào không cần. ","wordCount":"2516","inLanguage":"en","datePublished":"2026-02-01T17:00:00+07:00","dateModified":"2026-02-01T17:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/infrastructure-networking/11-real-world-architectures/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/infrastructure-networking/>Infrastructure & Networking</a></div><h1 class="post-title entry-hint-parent">Bài 11 — Kiến Trúc Thực Tế</h1><div class=post-meta><span title='2026-02-01 17:00:00 +0700 +07'>February 1, 2026</span>&nbsp;·&nbsp;12 min</div></header><div class=post-content><h1 id=module-11--kiến-trúc-thực-tế-các-hệ-thống-lớn-được-xây-thế-nào-và-vì-sao>Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao<a hidden class=anchor aria-hidden=true href=#module-11--kiến-trúc-thực-tế-các-hệ-thống-lớn-được-xây-thế-nào-và-vì-sao>#</a></h1><blockquote><p>Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là <strong>chuỗi suy luận từ workload ra kiến trúc</strong>.</p></blockquote><hr><h2 id=1-e-commerce-platform>1. E-commerce Platform<a hidden class=anchor aria-hidden=true href=#1-e-commerce-platform>#</a></h2><p><strong>Đặc trưng workload</strong>: đọc/ghi lệch cực đoan (duyệt:mua ~100:1); burst có thể 10–50× trong sale event (thứ giết hệ thống không phải tải trung bình mà là 10 phút đầu của flash sale); một chuỗi nghiệp vụ trộn lẫn phần chịu được sai lệch (catalog, review) và phần tuyệt đối không (thanh toán, tồn kho).</p><p><strong>Kiến trúc bị ép ra</strong>:</p><ul><li>Tách đường đọc và đường ghi triệt để. Đường đọc (catalog/search): CDN + cache nhiều tầng + search engine (Elasticsearch) + DB replica — chấp nhận stale vài phút, đổi lấy hấp thụ 99% traffic bằng hạ tầng rẻ. Đường ghi (order/payment): DB transactional, không cache, bảo vệ bằng queue.</li><li><strong>Checkout qua queue</strong>: nhận đơn = ghi message (nhanh, hấp thụ burst) → xử lý payment/tồn kho theo tốc độ ổn định phía sau; user nhận &ldquo;đang xử lý&rdquo; thay vì timeout. Đây là backpressure (module 09) áp vào nghiệp vụ.</li><li>Tồn kho là bài consistency kinh điển: khóa chặt (không oversell — mất doanh thu vì báo hết hàng oan trong burst) vs lạc quan (oversell rồi xin lỗi — chi phí xử lý ngoại lệ). Đa số chọn: reserve lạc quan + xác nhận khi thanh toán, oversell hiếm xử lý bằng quy trình. Trade-off nghiệp vụ quyết định, không phải kỹ thuật.</li><li>Flash sale đúng nghĩa: thêm hàng chờ ảo (queue page) + load shedding có ưu tiên — thà phục vụ tốt 50k người trong hàng còn hơn 500k người cùng thấy 500.</li></ul><p><strong>Failure case tiêu biểu</strong>: sale event → autoscaling không kịp (bài học trễ 3–5 phút, module 05) → phải pre-scale theo lịch; cache stampede khi hot item hết TTL đúng giờ vàng (module 02); và &ldquo;recommendation service chết kéo sập checkout&rdquo; — thiếu bulkhead, lỗi kinh điển nhất của ngành này.</p><hr><h2 id=2-fintech--payment-platform>2. FinTech / Payment Platform<a hidden class=anchor aria-hidden=true href=#2-fintech--payment-platform>#</a></h2><p><strong>Đặc trưng workload</strong>: đúng > nhanh > rẻ, theo thứ tự tuyệt đối. Mỗi thao tác tiền phải: không mất, không nhân đôi, audit được, và tuân thủ pháp lý (PCI-DSS, data residency).</p><p><strong>Kiến trúc bị ép ra</strong>:</p><ul><li><strong>Ledger append-only + double-entry</strong> làm nguồn sự thật: không UPDATE số dư — ghi bút toán, số dư là tổng dẫn xuất. Sửa sai bằng bút toán đảo, không sửa lịch sử. Điều này cho audit trail miễn phí và loại bỏ cả lớp bug race condition trên số dư.</li><li><strong>Idempotency key ở mọi API ghi</strong> (module 02 — retry chỉ an toàn khi idempotent, và mạng LUÔN mơ hồ: timeout không cho biết lệnh đã chạy hay chưa). Client tạo key, server dedupe. Không có nó, retry + double-click = chuyển tiền 2 lần.</li><li>Giao dịch xuyên hệ thống (với ngân hàng, đối tác): không có distributed transaction với bên thứ ba → <strong>saga + reconciliation</strong>: mỗi bước có bù trừ (compensation), và một hệ đối soát chạy định kỳ so khớp hai sổ — chấp nhận sự thật rằng hệ phân tán sẽ lệch, thiết kế quy trình phát hiện + sửa lệch thay vì giả vờ không lệch.</li><li>DB: consistency chọn trước availability (CP) cho đường tiền — thà từ chối giao dịch còn hơn nhận mơ hồ. RPO ~0 bằng synchronous replication trong region (trả giá latency ghi), cross-region async + đối soát.</li><li>Cô lập PCI scope: dữ liệu thẻ vào một vùng nhỏ tách biệt (tokenization — hệ chính chỉ giữ token), thu nhỏ phạm vi audit từ &ldquo;cả công ty&rdquo; xuống &ldquo;một service&rdquo;.</li></ul><p><strong>Failure case tiêu biểu</strong>: double-spend qua retry không idempotent; lệch sổ âm thầm do bug saga không có reconciliation (phát hiện sau 3 tháng = ác mộng); và outage do chính cơ chế an toàn — synchronous replication treo khi replica chậm (trade-off consistency-availability hiện nguyên hình).</p><hr><h2 id=3-social-network--feed>3. Social Network / Feed<a hidden class=anchor aria-hidden=true href=#3-social-network--feed>#</a></h2><p><strong>Đặc trưng workload</strong>: đồ thị quan hệ + fan-out khổng lồ (1 post của người có 10M follower phải xuất hiện ở 10M feed); read nhiều áp đảo; chịu được eventual consistency gần như mọi nơi (thấy post trễ 30 giây không ai kiện).</p><p><strong>Kiến trúc bị ép ra</strong>:</p><ul><li>Bài toán trung tâm: <strong>fan-out on write</strong> (đẩy post vào feed cache của từng follower lúc đăng — đọc rẻ, ghi đắt với celebrity) vs <strong>fan-out on read</strong> (gom lúc đọc — ghi rẻ, đọc đắt). Lời giải thực tế là <strong>hybrid</strong>: user thường = fan-out on write; celebrity = fan-out on read, merge lúc phục vụ. Bài học lớn: <strong>phân phối power-law phá mọi thiết kế đồng nhất</strong> — thiết kế cho trung bình chết vì đuôi.</li><li>Cache là hạ tầng chính chứ không phải phụ trợ (cache-hit 95%+ là điều kiện sống): mọi bài học cache stampede, hot key (một celebrity = một hot key làm nóng một shard cache) áp dụng cực đại. Giải hot key: replicate key nóng ra nhiều node + local cache tầng app.</li><li>Eventual consistency mặc định, trừ vài chỗ bắt buộc mạnh hơn (block user phải có hiệu lực NGAY — an toàn cá nhân; đây là ví dụ đẹp về consistency theo từng nghiệp vụ thay vì toàn hệ).</li></ul><p><strong>Failure case</strong>: thundering herd khi cache cluster restart (mất cache = DB nhận 20× tải = chết ngay — vì thế cache warm-up và restart từng phần là quy trình nghiêm ngặt); tin nổi bật toàn cầu tạo hot partition mà không shard scheme nào đỡ sẵn.</p><hr><h2 id=4-saas-platform-b2b-multi-tenant>4. SaaS Platform (B2B, multi-tenant)<a hidden class=anchor aria-hidden=true href=#4-saas-platform-b2b-multi-tenant>#</a></h2><p><strong>Đặc trưng workload</strong>: nhiều khách hàng chia sẻ hạ tầng; một tenant lớn có thể bằng 1000 tenant nhỏ; yêu cầu cách ly (dữ liệu + hiệu năng) và đôi khi residency/compliance theo từng khách.</p><p><strong>Kiến trúc bị ép ra</strong> — trục quyết định là <strong>mức độ cách ly tenant</strong>:</p><table><thead><tr><th>Mô hình</th><th>Cách ly</th><th>Chi phí/tenant</th><th>Vận hành</th></tr></thead><tbody><tr><td>Pool (chung DB, cột tenant_id)</td><td>Logic (RLS)</td><td>Thấp nhất</td><td>1 fleet, dễ; rủi ro bug rò dữ liệu chéo cao nhất</td></tr><tr><td>Bridge (chung app, DB/schema riêng)</td><td>Dữ liệu vật lý</td><td>Trung bình</td><td>Migration × N database</td></tr><tr><td>Silo (stack riêng từng tenant)</td><td>Hoàn toàn</td><td>Cao nhất</td><td>Phù hợp enterprise trả đậm/compliance</td></tr></tbody></table><p>Thực tế trưởng thành: <strong>hỗn hợp theo tier</strong> — long tail ở pool, enterprise ở bridge/silo. Kèm theo bắt buộc: (1) <strong>tenant_id trong mọi truy vấn được enforce ở tầng nền</strong> (RLS/middleware — không dựa vào kỷ luật dev; một <code>WHERE</code> thiếu = rò dữ liệu khách A cho khách B = sự cố tồn vong của công ty SaaS); (2) <strong>noisy neighbor control</strong>: rate limit + quota theo tenant, không để 1 tenant chạy report nặng làm chậm 999 tenant (bulkhead theo tenant); (3) mọi metric/log gắn tenant_id — &ldquo;khách X kêu chậm&rdquo; phải trả lời được trong phút.</p><p><strong>Failure case</strong>: bug rò dữ liệu chéo tenant (kinh khủng nhất); migration schema chạy trên 5000 DB bridge kẹt giữa chừng ở DB thứ 3021 (tooling migration theo fleet là hạ tầng nghiêm túc); một tenant bật tính năng export và DDoS chính hệ thống từ bên trong.</p><hr><h2 id=5-video-streaming>5. Video Streaming<a hidden class=anchor aria-hidden=true href=#5-video-streaming>#</a></h2><p><strong>Đặc trưng workload</strong>: băng thông là chi phí và giới hạn số 1 (video = ~85% traffic Internet); latency giao hàng quan trọng hơn latency tính toán; nội dung bất biến sau khi encode → cache được gần tuyệt đối.</p><p><strong>Kiến trúc bị ép ra</strong>:</p><ul><li>Pipeline offline: ingest → transcode thành <strong>bậc thang bitrate</strong> (240p→4K, mỗi bậc cắt segment 2–6s) → đẩy ra CDN. Player làm <strong>ABR</strong> (adaptive bitrate): đo throughput thực tế, tự chọn bậc cho segment kế — chất lượng thích nghi từng vài giây với mạng của từng user. Toàn bộ &ldquo;streaming&rdquo; thực chất là HTTP GET các file tĩnh nhỏ — thiết kế thiên tài ở chỗ biến bài toán streaming thành bài toán CDN đã giải.</li><li>CDN không chỉ là mua dịch vụ: ở quy mô Netflix là <strong>đặt appliance cache trong ISP</strong> (Open Connect) — đưa nội dung đến sát user đến mức traffic không ra khỏi ISP; kèm <strong>pre-position</strong> nội dung dự đoán hot vào giờ thấp điểm. Bài học: ở quy mô đủ lớn, chi phí bandwidth biện minh cho việc xây hạ tầng vật lý riêng.</li><li>Transcode là bài batch compute khổng lồ → spot instance + queue (chịu chết hoàn hảo — module 07); phần live streaming khó hơn VOD nhiều (không pre-position được, latency giây, spike đồng thời).</li></ul><p><strong>Failure case</strong>: sự kiện live lớn (chung kết bóng đá) = hàng chục triệu client cùng xin segment MỚI NHẤT mỗi 2s — cache hit cao nhưng origin vẫn nhận sóng đều đặn mỗi segment mới, và một nhịp origin chậm = hàng triệu player cùng downshift/rebuffer; đó là lý do live có kiến trúc origin shield + request coalescing riêng biệt và được diễn tập như chiến dịch.</p><hr><h2 id=6-messaging-platform-chat>6. Messaging Platform (chat)<a hidden class=anchor aria-hidden=true href=#6-messaging-platform-chat>#</a></h2><p><strong>Đặc trưng workload</strong>: hàng triệu connection dài đồng thời (WebSocket) nhưng mỗi connection thưa (idle 99%); message nhỏ, latency cảm nhận được (&lt;1s); yêu cầu ordering theo hội thoại và delivery guarantee.</p><p><strong>Kiến trúc bị ép ra</strong>:</p><ul><li><strong>Gateway tier giữ connection</strong> (bài C10K/epoll module 03 ở dạng thuần khiết nhất — mỗi node giữ 500k–1M connection idle) tách khỏi <strong>logic tier stateless</strong>: connection đắt vì số lượng, logic đắt vì CPU — tách ra để scale độc lập. Cần bảng định tuyến user→gateway node (Redis/registry) để đẩy message tới đúng connection.</li><li>Ordering: <strong>tổng thứ tự toàn cục là bất khả thi và không cần</strong> — chỉ cần thứ tự TRONG một hội thoại → gán sequence per-conversation (shard theo conversation_id, mỗi hội thoại một dòng ghi tuần tự). Chọn scope consistency nhỏ nhất mà nghiệp vụ cần là bài học tổng quát.</li><li>Delivery: at-least-once + dedupe bằng message ID phía client (exactly-once end-to-end là ảo tưởng — module 02 idempotency một lần nữa); trạng thái sent/delivered/read là ACK ba tầng.</li><li>Deploy gateway tier là nghi lễ (bài học WebSocket module 02): drain chậm, reconnect với jitter, và dimension hóa &ldquo;connection churn rate&rdquo; như một metric hạng nhất.</li></ul><p><strong>Failure case</strong>: mất một gateway node = trăm nghìn reconnect đồng loạt (thundering herd vào auth + registry — phải có jitter và rate limit reconnect); vòng lặp notification→mở app→connection→presence update→notification khuếch đại chính nó.</p><hr><h2 id=7-blockchain-infrastructure>7. Blockchain Infrastructure<a hidden class=anchor aria-hidden=true href=#7-blockchain-infrastructure>#</a></h2><p><strong>Đặc trưng workload</strong>: node phân tán không tin nhau; state machine replication qua consensus; yêu cầu về key management và tính bất biến cao nhất trong mọi ngành.</p><p><strong>Điều thú vị về hạ tầng</strong> (bỏ qua tranh luận về ứng dụng): đây là hệ <strong>thù địch by design</strong> — mọi bài học security module 10 ở mức cực đại. Hạ tầng thực tế của một công ty vận hành trong ngành này: (1) <strong>node fleet</strong> (full/archive node) là StatefulSet ác mộng — state hàng TB, sync ban đầu hàng ngày/tuần, nâng cấp client phải theo lịch hard-fork toàn mạng (deadline không thể xin hoãn — hiếm có trong ngành hạ tầng); (2) <strong>key management là sống còn tuyệt đối</strong>: private key = tiền, mất là mất không kháng cáo → HSM, multi-sig/MPC, ceremony có nghi thức cho cold key — mô hình secret management (module 10) với hậu quả sai lầm không thể đảo ngược; (3) RPC tier cho ứng dụng đọc chain: cache + LB trước node fleet, vì node không được thiết kế để chịu query load — mọi bài học reverse proxy áp dụng.</p><p><strong>Failure case</strong>: chain reorg làm dữ liệu &ldquo;đã confirm&rdquo; biến mất (phải thiết kế số confirmation chờ theo giá trị giao dịch); node client có bug consensus = fork ngoài ý muốn — chạy đa client (client diversity) chính là redundancy chống correlated failure (module 09) ở tầng phần mềm.</p><hr><h2 id=8-ai-platform>8. AI Platform<a hidden class=anchor aria-hidden=true href=#8-ai-platform>#</a></h2><p><strong>Đặc trưng workload</strong>: hai thế giới khác hẳn nhau chung một chữ AI — <strong>training</strong> (batch, chiếm GPU hàng tuần, checkpoint lớn, chịu restart) và <strong>inference/serving</strong> (online, latency-sensitive, autoscale theo traffic). Tài nguyên trung tâm là <strong>GPU: đắt, khan hiếm, không chia sẻ mượt như CPU</strong>.</p><p><strong>Kiến trúc bị ép ra</strong>:</p><ul><li>GPU phá các giả định của scheduler thường: không &ldquo;nén&rdquo; được như CPU (module 03/05 — không có throttle, chỉ có được/không), bin packing theo card/MIG partition, và <strong>utilization là KPI số 1</strong> (GPU $30k+/card nằm im là đốt tiền) → queue + gang scheduling cho training (job 64 GPU cần đủ 64 cùng lúc — partial allocation là deadlock), ưu tiên + preemption giữa team.</li><li>Training: checkpoint thường xuyên là bắt buộc (spot GPU + job dài ngày = chắc chắn có restart; bài học &ldquo;thiết kế cho hỏng hóc&rdquo; module 09 áp vào batch); data pipeline (đọc dataset TB) thường là bottleneck thật chứ không phải GPU — đo trước khi mua thêm card.</li><li>Inference: model lớn = image/artifact hàng chục GB → cold start hàng phút phá autoscaling truyền thống (module 05 chuỗi trễ nhân 10) → giải bằng warm pool, model cache trên node, hoặc chấp nhận over-provision; batching động (gom request vài ms để GPU xử lý theo lô — đổi p50 latency lấy throughput 5–10×) là trade-off đặc trưng của serving.</li><li>LLM serving thêm đặc thù: KV-cache làm mỗi request chiếm GPU memory theo độ dài context → capacity planning theo <strong>token</strong>, không theo request; streaming response (SSE) quay lại bài connection dài module 02.</li></ul><p><strong>Failure case</strong>: một team chiếm cả cụm GPU bằng job ưu tiên thấp không preempt được (thiếu quota + preemption từ đầu); cập nhật model mới có latency tệ hơn dưới tải thật mà offline benchmark không lộ (cần canary cho model như cho code — module 06, shadow traffic là kỹ thuật chuẩn); GPU node &ldquo;chết một nửa&rdquo; (ECC error, thermal throttle) làm job chậm bí ẩn — health check GPU chuyên biệt là hạng mục riêng.</p><hr><h2 id=tổng-kết-các-bất-biến-xuyên-suốt-8-kiến-trúc>Tổng kết: các bất biến xuyên suốt 8 kiến trúc<a hidden class=anchor aria-hidden=true href=#tổng-kết-các-bất-biến-xuyên-suốt-8-kiến-trúc>#</a></h2><ol><li><strong>Workload quyết định kiến trúc</strong> — không có kiến trúc tốt phổ quát, chỉ có kiến trúc khớp với hình dạng tải + yêu cầu consistency + cấu trúc chi phí của bài toán.</li><li><strong>Đường nóng được tách khỏi đường lạnh</strong> ở mọi hệ: đọc/ghi, connection/logic, online/batch — tách để scale, bảo vệ và định giá độc lập.</li><li><strong>Queue xuất hiện ở mọi ranh giới chịu tải</strong> — hấp thụ burst, cách ly nhịp độ, đổi latency lấy sống sót.</li><li><strong>Consistency được chọn theo từng mẩu nghiệp vụ</strong>, không theo toàn hệ thống — và phần &ldquo;chịu được sai lệch tạm&rdquo; luôn lớn hơn trực giác ban đầu.</li><li><strong>Phân phối power-law (hot key, celebrity, tenant lớn, event lớn) phá thiết kế đồng nhất</strong> — mọi hệ trưởng thành đều có đường xử lý riêng cho đuôi.</li><li>Cái giá của mọi cơ chế an toàn là có thật (latency, chi phí, độ phức tạp) — kiến trúc sư giỏi không phải người thêm nhiều lớp bảo vệ nhất, mà là người <strong>biết chỗ nào không cần</strong>.</li></ol></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/infrastructure/>Infrastructure</a></li><li><a href=https://thanhhv.github.io/tags/networking/>Networking</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/posts/message-queue-pubsub-and-message-broker/><span class=title>« Prev</span><br><span>Phân biệt Message Queue - Pub/Sub - Message Broker</span>
-</a><a class=next href=https://thanhhv.github.io/series/infrastructure-networking/10-security/><span class=title>Next »</span><br><span>Bài 10 — Security cho Backend Systems</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on x" href="https://x.com/intent/tweet/?text=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f&amp;hashtags=backend%2cinfrastructure%2cnetworking"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f&amp;title=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;summary=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f&title=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on whatsapp" href="https://api.whatsapp.com/send?text=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on telegram" href="https://telegram.me/share/url?text=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on ycombinator" href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&u=https%3a%2f%2fthanhhv.github.io%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là chuỗi suy luận từ workload ra kiến trúc.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:54040/series/infrastructure-networking/11-real-world-architectures/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:54040/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:54040/series/infrastructure-networking/11-real-world-architectures/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:54040/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/infrastructure-networking/">Infrastructure &amp; Networking</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Bài 11 — Kiến Trúc Thực Tế
+    </h1>
+    <div class="post-meta"><span title='2026-02-01 17:00:00 +0700 +07'>February 1, 2026</span>&nbsp;·&nbsp;12 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="module-11--kiến-trúc-thực-tế-các-hệ-thống-lớn-được-xây-thế-nào-và-vì-sao">Module 11 — Kiến trúc thực tế: các hệ thống lớn được xây thế nào và vì sao<a hidden class="anchor" aria-hidden="true" href="#module-11--kiến-trúc-thực-tế-các-hệ-thống-lớn-được-xây-thế-nào-và-vì-sao">#</a></h1>
+<blockquote>
+<p>Mỗi mục dưới đây là một bài tập tổng hợp của 10 module trước. Cấu trúc chung: đặc trưng workload → nó ép ra kiến trúc gì → trade-off và failure case đã trả giá. Điều đáng học không phải sơ đồ — mà là <strong>chuỗi suy luận từ workload ra kiến trúc</strong>.</p></blockquote>
+<hr>
+<h2 id="1-e-commerce-platform">1. E-commerce Platform<a hidden class="anchor" aria-hidden="true" href="#1-e-commerce-platform">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: đọc/ghi lệch cực đoan (duyệt:mua ~100:1); burst có thể 10–50× trong sale event (thứ giết hệ thống không phải tải trung bình mà là 10 phút đầu của flash sale); một chuỗi nghiệp vụ trộn lẫn phần chịu được sai lệch (catalog, review) và phần tuyệt đối không (thanh toán, tồn kho).</p>
+<p><strong>Kiến trúc bị ép ra</strong>:</p>
+<ul>
+<li>Tách đường đọc và đường ghi triệt để. Đường đọc (catalog/search): CDN + cache nhiều tầng + search engine (Elasticsearch) + DB replica — chấp nhận stale vài phút, đổi lấy hấp thụ 99% traffic bằng hạ tầng rẻ. Đường ghi (order/payment): DB transactional, không cache, bảo vệ bằng queue.</li>
+<li><strong>Checkout qua queue</strong>: nhận đơn = ghi message (nhanh, hấp thụ burst) → xử lý payment/tồn kho theo tốc độ ổn định phía sau; user nhận &ldquo;đang xử lý&rdquo; thay vì timeout. Đây là backpressure (module 09) áp vào nghiệp vụ.</li>
+<li>Tồn kho là bài consistency kinh điển: khóa chặt (không oversell — mất doanh thu vì báo hết hàng oan trong burst) vs lạc quan (oversell rồi xin lỗi — chi phí xử lý ngoại lệ). Đa số chọn: reserve lạc quan + xác nhận khi thanh toán, oversell hiếm xử lý bằng quy trình. Trade-off nghiệp vụ quyết định, không phải kỹ thuật.</li>
+<li>Flash sale đúng nghĩa: thêm hàng chờ ảo (queue page) + load shedding có ưu tiên — thà phục vụ tốt 50k người trong hàng còn hơn 500k người cùng thấy 500.</li>
+</ul>
+<p><strong>Failure case tiêu biểu</strong>: sale event → autoscaling không kịp (bài học trễ 3–5 phút, module 05) → phải pre-scale theo lịch; cache stampede khi hot item hết TTL đúng giờ vàng (module 02); và &ldquo;recommendation service chết kéo sập checkout&rdquo; — thiếu bulkhead, lỗi kinh điển nhất của ngành này.</p>
+<hr>
+<h2 id="2-fintech--payment-platform">2. FinTech / Payment Platform<a hidden class="anchor" aria-hidden="true" href="#2-fintech--payment-platform">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: đúng &gt; nhanh &gt; rẻ, theo thứ tự tuyệt đối. Mỗi thao tác tiền phải: không mất, không nhân đôi, audit được, và tuân thủ pháp lý (PCI-DSS, data residency).</p>
+<p><strong>Kiến trúc bị ép ra</strong>:</p>
+<ul>
+<li><strong>Ledger append-only + double-entry</strong> làm nguồn sự thật: không UPDATE số dư — ghi bút toán, số dư là tổng dẫn xuất. Sửa sai bằng bút toán đảo, không sửa lịch sử. Điều này cho audit trail miễn phí và loại bỏ cả lớp bug race condition trên số dư.</li>
+<li><strong>Idempotency key ở mọi API ghi</strong> (module 02 — retry chỉ an toàn khi idempotent, và mạng LUÔN mơ hồ: timeout không cho biết lệnh đã chạy hay chưa). Client tạo key, server dedupe. Không có nó, retry + double-click = chuyển tiền 2 lần.</li>
+<li>Giao dịch xuyên hệ thống (với ngân hàng, đối tác): không có distributed transaction với bên thứ ba → <strong>saga + reconciliation</strong>: mỗi bước có bù trừ (compensation), và một hệ đối soát chạy định kỳ so khớp hai sổ — chấp nhận sự thật rằng hệ phân tán sẽ lệch, thiết kế quy trình phát hiện + sửa lệch thay vì giả vờ không lệch.</li>
+<li>DB: consistency chọn trước availability (CP) cho đường tiền — thà từ chối giao dịch còn hơn nhận mơ hồ. RPO ~0 bằng synchronous replication trong region (trả giá latency ghi), cross-region async + đối soát.</li>
+<li>Cô lập PCI scope: dữ liệu thẻ vào một vùng nhỏ tách biệt (tokenization — hệ chính chỉ giữ token), thu nhỏ phạm vi audit từ &ldquo;cả công ty&rdquo; xuống &ldquo;một service&rdquo;.</li>
+</ul>
+<p><strong>Failure case tiêu biểu</strong>: double-spend qua retry không idempotent; lệch sổ âm thầm do bug saga không có reconciliation (phát hiện sau 3 tháng = ác mộng); và outage do chính cơ chế an toàn — synchronous replication treo khi replica chậm (trade-off consistency-availability hiện nguyên hình).</p>
+<hr>
+<h2 id="3-social-network--feed">3. Social Network / Feed<a hidden class="anchor" aria-hidden="true" href="#3-social-network--feed">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: đồ thị quan hệ + fan-out khổng lồ (1 post của người có 10M follower phải xuất hiện ở 10M feed); read nhiều áp đảo; chịu được eventual consistency gần như mọi nơi (thấy post trễ 30 giây không ai kiện).</p>
+<p><strong>Kiến trúc bị ép ra</strong>:</p>
+<ul>
+<li>Bài toán trung tâm: <strong>fan-out on write</strong> (đẩy post vào feed cache của từng follower lúc đăng — đọc rẻ, ghi đắt với celebrity) vs <strong>fan-out on read</strong> (gom lúc đọc — ghi rẻ, đọc đắt). Lời giải thực tế là <strong>hybrid</strong>: user thường = fan-out on write; celebrity = fan-out on read, merge lúc phục vụ. Bài học lớn: <strong>phân phối power-law phá mọi thiết kế đồng nhất</strong> — thiết kế cho trung bình chết vì đuôi.</li>
+<li>Cache là hạ tầng chính chứ không phải phụ trợ (cache-hit 95%+ là điều kiện sống): mọi bài học cache stampede, hot key (một celebrity = một hot key làm nóng một shard cache) áp dụng cực đại. Giải hot key: replicate key nóng ra nhiều node + local cache tầng app.</li>
+<li>Eventual consistency mặc định, trừ vài chỗ bắt buộc mạnh hơn (block user phải có hiệu lực NGAY — an toàn cá nhân; đây là ví dụ đẹp về consistency theo từng nghiệp vụ thay vì toàn hệ).</li>
+</ul>
+<p><strong>Failure case</strong>: thundering herd khi cache cluster restart (mất cache = DB nhận 20× tải = chết ngay — vì thế cache warm-up và restart từng phần là quy trình nghiêm ngặt); tin nổi bật toàn cầu tạo hot partition mà không shard scheme nào đỡ sẵn.</p>
+<hr>
+<h2 id="4-saas-platform-b2b-multi-tenant">4. SaaS Platform (B2B, multi-tenant)<a hidden class="anchor" aria-hidden="true" href="#4-saas-platform-b2b-multi-tenant">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: nhiều khách hàng chia sẻ hạ tầng; một tenant lớn có thể bằng 1000 tenant nhỏ; yêu cầu cách ly (dữ liệu + hiệu năng) và đôi khi residency/compliance theo từng khách.</p>
+<p><strong>Kiến trúc bị ép ra</strong> — trục quyết định là <strong>mức độ cách ly tenant</strong>:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Mô hình</th>
+          <th>Cách ly</th>
+          <th>Chi phí/tenant</th>
+          <th>Vận hành</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Pool (chung DB, cột tenant_id)</td>
+          <td>Logic (RLS)</td>
+          <td>Thấp nhất</td>
+          <td>1 fleet, dễ; rủi ro bug rò dữ liệu chéo cao nhất</td>
+      </tr>
+      <tr>
+          <td>Bridge (chung app, DB/schema riêng)</td>
+          <td>Dữ liệu vật lý</td>
+          <td>Trung bình</td>
+          <td>Migration × N database</td>
+      </tr>
+      <tr>
+          <td>Silo (stack riêng từng tenant)</td>
+          <td>Hoàn toàn</td>
+          <td>Cao nhất</td>
+          <td>Phù hợp enterprise trả đậm/compliance</td>
+      </tr>
+  </tbody>
+</table>
+<p>Thực tế trưởng thành: <strong>hỗn hợp theo tier</strong> — long tail ở pool, enterprise ở bridge/silo. Kèm theo bắt buộc: (1) <strong>tenant_id trong mọi truy vấn được enforce ở tầng nền</strong> (RLS/middleware — không dựa vào kỷ luật dev; một <code>WHERE</code> thiếu = rò dữ liệu khách A cho khách B = sự cố tồn vong của công ty SaaS); (2) <strong>noisy neighbor control</strong>: rate limit + quota theo tenant, không để 1 tenant chạy report nặng làm chậm 999 tenant (bulkhead theo tenant); (3) mọi metric/log gắn tenant_id — &ldquo;khách X kêu chậm&rdquo; phải trả lời được trong phút.</p>
+<p><strong>Failure case</strong>: bug rò dữ liệu chéo tenant (kinh khủng nhất); migration schema chạy trên 5000 DB bridge kẹt giữa chừng ở DB thứ 3021 (tooling migration theo fleet là hạ tầng nghiêm túc); một tenant bật tính năng export và DDoS chính hệ thống từ bên trong.</p>
+<hr>
+<h2 id="5-video-streaming">5. Video Streaming<a hidden class="anchor" aria-hidden="true" href="#5-video-streaming">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: băng thông là chi phí và giới hạn số 1 (video = ~85% traffic Internet); latency giao hàng quan trọng hơn latency tính toán; nội dung bất biến sau khi encode → cache được gần tuyệt đối.</p>
+<p><strong>Kiến trúc bị ép ra</strong>:</p>
+<ul>
+<li>Pipeline offline: ingest → transcode thành <strong>bậc thang bitrate</strong> (240p→4K, mỗi bậc cắt segment 2–6s) → đẩy ra CDN. Player làm <strong>ABR</strong> (adaptive bitrate): đo throughput thực tế, tự chọn bậc cho segment kế — chất lượng thích nghi từng vài giây với mạng của từng user. Toàn bộ &ldquo;streaming&rdquo; thực chất là HTTP GET các file tĩnh nhỏ — thiết kế thiên tài ở chỗ biến bài toán streaming thành bài toán CDN đã giải.</li>
+<li>CDN không chỉ là mua dịch vụ: ở quy mô Netflix là <strong>đặt appliance cache trong ISP</strong> (Open Connect) — đưa nội dung đến sát user đến mức traffic không ra khỏi ISP; kèm <strong>pre-position</strong> nội dung dự đoán hot vào giờ thấp điểm. Bài học: ở quy mô đủ lớn, chi phí bandwidth biện minh cho việc xây hạ tầng vật lý riêng.</li>
+<li>Transcode là bài batch compute khổng lồ → spot instance + queue (chịu chết hoàn hảo — module 07); phần live streaming khó hơn VOD nhiều (không pre-position được, latency giây, spike đồng thời).</li>
+</ul>
+<p><strong>Failure case</strong>: sự kiện live lớn (chung kết bóng đá) = hàng chục triệu client cùng xin segment MỚI NHẤT mỗi 2s — cache hit cao nhưng origin vẫn nhận sóng đều đặn mỗi segment mới, và một nhịp origin chậm = hàng triệu player cùng downshift/rebuffer; đó là lý do live có kiến trúc origin shield + request coalescing riêng biệt và được diễn tập như chiến dịch.</p>
+<hr>
+<h2 id="6-messaging-platform-chat">6. Messaging Platform (chat)<a hidden class="anchor" aria-hidden="true" href="#6-messaging-platform-chat">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: hàng triệu connection dài đồng thời (WebSocket) nhưng mỗi connection thưa (idle 99%); message nhỏ, latency cảm nhận được (&lt;1s); yêu cầu ordering theo hội thoại và delivery guarantee.</p>
+<p><strong>Kiến trúc bị ép ra</strong>:</p>
+<ul>
+<li><strong>Gateway tier giữ connection</strong> (bài C10K/epoll module 03 ở dạng thuần khiết nhất — mỗi node giữ 500k–1M connection idle) tách khỏi <strong>logic tier stateless</strong>: connection đắt vì số lượng, logic đắt vì CPU — tách ra để scale độc lập. Cần bảng định tuyến user→gateway node (Redis/registry) để đẩy message tới đúng connection.</li>
+<li>Ordering: <strong>tổng thứ tự toàn cục là bất khả thi và không cần</strong> — chỉ cần thứ tự TRONG một hội thoại → gán sequence per-conversation (shard theo conversation_id, mỗi hội thoại một dòng ghi tuần tự). Chọn scope consistency nhỏ nhất mà nghiệp vụ cần là bài học tổng quát.</li>
+<li>Delivery: at-least-once + dedupe bằng message ID phía client (exactly-once end-to-end là ảo tưởng — module 02 idempotency một lần nữa); trạng thái sent/delivered/read là ACK ba tầng.</li>
+<li>Deploy gateway tier là nghi lễ (bài học WebSocket module 02): drain chậm, reconnect với jitter, và dimension hóa &ldquo;connection churn rate&rdquo; như một metric hạng nhất.</li>
+</ul>
+<p><strong>Failure case</strong>: mất một gateway node = trăm nghìn reconnect đồng loạt (thundering herd vào auth + registry — phải có jitter và rate limit reconnect); vòng lặp notification→mở app→connection→presence update→notification khuếch đại chính nó.</p>
+<hr>
+<h2 id="7-blockchain-infrastructure">7. Blockchain Infrastructure<a hidden class="anchor" aria-hidden="true" href="#7-blockchain-infrastructure">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: node phân tán không tin nhau; state machine replication qua consensus; yêu cầu về key management và tính bất biến cao nhất trong mọi ngành.</p>
+<p><strong>Điều thú vị về hạ tầng</strong> (bỏ qua tranh luận về ứng dụng): đây là hệ <strong>thù địch by design</strong> — mọi bài học security module 10 ở mức cực đại. Hạ tầng thực tế của một công ty vận hành trong ngành này: (1) <strong>node fleet</strong> (full/archive node) là StatefulSet ác mộng — state hàng TB, sync ban đầu hàng ngày/tuần, nâng cấp client phải theo lịch hard-fork toàn mạng (deadline không thể xin hoãn — hiếm có trong ngành hạ tầng); (2) <strong>key management là sống còn tuyệt đối</strong>: private key = tiền, mất là mất không kháng cáo → HSM, multi-sig/MPC, ceremony có nghi thức cho cold key — mô hình secret management (module 10) với hậu quả sai lầm không thể đảo ngược; (3) RPC tier cho ứng dụng đọc chain: cache + LB trước node fleet, vì node không được thiết kế để chịu query load — mọi bài học reverse proxy áp dụng.</p>
+<p><strong>Failure case</strong>: chain reorg làm dữ liệu &ldquo;đã confirm&rdquo; biến mất (phải thiết kế số confirmation chờ theo giá trị giao dịch); node client có bug consensus = fork ngoài ý muốn — chạy đa client (client diversity) chính là redundancy chống correlated failure (module 09) ở tầng phần mềm.</p>
+<hr>
+<h2 id="8-ai-platform">8. AI Platform<a hidden class="anchor" aria-hidden="true" href="#8-ai-platform">#</a></h2>
+<p><strong>Đặc trưng workload</strong>: hai thế giới khác hẳn nhau chung một chữ AI — <strong>training</strong> (batch, chiếm GPU hàng tuần, checkpoint lớn, chịu restart) và <strong>inference/serving</strong> (online, latency-sensitive, autoscale theo traffic). Tài nguyên trung tâm là <strong>GPU: đắt, khan hiếm, không chia sẻ mượt như CPU</strong>.</p>
+<p><strong>Kiến trúc bị ép ra</strong>:</p>
+<ul>
+<li>GPU phá các giả định của scheduler thường: không &ldquo;nén&rdquo; được như CPU (module 03/05 — không có throttle, chỉ có được/không), bin packing theo card/MIG partition, và <strong>utilization là KPI số 1</strong> (GPU $30k+/card nằm im là đốt tiền) → queue + gang scheduling cho training (job 64 GPU cần đủ 64 cùng lúc — partial allocation là deadlock), ưu tiên + preemption giữa team.</li>
+<li>Training: checkpoint thường xuyên là bắt buộc (spot GPU + job dài ngày = chắc chắn có restart; bài học &ldquo;thiết kế cho hỏng hóc&rdquo; module 09 áp vào batch); data pipeline (đọc dataset TB) thường là bottleneck thật chứ không phải GPU — đo trước khi mua thêm card.</li>
+<li>Inference: model lớn = image/artifact hàng chục GB → cold start hàng phút phá autoscaling truyền thống (module 05 chuỗi trễ nhân 10) → giải bằng warm pool, model cache trên node, hoặc chấp nhận over-provision; batching động (gom request vài ms để GPU xử lý theo lô — đổi p50 latency lấy throughput 5–10×) là trade-off đặc trưng của serving.</li>
+<li>LLM serving thêm đặc thù: KV-cache làm mỗi request chiếm GPU memory theo độ dài context → capacity planning theo <strong>token</strong>, không theo request; streaming response (SSE) quay lại bài connection dài module 02.</li>
+</ul>
+<p><strong>Failure case</strong>: một team chiếm cả cụm GPU bằng job ưu tiên thấp không preempt được (thiếu quota + preemption từ đầu); cập nhật model mới có latency tệ hơn dưới tải thật mà offline benchmark không lộ (cần canary cho model như cho code — module 06, shadow traffic là kỹ thuật chuẩn); GPU node &ldquo;chết một nửa&rdquo; (ECC error, thermal throttle) làm job chậm bí ẩn — health check GPU chuyên biệt là hạng mục riêng.</p>
+<hr>
+<h2 id="tổng-kết-các-bất-biến-xuyên-suốt-8-kiến-trúc">Tổng kết: các bất biến xuyên suốt 8 kiến trúc<a hidden class="anchor" aria-hidden="true" href="#tổng-kết-các-bất-biến-xuyên-suốt-8-kiến-trúc">#</a></h2>
+<ol>
+<li><strong>Workload quyết định kiến trúc</strong> — không có kiến trúc tốt phổ quát, chỉ có kiến trúc khớp với hình dạng tải + yêu cầu consistency + cấu trúc chi phí của bài toán.</li>
+<li><strong>Đường nóng được tách khỏi đường lạnh</strong> ở mọi hệ: đọc/ghi, connection/logic, online/batch — tách để scale, bảo vệ và định giá độc lập.</li>
+<li><strong>Queue xuất hiện ở mọi ranh giới chịu tải</strong> — hấp thụ burst, cách ly nhịp độ, đổi latency lấy sống sót.</li>
+<li><strong>Consistency được chọn theo từng mẩu nghiệp vụ</strong>, không theo toàn hệ thống — và phần &ldquo;chịu được sai lệch tạm&rdquo; luôn lớn hơn trực giác ban đầu.</li>
+<li><strong>Phân phối power-law (hot key, celebrity, tenant lớn, event lớn) phá thiết kế đồng nhất</strong> — mọi hệ trưởng thành đều có đường xử lý riêng cho đuôi.</li>
+<li>Cái giá của mọi cơ chế an toàn là có thật (latency, chi phí, độ phức tạp) — kiến trúc sư giỏi không phải người thêm nhiều lớp bảo vệ nhất, mà là người <strong>biết chỗ nào không cần</strong>.</li>
+</ol>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:54040/tags/infrastructure/">Infrastructure</a></li>
+      <li><a href="http://localhost:54040/tags/networking/">Networking</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:54040/posts/message-queue-pubsub-and-message-broker/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Phân biệt Message Queue - Pub/Sub - Message Broker</span>
+  </a>
+  <a class="next" href="http://localhost:54040/series/infrastructure-networking/10-security/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Bài 10 — Security cho Backend Systems</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on x"
+            href="https://x.com/intent/tweet/?text=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f&amp;hashtags=backend%2cinfrastructure%2cnetworking">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f&amp;title=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;summary=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f&title=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on whatsapp"
+            href="https://api.whatsapp.com/send?text=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on telegram"
+            href="https://telegram.me/share/url?text=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 11 — Kiến Trúc Thực Tế on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%2011%20%e2%80%94%20Ki%e1%ba%bfn%20Tr%c3%bac%20Th%e1%bb%b1c%20T%e1%ba%bf&u=http%3a%2f%2flocalhost%3a54040%2fseries%2finfrastructure-networking%2f11-real-world-architectures%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

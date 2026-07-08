@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, golang, clean-architecture">
+<meta name="description" content="
+Level 2 – Engineering · Chương này dựng một service hoàn chỉnh, chạy được, minh họa cả bốn vòng.
+Bài toán xuyên suốt: service quản lý ví điểm thưởng (loyalty wallet) — nghiệp vụ đủ thật để có rule, đủ nhỏ để đọc hết:
+
+Khách tích điểm khi mua hàng (1 điểm / 10.000 VND, hạng GOLD nhân đôi).
+Đổi điểm lấy voucher; không cho âm điểm; mỗi ngày đổi tối đa 3 lần.
+
+
+1. Vòng 1 — Entities (Enterprise Business Rules)
+Bản chất
+Entity chứa quy tắc đúng bất kể ứng dụng nào dùng nó — quy tắc sẽ tồn tại kể cả khi công ty vận hành bằng giấy bút: &ldquo;điểm không âm&rdquo;, &ldquo;GOLD nhân đôi&rdquo;. Nó không biết use case nào gọi nó, không biết dữ liệu từ đâu đến.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:54040/series/clean-architect/02-clean-architecture-core/03-cac-layer/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:54040/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:54040/series/clean-architect/02-clean-architecture-core/03-cac-layer/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:54040/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/clean-architect/">Clean Architecture với Golang</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework
+    </h1>
+    <div class="post-meta"><span title='2026-07-08 01:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;11 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p><strong>Level 2 – Engineering</strong> · Chương này dựng một service hoàn chỉnh, chạy được, minh họa cả bốn vòng.</p></blockquote>
+<p>Bài toán xuyên suốt: <strong>service quản lý ví điểm thưởng (loyalty wallet)</strong> — nghiệp vụ đủ thật để có rule, đủ nhỏ để đọc hết:</p>
+<ul>
+<li>Khách tích điểm khi mua hàng (1 điểm / 10.000 VND, hạng GOLD nhân đôi).</li>
+<li>Đổi điểm lấy voucher; không cho âm điểm; mỗi ngày đổi tối đa 3 lần.</li>
+</ul>
+<hr>
+<h2 id="1-vòng-1--entities-enterprise-business-rules">1. Vòng 1 — Entities (Enterprise Business Rules)<a hidden class="anchor" aria-hidden="true" href="#1-vòng-1--entities-enterprise-business-rules">#</a></h2>
+<h3 id="bản-chất">Bản chất<a hidden class="anchor" aria-hidden="true" href="#bản-chất">#</a></h3>
+<p>Entity chứa <strong>quy tắc đúng bất kể ứng dụng nào dùng nó</strong> — quy tắc sẽ tồn tại kể cả khi công ty vận hành bằng giấy bút: &ldquo;điểm không âm&rdquo;, &ldquo;GOLD nhân đôi&rdquo;. Nó không biết use case nào gọi nó, không biết dữ liệu từ đâu đến.</p>
+<p>Trong Go, entity là struct + method + hàm thuần, <strong>giữ bất biến (invariant) của chính nó</strong>. Đây là chỗ phân biệt domain model thật với &ldquo;anemic model&rdquo; (struct trần chỉ có field — mọi rule bị hút ra service, xem anti-pattern chương 9).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/loyalty/domain/wallet.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">domain</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Tier</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">TierStandard</span> <span style="color:#a6e22e">Tier</span> = <span style="color:#e6db74">&#34;STANDARD&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">TierGold</span>     <span style="color:#a6e22e">Tier</span> = <span style="color:#e6db74">&#34;GOLD&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Points</span> <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrInsufficientPoints</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;loyalty: insufficient points&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrRedeemLimitReached</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;loyalty: daily redeem limit reached&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrInvalidAmount</span>      = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;loyalty: invalid amount&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrWalletNotFound</span>     = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;loyalty: wallet not found&#34;</span>)
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Wallet là Entity: dữ liệu + rule bảo vệ bất biến của chính nó.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Field unexported → bên ngoài KHÔNG THỂ tạo Wallet ở trạng thái sai.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Wallet</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">customerID</span>   <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">tier</span>         <span style="color:#a6e22e">Tier</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">balance</span>      <span style="color:#a6e22e">Points</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">redeemsToday</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">lastRedeemAt</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// RehydrateWallet dùng cho tầng persistence dựng lại entity từ DB.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Tách khỏi constructor nghiệp vụ để phân biệt &#34;tạo mới&#34; và &#34;khôi phục&#34;.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">RehydrateWallet</span>(<span style="color:#a6e22e">customerID</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">tier</span> <span style="color:#a6e22e">Tier</span>, <span style="color:#a6e22e">balance</span> <span style="color:#a6e22e">Points</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">redeemsToday</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">lastRedeemAt</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) <span style="color:#a6e22e">Wallet</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Wallet</span>{<span style="color:#a6e22e">customerID</span>, <span style="color:#a6e22e">tier</span>, <span style="color:#a6e22e">balance</span>, <span style="color:#a6e22e">redeemsToday</span>, <span style="color:#a6e22e">lastRedeemAt</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewWallet</span>(<span style="color:#a6e22e">customerID</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">tier</span> <span style="color:#a6e22e">Tier</span>) <span style="color:#a6e22e">Wallet</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Wallet</span>{<span style="color:#a6e22e">customerID</span>: <span style="color:#a6e22e">customerID</span>, <span style="color:#a6e22e">tier</span>: <span style="color:#a6e22e">tier</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wallet</span>) <span style="color:#a6e22e">CustomerID</span>() <span style="color:#66d9ef">string</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">customerID</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wallet</span>) <span style="color:#a6e22e">Balance</span>() <span style="color:#a6e22e">Points</span>    { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">balance</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wallet</span>) <span style="color:#a6e22e">Tier</span>() <span style="color:#a6e22e">Tier</span>         { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">tier</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wallet</span>) <span style="color:#a6e22e">RedeemsToday</span>() <span style="color:#66d9ef">int</span>  { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">redeemsToday</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wallet</span>) <span style="color:#a6e22e">LastRedeemAt</span>() <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">lastRedeemAt</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// EarnFromPurchase — Enterprise Rule: cách quy đổi tiền → điểm.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Method nhận value receiver và trả Wallet mới: entity immutable,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// loại bỏ cả một lớp bug về shared mutable state.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wallet</span>) <span style="color:#a6e22e">EarnFromPurchase</span>(<span style="color:#a6e22e">amountVND</span> <span style="color:#66d9ef">int64</span>) (<span style="color:#a6e22e">Wallet</span>, <span style="color:#a6e22e">Points</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">amountVND</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: %d&#34;</span>, <span style="color:#a6e22e">ErrInvalidAmount</span>, <span style="color:#a6e22e">amountVND</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">earned</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Points</span>(<span style="color:#a6e22e">amountVND</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">10_000</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">tier</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">TierGold</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">earned</span> <span style="color:#f92672">*=</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">balance</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">earned</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">earned</span>, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">maxRedeemsPerDay</span> = <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Redeem — Enterprise Rules: không âm điểm, tối đa 3 lần/ngày.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wallet</span>) <span style="color:#a6e22e">Redeem</span>(<span style="color:#a6e22e">cost</span> <span style="color:#a6e22e">Points</span>, <span style="color:#a6e22e">now</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) (<span style="color:#a6e22e">Wallet</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">cost</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: cost %d&#34;</span>, <span style="color:#a6e22e">ErrInvalidAmount</span>, <span style="color:#a6e22e">cost</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">sameDay</span>(<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">lastRedeemAt</span>, <span style="color:#a6e22e">now</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">redeemsToday</span> = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">redeemsToday</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">maxRedeemsPerDay</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">ErrRedeemLimitReached</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">balance</span> &lt; <span style="color:#a6e22e">cost</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: have %d, need %d&#34;</span>, <span style="color:#a6e22e">ErrInsufficientPoints</span>, <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">balance</span>, <span style="color:#a6e22e">cost</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">balance</span> <span style="color:#f92672">-=</span> <span style="color:#a6e22e">cost</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">redeemsToday</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">lastRedeemAt</span> = <span style="color:#a6e22e">now</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">w</span>, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">sameDay</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ay</span>, <span style="color:#a6e22e">am</span>, <span style="color:#a6e22e">ad</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">Date</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">by</span>, <span style="color:#a6e22e">bm</span>, <span style="color:#a6e22e">bd</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">Date</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ay</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">by</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">am</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">bm</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">ad</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">bd</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Chú ý các quyết định thiết kế và lý do:</p>
+<ul>
+<li><strong>Field unexported + constructor</strong>: bất biến được bảo vệ tại cửa. Không code nào ngoài package tạo được ví âm điểm. Trade-off: cần <code>Rehydrate</code> cho persistence — chấp nhận, vì nó biến &ldquo;trạng thái sai&rdquo; từ bug runtime thành điều không thể biểu diễn.</li>
+<li><strong>Immutable (value receiver, trả bản mới)</strong>: dễ suy luận, an toàn concurrent. Trade-off: copy struct — không đáng kể với struct nhỏ; với aggregate lớn cân nhắc pointer receiver + kỷ luật.</li>
+<li><strong><code>now</code> là tham số</strong>, không gọi <code>time.Now()</code> trong entity: rule &ldquo;3 lần/ngày&rdquo; test được với thời gian bất kỳ. Entity thuần = deterministic.</li>
+<li><strong>Sentinel errors</strong> thuộc domain, là một phần của ngôn ngữ nghiệp vụ.</li>
+</ul>
+<h2 id="2-vòng-2--use-cases-application-business-rules">2. Vòng 2 — Use Cases (Application Business Rules)<a hidden class="anchor" aria-hidden="true" href="#2-vòng-2--use-cases-application-business-rules">#</a></h2>
+<h3 id="bản-chất-1">Bản chất<a hidden class="anchor" aria-hidden="true" href="#bản-chất-1">#</a></h3>
+<p>Use case là <strong>quy trình đặc thù của ứng dụng</strong>: điều phối entity, quyết định thứ tự, gọi cổng ra ngoài. Rule &ldquo;GOLD nhân đôi&rdquo; là enterprise (sống mãi với doanh nghiệp); rule &ldquo;sau khi đổi điểm thì phát event cho hệ thống voucher&rdquo; là application (chỉ tồn tại vì hệ thống này thiết kế như vậy). Phân biệt này quyết định code đặt ở đâu khi cả hai đều là &ldquo;business logic&rdquo;.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/loyalty/usecase/redeem.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">usecase</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/domain&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ==== Ports: nhu cầu của use case, use case sở hữu ====</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">WalletRepo</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ByCustomer trả domain.ErrWalletNotFound nếu không có (contract!)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ByCustomer</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">customerID</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>, <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">w</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">VoucherIssuer</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Issue</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">customerID</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">cost</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Points</span>) (<span style="color:#a6e22e">VoucherCode</span>, <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">EventPublisher</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">PointsRedeemed</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">e</span> <span style="color:#a6e22e">PointsRedeemedEvent</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">VoucherCode</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">PointsRedeemedEvent</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CustomerID</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Cost</span>       <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Points</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Voucher</span>    <span style="color:#a6e22e">VoucherCode</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">At</span>         <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ==== Input/Output: kiểu đơn giản do use case định nghĩa ====</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RedeemInput</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CustomerID</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Cost</span>       <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Points</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RedeemOutput</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Voucher</span>    <span style="color:#a6e22e">VoucherCode</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">NewBalance</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Points</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ==== Use case ====</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Redeem</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">wallets</span>  <span style="color:#a6e22e">WalletRepo</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">vouchers</span> <span style="color:#a6e22e">VoucherIssuer</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">events</span>   <span style="color:#a6e22e">EventPublisher</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">now</span>      <span style="color:#66d9ef">func</span>() <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewRedeem</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">WalletRepo</span>, <span style="color:#a6e22e">v</span> <span style="color:#a6e22e">VoucherIssuer</span>, <span style="color:#a6e22e">e</span> <span style="color:#a6e22e">EventPublisher</span>, <span style="color:#a6e22e">now</span> <span style="color:#66d9ef">func</span>() <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Redeem</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Redeem</span>{<span style="color:#a6e22e">wallets</span>: <span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">vouchers</span>: <span style="color:#a6e22e">v</span>, <span style="color:#a6e22e">events</span>: <span style="color:#a6e22e">e</span>, <span style="color:#a6e22e">now</span>: <span style="color:#a6e22e">now</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">uc</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Redeem</span>) <span style="color:#a6e22e">Execute</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">in</span> <span style="color:#a6e22e">RedeemInput</span>) (<span style="color:#a6e22e">RedeemOutput</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">wallets</span>.<span style="color:#a6e22e">ByCustomer</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">CustomerID</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RedeemOutput</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;load wallet: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Enterprise rules chạy trong entity — use case KHÔNG tự kiểm tra balance.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Redeem</span>(<span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">Cost</span>, <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">now</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RedeemOutput</span>{}, <span style="color:#a6e22e">err</span> <span style="color:#75715e">// lỗi domain trả nguyên vẹn cho adapter dịch</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Application rules: thứ tự nghiệp vụ của HỆ THỐNG NÀY.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">code</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">vouchers</span>.<span style="color:#a6e22e">Issue</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">CustomerID</span>, <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">Cost</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RedeemOutput</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;issue voucher: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">wallets</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">w</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RedeemOutput</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;save wallet: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Event lỗi không fail nghiệp vụ — quyết định thiết kế đọc thấy được.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">PointsRedeemed</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">PointsRedeemedEvent</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">CustomerID</span>: <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">CustomerID</span>, <span style="color:#a6e22e">Cost</span>: <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">Cost</span>, <span style="color:#a6e22e">Voucher</span>: <span style="color:#a6e22e">code</span>, <span style="color:#a6e22e">At</span>: <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">now</span>(),
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RedeemOutput</span>{<span style="color:#a6e22e">Voucher</span>: <span style="color:#a6e22e">code</span>, <span style="color:#a6e22e">NewBalance</span>: <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Balance</span>()}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Ranh giới trách nhiệm rõ ràng: <strong>entity giữ rule bất biến, use case giữ quy trình</strong>. Nếu use case bắt đầu <code>if w.Balance() &lt; cost</code> — nó đang cướp việc của entity, và rule sẽ dần vương vãi ra mọi use case chạm ví.</p>
+<h2 id="3-vòng-3--interface-adapters">3. Vòng 3 — Interface Adapters<a hidden class="anchor" aria-hidden="true" href="#3-vòng-3--interface-adapters">#</a></h2>
+<h3 id="bản-chất-2">Bản chất<a hidden class="anchor" aria-hidden="true" href="#bản-chất-2">#</a></h3>
+<p>Adapter là <strong>người phiên dịch hai chiều</strong>: dịch thế giới ngoài (HTTP, SQL, Kafka) sang ngôn ngữ trong (kiểu domain, input/output của use case) và ngược lại. Không chứa business rule — bài kiểm tra: xóa mọi adapter, nghiệp vụ vẫn nguyên vẹn và test được.</p>
+<p><strong>Controller (HTTP → use case):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/loyalty/adapter/httpapi/handler.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">httpapi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;encoding/json&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net/http&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/domain&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/usecase&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Handler</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">redeem</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">usecase</span>.<span style="color:#a6e22e">Redeem</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewHandler</span>(<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">usecase</span>.<span style="color:#a6e22e">Redeem</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Handler</span> { <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Handler</span>{<span style="color:#a6e22e">redeem</span>: <span style="color:#a6e22e">r</span>} }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// DTO của TẦNG HTTP — cách API nói chuyện, tách khỏi cách domain nghĩ.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">redeemRequest</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Cost</span> <span style="color:#66d9ef">int64</span> <span style="color:#e6db74">`json:&#34;cost&#34;`</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">redeemResponse</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Voucher</span>    <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;voucher&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">NewBalance</span> <span style="color:#66d9ef">int64</span>  <span style="color:#e6db74">`json:&#34;new_balance&#34;`</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">Redeem</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">customerID</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">PathValue</span>(<span style="color:#e6db74">&#34;customerID&#34;</span>) <span style="color:#75715e">// Go 1.22 routing</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">req</span> <span style="color:#a6e22e">redeemRequest</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span>).<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">req</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">writeErr</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusBadRequest</span>, <span style="color:#e6db74">&#34;invalid json&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">redeem</span>.<span style="color:#a6e22e">Execute</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>(), <span style="color:#a6e22e">usecase</span>.<span style="color:#a6e22e">RedeemInput</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">CustomerID</span>: <span style="color:#a6e22e">customerID</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Cost</span>:       <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Points</span>(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">Cost</span>),
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Dịch lỗi domain → mã HTTP: trách nhiệm CỦA ADAPTER, không của domain.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">switch</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">ErrInsufficientPoints</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">ErrInvalidAmount</span>):
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">writeErr</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusUnprocessableEntity</span>, <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">ErrRedeemLimitReached</span>):
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">writeErr</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusTooManyRequests</span>, <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">ErrWalletNotFound</span>):
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">writeErr</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusNotFound</span>, <span style="color:#e6db74">&#34;wallet not found&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">writeErr</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusInternalServerError</span>, <span style="color:#e6db74">&#34;internal error&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">w</span>).<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">redeemResponse</span>{
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">Voucher</span>: string(<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">Voucher</span>), <span style="color:#a6e22e">NewBalance</span>: int64(<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">NewBalance</span>),
+</span></span><span style="display:flex;"><span>		})
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">writeErr</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">code</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">msg</span> <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">WriteHeader</span>(<span style="color:#a6e22e">code</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">w</span>).<span style="color:#a6e22e">Encode</span>(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;error&#34;</span>: <span style="color:#a6e22e">msg</span>})
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Gateway/Repository (use case → SQL):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/loyalty/adapter/postgres/wallet_repo.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">postgres</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;database/sql&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/domain&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">WalletRepo</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">DB</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewWalletRepo</span>(<span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">DB</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">WalletRepo</span> { <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">WalletRepo</span>{<span style="color:#a6e22e">db</span>} }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// walletRow — DTO của TẦNG DB: ánh xạ schema, không phải domain model.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">walletRow</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CustomerID</span>   <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Tier</span>         <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Balance</span>      <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">RedeemsToday</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">LastRedeemAt</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">WalletRepo</span>) <span style="color:#a6e22e">ByCustomer</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">id</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">row</span> <span style="color:#a6e22e">walletRow</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">QueryRowContext</span>(<span style="color:#a6e22e">ctx</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">`SELECT customer_id, tier, balance, redeems_today, last_redeem_at
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		 FROM wallets WHERE customer_id = $1`</span>, <span style="color:#a6e22e">id</span>).
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Scan</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">CustomerID</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">Tier</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">Balance</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">RedeemsToday</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">LastRedeemAt</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">ErrNoRows</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>{}, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">ErrWalletNotFound</span> <span style="color:#75715e">// dịch lỗi tại ranh giới</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;query wallet %s: %w&#34;</span>, <span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">RehydrateWallet</span>(<span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">CustomerID</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Tier</span>(<span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">Tier</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Points</span>(<span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">Balance</span>), <span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">RedeemsToday</span>, <span style="color:#a6e22e">row</span>.<span style="color:#a6e22e">LastRedeemAt</span>), <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">WalletRepo</span>) <span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">w</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">ExecContext</span>(<span style="color:#a6e22e">ctx</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">`INSERT INTO wallets (customer_id, tier, balance, redeems_today, last_redeem_at)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		 VALUES ($1,$2,$3,$4,$5)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		 ON CONFLICT (customer_id) DO UPDATE
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		 SET balance=$3, redeems_today=$4, last_redeem_at=$5`</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">CustomerID</span>(), string(<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Tier</span>()), int64(<span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Balance</span>()), <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">RedeemsToday</span>(), <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">LastRedeemAt</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;save wallet %s: %w&#34;</span>, <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">CustomerID</span>(), <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ByCustomer</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>, <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">Wallet</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>} = (<span style="color:#f92672">*</span><span style="color:#a6e22e">WalletRepo</span>)(<span style="color:#66d9ef">nil</span>)
+</span></span></code></pre></div><h2 id="4-vòng-4--frameworks--drivers--composition-root">4. Vòng 4 — Frameworks &amp; Drivers + Composition Root<a hidden class="anchor" aria-hidden="true" href="#4-vòng-4--frameworks--drivers--composition-root">#</a></h2>
+<p>Vòng ngoài cùng gồm những thứ bạn <strong>không viết</strong>: net/http server, driver <code>lib/pq</code>, Kafka client. Code của bạn ở vòng này chỉ là <strong>keo dán</strong> — mỏng nhất có thể, tập trung tại <code>cmd/</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// cmd/loyalty/main.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;database/sql&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;log/slog&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net/http&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;os&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;os/signal&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;syscall&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;github.com/lib/pq&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/adapter/httpapi&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/adapter/postgres&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/adapter/voucherapi&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/adapter/kafkapub&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/loyalty/usecase&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">logger</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">NewJSONHandler</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdout</span>, <span style="color:#66d9ef">nil</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;postgres&#34;</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;DATABASE_URL&#34;</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#e6db74">&#34;open db&#34;</span>, <span style="color:#e6db74">&#34;err&#34;</span>, <span style="color:#a6e22e">err</span>); <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Exit</span>(<span style="color:#ae81ff">1</span>) }
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Lắp ráp: nơi DUY NHẤT mọi vòng gặp nhau</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">redeem</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">usecase</span>.<span style="color:#a6e22e">NewRedeem</span>(
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">postgres</span>.<span style="color:#a6e22e">NewWalletRepo</span>(<span style="color:#a6e22e">db</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">voucherapi</span>.<span style="color:#a6e22e">NewClient</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;VOUCHER_API_URL&#34;</span>)),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">kafkapub</span>.<span style="color:#a6e22e">NewPublisher</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;KAFKA_BROKERS&#34;</span>)),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>,
+</span></span><span style="display:flex;"><span>	)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">h</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">httpapi</span>.<span style="color:#a6e22e">NewHandler</span>(<span style="color:#a6e22e">redeem</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mux</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">NewServeMux</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mux</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;POST /customers/{customerID}/redeem&#34;</span>, <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">Redeem</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">srv</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Server</span>{<span style="color:#a6e22e">Addr</span>: <span style="color:#e6db74">&#34;:8080&#34;</span>, <span style="color:#a6e22e">Handler</span>: <span style="color:#a6e22e">mux</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Graceful shutdown — concern của vòng 4, nghiệp vụ không biết gì</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">stop</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">signal</span>.<span style="color:#a6e22e">NotifyContext</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">SIGINT</span>, <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">SIGTERM</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">stop</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">srv</span>.<span style="color:#a6e22e">ListenAndServe</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ErrServerClosed</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#e6db74">&#34;server&#34;</span>, <span style="color:#e6db74">&#34;err&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}()
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">Done</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">shutdownCtx</span>, <span style="color:#a6e22e">cancel</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithTimeout</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#ae81ff">10</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">cancel</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">srv</span>.<span style="color:#a6e22e">Shutdown</span>(<span style="color:#a6e22e">shutdownCtx</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="5-cấu-trúc-thư-mục-và-sơ-đồ-tổng-hợp">5. Cấu trúc thư mục và sơ đồ tổng hợp<a hidden class="anchor" aria-hidden="true" href="#5-cấu-trúc-thư-mục-và-sơ-đồ-tổng-hợp">#</a></h2>
+<pre tabindex="0"><code>myapp/
+├── go.mod
+├── cmd/
+│   └── loyalty/main.go              # Vòng 4: wiring, server, shutdown
+└── internal/loyalty/
+    ├── domain/                      # Vòng 1: chỉ stdlib
+    │   ├── wallet.go
+    │   └── wallet_test.go
+    ├── usecase/                     # Vòng 2: import domain
+    │   ├── redeem.go                #   ports + input/output + quy trình
+    │   └── redeem_test.go
+    └── adapter/                     # Vòng 3: import usecase + domain
+        ├── httpapi/handler.go       #   controller
+        ├── postgres/wallet_repo.go  #   gateway
+        ├── voucherapi/client.go     #   external API adapter
+        └── kafkapub/publisher.go    #   event publisher
+</code></pre><pre tabindex="0"><code>Luồng request (control flow):
+Client ──▶ httpapi.Handler ──▶ usecase.Redeem ──▶ domain.Wallet.Redeem()
+                                    │──▶ voucherapi.Client ──▶ Voucher API
+                                    │──▶ postgres.WalletRepo ──▶ Postgres
+                                    └──▶ kafkapub.Publisher ──▶ Kafka
+
+Luồng phụ thuộc (source dep) — tất cả trỏ vào trong:
+httpapi ─┐
+postgres ─┤
+voucherapi├──▶ usecase ──▶ domain
+kafkapub ─┘        ▲
+     cmd/loyalty ──┴── (import tất cả để lắp ráp)
+</code></pre><p>Sequence diagram (Mermaid):</p>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    participant C as Client
+    participant H as httpapi.Handler
+    participant U as usecase.Redeem
+    participant D as domain.Wallet
+    participant P as postgres.WalletRepo
+    participant V as voucherapi
+    participant K as kafkapub
+
+    C-&gt;&gt;H: POST /customers/42/redeem {cost: 500}
+    H-&gt;&gt;U: Execute(RedeemInput)
+    U-&gt;&gt;P: ByCustomer(ctx, &#34;42&#34;)
+    P--&gt;&gt;U: domain.Wallet
+    U-&gt;&gt;D: w.Redeem(500, now)
+    D--&gt;&gt;U: Wallet mới (hoặc lỗi domain)
+    U-&gt;&gt;V: Issue(ctx, &#34;42&#34;, 500)
+    V--&gt;&gt;U: VoucherCode
+    U-&gt;&gt;P: Save(ctx, w)
+    U-&gt;&gt;K: PointsRedeemed(event)
+    U--&gt;&gt;H: RedeemOutput
+    H--&gt;&gt;C: 200 {voucher, new_balance}
+</code></pre><h2 id="6-unit-test-hai-vòng-trong">6. Unit test hai vòng trong<a hidden class="anchor" aria-hidden="true" href="#6-unit-test-hai-vòng-trong">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/loyalty/domain/wallet_test.go — test enterprise rules</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestWallet_Redeem_GioiHan3LanMotNgay</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">RehydrateWallet</span>(<span style="color:#e6db74">&#34;c1&#34;</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">TierStandard</span>, <span style="color:#ae81ff">1000</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>{})
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">now</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Date</span>(<span style="color:#ae81ff">2026</span>, <span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">9</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">UTC</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">3</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Redeem</span>(<span style="color:#ae81ff">10</span>, <span style="color:#a6e22e">now</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;lan %d: %v&#34;</span>, <span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">err</span>) }
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Redeem</span>(<span style="color:#ae81ff">10</span>, <span style="color:#a6e22e">now</span>); !<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">domain</span>.<span style="color:#a6e22e">ErrRedeemLimitReached</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;lan 4 phai bi chan, got %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Sang ngay moi: reset</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Redeem</span>(<span style="color:#ae81ff">10</span>, <span style="color:#a6e22e">now</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">24</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Hour</span>)); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;ngay moi phai duoc doi tiep: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Use case test với fake (pattern như chương 1.3 mục 5) — xác nhận quy trình: voucher lỗi → không save ví; save lỗi → trả lỗi; event lỗi → vẫn thành công. <strong>Các quyết định orchestration giờ là code test được</strong>, không phải tri thức truyền miệng.</p>
+<h2 id="7-trade-off-và-biến-thể-thực-dụng">7. Trade-off và biến thể thực dụng<a hidden class="anchor" aria-hidden="true" href="#7-trade-off-và-biến-thể-thực-dụng">#</a></h2>
+<ul>
+<li><strong>Gộp domain + usecase</strong>: với module nhỏ, một package <code>loyalty</code> chứa cả entity lẫn service (như ví dụ chương 1.3) là đủ — 2 vòng trong chung một package vẫn thỏa Dependency Rule. Tách 4 tầng đầy đủ khi module lớn hoặc nhiều use case chia sẻ domain.</li>
+<li><strong>Voucher lỗi sau khi Redeem?</strong> Ví dụ trên gọi voucher trước, save sau — nếu save fail, voucher đã phát: bài toán consistency thật. Các lời giải (transactional outbox, saga) ở chương 7 và 11; điểm cần thấy ở đây: kiến trúc làm cho <strong>câu hỏi này lộ ra ở một chỗ đọc được</strong> thay vì chôn trong handler 300 dòng.</li>
+<li><strong>Không copy cấu trúc này cho mọi service</strong>: đây là mức &ldquo;đầy đủ nghi thức&rdquo;. Chương 3 trình bày phổ các mức từ tối giản đến đầy đủ và tiêu chí chọn.</li>
+</ul>
+<h2 id="tóm-tắt">Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt">#</a></h2>
+<ul>
+<li>Entity giữ rule bất biến của doanh nghiệp; use case giữ quy trình của ứng dụng; adapter phiên dịch; vòng 4 là keo dán mỏng.</li>
+<li>Câu hỏi xếp tầng: &ldquo;code này có còn đúng nếu đổi giao thức/DB?&rdquo; (→ vòng trong) và &ldquo;rule này có sống sót nếu bỏ ứng dụng này?&rdquo; (→ entity thay vì use case).</li>
+<li>Số tầng là công cụ, không phải nghi lễ — Dependency Rule mới là luật.</li>
+</ul>
+<p><strong>Tiếp theo:</strong> <a href="/series/clean-architect/03-go-project-structure/01-package-organization/">Level 3 — Tổ chức project Go thực tế</a></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:54040/tags/golang/">Golang</a></li>
+      <li><a href="http://localhost:54040/tags/clean-architecture/">Clean-Architecture</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:54040/series/clean-architect/03-go-project-structure/01-package-organization/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 3.1 — Tổ chức Package trong Go: cmd/, internal/, pkg/ và các trường phái</span>
+  </a>
+  <a class="next" href="http://localhost:54040/series/clean-architect/02-clean-architecture-core/02-dependency-rule/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 2.2 — Dependency Rule: Luật duy nhất</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%202.3%20%e2%80%94%20B%e1%bb%91n%20v%c3%b2ng%20trong%20Go%3a%20t%e1%bb%ab%20Entity%20%c4%91%e1%ba%bfn%20Framework&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f&amp;hashtags=backend%2cgolang%2cclean-architecture">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f&amp;title=Ch%c6%b0%c6%a1ng%202.3%20%e2%80%94%20B%e1%bb%91n%20v%c3%b2ng%20trong%20Go%3a%20t%e1%bb%ab%20Entity%20%c4%91%e1%ba%bfn%20Framework&amp;summary=Ch%c6%b0%c6%a1ng%202.3%20%e2%80%94%20B%e1%bb%91n%20v%c3%b2ng%20trong%20Go%3a%20t%e1%bb%ab%20Entity%20%c4%91%e1%ba%bfn%20Framework&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f&title=Ch%c6%b0%c6%a1ng%202.3%20%e2%80%94%20B%e1%bb%91n%20v%c3%b2ng%20trong%20Go%3a%20t%e1%bb%ab%20Entity%20%c4%91%e1%ba%bfn%20Framework">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%202.3%20%e2%80%94%20B%e1%bb%91n%20v%c3%b2ng%20trong%20Go%3a%20t%e1%bb%ab%20Entity%20%c4%91%e1%ba%bfn%20Framework%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%202.3%20%e2%80%94%20B%e1%bb%91n%20v%c3%b2ng%20trong%20Go%3a%20t%e1%bb%ab%20Entity%20%c4%91%e1%ba%bfn%20Framework&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%202.3%20%e2%80%94%20B%e1%bb%91n%20v%c3%b2ng%20trong%20Go%3a%20t%e1%bb%ab%20Entity%20%c4%91%e1%ba%bfn%20Framework&u=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f02-clean-architecture-core%2f03-cac-layer%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

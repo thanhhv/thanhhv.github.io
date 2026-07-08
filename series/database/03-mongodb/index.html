@@ -1,7 +1,15 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Bài 3 — MongoDB | Thanh HV's Blog</title>
-<meta name=keywords content="backend,database"><meta name=description content="MongoDB
+<!DOCTYPE html>
+<html lang="en" dir="auto">
 
-Tiền đề: Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC).
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Bài 3 — MongoDB | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, database">
+<meta name="description" content="MongoDB
+
+Tiền đề: Chương 1 (LSM/B&#43;Tree, replication, sharding, CAP/PACELC).
 Góc nhìn: từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.
 
 1. Problem Statement
@@ -10,37 +18,231 @@ MongoDB giải bài toán gì? Hai bài toán mà RDBMS đầu những năm 2000
 Impedance mismatch: đối tượng trong ứng dụng (nested, mảng, đa hình) phải &ldquo;băm&rdquo; ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại.
 Scale-out: RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding).
 
-Nếu không có nó thì sao? Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: document model giàu query + sharding tích hợp."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/database/03-mongodb/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/database/03-mongodb/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/database/03-mongodb/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Bài 3 — MongoDB"><meta property="og:description" content="MongoDB Tiền đề: Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC). Góc nhìn: từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.
-1. Problem Statement MongoDB giải bài toán gì? Hai bài toán mà RDBMS đầu những năm 2000 giải kém:
-Impedance mismatch: đối tượng trong ứng dụng (nested, mảng, đa hình) phải “băm” ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại. Scale-out: RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding). Nếu không có nó thì sao? Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: document model giàu query + sharding tích hợp."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-02T11:00:00+07:00"><meta property="article:modified_time" content="2026-07-02T11:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Database"><meta name=twitter:card content="summary"><meta name=twitter:title content="Bài 3 — MongoDB"><meta name=twitter:description content="MongoDB
+Nếu không có nó thì sao? Hoặc chịu ma sát schema &#43; tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: document model giàu query &#43; sharding tích hợp.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:54040/series/database/03-mongodb/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:54040/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:54040/series/database/03-mongodb/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-Tiền đề: Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC).
-Góc nhìn: từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.
+    </style>
+</noscript>
+</head>
 
-1. Problem Statement
-MongoDB giải bài toán gì? Hai bài toán mà RDBMS đầu những năm 2000 giải kém:
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
 
-Impedance mismatch: đối tượng trong ứng dụng (nested, mảng, đa hình) phải &ldquo;băm&rdquo; ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại.
-Scale-out: RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding).
+</script>
 
-Nếu không có nó thì sao? Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: document model giàu query + sharding tích hợp."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Database Thực Chiến","item":"https://thanhhv.github.io/series/database/"},{"@type":"ListItem","position":3,"name":"Bài 3 — MongoDB","item":"https://thanhhv.github.io/series/database/03-mongodb/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Bài 3 — MongoDB","name":"Bài 3 — MongoDB","description":"MongoDB Tiền đề: Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC). Góc nhìn: từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.\n1. Problem Statement MongoDB giải bài toán gì? Hai bài toán mà RDBMS đầu những năm 2000 giải kém:\nImpedance mismatch: đối tượng trong ứng dụng (nested, mảng, đa hình) phải \u0026ldquo;băm\u0026rdquo; ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại. Scale-out: RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding). Nếu không có nó thì sao? Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: document model giàu query + sharding tích hợp.\n","keywords":["backend","database"],"articleBody":"MongoDB Tiền đề: Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC). Góc nhìn: từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.\n1. Problem Statement MongoDB giải bài toán gì? Hai bài toán mà RDBMS đầu những năm 2000 giải kém:\nImpedance mismatch: đối tượng trong ứng dụng (nested, mảng, đa hình) phải “băm” ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại. Scale-out: RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding). Nếu không có nó thì sao? Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: document model giàu query + sharding tích hợp.\nVì sao khó? Vì “schema linh hoạt” và “phân tán tự động” đều chuyển độ phức tạp từ database sang chỗ khác — câu hỏi là chuyển đi đâu và ai trả giá. Toàn bộ chương này xoay quanh câu trả lời.\n2. Tại sao MongoDB tồn tại Bối cảnh 2007–2009: web scale bùng nổ, phong trào NoSQL (BigTable/Dynamo papers), agile/startup cần ship nhanh. 10gen xây MongoDB với ưu tiên rõ rệt: developer velocity trước, scale-out tích hợp, tính năng đúng đắn hoàn thiện dần sau.\nLịch sử kỹ thuật của MongoDB là lịch sử trả nợ dần các cam kết đúng đắn:\nThời kỳ đầu: MMAPv1 storage engine, per-database lock, write concern mặc định không chờ xác nhận → mang tiếng “mất dữ liệu”. Các phân tích Jepsen thời kỳ này chỉ ra nhiều lỗ hổng thật. 2014: mua WiredTiger → storage engine hiện đại, document-level concurrency, nén. 3.2–4.0: raft-hóa bầu cử, majority read/write concern, multi-document transaction (4.0 trong replica set, 4.2 xuyên shard). Hiện nay: mặc định đã an toàn hơn nhiều (w: majority mặc định từ 5.0); các phiên bản gần đây qua được kiểm tra Jepsen với cấu hình đúng. Bài học meta cho architect: đánh giá database phải theo phiên bản và cấu hình cụ thể, không theo danh tiếng cũ — cả chiều khen lẫn chiều chê.\n3. Cách hoạt động bên trong 3.1. Document Model và BSON Dữ liệu là document (tương tự JSON) trong collection, không có schema bắt buộc (từ 3.6 có schema validation tùy chọn qua JSON Schema).\nBSON — Binary JSON — là quyết định thiết kế nền tảng:\nNhị phân, có độ dài trường prefix → traverse không cần parse toàn bộ (nhảy qua field theo length), khác JSON text. Kiểu dữ liệu giàu hơn JSON: int32/int64, decimal128 (tiền!), date, ObjectId, binary. ObjectId 12 byte = timestamp(4) + random(5) + counter(3) → sinh phân tán không cần điều phối, sắp xếp thô theo thời gian. Đây là câu trả lời cho “làm sao có ID duy nhất trên 100 shard mà không có điểm điều phối trung tâm”. Nguyên tắc modeling nền tảng — “what you query together, store together”:\nRDBMS: orders ──\u003c order_items ──\u003c ... (JOIN lúc đọc) MongoDB: { _id: ..., customer: {...}, items: [ {sku, qty, price}, ... ] ← embed: 1 lần đọc = cả đơn hàng } Embed đổi chi phí JOIN lúc đọc lấy chi phí duplication + kích thước document. Giới hạn cứng: document ≤ 16MB. Anti-pattern kinh điển: unbounded array (embed danh sách lớn dần vô hạn — comment của bài viral) → document phình, mỗi update ghi lại lớn dần, chạm trần 16MB = sự cố. Quy tắc: embed quan hệ “một-vài”, reference quan hệ “một-vô-hạn”.\n3.2. WiredTiger — storage engine Cấu trúc: B+Tree (biến thể) cho collection và index; mỗi collection/index một file. MVCC: phiên bản giữ trong cache dưới dạng update chain; snapshot isolation cho đọc. Concurrency ở mức document — hai client sửa hai document khác nhau không chặn nhau (bước nhảy vọt so với per-database lock của MMAPv1). Cache riêng (mặc định ~50% RAM): trong cache, page ở dạng giải nén; xuống disk mới nén. Nén mặc định: snappy cho collection (zstd tùy chọn), prefix compression cho index. Đáng chú ý: dữ liệu document lặp tên field trong mọi document (“field name overhead”) — nén block bù lại phần lớn chi phí này trên disk, nhưng trong cache thì không → RAM là tài nguyên quý nhất của MongoDB. Durability: journal (WAL của WiredTiger) + checkpoint (mặc định 60s). Commit chờ journal theo j: true hoặc bao hàm trong w: majority. Checkpoint + journal thay vì chỉ WAL: WiredTiger phục hồi = checkpoint gần nhất + replay journal từ đó. Nguyên lý y hệt Chương 1 — chỉ khác tên gọi.\n3.3. Indexing B+Tree tương tự RDBMS, với các dạng đặc thù document model: compound (nhớ quy tắc ESR — Equality, Sort, Range khi xếp thứ tự field), multikey (index vào từng phần tử mảng — một document sinh nhiều entry; hạn chế: một compound index chỉ được một field mảng), TTL (tự xóa document hết hạn — cho session/cache), partial, text, geospatial (2dsphere), wildcard.\nKhác biệt then chốt so với RDBMS: không có index = COLLSCAN im lặng. Không có DBA gác cổng, schema linh hoạt khiến dev quên index theo query mới. explain() với totalDocsExamined \u003e\u003e nReturned là chỉ số vàng cần giám sát.\n3.4. Aggregation Pipeline Mô hình xử lý dữ liệu dạng pipeline các stage — tư duy dòng chảy thay vì tư duy tập hợp của SQL:\ndb.orders.aggregate([ { $match: { status: \"paid\", ts: { $gte: ISODate(\"2026-01-01\") } } }, // lọc sớm → dùng index { $group: { _id: \"$customerId\", total: { $sum: \"$amount\" } } }, { $sort: { total: -1 } }, { $limit: 10 } ]) Điểm kỹ thuật cần hiểu:\nThứ tự stage quyết định hiệu năng: $match/$sort đứng đầu pipeline mới dùng được index; optimizer có tự đẩy $match lên nhưng không phải mọi trường hợp. $group/$sort không dùng được index phải giữ dữ liệu trong RAM (giới hạn 100MB/stage, tràn thì allowDiskUse — chậm). $lookup (left join) tồn tại nhưng là tín hiệu cảnh báo modeling: dùng thường xuyên trên đường nóng nghĩa là dữ liệu “query together” đã không được “store together” — và $lookup không hoạt động tự do xuyên shard (collection phải unsharded hoặc từ 5.1+ có hỗ trợ giới hạn với chi phí lớn). Aggregation trên volume lớn vẫn là row-oriented, single-node-per-shard execution — không phải đối thủ của columnar engine. MongoDB phù hợp aggregation operational (theo user, theo đơn hàng), không phải analytical (toàn bộ dataset). 3.5. Replica Set Đơn vị HA của MongoDB — single-leader replication với bầu cử tích hợp (giao thức tinh thần Raft):\n┌── Secondary (replicate oplog, có thể bầu làm primary) Primary ┤ └── Secondary (ghi duy nhất; heartbeat 2s; mất liên lạc 10s → bầu cử; cần đa số phiếu) Oplog: capped collection ghi lại mọi thay đổi ở dạng idempotent logic operation (không phải bytes vật lý như WAL shipping của PG) → secondary áp lại được, dùng lại được cho change streams (CDC tích hợp — điểm mạnh thực dụng lớn). Cần đa số để có primary → cluster 2 node là vô nghĩa (mất 1 node = mất khả năng ghi); tối thiểu 3 (hoặc 2 + arbiter, nhưng arbiter làm yếu w: majority — tránh trong production nghiêm túc). Tự động failover ~10–30s không cần công cụ ngoài — khác biệt vận hành lớn nhất so với PostgreSQL. Tunable consistency — PACELC per-operation:\nCấu hình Ý nghĩa Trade-off w: 1 Primary ack là xong Nhanh; primary chết trước khi replicate → rollback dữ liệu đã ack w: majority Đa số ack Sống sót failover; +latency một round-trip readConcern: local Đọc mới nhất tại node Có thể đọc dữ liệu sẽ bị rollback readConcern: majority Chỉ đọc dữ liệu đã majority-commit An toàn; có thể cũ hơn một chút readPreference: secondary Scale read Replication lag → stale read Đây là ưu điểm (chọn theo từng nghiệp vụ: log dùng w:1, thanh toán dùng w:majority + readConcern:majority) và đồng thời là bẫy (mặc định lịch sử từng là w:1 — nguồn gốc danh tiếng “mất dữ liệu”).\n3.6. Sharding Kiến trúc ba thành phần:\nClient → mongos (router, stateless, nhiều instance) │ (routing table cache) ┌─────────┼──────────┐ ▼ ▼ ▼ Shard 1 Shard 2 Shard 3 ← mỗi shard là một Replica Set đầy đủ (RS 3 node)(RS 3 node)(RS 3 node) ▲ Config Server RS (metadata: chunk → shard mapping) Dữ liệu chia theo shard key thành chunk; balancer di chuyển chunk giữa các shard. Chọn shard key là quyết định một chiều quan trọng nhất (reshard được từ 5.0 nhưng là chiến dịch lớn, đắt đỏ): Cardinality cao, phân bố ghi đều, và xuất hiện trong đa số query (query có shard key → định tuyến 1 shard; không có → scatter-gather toàn bộ shard). Anti-pattern chết người: shard key đơn điệu tăng (timestamp, ObjectId) → mọi insert dồn vào chunk cuối của một shard — cluster 10 shard, 1 shard gánh 100% ghi. Giải pháp: hashed shard key (mất range query) hoặc compound key có tiền tố phân tán. Chi phí ẩn của sharding: cluster tối thiểu nghiêm túc = 2 shard × 3 node + 3 config + 2 mongos ≈ 11 process phải vận hành, giám sát, backup. So với 1 replica set 3 node — độ phức tạp nhảy một bậc. Nguyên tắc Chương 1 lặp lại: shard khi có bằng chứng cần, không phải vì “để sẵn cho tương lai”. 3.7. Multi-document Transactions Có từ 4.0 (replica set) / 4.2 (sharded, dùng 2PC nội bộ). Snapshot isolation, giới hạn thời gian mặc định 60s. Vấn đề không phải “có hay không” mà là chi phí: giữ snapshot + cache pressure trên WiredTiger, xuyên shard thì 2PC latency. Nguyên tắc thiết kế đúng: transaction đa document trong MongoDB là van an toàn cho ngoại lệ, không phải công cụ hàng ngày. Nếu thiết kế cần multi-document transaction trên đường nóng, đó là tín hiệu hoặc modeling sai (đáng lẽ embed để atomic-trong-1-document — mọi thao tác trên MỘT document luôn atomic), hoặc chọn nhầm database (bài toán vốn quan hệ → PostgreSQL).\n4. Điểm mạnh Velocity: model khớp object trong code, thêm field không cần migration — đúng chỗ nhất cho sản phẩm giai đoạn khám phá, schema biến động. Scale-out tích hợp, HA tích hợp: failover tự động không cần Patroni; sharding không cần tự chế — chi phí kỹ sư hạ tầng thấp hơn đáng kể ở quy mô lớn. Atomic single-document + embed phủ được tỷ lệ lớn nhu cầu transactional thực tế nếu modeling đúng. Change streams — CDC hạng nhất, xây event-driven dễ. Tunable consistency per-operation — một cluster phục vụ nhiều mức yêu cầu. 5. Điểm yếu Đẩy trách nhiệm toàn vẹn về ứng dụng: không FK, không CHECK constraint xuyên document, schema validation tùy chọn ít ai bật. “Schema linh hoạt” sau 3 năm và 5 thế hệ dev = schema hỗn loạn ngầm (field cùng tên khác kiểu, ngày lưu string lẫn Date). Chi phí này vô hình lúc đầu, lớn dần theo tuổi codebase. JOIN yếu về cấu trúc — $lookup hạn chế, đặc biệt xuyên shard. Bài toán vốn nhiều quan hệ nhiều chiều sẽ khổ sở. RAM-hungry: hiệu năng tụt vách đá khi working set tràn WiredTiger cache; field name lặp làm cache “loãng” hơn RDBMS tương đương. Analytics lớn không phải sân của nó (row-oriented — mục 3.4). Chi phí vận hành sharded cluster cao hơn vẻ ngoài (11+ process, chọn shard key một chiều). 6. Trade-off Trade-off MongoDB chọn Nguyên nhân kỹ thuật Hệ quả Flexibility vs Integrity Flexibility Schema-on-read, validation opt-in Toàn vẹn là kỷ luật của đội, không phải bảo đảm của hệ thống Read locality vs Duplication Embed (locality) Document = đơn vị I/O và atomicity Đọc 1 lần lấy tất; sửa dữ liệu lặp ở N chỗ là N lần ghi Consistency vs Latency Tùy chỉnh per-op writeConcern/readConcern Mạnh khi dùng đúng; bẫy khi dùng mặc định mù Scale-out vs Query tự do Scale-out Shard key routing Query không có shard key = scatter-gather; thiết kế query bị shard key trói Tích hợp HA vs kiểm soát tinh vi Tích hợp Bầu cử Raft-like nội bộ Vận hành dễ hơn PG; ít điểm can thiệp hơn Patroni 7. Production Considerations Topology tối thiểu: replica set 3 node, 3 AZ. w: majority cho dữ liệu quan trọng. Không dùng arbiter nếu tránh được. Backup: mongodump chỉ đủ cho dữ liệu nhỏ; production dùng snapshot filesystem nhất quán hoặc Ops Manager/Atlas continuous backup (PITR qua oplog). Monitoring tối thiểu: replication lag, oplog window (giờ oplog còn giữ — secondary chết lâu hơn window = phải initial sync lại toàn bộ), WiredTiger cache dirty/used %, connections, COLLSCAN (qua profiler/totalDocsExamined), disk. Capacity: RAM ≥ working set + index nóng; theo dõi cache eviction rate như tín hiệu sớm nhất của “sắp tụt vách đá”. Security: authentication BẮT BUỘC bật (lịch sử Internet đầy cluster Mongo mở toang bị ransom — mặc định cũ bind 0.0.0.0 không auth), TLS, network isolation. Upgrade: rolling upgrade trong replica set — thay từng secondary, stepdown primary; đọc kỹ compatibility version (FCV). Multi-region: replica set trải region với priority điều khiển primary ở đâu; sharded + zone sharding cho data residency. Atlas vs tự vận hành: Atlas mua vận hành bằng tiền — thường rẻ hơn đội ngũ tự vận hành sharded cluster nghiêm túc; trade-off là chi phí ở scale lớn và lock-in. 8. Best Practices Model theo access pattern, không theo “đối tượng nghiệp vụ”: liệt kê query trước, thiết kế document sau. Embed một-vài; reference một-nhiều-vô-hạn; các pattern chuẩn: bucket (time-series), subset (10 comment mới nhất embed, còn lại collection riêng), computed (tính trước lúc ghi), extended reference (nhúng bản sao rút gọn của đối tượng liên quan). Bật schema validation ở mức tối thiểu (kiểu của field cốt lõi) — chi phí gần 0, cứu chuộc tương lai. Index theo ESR; xóa index không dùng ($indexStats); dùng partial thay vì index cả collection thưa. Ghi có kỷ luật: w: majority mặc định ứng dụng; retryable writes bật (mặc định driver mới); idempotency ở tầng nghiệp vụ. Shard key: chọn như thể không thể đổi (dù 5.0+ reshard được); mô phỏng phân bố ghi trước khi chốt. 9. Anti-patterns Dùng MongoDB như RDBMS: collection chuẩn hóa như bảng + $lookup khắp nơi → mọi nhược điểm của cả hai thế giới, ưu điểm của không thế giới nào. Unbounded array (mục 3.1) — chạm trần 16MB giữa đêm. Shard key đơn điệu tăng → một shard gánh cả cluster (mục 3.6). w:1 cho dữ liệu tiền bạc → rollback sau failover = “mất tiền đã báo thành công”. Query không index trên collection lớn — COLLSCAN âm thầm ăn hết I/O. Transaction đa document làm nếp hằng ngày — tín hiệu modeling/chọn hệ sai (mục 3.7). Không giám sát oplog window → secondary bảo trì lâu quay lại phải initial sync, kéo I/O primary đúng giờ cao điểm. 10. Khi nào KHÔNG nên dùng MongoDB Dữ liệu quan hệ chặt, bất biến nghiệp vụ phức tạp, đối soát tài chính → PostgreSQL. Cưỡng bức bài toán quan hệ vào document là nguồn khổ đau dài hạn phổ biến nhất. Analytics quét lớn / BI → ClickHouse hay warehouse columnar. Ứng dụng CRUD nhỏ, schema ổn định, một máy đủ → PostgreSQL đơn giản và “đủ” hơn; JSONB phủ được phần linh hoạt. Cần multi-region active-active ghi mọi nơi với xung đột tự giải quyết → hệ CRDT/Dynamo-style; MongoDB vẫn là single-primary per shard. Vì sao nhiều đội chọn sai? Vì demo 15 phút của MongoDB cực kỳ thuyết phục — insert JSON, không schema, chạy ngay. Chi phí thật (kỷ luật modeling, toàn vẹn ở app, RAM, shard key) chỉ lộ sau 12–24 tháng. Ngược lại cũng có đội né MongoDB vì danh tiếng 2012 dù ngày nay nó đã khác — cả hai đều là quyết định bằng meme thay vì phân tích. 11. Decision Framework Chọn MongoDB khi:\nDữ liệu tự nhiên là document (catalog sản phẩm đa dạng thuộc tính, hồ sơ người dùng, nội dung CMS, event/IoT theo thiết bị) và access pattern chủ yếu theo một trục (theo user, theo device, theo đơn). Schema biến động nhanh theo sản phẩm; đội chấp nhận kỷ luật validation. Lộ trình scale-out ghi là thật (đo đạc/dự báo được), muốn sharding+HA tích hợp thay vì tự xây trên RDBMS. Cần change streams / offline-sync (hệ sinh thái Realm/Atlas) làm xương sống event-driven. Chọn hệ khác khi: bất biến quan hệ là cốt lõi (→ PostgreSQL), aggregation toàn dataset là cốt lõi (→ ClickHouse), key-value thuần tốc độ cao (→ Redis/DynamoDB).\nCâu hỏi quyết định nhanh: “Vẽ 5 query quan trọng nhất — chúng đi theo một trục (user/device/order) hay đan chéo nhiều thực thể?” Một trục → MongoDB tỏa sáng. Đan chéo → RDBMS.\n","wordCount":"2857","inLanguage":"en","datePublished":"2026-07-02T11:00:00+07:00","dateModified":"2026-07-02T11:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/database/03-mongodb/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/database/>Database Thực Chiến</a></div><h1 class="post-title entry-hint-parent">Bài 3 — MongoDB</h1><div class=post-meta><span title='2026-07-02 11:00:00 +0700 +07'>July 2, 2026</span>&nbsp;·&nbsp;14 min</div></header><div class=post-content><h1 id=mongodb>MongoDB<a hidden class=anchor aria-hidden=true href=#mongodb>#</a></h1><blockquote><p><strong>Tiền đề:</strong> Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC).
-<strong>Góc nhìn:</strong> từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.</p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p><strong>MongoDB giải bài toán gì?</strong> Hai bài toán mà RDBMS đầu những năm 2000 giải kém:</p><ol><li><strong>Impedance mismatch:</strong> đối tượng trong ứng dụng (nested, mảng, đa hình) phải &ldquo;băm&rdquo; ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại.</li><li><strong>Scale-out:</strong> RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding).</li></ol><p><strong>Nếu không có nó thì sao?</strong> Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: <strong>document model giàu query + sharding tích hợp</strong>.</p><p><strong>Vì sao khó?</strong> Vì &ldquo;schema linh hoạt&rdquo; và &ldquo;phân tán tự động&rdquo; đều chuyển độ phức tạp từ database sang chỗ khác — câu hỏi là chuyển đi đâu và ai trả giá. Toàn bộ chương này xoay quanh câu trả lời.</p><hr><h2 id=2-tại-sao-mongodb-tồn-tại>2. Tại sao MongoDB tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-mongodb-tồn-tại>#</a></h2><p><strong>Bối cảnh 2007–2009:</strong> web scale bùng nổ, phong trào NoSQL (BigTable/Dynamo papers), agile/startup cần ship nhanh. 10gen xây MongoDB với ưu tiên rõ rệt: <strong>developer velocity trước, scale-out tích hợp, tính năng đúng đắn hoàn thiện dần sau</strong>.</p><p>Lịch sử kỹ thuật của MongoDB là lịch sử <strong>trả nợ dần các cam kết đúng đắn</strong>:</p><ul><li>Thời kỳ đầu: MMAPv1 storage engine, per-database lock, write concern mặc định không chờ xác nhận → mang tiếng &ldquo;mất dữ liệu&rdquo;. Các phân tích Jepsen thời kỳ này chỉ ra nhiều lỗ hổng thật.</li><li>2014: mua WiredTiger → storage engine hiện đại, document-level concurrency, nén.</li><li>3.2–4.0: raft-hóa bầu cử, majority read/write concern, multi-document transaction (4.0 trong replica set, 4.2 xuyên shard).</li><li>Hiện nay: mặc định đã an toàn hơn nhiều (<code>w: majority</code> mặc định từ 5.0); các phiên bản gần đây qua được kiểm tra Jepsen với cấu hình đúng.</li></ul><p><strong>Bài học meta cho architect:</strong> đánh giá database phải theo <em>phiên bản và cấu hình cụ thể</em>, không theo danh tiếng cũ — cả chiều khen lẫn chiều chê.</p><hr><h2 id=3-cách-hoạt-động-bên-trong>3. Cách hoạt động bên trong<a hidden class=anchor aria-hidden=true href=#3-cách-hoạt-động-bên-trong>#</a></h2><h3 id=31-document-model-và-bson>3.1. Document Model và BSON<a hidden class=anchor aria-hidden=true href=#31-document-model-và-bson>#</a></h3><p>Dữ liệu là <strong>document</strong> (tương tự JSON) trong <strong>collection</strong>, không có schema bắt buộc (từ 3.6 có schema validation tùy chọn qua JSON Schema).</p><p><strong>BSON</strong> — Binary JSON — là quyết định thiết kế nền tảng:</p><ul><li>Nhị phân, có độ dài trường prefix → <strong>traverse không cần parse toàn bộ</strong> (nhảy qua field theo length), khác JSON text.</li><li>Kiểu dữ liệu giàu hơn JSON: int32/int64, decimal128 (tiền!), date, ObjectId, binary.</li><li><strong>ObjectId</strong> 12 byte = timestamp(4) + random(5) + counter(3) → sinh phân tán không cần điều phối, sắp xếp thô theo thời gian. Đây là câu trả lời cho &ldquo;làm sao có ID duy nhất trên 100 shard mà không có điểm điều phối trung tâm&rdquo;.</li></ul><p><strong>Nguyên tắc modeling nền tảng — &ldquo;what you query together, store together&rdquo;:</strong></p><pre tabindex=0><code>RDBMS:  orders ──&lt; order_items ──&lt; ...   (JOIN lúc đọc)
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:54040/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:54040/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/database/">Database Thực Chiến</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Bài 3 — MongoDB
+    </h1>
+    <div class="post-meta"><span title='2026-07-02 11:00:00 +0700 +07'>July 2, 2026</span>&nbsp;·&nbsp;14 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="mongodb">MongoDB<a hidden class="anchor" aria-hidden="true" href="#mongodb">#</a></h1>
+<blockquote>
+<p><strong>Tiền đề:</strong> Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC).
+<strong>Góc nhìn:</strong> từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p><strong>MongoDB giải bài toán gì?</strong> Hai bài toán mà RDBMS đầu những năm 2000 giải kém:</p>
+<ol>
+<li><strong>Impedance mismatch:</strong> đối tượng trong ứng dụng (nested, mảng, đa hình) phải &ldquo;băm&rdquo; ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại.</li>
+<li><strong>Scale-out:</strong> RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding).</li>
+</ol>
+<p><strong>Nếu không có nó thì sao?</strong> Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: <strong>document model giàu query + sharding tích hợp</strong>.</p>
+<p><strong>Vì sao khó?</strong> Vì &ldquo;schema linh hoạt&rdquo; và &ldquo;phân tán tự động&rdquo; đều chuyển độ phức tạp từ database sang chỗ khác — câu hỏi là chuyển đi đâu và ai trả giá. Toàn bộ chương này xoay quanh câu trả lời.</p>
+<hr>
+<h2 id="2-tại-sao-mongodb-tồn-tại">2. Tại sao MongoDB tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-mongodb-tồn-tại">#</a></h2>
+<p><strong>Bối cảnh 2007–2009:</strong> web scale bùng nổ, phong trào NoSQL (BigTable/Dynamo papers), agile/startup cần ship nhanh. 10gen xây MongoDB với ưu tiên rõ rệt: <strong>developer velocity trước, scale-out tích hợp, tính năng đúng đắn hoàn thiện dần sau</strong>.</p>
+<p>Lịch sử kỹ thuật của MongoDB là lịch sử <strong>trả nợ dần các cam kết đúng đắn</strong>:</p>
+<ul>
+<li>Thời kỳ đầu: MMAPv1 storage engine, per-database lock, write concern mặc định không chờ xác nhận → mang tiếng &ldquo;mất dữ liệu&rdquo;. Các phân tích Jepsen thời kỳ này chỉ ra nhiều lỗ hổng thật.</li>
+<li>2014: mua WiredTiger → storage engine hiện đại, document-level concurrency, nén.</li>
+<li>3.2–4.0: raft-hóa bầu cử, majority read/write concern, multi-document transaction (4.0 trong replica set, 4.2 xuyên shard).</li>
+<li>Hiện nay: mặc định đã an toàn hơn nhiều (<code>w: majority</code> mặc định từ 5.0); các phiên bản gần đây qua được kiểm tra Jepsen với cấu hình đúng.</li>
+</ul>
+<p><strong>Bài học meta cho architect:</strong> đánh giá database phải theo <em>phiên bản và cấu hình cụ thể</em>, không theo danh tiếng cũ — cả chiều khen lẫn chiều chê.</p>
+<hr>
+<h2 id="3-cách-hoạt-động-bên-trong">3. Cách hoạt động bên trong<a hidden class="anchor" aria-hidden="true" href="#3-cách-hoạt-động-bên-trong">#</a></h2>
+<h3 id="31-document-model-và-bson">3.1. Document Model và BSON<a hidden class="anchor" aria-hidden="true" href="#31-document-model-và-bson">#</a></h3>
+<p>Dữ liệu là <strong>document</strong> (tương tự JSON) trong <strong>collection</strong>, không có schema bắt buộc (từ 3.6 có schema validation tùy chọn qua JSON Schema).</p>
+<p><strong>BSON</strong> — Binary JSON — là quyết định thiết kế nền tảng:</p>
+<ul>
+<li>Nhị phân, có độ dài trường prefix → <strong>traverse không cần parse toàn bộ</strong> (nhảy qua field theo length), khác JSON text.</li>
+<li>Kiểu dữ liệu giàu hơn JSON: int32/int64, decimal128 (tiền!), date, ObjectId, binary.</li>
+<li><strong>ObjectId</strong> 12 byte = timestamp(4) + random(5) + counter(3) → sinh phân tán không cần điều phối, sắp xếp thô theo thời gian. Đây là câu trả lời cho &ldquo;làm sao có ID duy nhất trên 100 shard mà không có điểm điều phối trung tâm&rdquo;.</li>
+</ul>
+<p><strong>Nguyên tắc modeling nền tảng — &ldquo;what you query together, store together&rdquo;:</strong></p>
+<pre tabindex="0"><code>RDBMS:  orders ──&lt; order_items ──&lt; ...   (JOIN lúc đọc)
 MongoDB: {
   _id: ...,
   customer: {...},
   items: [ {sku, qty, price}, ... ]      ← embed: 1 lần đọc = cả đơn hàng
 }
-</code></pre><p>Embed đổi <strong>chi phí JOIN lúc đọc</strong> lấy <strong>chi phí duplication + kích thước document</strong>. Giới hạn cứng: document ≤ 16MB. Anti-pattern kinh điển: <strong>unbounded array</strong> (embed danh sách lớn dần vô hạn — comment của bài viral) → document phình, mỗi update ghi lại lớn dần, chạm trần 16MB = sự cố. Quy tắc: embed quan hệ &ldquo;một-vài&rdquo;, reference quan hệ &ldquo;một-vô-hạn&rdquo;.</p><h3 id=32-wiredtiger--storage-engine>3.2. WiredTiger — storage engine<a hidden class=anchor aria-hidden=true href=#32-wiredtiger--storage-engine>#</a></h3><ul><li><strong>Cấu trúc:</strong> B+Tree (biến thể) cho collection và index; mỗi collection/index một file.</li><li><strong>MVCC:</strong> phiên bản giữ trong cache dưới dạng update chain; snapshot isolation cho đọc. <strong>Concurrency ở mức document</strong> — hai client sửa hai document khác nhau không chặn nhau (bước nhảy vọt so với per-database lock của MMAPv1).</li><li><strong>Cache riêng</strong> (mặc định ~50% RAM): trong cache, page ở dạng giải nén; xuống disk mới nén.</li><li><strong>Nén mặc định:</strong> snappy cho collection (zstd tùy chọn), <strong>prefix compression cho index</strong>. Đáng chú ý: dữ liệu document lặp tên field trong mọi document (&ldquo;field name overhead&rdquo;) — nén block bù lại phần lớn chi phí này trên disk, nhưng <strong>trong cache thì không</strong> → RAM là tài nguyên quý nhất của MongoDB.</li><li><strong>Durability:</strong> journal (WAL của WiredTiger) + checkpoint (mặc định 60s). Commit chờ journal theo <code>j: true</code> hoặc bao hàm trong <code>w: majority</code>.</li></ul><p><strong>Checkpoint + journal thay vì chỉ WAL:</strong> WiredTiger phục hồi = checkpoint gần nhất + replay journal từ đó. Nguyên lý y hệt Chương 1 — chỉ khác tên gọi.</p><h3 id=33-indexing>3.3. Indexing<a hidden class=anchor aria-hidden=true href=#33-indexing>#</a></h3><p>B+Tree tương tự RDBMS, với các dạng đặc thù document model: compound (nhớ quy tắc <strong>ESR — Equality, Sort, Range</strong> khi xếp thứ tự field), multikey (index vào <strong>từng phần tử mảng</strong> — một document sinh nhiều entry; hạn chế: một compound index chỉ được một field mảng), TTL (tự xóa document hết hạn — cho session/cache), partial, text, geospatial (2dsphere), wildcard.</p><p>Khác biệt then chốt so với RDBMS: <strong>không có index = COLLSCAN im lặng.</strong> Không có DBA gác cổng, schema linh hoạt khiến dev quên index theo query mới. <code>explain()</code> với <code>totalDocsExamined >> nReturned</code> là chỉ số vàng cần giám sát.</p><h3 id=34-aggregation-pipeline>3.4. Aggregation Pipeline<a hidden class=anchor aria-hidden=true href=#34-aggregation-pipeline>#</a></h3><p>Mô hình xử lý dữ liệu dạng <strong>pipeline các stage</strong> — tư duy dòng chảy thay vì tư duy tập hợp của SQL:</p><pre tabindex=0><code>db.orders.aggregate([
+</code></pre><p>Embed đổi <strong>chi phí JOIN lúc đọc</strong> lấy <strong>chi phí duplication + kích thước document</strong>. Giới hạn cứng: document ≤ 16MB. Anti-pattern kinh điển: <strong>unbounded array</strong> (embed danh sách lớn dần vô hạn — comment của bài viral) → document phình, mỗi update ghi lại lớn dần, chạm trần 16MB = sự cố. Quy tắc: embed quan hệ &ldquo;một-vài&rdquo;, reference quan hệ &ldquo;một-vô-hạn&rdquo;.</p>
+<h3 id="32-wiredtiger--storage-engine">3.2. WiredTiger — storage engine<a hidden class="anchor" aria-hidden="true" href="#32-wiredtiger--storage-engine">#</a></h3>
+<ul>
+<li><strong>Cấu trúc:</strong> B+Tree (biến thể) cho collection và index; mỗi collection/index một file.</li>
+<li><strong>MVCC:</strong> phiên bản giữ trong cache dưới dạng update chain; snapshot isolation cho đọc. <strong>Concurrency ở mức document</strong> — hai client sửa hai document khác nhau không chặn nhau (bước nhảy vọt so với per-database lock của MMAPv1).</li>
+<li><strong>Cache riêng</strong> (mặc định ~50% RAM): trong cache, page ở dạng giải nén; xuống disk mới nén.</li>
+<li><strong>Nén mặc định:</strong> snappy cho collection (zstd tùy chọn), <strong>prefix compression cho index</strong>. Đáng chú ý: dữ liệu document lặp tên field trong mọi document (&ldquo;field name overhead&rdquo;) — nén block bù lại phần lớn chi phí này trên disk, nhưng <strong>trong cache thì không</strong> → RAM là tài nguyên quý nhất của MongoDB.</li>
+<li><strong>Durability:</strong> journal (WAL của WiredTiger) + checkpoint (mặc định 60s). Commit chờ journal theo <code>j: true</code> hoặc bao hàm trong <code>w: majority</code>.</li>
+</ul>
+<p><strong>Checkpoint + journal thay vì chỉ WAL:</strong> WiredTiger phục hồi = checkpoint gần nhất + replay journal từ đó. Nguyên lý y hệt Chương 1 — chỉ khác tên gọi.</p>
+<h3 id="33-indexing">3.3. Indexing<a hidden class="anchor" aria-hidden="true" href="#33-indexing">#</a></h3>
+<p>B+Tree tương tự RDBMS, với các dạng đặc thù document model: compound (nhớ quy tắc <strong>ESR — Equality, Sort, Range</strong> khi xếp thứ tự field), multikey (index vào <strong>từng phần tử mảng</strong> — một document sinh nhiều entry; hạn chế: một compound index chỉ được một field mảng), TTL (tự xóa document hết hạn — cho session/cache), partial, text, geospatial (2dsphere), wildcard.</p>
+<p>Khác biệt then chốt so với RDBMS: <strong>không có index = COLLSCAN im lặng.</strong> Không có DBA gác cổng, schema linh hoạt khiến dev quên index theo query mới. <code>explain()</code> với <code>totalDocsExamined &gt;&gt; nReturned</code> là chỉ số vàng cần giám sát.</p>
+<h3 id="34-aggregation-pipeline">3.4. Aggregation Pipeline<a hidden class="anchor" aria-hidden="true" href="#34-aggregation-pipeline">#</a></h3>
+<p>Mô hình xử lý dữ liệu dạng <strong>pipeline các stage</strong> — tư duy dòng chảy thay vì tư duy tập hợp của SQL:</p>
+<pre tabindex="0"><code>db.orders.aggregate([
   { $match:  { status: &#34;paid&#34;, ts: { $gte: ISODate(&#34;2026-01-01&#34;) } } },  // lọc sớm → dùng index
   { $group:  { _id: &#34;$customerId&#34;, total: { $sum: &#34;$amount&#34; } } },
   { $sort:   { total: -1 } },
   { $limit:  10 }
 ])
-</code></pre><p>Điểm kỹ thuật cần hiểu:</p><ul><li><strong>Thứ tự stage quyết định hiệu năng:</strong> <code>$match</code>/<code>$sort</code> đứng đầu pipeline mới dùng được index; optimizer có tự đẩy <code>$match</code> lên nhưng không phải mọi trường hợp.</li><li><code>$group</code>/<code>$sort</code> không dùng được index phải giữ dữ liệu trong RAM (giới hạn 100MB/stage, tràn thì <code>allowDiskUse</code> — chậm).</li><li><code>$lookup</code> (left join) tồn tại nhưng là <strong>tín hiệu cảnh báo modeling</strong>: dùng thường xuyên trên đường nóng nghĩa là dữ liệu &ldquo;query together&rdquo; đã không được &ldquo;store together&rdquo; — và <code>$lookup</code> không hoạt động tự do xuyên shard (collection phải unsharded hoặc từ 5.1+ có hỗ trợ giới hạn với chi phí lớn).</li><li>Aggregation trên volume lớn vẫn là <strong>row-oriented, single-node-per-shard execution</strong> — không phải đối thủ của columnar engine. MongoDB phù hợp aggregation <em>operational</em> (theo user, theo đơn hàng), không phải <em>analytical</em> (toàn bộ dataset).</li></ul><h3 id=35-replica-set>3.5. Replica Set<a hidden class=anchor aria-hidden=true href=#35-replica-set>#</a></h3><p>Đơn vị HA của MongoDB — single-leader replication với <strong>bầu cử tích hợp</strong> (giao thức tinh thần Raft):</p><pre tabindex=0><code>        ┌── Secondary (replicate oplog, có thể bầu làm primary)
+</code></pre><p>Điểm kỹ thuật cần hiểu:</p>
+<ul>
+<li><strong>Thứ tự stage quyết định hiệu năng:</strong> <code>$match</code>/<code>$sort</code> đứng đầu pipeline mới dùng được index; optimizer có tự đẩy <code>$match</code> lên nhưng không phải mọi trường hợp.</li>
+<li><code>$group</code>/<code>$sort</code> không dùng được index phải giữ dữ liệu trong RAM (giới hạn 100MB/stage, tràn thì <code>allowDiskUse</code> — chậm).</li>
+<li><code>$lookup</code> (left join) tồn tại nhưng là <strong>tín hiệu cảnh báo modeling</strong>: dùng thường xuyên trên đường nóng nghĩa là dữ liệu &ldquo;query together&rdquo; đã không được &ldquo;store together&rdquo; — và <code>$lookup</code> không hoạt động tự do xuyên shard (collection phải unsharded hoặc từ 5.1+ có hỗ trợ giới hạn với chi phí lớn).</li>
+<li>Aggregation trên volume lớn vẫn là <strong>row-oriented, single-node-per-shard execution</strong> — không phải đối thủ của columnar engine. MongoDB phù hợp aggregation <em>operational</em> (theo user, theo đơn hàng), không phải <em>analytical</em> (toàn bộ dataset).</li>
+</ul>
+<h3 id="35-replica-set">3.5. Replica Set<a hidden class="anchor" aria-hidden="true" href="#35-replica-set">#</a></h3>
+<p>Đơn vị HA của MongoDB — single-leader replication với <strong>bầu cử tích hợp</strong> (giao thức tinh thần Raft):</p>
+<pre tabindex="0"><code>        ┌── Secondary (replicate oplog, có thể bầu làm primary)
 Primary ┤
         └── Secondary
 (ghi duy nhất; heartbeat 2s; mất liên lạc 10s → bầu cử; cần đa số phiếu)
-</code></pre><ul><li><strong>Oplog:</strong> capped collection ghi lại mọi thay đổi ở dạng <strong>idempotent logic operation</strong> (không phải bytes vật lý như WAL shipping của PG) → secondary áp lại được, dùng lại được cho <strong>change streams</strong> (CDC tích hợp — điểm mạnh thực dụng lớn).</li><li><strong>Cần đa số để có primary</strong> → cluster 2 node là vô nghĩa (mất 1 node = mất khả năng ghi); tối thiểu 3 (hoặc 2 + arbiter, nhưng arbiter làm yếu <code>w: majority</code> — tránh trong production nghiêm túc).</li><li><strong>Tự động failover ~10–30s</strong> không cần công cụ ngoài — khác biệt vận hành lớn nhất so với PostgreSQL.</li></ul><p><strong>Tunable consistency — PACELC per-operation:</strong></p><table><thead><tr><th>Cấu hình</th><th>Ý nghĩa</th><th>Trade-off</th></tr></thead><tbody><tr><td><code>w: 1</code></td><td>Primary ack là xong</td><td>Nhanh; primary chết trước khi replicate → <strong>rollback dữ liệu đã ack</strong></td></tr><tr><td><code>w: majority</code></td><td>Đa số ack</td><td>Sống sót failover; +latency một round-trip</td></tr><tr><td><code>readConcern: local</code></td><td>Đọc mới nhất tại node</td><td>Có thể đọc dữ liệu sẽ bị rollback</td></tr><tr><td><code>readConcern: majority</code></td><td>Chỉ đọc dữ liệu đã majority-commit</td><td>An toàn; có thể cũ hơn một chút</td></tr><tr><td><code>readPreference: secondary</code></td><td>Scale read</td><td>Replication lag → stale read</td></tr></tbody></table><p>Đây là ưu điểm (chọn theo từng nghiệp vụ: log dùng <code>w:1</code>, thanh toán dùng <code>w:majority</code> + <code>readConcern:majority</code>) và đồng thời là bẫy (mặc định lịch sử từng là <code>w:1</code> — nguồn gốc danh tiếng &ldquo;mất dữ liệu&rdquo;).</p><h3 id=36-sharding>3.6. Sharding<a hidden class=anchor aria-hidden=true href=#36-sharding>#</a></h3><p>Kiến trúc ba thành phần:</p><pre tabindex=0><code>Client → mongos (router, stateless, nhiều instance)
+</code></pre><ul>
+<li><strong>Oplog:</strong> capped collection ghi lại mọi thay đổi ở dạng <strong>idempotent logic operation</strong> (không phải bytes vật lý như WAL shipping của PG) → secondary áp lại được, dùng lại được cho <strong>change streams</strong> (CDC tích hợp — điểm mạnh thực dụng lớn).</li>
+<li><strong>Cần đa số để có primary</strong> → cluster 2 node là vô nghĩa (mất 1 node = mất khả năng ghi); tối thiểu 3 (hoặc 2 + arbiter, nhưng arbiter làm yếu <code>w: majority</code> — tránh trong production nghiêm túc).</li>
+<li><strong>Tự động failover ~10–30s</strong> không cần công cụ ngoài — khác biệt vận hành lớn nhất so với PostgreSQL.</li>
+</ul>
+<p><strong>Tunable consistency — PACELC per-operation:</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>Cấu hình</th>
+          <th>Ý nghĩa</th>
+          <th>Trade-off</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>w: 1</code></td>
+          <td>Primary ack là xong</td>
+          <td>Nhanh; primary chết trước khi replicate → <strong>rollback dữ liệu đã ack</strong></td>
+      </tr>
+      <tr>
+          <td><code>w: majority</code></td>
+          <td>Đa số ack</td>
+          <td>Sống sót failover; +latency một round-trip</td>
+      </tr>
+      <tr>
+          <td><code>readConcern: local</code></td>
+          <td>Đọc mới nhất tại node</td>
+          <td>Có thể đọc dữ liệu sẽ bị rollback</td>
+      </tr>
+      <tr>
+          <td><code>readConcern: majority</code></td>
+          <td>Chỉ đọc dữ liệu đã majority-commit</td>
+          <td>An toàn; có thể cũ hơn một chút</td>
+      </tr>
+      <tr>
+          <td><code>readPreference: secondary</code></td>
+          <td>Scale read</td>
+          <td>Replication lag → stale read</td>
+      </tr>
+  </tbody>
+</table>
+<p>Đây là ưu điểm (chọn theo từng nghiệp vụ: log dùng <code>w:1</code>, thanh toán dùng <code>w:majority</code> + <code>readConcern:majority</code>) và đồng thời là bẫy (mặc định lịch sử từng là <code>w:1</code> — nguồn gốc danh tiếng &ldquo;mất dữ liệu&rdquo;).</p>
+<h3 id="36-sharding">3.6. Sharding<a hidden class="anchor" aria-hidden="true" href="#36-sharding">#</a></h3>
+<p>Kiến trúc ba thành phần:</p>
+<pre tabindex="0"><code>Client → mongos (router, stateless, nhiều instance)
              │  (routing table cache)
    ┌─────────┼──────────┐
    ▼         ▼          ▼
@@ -48,9 +250,344 @@ Primary ┤
 (RS 3 node)(RS 3 node)(RS 3 node)
              ▲
       Config Server RS (metadata: chunk → shard mapping)
-</code></pre><ul><li>Dữ liệu chia theo <strong>shard key</strong> thành <strong>chunk</strong>; balancer di chuyển chunk giữa các shard.</li><li><strong>Chọn shard key là quyết định một chiều quan trọng nhất</strong> (reshard được từ 5.0 nhưng là chiến dịch lớn, đắt đỏ):<ul><li>Cardinality cao, phân bố ghi đều, và <strong>xuất hiện trong đa số query</strong> (query có shard key → định tuyến 1 shard; không có → scatter-gather toàn bộ shard).</li><li>Anti-pattern chết người: shard key đơn điệu tăng (timestamp, ObjectId) → <strong>mọi insert dồn vào chunk cuối của một shard</strong> — cluster 10 shard, 1 shard gánh 100% ghi. Giải pháp: hashed shard key (mất range query) hoặc compound key có tiền tố phân tán.</li></ul></li><li><strong>Chi phí ẩn của sharding:</strong> cluster tối thiểu nghiêm túc = 2 shard × 3 node + 3 config + 2 mongos ≈ <strong>11 process</strong> phải vận hành, giám sát, backup. So với 1 replica set 3 node — độ phức tạp nhảy một bậc. Nguyên tắc Chương 1 lặp lại: <em>shard khi có bằng chứng cần, không phải vì &ldquo;để sẵn cho tương lai&rdquo;</em>.</li></ul><h3 id=37-multi-document-transactions>3.7. Multi-document Transactions<a hidden class=anchor aria-hidden=true href=#37-multi-document-transactions>#</a></h3><p>Có từ 4.0 (replica set) / 4.2 (sharded, dùng 2PC nội bộ). Snapshot isolation, giới hạn thời gian mặc định 60s. Vấn đề không phải &ldquo;có hay không&rdquo; mà là <strong>chi phí</strong>: giữ snapshot + cache pressure trên WiredTiger, xuyên shard thì 2PC latency. <strong>Nguyên tắc thiết kế đúng:</strong> transaction đa document trong MongoDB là <strong>van an toàn cho ngoại lệ</strong>, không phải công cụ hàng ngày. Nếu thiết kế cần multi-document transaction trên đường nóng, đó là tín hiệu hoặc modeling sai (đáng lẽ embed để atomic-trong-1-document — mọi thao tác trên MỘT document luôn atomic), hoặc chọn nhầm database (bài toán vốn quan hệ → PostgreSQL).</p><hr><h2 id=4-điểm-mạnh>4. Điểm mạnh<a hidden class=anchor aria-hidden=true href=#4-điểm-mạnh>#</a></h2><ul><li><strong>Velocity:</strong> model khớp object trong code, thêm field không cần migration — đúng chỗ nhất cho sản phẩm giai đoạn khám phá, schema biến động.</li><li><strong>Scale-out tích hợp, HA tích hợp:</strong> failover tự động không cần Patroni; sharding không cần tự chế — chi phí kỹ sư hạ tầng thấp hơn đáng kể ở quy mô lớn.</li><li><strong>Atomic single-document + embed</strong> phủ được tỷ lệ lớn nhu cầu transactional thực tế nếu modeling đúng.</li><li><strong>Change streams</strong> — CDC hạng nhất, xây event-driven dễ.</li><li><strong>Tunable consistency per-operation</strong> — một cluster phục vụ nhiều mức yêu cầu.</li></ul><h2 id=5-điểm-yếu>5. Điểm yếu<a hidden class=anchor aria-hidden=true href=#5-điểm-yếu>#</a></h2><ul><li><strong>Đẩy trách nhiệm toàn vẹn về ứng dụng:</strong> không FK, không CHECK constraint xuyên document, schema validation tùy chọn ít ai bật. &ldquo;Schema linh hoạt&rdquo; sau 3 năm và 5 thế hệ dev = <strong>schema hỗn loạn ngầm</strong> (field cùng tên khác kiểu, ngày lưu string lẫn Date). Chi phí này vô hình lúc đầu, lớn dần theo tuổi codebase.</li><li><strong>JOIN yếu về cấu trúc</strong> — <code>$lookup</code> hạn chế, đặc biệt xuyên shard. Bài toán vốn nhiều quan hệ nhiều chiều sẽ khổ sở.</li><li><strong>RAM-hungry:</strong> hiệu năng tụt vách đá khi working set tràn WiredTiger cache; field name lặp làm cache &ldquo;loãng&rdquo; hơn RDBMS tương đương.</li><li><strong>Analytics lớn không phải sân của nó</strong> (row-oriented — mục 3.4).</li><li><strong>Chi phí vận hành sharded cluster</strong> cao hơn vẻ ngoài (11+ process, chọn shard key một chiều).</li></ul><h2 id=6-trade-off>6. Trade-off<a hidden class=anchor aria-hidden=true href=#6-trade-off>#</a></h2><table><thead><tr><th>Trade-off</th><th>MongoDB chọn</th><th>Nguyên nhân kỹ thuật</th><th>Hệ quả</th></tr></thead><tbody><tr><td>Flexibility vs Integrity</td><td>Flexibility</td><td>Schema-on-read, validation opt-in</td><td>Toàn vẹn là kỷ luật của đội, không phải bảo đảm của hệ thống</td></tr><tr><td>Read locality vs Duplication</td><td>Embed (locality)</td><td>Document = đơn vị I/O và atomicity</td><td>Đọc 1 lần lấy tất; sửa dữ liệu lặp ở N chỗ là N lần ghi</td></tr><tr><td>Consistency vs Latency</td><td>Tùy chỉnh per-op</td><td>writeConcern/readConcern</td><td>Mạnh khi dùng đúng; bẫy khi dùng mặc định mù</td></tr><tr><td>Scale-out vs Query tự do</td><td>Scale-out</td><td>Shard key routing</td><td>Query không có shard key = scatter-gather; thiết kế query bị shard key trói</td></tr><tr><td>Tích hợp HA vs kiểm soát tinh vi</td><td>Tích hợp</td><td>Bầu cử Raft-like nội bộ</td><td>Vận hành dễ hơn PG; ít điểm can thiệp hơn Patroni</td></tr></tbody></table><h2 id=7-production-considerations>7. Production Considerations<a hidden class=anchor aria-hidden=true href=#7-production-considerations>#</a></h2><ul><li><strong>Topology tối thiểu:</strong> replica set 3 node, 3 AZ. <code>w: majority</code> cho dữ liệu quan trọng. Không dùng arbiter nếu tránh được.</li><li><strong>Backup:</strong> mongodump chỉ đủ cho dữ liệu nhỏ; production dùng snapshot filesystem nhất quán hoặc Ops Manager/Atlas continuous backup (PITR qua oplog).</li><li><strong>Monitoring tối thiểu:</strong> replication lag, oplog window (giờ oplog còn giữ — secondary chết lâu hơn window = phải initial sync lại toàn bộ), WiredTiger cache dirty/used %, connections, COLLSCAN (qua profiler/<code>totalDocsExamined</code>), disk.</li><li><strong>Capacity:</strong> RAM ≥ working set + index nóng; theo dõi cache eviction rate như tín hiệu sớm nhất của &ldquo;sắp tụt vách đá&rdquo;.</li><li><strong>Security:</strong> authentication BẮT BUỘC bật (lịch sử Internet đầy cluster Mongo mở toang bị ransom — mặc định cũ bind 0.0.0.0 không auth), TLS, network isolation.</li><li><strong>Upgrade:</strong> rolling upgrade trong replica set — thay từng secondary, stepdown primary; đọc kỹ compatibility version (FCV).</li><li><strong>Multi-region:</strong> replica set trải region với priority điều khiển primary ở đâu; sharded + zone sharding cho data residency.</li><li><strong>Atlas vs tự vận hành:</strong> Atlas mua vận hành bằng tiền — thường rẻ hơn đội ngũ tự vận hành sharded cluster nghiêm túc; trade-off là chi phí ở scale lớn và lock-in.</li></ul><h2 id=8-best-practices>8. Best Practices<a hidden class=anchor aria-hidden=true href=#8-best-practices>#</a></h2><ul><li><strong>Model theo access pattern, không theo &ldquo;đối tượng nghiệp vụ&rdquo;:</strong> liệt kê query trước, thiết kế document sau. Embed một-vài; reference một-nhiều-vô-hạn; các pattern chuẩn: bucket (time-series), subset (10 comment mới nhất embed, còn lại collection riêng), computed (tính trước lúc ghi), extended reference (nhúng bản sao rút gọn của đối tượng liên quan).</li><li><strong>Bật schema validation</strong> ở mức tối thiểu (kiểu của field cốt lõi) — chi phí gần 0, cứu chuộc tương lai.</li><li>Index theo ESR; xóa index không dùng (<code>$indexStats</code>); dùng partial thay vì index cả collection thưa.</li><li>Ghi có kỷ luật: <code>w: majority</code> mặc định ứng dụng; retryable writes bật (mặc định driver mới); idempotency ở tầng nghiệp vụ.</li><li>Shard key: chọn như thể không thể đổi (dù 5.0+ reshard được); mô phỏng phân bố ghi trước khi chốt.</li></ul><h2 id=9-anti-patterns>9. Anti-patterns<a hidden class=anchor aria-hidden=true href=#9-anti-patterns>#</a></h2><ol><li><strong>Dùng MongoDB như RDBMS:</strong> collection chuẩn hóa như bảng + <code>$lookup</code> khắp nơi → mọi nhược điểm của cả hai thế giới, ưu điểm của không thế giới nào.</li><li><strong>Unbounded array</strong> (mục 3.1) — chạm trần 16MB giữa đêm.</li><li><strong>Shard key đơn điệu tăng</strong> → một shard gánh cả cluster (mục 3.6).</li><li><strong><code>w:1</code> cho dữ liệu tiền bạc</strong> → rollback sau failover = &ldquo;mất tiền đã báo thành công&rdquo;.</li><li><strong>Query không index trên collection lớn</strong> — COLLSCAN âm thầm ăn hết I/O.</li><li><strong>Transaction đa document làm nếp hằng ngày</strong> — tín hiệu modeling/chọn hệ sai (mục 3.7).</li><li><strong>Không giám sát oplog window</strong> → secondary bảo trì lâu quay lại phải initial sync, kéo I/O primary đúng giờ cao điểm.</li></ol><h2 id=10-khi-nào-không-nên-dùng-mongodb>10. Khi nào KHÔNG nên dùng MongoDB<a hidden class=anchor aria-hidden=true href=#10-khi-nào-không-nên-dùng-mongodb>#</a></h2><ul><li><strong>Dữ liệu quan hệ chặt, bất biến nghiệp vụ phức tạp, đối soát tài chính</strong> → PostgreSQL. Cưỡng bức bài toán quan hệ vào document là nguồn khổ đau dài hạn phổ biến nhất.</li><li><strong>Analytics quét lớn / BI</strong> → ClickHouse hay warehouse columnar.</li><li><strong>Ứng dụng CRUD nhỏ, schema ổn định, một máy đủ</strong> → PostgreSQL đơn giản và &ldquo;đủ&rdquo; hơn; JSONB phủ được phần linh hoạt.</li><li><strong>Cần multi-region active-active ghi mọi nơi với xung đột tự giải quyết</strong> → hệ CRDT/Dynamo-style; MongoDB vẫn là single-primary per shard.</li><li><strong>Vì sao nhiều đội chọn sai?</strong> Vì demo 15 phút của MongoDB cực kỳ thuyết phục — insert JSON, không schema, chạy ngay. Chi phí thật (kỷ luật modeling, toàn vẹn ở app, RAM, shard key) chỉ lộ sau 12–24 tháng. Ngược lại cũng có đội né MongoDB vì danh tiếng 2012 dù ngày nay nó đã khác — cả hai đều là quyết định bằng meme thay vì phân tích.</li></ul><h2 id=11-decision-framework>11. Decision Framework<a hidden class=anchor aria-hidden=true href=#11-decision-framework>#</a></h2><p><strong>Chọn MongoDB khi:</strong></p><ul><li>Dữ liệu tự nhiên là document (catalog sản phẩm đa dạng thuộc tính, hồ sơ người dùng, nội dung CMS, event/IoT theo thiết bị) và <strong>access pattern chủ yếu theo một trục</strong> (theo user, theo device, theo đơn).</li><li>Schema biến động nhanh theo sản phẩm; đội chấp nhận kỷ luật validation.</li><li>Lộ trình scale-out ghi là thật (đo đạc/dự báo được), muốn sharding+HA tích hợp thay vì tự xây trên RDBMS.</li><li>Cần change streams / offline-sync (hệ sinh thái Realm/Atlas) làm xương sống event-driven.</li></ul><p><strong>Chọn hệ khác khi:</strong> bất biến quan hệ là cốt lõi (→ PostgreSQL), aggregation toàn dataset là cốt lõi (→ ClickHouse), key-value thuần tốc độ cao (→ Redis/DynamoDB).</p><p><strong>Câu hỏi quyết định nhanh:</strong> <em>&ldquo;Vẽ 5 query quan trọng nhất — chúng đi theo một trục (user/device/order) hay đan chéo nhiều thực thể?&rdquo;</em> Một trục → MongoDB tỏa sáng. Đan chéo → RDBMS.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/database/>Database</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/database/04-clickhouse/><span class=title>« Prev</span><br><span>Bài 4 — ClickHouse</span>
-</a><a class=next href=https://thanhhv.github.io/series/database/02-postgresql/><span class=title>Next »</span><br><span>Bài 2 — PostgreSQL</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on x" href="https://x.com/intent/tweet/?text=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f&amp;hashtags=backend%2cdatabase"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f&amp;title=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;summary=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f&title=B%c3%a0i%203%20%e2%80%94%20MongoDB"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on whatsapp" href="https://api.whatsapp.com/send?text=B%c3%a0i%203%20%e2%80%94%20MongoDB%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on telegram" href="https://telegram.me/share/url?text=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on ycombinator" href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%203%20%e2%80%94%20MongoDB&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fdatabase%2f03-mongodb%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+</code></pre><ul>
+<li>Dữ liệu chia theo <strong>shard key</strong> thành <strong>chunk</strong>; balancer di chuyển chunk giữa các shard.</li>
+<li><strong>Chọn shard key là quyết định một chiều quan trọng nhất</strong> (reshard được từ 5.0 nhưng là chiến dịch lớn, đắt đỏ):
+<ul>
+<li>Cardinality cao, phân bố ghi đều, và <strong>xuất hiện trong đa số query</strong> (query có shard key → định tuyến 1 shard; không có → scatter-gather toàn bộ shard).</li>
+<li>Anti-pattern chết người: shard key đơn điệu tăng (timestamp, ObjectId) → <strong>mọi insert dồn vào chunk cuối của một shard</strong> — cluster 10 shard, 1 shard gánh 100% ghi. Giải pháp: hashed shard key (mất range query) hoặc compound key có tiền tố phân tán.</li>
+</ul>
+</li>
+<li><strong>Chi phí ẩn của sharding:</strong> cluster tối thiểu nghiêm túc = 2 shard × 3 node + 3 config + 2 mongos ≈ <strong>11 process</strong> phải vận hành, giám sát, backup. So với 1 replica set 3 node — độ phức tạp nhảy một bậc. Nguyên tắc Chương 1 lặp lại: <em>shard khi có bằng chứng cần, không phải vì &ldquo;để sẵn cho tương lai&rdquo;</em>.</li>
+</ul>
+<h3 id="37-multi-document-transactions">3.7. Multi-document Transactions<a hidden class="anchor" aria-hidden="true" href="#37-multi-document-transactions">#</a></h3>
+<p>Có từ 4.0 (replica set) / 4.2 (sharded, dùng 2PC nội bộ). Snapshot isolation, giới hạn thời gian mặc định 60s. Vấn đề không phải &ldquo;có hay không&rdquo; mà là <strong>chi phí</strong>: giữ snapshot + cache pressure trên WiredTiger, xuyên shard thì 2PC latency. <strong>Nguyên tắc thiết kế đúng:</strong> transaction đa document trong MongoDB là <strong>van an toàn cho ngoại lệ</strong>, không phải công cụ hàng ngày. Nếu thiết kế cần multi-document transaction trên đường nóng, đó là tín hiệu hoặc modeling sai (đáng lẽ embed để atomic-trong-1-document — mọi thao tác trên MỘT document luôn atomic), hoặc chọn nhầm database (bài toán vốn quan hệ → PostgreSQL).</p>
+<hr>
+<h2 id="4-điểm-mạnh">4. Điểm mạnh<a hidden class="anchor" aria-hidden="true" href="#4-điểm-mạnh">#</a></h2>
+<ul>
+<li><strong>Velocity:</strong> model khớp object trong code, thêm field không cần migration — đúng chỗ nhất cho sản phẩm giai đoạn khám phá, schema biến động.</li>
+<li><strong>Scale-out tích hợp, HA tích hợp:</strong> failover tự động không cần Patroni; sharding không cần tự chế — chi phí kỹ sư hạ tầng thấp hơn đáng kể ở quy mô lớn.</li>
+<li><strong>Atomic single-document + embed</strong> phủ được tỷ lệ lớn nhu cầu transactional thực tế nếu modeling đúng.</li>
+<li><strong>Change streams</strong> — CDC hạng nhất, xây event-driven dễ.</li>
+<li><strong>Tunable consistency per-operation</strong> — một cluster phục vụ nhiều mức yêu cầu.</li>
+</ul>
+<h2 id="5-điểm-yếu">5. Điểm yếu<a hidden class="anchor" aria-hidden="true" href="#5-điểm-yếu">#</a></h2>
+<ul>
+<li><strong>Đẩy trách nhiệm toàn vẹn về ứng dụng:</strong> không FK, không CHECK constraint xuyên document, schema validation tùy chọn ít ai bật. &ldquo;Schema linh hoạt&rdquo; sau 3 năm và 5 thế hệ dev = <strong>schema hỗn loạn ngầm</strong> (field cùng tên khác kiểu, ngày lưu string lẫn Date). Chi phí này vô hình lúc đầu, lớn dần theo tuổi codebase.</li>
+<li><strong>JOIN yếu về cấu trúc</strong> — <code>$lookup</code> hạn chế, đặc biệt xuyên shard. Bài toán vốn nhiều quan hệ nhiều chiều sẽ khổ sở.</li>
+<li><strong>RAM-hungry:</strong> hiệu năng tụt vách đá khi working set tràn WiredTiger cache; field name lặp làm cache &ldquo;loãng&rdquo; hơn RDBMS tương đương.</li>
+<li><strong>Analytics lớn không phải sân của nó</strong> (row-oriented — mục 3.4).</li>
+<li><strong>Chi phí vận hành sharded cluster</strong> cao hơn vẻ ngoài (11+ process, chọn shard key một chiều).</li>
+</ul>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Trade-off</th>
+          <th>MongoDB chọn</th>
+          <th>Nguyên nhân kỹ thuật</th>
+          <th>Hệ quả</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Flexibility vs Integrity</td>
+          <td>Flexibility</td>
+          <td>Schema-on-read, validation opt-in</td>
+          <td>Toàn vẹn là kỷ luật của đội, không phải bảo đảm của hệ thống</td>
+      </tr>
+      <tr>
+          <td>Read locality vs Duplication</td>
+          <td>Embed (locality)</td>
+          <td>Document = đơn vị I/O và atomicity</td>
+          <td>Đọc 1 lần lấy tất; sửa dữ liệu lặp ở N chỗ là N lần ghi</td>
+      </tr>
+      <tr>
+          <td>Consistency vs Latency</td>
+          <td>Tùy chỉnh per-op</td>
+          <td>writeConcern/readConcern</td>
+          <td>Mạnh khi dùng đúng; bẫy khi dùng mặc định mù</td>
+      </tr>
+      <tr>
+          <td>Scale-out vs Query tự do</td>
+          <td>Scale-out</td>
+          <td>Shard key routing</td>
+          <td>Query không có shard key = scatter-gather; thiết kế query bị shard key trói</td>
+      </tr>
+      <tr>
+          <td>Tích hợp HA vs kiểm soát tinh vi</td>
+          <td>Tích hợp</td>
+          <td>Bầu cử Raft-like nội bộ</td>
+          <td>Vận hành dễ hơn PG; ít điểm can thiệp hơn Patroni</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="7-production-considerations">7. Production Considerations<a hidden class="anchor" aria-hidden="true" href="#7-production-considerations">#</a></h2>
+<ul>
+<li><strong>Topology tối thiểu:</strong> replica set 3 node, 3 AZ. <code>w: majority</code> cho dữ liệu quan trọng. Không dùng arbiter nếu tránh được.</li>
+<li><strong>Backup:</strong> mongodump chỉ đủ cho dữ liệu nhỏ; production dùng snapshot filesystem nhất quán hoặc Ops Manager/Atlas continuous backup (PITR qua oplog).</li>
+<li><strong>Monitoring tối thiểu:</strong> replication lag, oplog window (giờ oplog còn giữ — secondary chết lâu hơn window = phải initial sync lại toàn bộ), WiredTiger cache dirty/used %, connections, COLLSCAN (qua profiler/<code>totalDocsExamined</code>), disk.</li>
+<li><strong>Capacity:</strong> RAM ≥ working set + index nóng; theo dõi cache eviction rate như tín hiệu sớm nhất của &ldquo;sắp tụt vách đá&rdquo;.</li>
+<li><strong>Security:</strong> authentication BẮT BUỘC bật (lịch sử Internet đầy cluster Mongo mở toang bị ransom — mặc định cũ bind 0.0.0.0 không auth), TLS, network isolation.</li>
+<li><strong>Upgrade:</strong> rolling upgrade trong replica set — thay từng secondary, stepdown primary; đọc kỹ compatibility version (FCV).</li>
+<li><strong>Multi-region:</strong> replica set trải region với priority điều khiển primary ở đâu; sharded + zone sharding cho data residency.</li>
+<li><strong>Atlas vs tự vận hành:</strong> Atlas mua vận hành bằng tiền — thường rẻ hơn đội ngũ tự vận hành sharded cluster nghiêm túc; trade-off là chi phí ở scale lớn và lock-in.</li>
+</ul>
+<h2 id="8-best-practices">8. Best Practices<a hidden class="anchor" aria-hidden="true" href="#8-best-practices">#</a></h2>
+<ul>
+<li><strong>Model theo access pattern, không theo &ldquo;đối tượng nghiệp vụ&rdquo;:</strong> liệt kê query trước, thiết kế document sau. Embed một-vài; reference một-nhiều-vô-hạn; các pattern chuẩn: bucket (time-series), subset (10 comment mới nhất embed, còn lại collection riêng), computed (tính trước lúc ghi), extended reference (nhúng bản sao rút gọn của đối tượng liên quan).</li>
+<li><strong>Bật schema validation</strong> ở mức tối thiểu (kiểu của field cốt lõi) — chi phí gần 0, cứu chuộc tương lai.</li>
+<li>Index theo ESR; xóa index không dùng (<code>$indexStats</code>); dùng partial thay vì index cả collection thưa.</li>
+<li>Ghi có kỷ luật: <code>w: majority</code> mặc định ứng dụng; retryable writes bật (mặc định driver mới); idempotency ở tầng nghiệp vụ.</li>
+<li>Shard key: chọn như thể không thể đổi (dù 5.0+ reshard được); mô phỏng phân bố ghi trước khi chốt.</li>
+</ul>
+<h2 id="9-anti-patterns">9. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#9-anti-patterns">#</a></h2>
+<ol>
+<li><strong>Dùng MongoDB như RDBMS:</strong> collection chuẩn hóa như bảng + <code>$lookup</code> khắp nơi → mọi nhược điểm của cả hai thế giới, ưu điểm của không thế giới nào.</li>
+<li><strong>Unbounded array</strong> (mục 3.1) — chạm trần 16MB giữa đêm.</li>
+<li><strong>Shard key đơn điệu tăng</strong> → một shard gánh cả cluster (mục 3.6).</li>
+<li><strong><code>w:1</code> cho dữ liệu tiền bạc</strong> → rollback sau failover = &ldquo;mất tiền đã báo thành công&rdquo;.</li>
+<li><strong>Query không index trên collection lớn</strong> — COLLSCAN âm thầm ăn hết I/O.</li>
+<li><strong>Transaction đa document làm nếp hằng ngày</strong> — tín hiệu modeling/chọn hệ sai (mục 3.7).</li>
+<li><strong>Không giám sát oplog window</strong> → secondary bảo trì lâu quay lại phải initial sync, kéo I/O primary đúng giờ cao điểm.</li>
+</ol>
+<h2 id="10-khi-nào-không-nên-dùng-mongodb">10. Khi nào KHÔNG nên dùng MongoDB<a hidden class="anchor" aria-hidden="true" href="#10-khi-nào-không-nên-dùng-mongodb">#</a></h2>
+<ul>
+<li><strong>Dữ liệu quan hệ chặt, bất biến nghiệp vụ phức tạp, đối soát tài chính</strong> → PostgreSQL. Cưỡng bức bài toán quan hệ vào document là nguồn khổ đau dài hạn phổ biến nhất.</li>
+<li><strong>Analytics quét lớn / BI</strong> → ClickHouse hay warehouse columnar.</li>
+<li><strong>Ứng dụng CRUD nhỏ, schema ổn định, một máy đủ</strong> → PostgreSQL đơn giản và &ldquo;đủ&rdquo; hơn; JSONB phủ được phần linh hoạt.</li>
+<li><strong>Cần multi-region active-active ghi mọi nơi với xung đột tự giải quyết</strong> → hệ CRDT/Dynamo-style; MongoDB vẫn là single-primary per shard.</li>
+<li><strong>Vì sao nhiều đội chọn sai?</strong> Vì demo 15 phút của MongoDB cực kỳ thuyết phục — insert JSON, không schema, chạy ngay. Chi phí thật (kỷ luật modeling, toàn vẹn ở app, RAM, shard key) chỉ lộ sau 12–24 tháng. Ngược lại cũng có đội né MongoDB vì danh tiếng 2012 dù ngày nay nó đã khác — cả hai đều là quyết định bằng meme thay vì phân tích.</li>
+</ul>
+<h2 id="11-decision-framework">11. Decision Framework<a hidden class="anchor" aria-hidden="true" href="#11-decision-framework">#</a></h2>
+<p><strong>Chọn MongoDB khi:</strong></p>
+<ul>
+<li>Dữ liệu tự nhiên là document (catalog sản phẩm đa dạng thuộc tính, hồ sơ người dùng, nội dung CMS, event/IoT theo thiết bị) và <strong>access pattern chủ yếu theo một trục</strong> (theo user, theo device, theo đơn).</li>
+<li>Schema biến động nhanh theo sản phẩm; đội chấp nhận kỷ luật validation.</li>
+<li>Lộ trình scale-out ghi là thật (đo đạc/dự báo được), muốn sharding+HA tích hợp thay vì tự xây trên RDBMS.</li>
+<li>Cần change streams / offline-sync (hệ sinh thái Realm/Atlas) làm xương sống event-driven.</li>
+</ul>
+<p><strong>Chọn hệ khác khi:</strong> bất biến quan hệ là cốt lõi (→ PostgreSQL), aggregation toàn dataset là cốt lõi (→ ClickHouse), key-value thuần tốc độ cao (→ Redis/DynamoDB).</p>
+<p><strong>Câu hỏi quyết định nhanh:</strong> <em>&ldquo;Vẽ 5 query quan trọng nhất — chúng đi theo một trục (user/device/order) hay đan chéo nhiều thực thể?&rdquo;</em> Một trục → MongoDB tỏa sáng. Đan chéo → RDBMS.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:54040/tags/database/">Database</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:54040/series/database/04-clickhouse/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Bài 4 — ClickHouse</span>
+  </a>
+  <a class="next" href="http://localhost:54040/series/database/02-postgresql/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Bài 2 — PostgreSQL</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on x"
+            href="https://x.com/intent/tweet/?text=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f&amp;hashtags=backend%2cdatabase">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f&amp;title=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;summary=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f&title=B%c3%a0i%203%20%e2%80%94%20MongoDB">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on whatsapp"
+            href="https://api.whatsapp.com/send?text=B%c3%a0i%203%20%e2%80%94%20MongoDB%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on telegram"
+            href="https://telegram.me/share/url?text=B%c3%a0i%203%20%e2%80%94%20MongoDB&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 3 — MongoDB on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%203%20%e2%80%94%20MongoDB&u=http%3a%2f%2flocalhost%3a54040%2fseries%2fdatabase%2f03-mongodb%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

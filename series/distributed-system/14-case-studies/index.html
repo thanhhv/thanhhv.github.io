@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Chương 14 – Case Studies: Ráp toàn bộ kiến thức vào hệ thống thật
+
+Mỗi case study dưới đây là một bài tập tổng hợp: kiến trúc → vì sao → trade-off → failure case → bottleneck → cách mở rộng. Số chương trong ngoặc trỏ về lý thuyết tương ứng. Các con số là ước lượng để tập tư duy định lượng — thói quen quan trọng nhất khi thiết kế hệ thống.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/distributed-system/14-case-studies/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/distributed-system/14-case-studies/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/distributed-system/"></a></div>
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">17 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="chương-14--case-studies-ráp-toàn-bộ-kiến-thức-vào-hệ-thống-thật">Chương 14 – Case Studies: Ráp toàn bộ kiến thức vào hệ thống thật<a hidden class="anchor" aria-hidden="true" href="#chương-14--case-studies-ráp-toàn-bộ-kiến-thức-vào-hệ-thống-thật">#</a></h1>
+<blockquote>
+<p>Mỗi case study dưới đây là một bài tập tổng hợp: kiến trúc → vì sao → trade-off → failure case → bottleneck → cách mở rộng. Số chương trong ngoặc trỏ về lý thuyết tương ứng. Các con số là ước lượng để tập tư duy định lượng — thói quen quan trọng nhất khi thiết kế hệ thống.</p></blockquote>
+<hr>
+<h2 id="1-url-shortener--bài-học-vỡ-lòng-nhưng-đủ-cả-trade-off">1. URL Shortener — bài học vỡ lòng nhưng đủ cả trade-off<a hidden class="anchor" aria-hidden="true" href="#1-url-shortener--bài-học-vỡ-lòng-nhưng-đủ-cả-trade-off">#</a></h2>
+<p><strong>Bài toán</strong>: 100M link mới/tháng (~40 write/s), redirect 10K/s — <strong>read:write = 250:1</strong>, latency redirect phải &lt;50ms.</p>
+<p><strong>Kiến trúc</strong>: API tạo link → sinh mã 7 ký tự base62 → ghi DB (key→URL). Redirect: cache-aside (chương 10) trước DB; CDN/edge cache cho link hot.</p>
+<p><strong>Các quyết định đáng học:</strong></p>
+<ul>
+<li><strong>Sinh mã</strong>: hash URL (trùng khi 2 người rút gọn cùng URL — chấp nhận hay muối?) vs counter toàn cục (một điểm nghẽn + đoán được ID) vs <strong>dải counter cấp theo lô</strong> (mỗi app node xin lô 100K ID từ coordinator — ghi nhanh, không nghẽn; đây là bài &ldquo;né consensus trong hot path&rdquo;, chương 07 §8).</li>
+<li><strong>Storage</strong>: dữ liệu KV thuần, không join → key-value store partition theo mã (hash partition — chương 06); một node PostgreSQL cũng thừa sức ở quy mô này (chương 01: đừng phân tán sớm!).</li>
+<li><strong>Consistency</strong>: link vừa tạo phải dùng được ngay (read-your-writes — chương 03) nhưng lan tới edge cache có thể trễ giây — chấp nhận được. Xóa/vô hiệu link mới là bài khó: cache TTL + purge CDN (invalidation, chương 10).</li>
+</ul>
+<p><strong>Failure &amp; bottleneck</strong>: hot key (một link viral 100K rps) → CDN hấp thụ, đây là lý do có tầng edge chứ không chỉ Redis (chương 10 §3.4). Đếm click: đừng <code>UPDATE count+1</code> mỗi redirect (write amplification vào một hàng — hot row); bắn event vào Kafka, aggregate theo lô (chương 09).</p>
+<p><strong>Bài học chính</strong>: ngay cả hệ &ldquo;đơn giản nhất&rdquo; cũng chứa: read/write ratio quyết định kiến trúc, ID generation phân tán, hot key, và analytics tách khỏi hot path.</p>
+<hr>
+<h2 id="2-e-commerce--flash-sale--tồn-kho-là-bài-toán-consistency-đắt-nhất">2. E-commerce &amp; Flash Sale — tồn kho là bài toán consistency đắt nhất<a hidden class="anchor" aria-hidden="true" href="#2-e-commerce--flash-sale--tồn-kho-là-bài-toán-consistency-đắt-nhất">#</a></h2>
+<p><strong>Bài toán</strong>: nền tảng 1M đơn/ngày, flash sale 12.12: 500K người tranh 10K suất trong 5 phút.</p>
+<p><strong>Kiến trúc tổng</strong>: tách service theo bounded context (Catalog, Cart, Order, Inventory, Payment) — Catalog read-heavy (cache + search index, CQRS — chương 09); Cart là dữ liệu hòa giải được (Dynamo-style, chương 05 — bài học từ chính Amazon); <strong>Order+Inventory+Payment là saga orchestration</strong> (chương 08): tạo đơn PENDING → giữ chỗ tồn kho (reserve, có TTL) → thanh toán (idempotency key) → xác nhận; mỗi bước có compensation.</p>
+<p><strong>Flash sale — thiết kế riêng vì tải lệch 1000x ngày thường:</strong></p>
+<pre tabindex="0"><code>User ──▶ CDN (trang tĩnh, đếm ngược) 
+     ──▶ Queue chờ ảo (virtual waiting room — load shedding có UX, ch.11)
+     ──▶ Trừ suất trong REDIS (Lua script atomic DECR — linearizable một node, ch.03)
+            hết suất → từ chối ngay, KHÔNG chạm DB
+     ──▶ Chỉ N người thắng đi tiếp vào saga đặt hàng thật
+</code></pre><p>Vì sao: 500K request tranh 10K suất = 490K request <strong>chắc chắn thất bại</strong> — cho chúng chết càng sớm càng rẻ (edge &gt; Redis &gt; DB). Số suất là hot key chủ đích → một node Redis atomic thay vì &ldquo;phân tán cho ngầu&rdquo; (mã hóa đúng bài: cần linearizability cục bộ, chương 03) — muốn hơn nữa thì chia 10K suất thành 10 bucket × 1K (salting, chương 06 §5).</p>
+<p><strong>Failure case kinh điển</strong>: (1) Oversell — check-then-act không nguyên tử (chương 03 §8); (2) thanh toán timeout không rõ kết quả → query PSP + idempotency key, tuyệt đối không đoán (chương 08); (3) giữ chỗ không TTL → thanh toán bỏ dở khóa hết kho — reserve phải tự hết hạn + đối soát.</p>
+<p><strong>Bài học chính</strong>: phân loại consistency per-operation (catalog eventual, cart merge, tồn kho linearizable-tại-điểm-quyết-định) và &ldquo;thiết kế cho từ chối sớm&rdquo; là cốt lõi của mọi hệ bán hàng tải đỉnh.</p>
+<hr>
+<h2 id="3-banking--payment-system--đúng-trước-nhanh-sau">3. Banking / Payment System — đúng trước, nhanh sau<a hidden class="anchor" aria-hidden="true" href="#3-banking--payment-system--đúng-trước-nhanh-sau">#</a></h2>
+<p><strong>Bài toán</strong>: chuyển tiền, số dư không bao giờ sai, audit 7 năm, đối tác (ngân hàng, PSP) là hệ ngoài không kiểm soát được.</p>
+<p><strong>Kiến trúc lõi — ledger ghi kép, append-only:</strong></p>
+<pre tabindex="0"><code>Chuyển 500K từ A→B = MỘT transaction ghi 2 entry bất biến:
+  [debit  A  500K  txn_9182]
+  [credit B  500K  txn_9182]
+Số dư = SUM(entries) — có snapshot/materialized view để đọc nhanh (Event Sourcing đúng chỗ, ch.09 §5)
+</code></pre><p>Vì sao: UPDATE balance đè mất lịch sử — regulator hỏi &ldquo;vì sao số dư là X&rdquo; phải trả lời bằng chứng cứ; entry bất biến còn <strong>né bài toán lost-update</strong> (không ai UPDATE, chỉ INSERT — chương 03 §9).</p>
+<p><strong>Các quyết định đáng học:</strong></p>
+<ul>
+<li><strong>Trong một ledger</strong>: transaction ACD I cục bộ trên một DB relational, partition theo account chỉ khi buộc phải (chương 08 thứ tự ưu tiên: vẽ ranh giới để transaction là cục bộ). Core ledger nhiều ngân hàng chạy trên <strong>một</strong> cụm DB mạnh + sync replica (chương 01 §9: scale up là lựa chọn nghiêm túc) — vì thứ họ cần là <em>đúng</em>, và 5K TPS ledger là trong tầm một máy.</li>
+<li><strong>Xuyên hệ (nạp/rút qua ngân hàng khác, PSP)</strong>: không có transaction chung với hệ của người khác → <strong>saga + idempotency key + trạng thái PENDING + đối soát file cuối ngày</strong> (chương 08 §7 — reconciliation không phải phương án dự phòng, nó là <em>một phần của protocol</em> ngành tài chính).</li>
+<li><strong>Chống double-spend khi song song</strong>: với ledger, ràng buộc <code>balance &gt;= 0</code> kiểm tại commit (serializable hoặc constraint + retry khi conflict — optimistic, chương 03). Chống double-<em>submit</em>: idempotency key theo ý định (chương 08 §5).</li>
+<li><strong>DR</strong>: RPO=0 là bắt buộc → sync/semi-sync replica (chương 05), multi-AZ, và backup immutable (chương 13).</li>
+</ul>
+<p><strong>Failure case</strong>: PSP trả timeout rồi 2 giờ sau báo thành công qua webhook — luồng phải thiết kế cho &ldquo;kết quả đến muộn qua kênh khác&rdquo; (state machine per-transaction, không phải request/response). Webhook đến <strong>hai lần</strong> và <strong>sai thứ tự</strong> — idempotent + state machine chỉ nhận chuyển tiếp hợp lệ.</p>
+<p><strong>Bài học chính</strong>: hệ tiền nong thắng bằng <em>mô hình dữ liệu</em> (immutable ledger, state machine) và <em>quy trình</em> (idempotency, đối soát) nhiều hơn bằng công nghệ phân tán tân kỳ.</p>
+<hr>
+<h2 id="4-chat-application--fanout-ordering-và-presence">4. Chat Application — fanout, ordering và presence<a hidden class="anchor" aria-hidden="true" href="#4-chat-application--fanout-ordering-và-presence">#</a></h2>
+<p><strong>Bài toán</strong>: 50M user, tin nhắn 1-1 + nhóm, &ldquo;đã xem&rdquo;, online status, lịch sử vô hạn.</p>
+<p><strong>Kiến trúc</strong>: client giữ <strong>WebSocket</strong> tới Gateway (stateful — điều làm chat khó hơn web thường); Gateway route theo <code>user_id → connection</code> (registry trong Redis, chương 02 service discovery cho <em>người</em>); message đi: sender → Chat service → ghi store → đẩy tới Gateway của người nhận (online) hoặc push notification (offline).</p>
+<p><strong>Các quyết định đáng học:</strong></p>
+<ul>
+<li><strong>Ordering</strong>: thứ tự <em>trong một hội thoại</em> là bắt buộc, giữa các hội thoại thì không → partition theo <code>conversation_id</code> (chương 06 câu hỏi tự kiểm tra số 1 — giờ có đáp án), sequence number cấp per-conversation (single writer per partition — né bài đồng hồ, chương 12 §5).</li>
+<li><strong>Storage</strong>: <code>(conversation_id, seq)</code> làm khóa — Cassandra-style wide row là khớp tự nhiên; TTL/tiering cho media.</li>
+<li><strong>Nhóm lớn (100K thành viên)</strong>: fanout-on-write (đẩy 100K bản sao) chết → nhóm lớn chuyển <strong>fanout-on-read</strong> (thành viên kéo từ log hội thoại khi mở — chính là mô hình consumer/log, chương 02). Cùng một bài với social feed (case 7).</li>
+<li><strong>Presence (online/offline)</strong>: dữ liệu <em>đúng-tạm-thời</em>, sai vài giây vô hại → heartbeat + TTL trong Redis, eventual thoải mái (chương 03 — chọn model yếu nhất chịu được); đừng đốt engineering vào việc làm presence &ldquo;chính xác&rdquo;.</li>
+<li><strong>Exactly-once với người dùng</strong>: mạng di động rớt liên tục → client retry gửi kèm <code>client_msg_id</code> (idempotency key), server dedupe; receipt (delivered/read) là event bất đồng bộ, chịu trễ.</li>
+</ul>
+<p><strong>Failure case</strong>: Gateway node chết mang theo 500K connection → bão reconnect (thundering herd, chương 11) → client phải reconnect với backoff + jitter, server có connection rate limit; đây là lý do gateway phải nhiều node nhỏ thay vì ít node to (blast radius, chương 11 bulkhead).</p>
+<p><strong>Bài học chính</strong>: hệ stateful (connection) đòi tư duy khác hệ stateless: sticky routing, drain khi deploy, và bão reconnect là failure mode số một.</p>
+<hr>
+<h2 id="5-notification-service--hệ-chỉ-gửi-thông-báo-mà-chứa-cả-giáo-trình">5. Notification Service — hệ &ldquo;chỉ gửi thông báo&rdquo; mà chứa cả giáo trình<a hidden class="anchor" aria-hidden="true" href="#5-notification-service--hệ-chỉ-gửi-thông-báo-mà-chứa-cả-giáo-trình">#</a></h2>
+<p><strong>Bài toán</strong>: gửi email/SMS/push cho 100M user từ hàng chục service nội bộ, qua provider ngoài (APNs, FCM, SMS gateway) có rate limit và hay chập chờn.</p>
+<p><strong>Kiến trúc</strong>: các service phát event (<code>OrderShipped</code>&hellip;) → Kafka → Notification service: ưu tiên hóa + template + preference (user tắt gì?) + <strong>rate limit per-provider</strong> (chương 11 §7) + retry queue riêng từng kênh + <strong>DLQ có người trực</strong> (chương 11 §8).</p>
+<p><strong>Các quyết định đáng học:</strong></p>
+<ul>
+<li>Đây là <strong>command đội lốt event làm đúng cách</strong> (chương 09 §8): upstream phát <em>domain event</em> (sự thật), Notification service tự quyết có gửi không — thay vì mọi service tự gọi API email (logic notification vương vãi 30 chỗ).</li>
+<li><strong>Idempotency tuyệt đối</strong>: gửi trùng email &ldquo;đặt hàng thành công&rdquo; là xấu hổ; gửi trùng OTP/SMS là <em>tốn tiền thật</em> + khóa tài khoản. Inbox dedupe theo <code>(user, notification_key)</code> (chương 08 §4).</li>
+<li><strong>Provider là dependency không kiểm soát được</strong>: circuit breaker per-provider, failover SMS provider A→B (multi-vendor là bulkhead ở tầng nhà cung cấp), và <strong>backpressure</strong>: APNs giới hạn — queue trước mỗi provider phải bounded + shed theo ưu tiên (OTP &gt; marketing) khi tràn (chương 11 §6).</li>
+</ul>
+<p><strong>Failure case kinh điển</strong>: sự cố làm tồn 5M notification trong queue, sự cố qua đi → hệ gửi 5M tin <em>cũ</em> (đêm khuya, nội dung hết hạn). Message phải mang <strong>TTL nghiệp vụ</strong> (&ldquo;quá 30 phút thì đừng gửi nữa&rdquo;) — chính là bài &ldquo;serving the dead&rdquo; (chương 11 §6) ở tầng nghiệp vụ.</p>
+<p><strong>Bài học chính</strong>: một hệ &ldquo;phụ trợ&rdquo; tưởng đơn giản chạm đủ: event vs command, idempotency, rate limit, circuit breaker, priority shedding, DLQ, TTL nghiệp vụ.</p>
+<hr>
+<h2 id="6-ride-hailing--dữ-liệu-địa-lý-thay-đổi-từng-giây">6. Ride Hailing — dữ liệu địa lý thay đổi từng giây<a hidden class="anchor" aria-hidden="true" href="#6-ride-hailing--dữ-liệu-địa-lý-thay-đổi-từng-giây">#</a></h2>
+<p><strong>Bài toán</strong>: khớp khách với tài xế gần nhất trong &lt;3s; vị trí 1M tài xế cập nhật mỗi 4 giây (~250K write/s); giá động theo cung-cầu.</p>
+<p><strong>Kiến trúc</strong>:</p>
+<ul>
+<li><strong>Vị trí tài xế</strong>: dữ liệu <em>tươi quan trọng hơn bền</em> — mất 1 điểm GPS chẳng sao, trễ 30 giây mới chết → in-memory store partition theo <strong>geo-cell</strong> (geohash/S2/H3 — partition key là không gian, chương 06 biến thể), TTL ngắn; không ghi DB bền trong hot path (ghi async cho analytics).</li>
+<li><strong>Matching</strong>: query các cell quanh khách → ứng viên → chấm điểm (ETA, rating) → <strong>khóa tài xế trong lúc mời</strong> (lease + TTL: tài xế không nhận trong 10s thì tự nhả — chương 07 lease, và vì sao TTL chứ không lock vĩnh viễn: process matching có thể chết).</li>
+<li><strong>Hot cell</strong>: sân bay giờ cao điểm — một cell chứa 5K tài xế + 2K yêu cầu (hot partition, chương 06 §5) → chia nhỏ cell theo mật độ (cell phân cấp — H3 các cấp) thay vì cell đều.</li>
+<li><strong>Trip state machine</strong>: (requested→matched→arriving→in_trip→completed→paid) — bền, event-sourced-style, vì tranh chấp tiền nong cần lịch sử (chương 09); tách hẳn khỏi luồng vị trí (hai loại dữ liệu, hai yêu cầu, hai hệ — đừng nhét chung).</li>
+<li><strong>Surge pricing</strong>: aggregate cung-cầu per-cell qua stream processing (Kafka + windowed aggregation) — eventual vài giây là bản chất chấp nhận được.</li>
+</ul>
+<p><strong>Failure case</strong>: mất khu vực matching service → khách thấy &ldquo;không có xe&rdquo; (degrade) trong khi tài xế đầy đường; double-match một tài xế cho 2 khách khi lease không nguyên tử → phải CAS trên trạng thái tài xế (chương 03 compare-and-set).</p>
+<p><strong>Bài học chính</strong>: phân loại dữ liệu theo (tươi/bền/đúng) rồi chọn store khác nhau cho từng loại trong <em>cùng một</em> nghiệp vụ — kỹ năng principal-level điển hình.</p>
+<hr>
+<h2 id="7-social-network-feed--fanout-và-celebrity-problem">7. Social Network Feed — fanout và celebrity problem<a hidden class="anchor" aria-hidden="true" href="#7-social-network-feed--fanout-và-celebrity-problem">#</a></h2>
+<p><strong>Bài toán</strong>: 200M user, follow graph lệch cực đại (người thường 200 follower, celebrity 50M), feed phải &lt;200ms.</p>
+<p><strong>Hai chiến lược nền</strong> (đây là bài trade-off compute-lúc-ghi vs compute-lúc-đọc):</p>
+<ul>
+<li><strong>Fanout-on-write (push)</strong>: đăng bài → chèn vào feed cache (Redis list) của <em>mỗi</em> follower. Đọc feed = O(1). Nhưng celebrity đăng 1 bài = 50M write (write amplification giết hệ thống).</li>
+<li><strong>Fanout-on-read (pull)</strong>: đọc feed = gom bài mới từ <em>mỗi</em> người mình follow rồi trộn. Ghi = O(1). Nhưng đọc của user follow 1.000 người = 1.000 fetch (chương 02 chatty — chết theo hướng ngược lại).</li>
+</ul>
+<p><strong>Lời giải công nghiệp (Twitter công bố): lai</strong> — người thường đi đường push; <strong>celebrity đi đường pull</strong> (bài của họ không fanout; lúc user mở feed, trộn feed-đã-push với &ldquo;bài mới của các celebrity tôi follow&rdquo; từ cache bài nóng). Ngưỡng celebrity là con số vận hành (vd &gt;100K follower). Đây là hot key (chương 06/10) giải bằng <strong>đổi hẳn thuật toán cho phần tử nóng</strong> thay vì cào bằng — pattern đáng nhớ.</p>
+<p><strong>Các mảnh còn lại</strong>: đếm like/view — counter phân tán aggregate theo lô (không ai cần con số chính xác từng đơn vị — eventual, chương 03); ranking bằng ML → CQRS: pipeline offline build feature, online chỉ chấm điểm (chương 09); mọi thứ user-facing cần read-your-writes (&ldquo;bài tôi vừa đăng phải hiện trong feed tôi&rdquo; — chèn local trước, đường tắt UX rẻ hơn mọi giải pháp hạ tầng, chương 03).</p>
+<p><strong>Failure case</strong>: fanout queue tồn 30 phút → user đăng bài, bạn bè không thấy → nghĩ là mất bài → đăng lại (duplicate do <em>con người</em> retry — mọi định luật chương 01 áp dụng cả cho người). Giám sát fanout lag như SLI sản phẩm.</p>
+<hr>
+<h2 id="8-search-engine-trong-sản-phẩm--index-là-read-model-khổng-lồ">8. Search Engine (trong sản phẩm) — index là read model khổng lồ<a hidden class="anchor" aria-hidden="true" href="#8-search-engine-trong-sản-phẩm--index-là-read-model-khổng-lồ">#</a></h2>
+<p><strong>Bài toán</strong>: tìm kiếm sản phẩm/nội dung trên 500M document, cập nhật &ldquo;gần real-time&rdquo;, query p99 &lt;300ms.</p>
+<p><strong>Kiến trúc</strong>: nguồn sự thật (DB) → CDC/event (chương 08 outbox, 09) → indexing pipeline → <strong>inverted index</strong> shard theo document (Elasticsearch/OpenSearch); query: scatter tới mọi shard → mỗi shard trả top-k → gather trộn (chương 06 §6 local index — vì search <em>bản chất</em> là query đa chiều, không tránh được scatter-gather).</p>
+<p><strong>Hệ quả của scatter-gather</strong> (điểm sâu nhất case này): p99 query = <strong>max</strong> của N shard → một shard chậm kéo cả cụm (tail at scale — chương 10 tài liệu đọc). Đối sách: shard đều (tránh shard to bất thường), <strong>hedged request</strong> (gửi bản sao request đến replica khi bản chính chậm quá p95), adaptive replica selection. Số shard vừa phải — 1000 shard cho 5GB dữ liệu là tự sát bằng overhead.</p>
+<p><strong>Freshness vs cost</strong>: index theo lô 1–5 giây (near-real-time là <em>thiết kế</em> của Lucene: segment bất biến + refresh — lại là immutability né consistency, chương 03 §9); sản phẩm vừa đăng chưa tìm thấy ngay là <em>hợp đồng</em> phải nói rõ với PM (chương 03 §6 document cam kết). Reindex toàn bộ (đổi mapping): build index mới song song + alias switch (blue-green cho dữ liệu — chương 09 §7 replay có kế hoạch).</p>
+<p><strong>Failure case</strong>: CDC pipeline chết âm thầm 2 ngày → search trả kết quả cũ, không ai alert vì &ldquo;search vẫn chạy&rdquo; — freshness lag phải là SLI riêng (đo bằng đối soát mẫu: lấy N bản ghi mới nhất từ DB, hỏi index có chưa).</p>
+<hr>
+<h2 id="9-video-streaming--cdn-là-nhân-vật-chính">9. Video Streaming — CDN là nhân vật chính<a hidden class="anchor" aria-hidden="true" href="#9-video-streaming--cdn-là-nhân-vật-chính">#</a></h2>
+<p><strong>Bài toán</strong>: 10M người xem đồng thời, video 4K, startup &lt;2s, không giật.</p>
+<p><strong>Kiến trúc</strong>: upload → transcoding pipeline (queue + worker fleet — bài toán batch song song, autoscale theo queue depth, chương 11 backpressure) → xuất <strong>HLS/DASH: video cắt thành segment 2–6s nhiều bitrate</strong> → đẩy vào origin storage → <strong>CDN</strong> phục vụ ~95–99% byte; player tự đổi bitrate theo băng thông (adaptive — degrade <em>ở client</em>, dạng graceful degradation đẹp nhất: người xem thà mờ hơn là dừng, chương 11 §6).</p>
+<p><strong>Vì sao thiết kế này</strong>: video là dữ liệu <strong>bất biến, đọc cực nhiều, trễ ghi vô hại</strong> — ngược hoàn toàn hồ sơ ngân hàng → mọi lựa chọn nghiêng hết về phía cache/replicate thoải mái (chương 03: immutability làm mọi thứ dễ). Cái <em>khó</em> dồn vào: livestream (đuôi latency: segment ngắn ↔ overhead — trade-off latency/throughput nguyên bản chương 01), và <strong>thundering herd lúc sự kiện lớn</strong>: trận đấu bắt đầu, 5M người cùng xin segment mới mỗi 2 giây → origin phải được che bằng <strong>request coalescing tại CDN</strong> (nghìn cache miss cùng key gộp thành 1 request về origin — chính là single-flight của chương 10 §3.1 ở tầng CDN).</p>
+<p><strong>Failure case</strong>: một PoP CDN hỏng → client failover PoP khác (anycast) — người dùng không biết; origin hỏng mới là sự cố thật → origin shield + multi-region origin (chương 13). Bài học phụ: <strong>hệ tốt là hệ mà thành phần hỏng nhiều nhất (edge) được thiết kế hỏng rẻ nhất</strong>.</p>
+<hr>
+<h2 id="10-ai-platform-serving--training--hệ-phân-tán-gặp-gpu">10. AI Platform (serving + training) — hệ phân tán gặp GPU<a hidden class="anchor" aria-hidden="true" href="#10-ai-platform-serving--training--hệ-phân-tán-gặp-gpu">#</a></h2>
+<p><strong>Bài toán</strong>: phục vụ LLM/model inference cho 10K request/s, GPU đắt và khan hiếm; training job chạy tuần trên nghìn GPU.</p>
+<p><strong>Serving:</strong></p>
+<ul>
+<li><strong>GPU là tài nguyên đắt gấp 100x CPU</strong> → utilization là chỉ số sống còn → <strong>batching động</strong> (gom request trong cửa sổ vài ms — trade-off latency/throughput tường minh nhất bạn từng thấy, chương 01 §5; continuous batching cho LLM); model replica + LB nhận thức được độ dài queue từng replica (không round-robin mù — request LLM dài ngắn khác nhau 100x, chương 06 hot partition phiên bản compute).</li>
+<li><strong>Bài toán state mới: KV-cache</strong> của phiên hội thoại nằm trên GPU node cụ thể → request tiếp theo <em>nên</em> quay lại đúng node (sticky routing — hệ stateful như chat, case 4) vs load balance — trade-off locality/balance kinh điển khoác áo mới.</li>
+<li>Backpressure là bắt buộc: GPU bão hòa thì queue dài vô ích → <strong>shed + trả 429 với retry-after</strong> sớm (chương 11), ưu tiên theo tier khách hàng; timeout của inference dài (giây) → càng phải bounded queue kẻo giam tài nguyên.</li>
+</ul>
+<p><strong>Training:</strong></p>
+<ul>
+<li>Data-parallel: mỗi bước phải <strong>all-reduce gradient giữa nghìn GPU</strong> — đây là <em>phối hợp đồng bộ</em> thuần túy: bước đi theo node chậm nhất (straggler — tail latency chi phối, một GPU lỗi nhiệt kéo cả nghìn con chờ) → phát hiện straggler, topology mạng chuyên dụng.</li>
+<li>Job chạy 2 tuần trên 1000 node: xác suất <em>không</em> có node nào chết ≈ 0 (chương 01 §3.2) → <strong>checkpoint định kỳ + tự động resume</strong> là tính năng số một của mọi training platform; trade-off tần suất checkpoint (thời gian mất khi crash) vs chi phí ghi (bài RPO của chương 13, khoác áo ML).</li>
+<li>Scheduler cụm GPU (gang scheduling — job cần 512 GPU <em>cùng lúc</em> hoặc không gì cả) — bài toán phân bổ tài nguyên phân tán, họ hàng với chương 07 coordination.</li>
+</ul>
+<p><strong>Bài học chính</strong>: AI platform không có định luật phân tán mới — nó là các định luật cũ với <strong>đơn giá tài nguyên cao hơn hai bậc</strong>, nên các trade-off (batching, utilization, checkpoint, stickiness) từ &ldquo;nên làm&rdquo; thành &ldquo;sống còn&rdquo;.</p>
+<hr>
+<h2 id="tổng-kết-chương">Tổng kết chương<a hidden class="anchor" aria-hidden="true" href="#tổng-kết-chương">#</a></h2>
+<h3 id="những-điều-bắt-buộc-phải-nhớ--các-pattern-lặp-lại-xuyên-10-case">Những điều bắt buộc phải nhớ — các pattern lặp lại xuyên 10 case<a hidden class="anchor" aria-hidden="true" href="#những-điều-bắt-buộc-phải-nhớ--các-pattern-lặp-lại-xuyên-10-case">#</a></h3>
+<ol>
+<li><strong>Phân loại dữ liệu theo (tươi / bền / đúng / bất biến?) rồi mới chọn store</strong> — mọi case đều bắt đầu ở đây, không bắt đầu ở &ldquo;chọn công nghệ gì&rdquo;.</li>
+<li><strong>Read:write ratio + phân bố key quyết định kiến trúc</strong> — và phân bố luôn lệch (celebrity, sân bay, flash-sale SKU): thiết kế cho phần tử nóng bằng <em>đường đi riêng</em>, không cào bằng.</li>
+<li><strong>Từ chối sớm và rẻ</strong>: waiting room, CDN, negative cache, shed theo ưu tiên — hệ chịu tải đỉnh là hệ giỏi nói &ldquo;không&rdquo;.</li>
+<li><strong>Idempotency + state machine + đối soát</strong> — bộ ba xuất hiện ở mọi case có tiền hoặc có hệ ngoài.</li>
+<li><strong>Immutability né được cả họ bài toán consistency</strong> — ledger, video segment, Lucene segment, event log.</li>
+<li><strong>Hệ stateful (WebSocket, KV-cache GPU) đòi sticky routing + drain + chống bão reconnect</strong> — lớp bài toán riêng mà hệ stateless không có.</li>
+</ol>
+<h3 id="câu-hỏi-tự-kiểm-tra-tổng-hợp">Câu hỏi tự kiểm tra tổng hợp<a hidden class="anchor" aria-hidden="true" href="#câu-hỏi-tự-kiểm-tra-tổng-hợp">#</a></h3>
+<ol>
+<li>Chọn 2 case bất kỳ và chỉ ra cùng một pattern (vd single-flight) xuất hiện ở cả hai dưới hai cái tên khác nhau.</li>
+<li>Thiết kế hệ đặt vé concert 50K vé, 2M người chờ — trộn những mảnh nào từ case 2, 3 và 5? Chỉ ra 3 điểm chết người nếu bỏ qua.</li>
+<li>Với hệ bạn đang làm ở công ty: viết bảng phân loại dữ liệu (tươi/bền/đúng) như case 6, và một quyết định kiến trúc sẽ thay đổi sau khi viết bảng đó.</li>
+</ol>
+<h3 id="tài-liệu-kinh-điển-nên-đọc">Tài liệu kinh điển nên đọc<a hidden class="anchor" aria-hidden="true" href="#tài-liệu-kinh-điển-nên-đọc">#</a></h3>
+<ul>
+<li><strong>&ldquo;Designing Data-Intensive Applications&rdquo; (Kleppmann)</strong> — nếu chỉ đọc một cuốn sách sau bộ tài liệu này, là cuốn này.</li>
+<li><strong>Twitter: &ldquo;Timelines at Scale&rdquo; (InfoQ talk, Raffi Krikorian)</strong> — fanout lai push/pull từ người vận hành thật.</li>
+<li><strong>Uber Engineering Blog (H3, matching, schemaless)</strong> — chuỗi bài ride-hailing chi tiết hiếm có.</li>
+<li><strong>&ldquo;Scaling Memcache at Facebook&rdquo;</strong> + <strong>&ldquo;The Tail at Scale&rdquo;</strong> — hai bài được trích dẫn ở gần như mọi case bên trên; đọc lại lần nữa sau khi đọc chương này sẽ thấy khác lần đầu.</li>
+<li><strong>AWS Builders&rsquo; Library</strong> — tuyển tập cách Amazon vận hành: timeouts, retries, shuffle sharding, cell-based architecture — mỏ vàng cho mọi case study.</li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/distributed-system/13-multi-region/">
+    <span class="title">« Prev</span>
+    <br>
+    <span></span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/domain-driven-design/00-muc-luc-2/">
+    <span class="title">Next »</span>
+    <br>
+    <span></span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on x"
+            href="https://x.com/intent/tweet/?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f&amp;title=&amp;summary=&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f&title=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on whatsapp"
+            href="https://api.whatsapp.com/send?text=%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on telegram"
+            href="https://telegram.me/share/url?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdistributed-system%2f14-case-studies%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

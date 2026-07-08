@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Chương 6: Entity và Value Object — Hai viên gạch đầu tiên của Tactical Design
+
+Vị trí chương này: Từ chương 1 đến chương 5, chúng ta đã đi qua Strategic Design — cách chia hệ thống thành Domain, Subdomain, Bounded Context và cách các context nói chuyện với nhau. Từ chương này trở đi, chúng ta bước vào Tactical Design: cách viết code bên trong một Bounded Context. Entity và Value Object là hai building block cơ bản nhất — mọi thứ khác (Aggregate ở chương 7, Repository ở chương 8, Domain Service ở chương 9) đều xây trên hai khái niệm này. Nếu bạn hiểu sai Entity/Value Object, toàn bộ phần còn lại của Tactical Design sẽ méo theo.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/domain-driven-design/06-entity-va-value-object/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/domain-driven-design/06-entity-va-value-object/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/domain-driven-design/"></a></div>
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">39 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="chương-6-entity-và-value-object--hai-viên-gạch-đầu-tiên-của-tactical-design">Chương 6: Entity và Value Object — Hai viên gạch đầu tiên của Tactical Design<a hidden class="anchor" aria-hidden="true" href="#chương-6-entity-và-value-object--hai-viên-gạch-đầu-tiên-của-tactical-design">#</a></h1>
+<blockquote>
+<p><strong>Vị trí chương này:</strong> Từ chương 1 đến chương 5, chúng ta đã đi qua Strategic Design — cách chia hệ thống thành Domain, Subdomain, Bounded Context và cách các context nói chuyện với nhau. Từ chương này trở đi, chúng ta bước vào <strong>Tactical Design</strong>: cách viết code <em>bên trong</em> một Bounded Context. Entity và Value Object là hai building block cơ bản nhất — mọi thứ khác (Aggregate ở chương 7, Repository ở chương 8, Domain Service ở chương 9) đều xây trên hai khái niệm này. Nếu bạn hiểu sai Entity/Value Object, toàn bộ phần còn lại của Tactical Design sẽ méo theo.</p></blockquote>
+<hr>
+<h2 id="1-problem-statement--những-bug-quen-thuộc-mà-bạn-đã-từng-gặp">1. Problem Statement — Những bug quen thuộc mà bạn đã từng gặp<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement--những-bug-quen-thuộc-mà-bạn-đã-từng-gặp">#</a></h2>
+<p>Trước khi nói về khái niệm, hãy nhìn ba sự cố production có thật (đã đổi tên, nhưng kịch bản thì đội nào cũng từng dính ít nhất một):</p>
+<h3 id="sự-cố-1-cộng-100-usd-với-100-vnd-ra-200">Sự cố 1: Cộng 100 USD với 100 VND ra 200<a hidden class="anchor" aria-hidden="true" href="#sự-cố-1-cộng-100-usd-với-100-vnd-ra-200">#</a></h3>
+<p>Một hệ thống thanh toán đa tiền tệ. Model như sau:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// order.entity.ts — &#34;entity&#34; theo nghĩa TypeORM
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Entity</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@PrimaryGeneratedColumn</span>(<span style="color:#e6db74">&#39;uuid&#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>(<span style="color:#e6db74">&#39;decimal&#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">totalAmount</span>: <span style="color:#66d9ef">number</span>;   <span style="color:#75715e">// 100 là 100 gì? USD? VND? cent hay đồng?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">currency</span>: <span style="color:#66d9ef">string</span>;      <span style="color:#75715e">// nằm ở cột khác, chẳng liên quan gì đến totalAmount
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Ở một service nào đó, ai đó viết:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">totalAmount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">totalAmount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">refund</span>.<span style="color:#a6e22e">amount</span>;
+</span></span></code></pre></div><p><code>refund.amount</code> là VND, <code>order.totalAmount</code> là USD. Compiler không phàn nàn — cả hai đều là <code>number</code>. Test không bắt được — test chỉ dùng một loại tiền. Bug sống 4 tháng trên production cho đến khi kế toán đối soát cuối quý.</p>
+<p><strong>Câu hỏi first-principles:</strong> tại sao compiler không cứu được chúng ta? Vì trong model này, &ldquo;tiền&rdquo; không tồn tại. Chỉ có <code>number</code> và <code>string</code> tồn tại. Tri thức &ldquo;tiền có currency, hai loại tiền khác nhau không cộng được với nhau&rdquo; nằm trong đầu developer, không nằm trong code.</p>
+<h3 id="sự-cố-2-đơn-hàng-đã-giao-vẫn-bị-hủy">Sự cố 2: Đơn hàng đã giao vẫn bị hủy<a hidden class="anchor" aria-hidden="true" href="#sự-cố-2-đơn-hàng-đã-giao-vẫn-bị-hủy">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// Ở một chỗ nào đó trong codebase 300k dòng
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CANCELLED&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">orderRepo</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">order</span>);
+</span></span></code></pre></div><p>Rule nghiệp vụ là &ldquo;đơn đã giao (DELIVERED) không được hủy&rdquo;. Rule này <em>có</em> được implement — trong <code>OrderService.cancelOrder()</code>. Nhưng một developer khác, làm feature &ldquo;admin bulk update&rdquo;, không biết đến rule đó và set thẳng <code>status</code>. Vì <code>status</code> là public field với setter tự do, không gì ngăn được anh ta.</p>
+<p><strong>Câu hỏi first-principles:</strong> rule &ldquo;đơn DELIVERED không được hủy&rdquo; thuộc về <em>ai</em>? Nó thuộc về khái niệm Order. Nhưng trong code, Order chỉ là túi dữ liệu — rule bị đẩy ra service, và service thì có thể bị bypass.</p>
+<h3 id="sự-cố-3-hai-user-trùng-nhau-mà-không-trùng">Sự cố 3: Hai user &ldquo;trùng nhau&rdquo; mà không trùng<a hidden class="anchor" aria-hidden="true" href="#sự-cố-3-hai-user-trùng-nhau-mà-không-trùng">#</a></h3>
+<p>Hệ thống CRM merge dữ liệu khách hàng. Code so sánh khách hàng bằng email:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">customerA</span>.<span style="color:#a6e22e">Email</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">customerB</span>.<span style="color:#a6e22e">Email</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">merge</span>(<span style="color:#a6e22e">customerA</span>, <span style="color:#a6e22e">customerB</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Một bản ghi có email <code>&quot;Gavin@Smartbit.One &quot;</code> (viết hoa, thừa dấu cách do import từ Excel), bản kia là <code>&quot;gavin@smartbit.one&quot;</code>. Hệ thống coi là hai người khác nhau → gửi hai hóa đơn, hai chiến dịch marketing, khách hàng phàn nàn. Ngược lại, có nơi khác trong hệ thống lại so sánh khách hàng bằng&hellip; số điện thoại, và hai người dùng chung số công ty bị merge nhầm thành một.</p>
+<p><strong>Câu hỏi first-principles:</strong> khi nào hai &ldquo;thứ&rdquo; là một? Với email — hai email là một khi <em>giá trị chuẩn hóa</em> của chúng bằng nhau. Với khách hàng — hai khách hàng là một khi <em>identity</em> của họ là một, bất kể email hay số điện thoại thay đổi. Hai loại &ldquo;bằng nhau&rdquo; này hoàn toàn khác nhau, và trộn lẫn chúng là nguồn của cả hai bug trên.</p>
+<p>Ba sự cố, một gốc rễ chung: <strong>model không phân biệt được thứ gì có identity và thứ gì chỉ là giá trị, và không đặt rule nghiệp vụ vào đúng chỗ của nó.</strong> Đó chính xác là vấn đề mà Entity và Value Object giải quyết.</p>
+<hr>
+<h2 id="2-tại-sao-ddd-đưa-ra-hai-khái-niệm-này">2. Tại sao DDD đưa ra hai khái niệm này?<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-ddd-đưa-ra-hai-khái-niệm-này">#</a></h2>
+<p>Eric Evans không phát minh ra Entity và Value Object từ hư không. Ông quan sát một thực tế: trong mọi domain, các khái niệm nghiệp vụ chia thành hai họ có <em>ngữ nghĩa bằng nhau</em> (equality semantics) khác nhau:</p>
+<ol>
+<li>
+<p><strong>Những thứ nghiệp vụ quan tâm &ldquo;nó là cái nào&rdquo;</strong> — khách hàng, đơn hàng, tài khoản, hợp đồng. Khách hàng Nguyễn Văn A đổi email, đổi số điện thoại, thậm chí đổi tên — vẫn là khách hàng đó, vẫn nợ công ty 50 triệu. Cái làm nên &ldquo;nó&rdquo; là <strong>identity xuyên suốt thời gian</strong>, không phải thuộc tính tại một thời điểm.</p>
+</li>
+<li>
+<p><strong>Những thứ nghiệp vụ chỉ quan tâm &ldquo;nó bằng bao nhiêu / nó là gì&rdquo;</strong> — 500.000 VND, địa chỉ &ldquo;12 Nguyễn Huệ, Q1&rdquo;, khoảng thời gian 01/07–15/07, email <code>gavin@smartbit.one</code>. Không ai hỏi &ldquo;tờ 500 nghìn <em>nào</em>?&rdquo; khi thanh toán. Hai tờ 500 nghìn là hoàn toàn thay thế được cho nhau (fungible). Cái làm nên &ldquo;nó&rdquo; là <strong>toàn bộ giá trị của nó</strong>.</p>
+</li>
+</ol>
+<p>Nếu bạn dùng chung một cách model cho cả hai họ (mà thói quen ORM-first đẩy chúng ta vào: mọi thứ đều là class có <code>id</code> và các cột), bạn sẽ:</p>
+<ul>
+<li>So sánh nhầm loại equality (sự cố 3).</li>
+<li>Cho phép mutate những thứ đáng lẽ bất biến (sự cố 1 — tiền bị cộng bừa).</li>
+<li>Không có chỗ tự nhiên để đặt rule nghiệp vụ (sự cố 2 — rule trôi dạt ra service).</li>
+</ul>
+<p>DDD tách bạch hai họ này thành <strong>Entity</strong> (identity-based) và <strong>Value Object</strong> (value-based), kèm theo các quy tắc thiết kế riêng cho từng loại. Đó không phải là &ldquo;pattern cho đẹp&rdquo; — đó là cách ép ngữ nghĩa nghiệp vụ vào type system để compiler và cấu trúc code bảo vệ bạn.</p>
+<hr>
+<h2 id="3-bản-chất--mỗi-khái-niệm-bảo-vệ-điều-gì">3. Bản chất — mỗi khái niệm bảo vệ điều gì?<a hidden class="anchor" aria-hidden="true" href="#3-bản-chất--mỗi-khái-niệm-bảo-vệ-điều-gì">#</a></h2>
+<h3 id="31-entity-bảo-vệ-identity-và-tính-liên-tục-của-vòng-đời">3.1. Entity bảo vệ: identity và tính liên tục của vòng đời<a hidden class="anchor" aria-hidden="true" href="#31-entity-bảo-vệ-identity-và-tính-liên-tục-của-vòng-đời">#</a></h3>
+<p><strong>Entity</strong> là khái niệm nghiệp vụ được định danh bằng identity, có vòng đời (được sinh ra, thay đổi trạng thái qua thời gian, có thể kết thúc), và <strong>hai Entity bằng nhau khi và chỉ khi identity bằng nhau</strong>.</p>
+<p>Điểm mấu chốt không phải &ldquo;nó có id&rdquo; — mọi row trong DB đều có primary key. Điểm mấu chốt là <strong>tính liên tục (continuity)</strong>: Order #12345 lúc 9h sáng ở trạng thái PENDING và lúc 3h chiều ở trạng thái SHIPPED là <em>cùng một đơn hàng</em>, và lịch sử thay đổi của nó có ý nghĩa nghiệp vụ. Ai đặt? Đặt lúc nào? Đã qua những trạng thái nào? Câu chuyện đó gắn với identity.</p>
+<p>Hệ quả thiết kế:</p>
+<ul>
+<li><strong>Identity phải bất biến và được gán sớm</strong> — lý tưởng là ngay lúc tạo (UUID/ULID sinh ở application), không đợi DB auto-increment. Một Entity chưa có identity là một Entity &ldquo;chưa tồn tại đầy đủ&rdquo;, và code xử lý nó sẽ đầy <code>if (order.id === undefined)</code>.</li>
+<li><strong>Trạng thái thay đổi qua hành vi, không qua setter</strong> — vì mỗi thay đổi trạng thái là một <em>sự kiện nghiệp vụ</em> có điều kiện và hệ quả (cancel một đơn hàng ≠ set status = CANCELLED; nó còn kiểm tra điều kiện, hoàn tiền, ghi lý do, phát event).</li>
+<li><strong>Equality theo id, và chỉ theo id.</strong> So sánh field-by-field hai Order là vô nghĩa về mặt nghiệp vụ.</li>
+</ul>
+<h3 id="32-value-object-bảo-vệ-tính-đúng-đắn-của-giá-trị-và-các-rule-nhỏ-đi-kèm">3.2. Value Object bảo vệ: tính đúng đắn của giá trị và các rule nhỏ đi kèm<a hidden class="anchor" aria-hidden="true" href="#32-value-object-bảo-vệ-tính-đúng-đắn-của-giá-trị-và-các-rule-nhỏ-đi-kèm">#</a></h3>
+<p><strong>Value Object (VO)</strong> là khái niệm được định danh bằng chính giá trị của nó, không có identity, không có vòng đời, và <strong>immutable</strong>. Hai VO bằng nhau khi mọi thành phần giá trị bằng nhau.</p>
+<p>VO không phải là &ldquo;struct tiện lợi&rdquo;. Nó là <strong>nơi cư trú của các business rule nhỏ nhưng chí mạng</strong>:</p>
+<ul>
+<li><code>Money</code> biết rằng hai currency khác nhau không cộng được, rằng tiền không âm (trong ngữ cảnh giá bán), rằng chia tiền phải xử lý phần dư (bài toán chia 100 đồng cho 3 người).</li>
+<li><code>Email</code> biết cách chuẩn hóa (lowercase, trim) và validate format — <strong>một lần, tại nơi sinh ra</strong>, thay vì rải regex ở 14 chỗ.</li>
+<li><code>DateRange</code> biết rằng <code>start &lt;= end</code>, biết cách kiểm tra hai khoảng có overlap không — rule nền tảng của mọi hệ booking.</li>
+<li><code>Quantity</code> biết rằng số lượng phải nguyên dương và không vượt quá giới hạn đặt hàng.</li>
+</ul>
+<p><strong>Vì sao VO phải immutable?</strong> Đây không phải là sở thích functional programming. Có ba lý do rất thực dụng:</p>
+<ol>
+<li><strong>Loại bỏ aliasing bug.</strong> Nếu <code>Money</code> mutable và hai Order cùng giữ reference đến một object <code>Money</code>, sửa tiền của đơn này làm hỏng đơn kia. Đây là loại bug cực khó debug vì nơi gây bug và nơi biểu hiện bug cách xa nhau. Immutable → share thoải mái, không bao giờ hỏng ngầm.</li>
+<li><strong>Validate một lần là đủ.</strong> VO chỉ có thể được tạo qua constructor/factory có validate. Vì không ai sửa được nó sau đó, một VO tồn tại ⇒ nó hợp lệ, mãi mãi. Toàn bộ code phía sau <em>không cần</em> defensive check nữa. So sánh với primitive: <code>string email</code> phải được re-validate ở mọi nơi nghi ngờ, hoặc (thực tế hơn) không được validate ở đâu cả.</li>
+<li><strong>An toàn concurrency miễn phí.</strong> Object bất biến đọc từ nhiều goroutine/nhiều request đồng thời không cần lock. Trong Go, điều này loại bỏ hẳn một họ data race.</li>
+</ol>
+<p>Nói cách khác: <strong>immutability biến &ldquo;hy vọng dữ liệu đúng&rdquo; thành &ldquo;bằng chứng dữ liệu đúng&rdquo; ở mức type system.</strong> Mỗi VO là một hợp đồng: &ldquo;nếu bạn cầm được tôi, tôi hợp lệ&rdquo;.</p>
+<h3 id="33-primitive-obsession--gốc-của-rất-nhiều-bug-production">3.3. Primitive Obsession — gốc của rất nhiều bug production<a hidden class="anchor" aria-hidden="true" href="#33-primitive-obsession--gốc-của-rất-nhiều-bug-production">#</a></h3>
+<p><strong>Primitive obsession</strong> là thói quen dùng kiểu nguyên thủy (<code>string</code>, <code>number</code>, <code>float64</code>) để biểu diễn khái niệm nghiệp vụ. Nó là anti-pattern phổ biến nhất trong backend code, và tai hại vì:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Dùng primitive</th>
+          <th>Hậu quả thực tế</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>amount: number</code></td>
+          <td>Cộng USD với VND (sự cố 1); nhầm cent với đồng; sai số float (<code>0.1 + 0.2 !== 0.3</code>) trên tiền</td>
+      </tr>
+      <tr>
+          <td><code>email: string</code></td>
+          <td>Email chưa chuẩn hóa lọt vào DB; duplicate account; so sánh sai</td>
+      </tr>
+      <tr>
+          <td><code>userId: string</code>, <code>orderId: string</code></td>
+          <td>Truyền nhầm tham số: <code>transfer(toId, fromId)</code> đảo chỗ — compiler im lặng vì cả hai đều là string</td>
+      </tr>
+      <tr>
+          <td><code>startDate, endDate: Date</code> rời rạc</td>
+          <td><code>endDate &lt; startDate</code> lọt qua; logic overlap viết lại 5 lần, sai 2 lần</td>
+      </tr>
+      <tr>
+          <td><code>percent: number</code></td>
+          <td>0.15 hay 15? Mỗi module hiểu một kiểu; bug giảm giá 1500%</td>
+      </tr>
+  </tbody>
+</table>
+<p>Điểm chung: <strong>compiler mù nghiệp vụ</strong>. Khi mọi thứ là <code>string</code>/<code>number</code>, type system chỉ kiểm tra được &ldquo;đây có phải chuỗi ký tự không&rdquo; — câu hỏi vô giá trị. Khi bạn nâng lên <code>Email</code>, <code>Money</code>, <code>OrderId</code>, type system bắt đầu kiểm tra được câu hỏi nghiệp vụ: &ldquo;chỗ này cần tiền, anh đưa tôi cái gì đây?&rdquo;</p>
+<p>Chi phí sửa một bug production kiểu này (điều tra, hotfix, đối soát dữ liệu, xin lỗi khách) luôn lớn hơn nhiều lần chi phí viết một class <code>Money</code> 80 dòng. Đó là phép tính ROI đơn giản nhất trong DDD.</p>
+<hr>
+<h2 id="4-cách-hoạt-động">4. Cách hoạt động<a hidden class="anchor" aria-hidden="true" href="#4-cách-hoạt-động">#</a></h2>
+<h3 id="41-sơ-đồ-phân-loại-khi-nào-là-entity-khi-nào-là-value-object">4.1. Sơ đồ phân loại: khi nào là Entity, khi nào là Value Object?<a hidden class="anchor" aria-hidden="true" href="#41-sơ-đồ-phân-loại-khi-nào-là-entity-khi-nào-là-value-object">#</a></h3>
+<p>Câu hỏi quyết định không phải &ldquo;nó có id trong DB không&rdquo; mà là <strong>&ldquo;nghiệp vụ có cần theo dõi nó qua thời gian không?&rdquo;</strong></p>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">flowchart TD
+    A[&#34;Khái niệm nghiệp vụ X&#34;] --&gt; B{&#34;Nghiệp vụ có cần phân biệt&lt;br/&gt;&#39;cái này&#39; với &#39;cái kia&#39;&lt;br/&gt;dù mọi thuộc tính giống hệt?&#34;}
+    B -- &#34;Có&lt;br/&gt;(2 đơn hàng giống hệt nhau&lt;br/&gt;vẫn là 2 đơn)&#34; --&gt; C{&#34;Có cần theo dõi&lt;br/&gt;thay đổi qua thời gian?&#34;}
+    B -- &#34;Không&lt;br/&gt;(2 tờ 500k là như nhau)&#34; --&gt; V[&#34;VALUE OBJECT&lt;br/&gt;immutable, equality theo giá trị,&lt;br/&gt;chứa validation + rule nhỏ&#34;]
+    C -- &#34;Có&#34; --&gt; E[&#34;ENTITY&lt;br/&gt;identity bất biến, equality theo id,&lt;br/&gt;thay đổi qua hành vi có tên nghiệp vụ&#34;]
+    C -- &#34;Không, chỉ cần snapshot&#34; --&gt; V
+    V --&gt; V2{&#34;Cùng một khái niệm có thể là VO&lt;br/&gt;ở context này, Entity ở context khác&#34;}
+    V2 --&gt; V3[&#34;Address trong Order = VO (snapshot lúc giao)&lt;br/&gt;Address trong hệ quản lý bất động sản = Entity&#34;]
+</code></pre><p>Lưu ý dòng cuối cùng của sơ đồ — nó quan trọng hơn vẻ ngoài của nó: <strong>Entity/VO là quyết định theo Bounded Context, không phải thuộc tính tuyệt đối của khái niệm.</strong> &ldquo;Địa chỉ giao hàng&rdquo; trong đơn hàng là VO — nếu khách sửa địa chỉ nhà sau khi đơn đã giao, đơn hàng cũ <em>không được</em> thay đổi (nó là bằng chứng lịch sử: hàng đã giao đến đâu). Nhưng &ldquo;địa chỉ&rdquo; trong hệ thống quản lý tòa nhà là Entity — tòa nhà đổi tên đường vẫn là tòa nhà đó. Đây là lý do chương 4 (Bounded Context) phải đứng trước chương này.</p>
+<h3 id="42-vòng-đời-và-dòng-chảy-dữ-liệu">4.2. Vòng đời và dòng chảy dữ liệu<a hidden class="anchor" aria-hidden="true" href="#42-vòng-đời-và-dòng-chảy-dữ-liệu">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    participant C as Client/Controller
+    participant AS as Application Service
+    participant VO as Value Object
+    participant E as Entity (Order)
+    participant R as Repository
+
+    C-&gt;&gt;AS: POST /orders/{id}/items {sku, qty, unitPrice, currency}
+    AS-&gt;&gt;VO: Money.of(unitPrice, currency)
+    Note over VO: Validate tại biên:&lt;br/&gt;currency hợp lệ? amount &gt;= 0?&lt;br/&gt;Fail ở đây = fail sớm, message rõ
+    VO--&gt;&gt;AS: money (bất biến, chắc chắn hợp lệ)
+    AS-&gt;&gt;R: findById(orderId)
+    R--&gt;&gt;AS: order (Entity, trạng thái hợp lệ)
+    AS-&gt;&gt;E: order.addItem(sku, qty, money)
+    Note over E: Rule nghiệp vụ chạy TRONG entity:&lt;br/&gt;- đơn còn sửa được không?&lt;br/&gt;- currency khớp với đơn?&lt;br/&gt;- tính lại tổng tiền
+    E--&gt;&gt;AS: ok / DomainError
+    AS-&gt;&gt;R: save(order)
+</code></pre><p>Hai điểm nhìn vào sơ đồ:</p>
+<ol>
+<li><strong>Dữ liệu thô chết ở biên.</strong> Từ sau bước <code>Money.of(...)</code>, không còn <code>number</code> + <code>string</code> trôi nổi nữa — chỉ còn <code>Money</code>. Vùng lõi của hệ thống làm việc hoàn toàn với các kiểu đã được chứng minh hợp lệ.</li>
+<li><strong>Application Service không chứa rule.</strong> Nó điều phối: parse input thành VO, load Entity, gọi hành vi, save. Rule &ldquo;đơn còn sửa được không&rdquo; nằm trong <code>order.addItem</code> — nơi duy nhất, không thể bypass (chi tiết hơn ở chương 9).</li>
+</ol>
+<hr>
+<h2 id="5-đối-chiếu-quan-trọng-entity-của-ddd--entity-của-orm">5. Đối chiếu quan trọng: Entity của DDD ≠ &ldquo;entity&rdquo; của ORM<a hidden class="anchor" aria-hidden="true" href="#5-đối-chiếu-quan-trọng-entity-của-ddd--entity-của-orm">#</a></h2>
+<p>Đây là ngộ nhận số một của developer Việt Nam (và thế giới) khi tiếp cận DDD, vì chúng ta học từ ORM trước: TypeORM có decorator <code>@Entity</code>, GORM có struct map bảng, JPA có <code>@Entity</code>. Cùng một chữ, hai khái niệm gần như không liên quan:</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>&ldquo;Entity&rdquo; của ORM (TypeORM/GORM/JPA)</th>
+          <th>Entity của DDD</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Bản chất</td>
+          <td><strong>Row mapping</strong> — cấu trúc dữ liệu ánh xạ 1-1 với bảng</td>
+          <td><strong>Khái niệm nghiệp vụ</strong> có identity, vòng đời, hành vi</td>
+      </tr>
+      <tr>
+          <td>Sinh ra từ đâu</td>
+          <td>Schema database (&ldquo;có bảng orders thì có class Order&rdquo;)</td>
+          <td>Ubiquitous Language (&ldquo;nghiệp vụ nói về Đơn hàng&rdquo;)</td>
+      </tr>
+      <tr>
+          <td>Ai quyết định hình dạng</td>
+          <td>DBA / nhu cầu lưu trữ / normalization</td>
+          <td>Domain expert / invariant nghiệp vụ</td>
+      </tr>
+      <tr>
+          <td>Hành vi</td>
+          <td>Không có (hoặc chỉ hook lifecycle của ORM)</td>
+          <td>Là phần quan trọng nhất: <code>order.cancel()</code>, <code>order.addItem()</code></td>
+      </tr>
+      <tr>
+          <td>Setter/public field</td>
+          <td>Bắt buộc phải có để ORM hydrate</td>
+          <td>Tránh tối đa; state thay đổi qua method nghiệp vụ</td>
+      </tr>
+      <tr>
+          <td>Quan hệ</td>
+          <td>Foreign key, eager/lazy relations</td>
+          <td>Aggregate boundary, reference bằng id (chương 7)</td>
+      </tr>
+      <tr>
+          <td>Validation</td>
+          <td>Constraint DB, decorator validate từng field</td>
+          <td>Invariant xuyên nhiều field, được bảo vệ trong hành vi</td>
+      </tr>
+      <tr>
+          <td>Equality</td>
+          <td>Theo primary key (tình cờ giống DDD)</td>
+          <td>Theo identity — nhưng là identity <em>nghiệp vụ</em></td>
+      </tr>
+  </tbody>
+</table>
+<p>Nói ngắn gọn: <strong><code>@Entity</code> của TypeORM trả lời &ldquo;dữ liệu này nằm ở đâu&rdquo;; Entity của DDD trả lời &ldquo;khái niệm này là gì và được phép làm gì&rdquo;.</strong> Một cái là persistence concern, một cái là domain concern. Việc chúng trùng tên là tai nạn lịch sử đáng tiếc nhất trong thuật ngữ ngành.</p>
+<h3 id="51-anemic-domain-model-sinh-ra-từ-thói-quen-orm-first-như-thế-nào">5.1. Anemic Domain Model sinh ra từ thói quen ORM-first như thế nào<a hidden class="anchor" aria-hidden="true" href="#51-anemic-domain-model-sinh-ra-từ-thói-quen-orm-first-như-thế-nào">#</a></h3>
+<p>Quy trình quen thuộc của một team backend điển hình:</p>
+<ol>
+<li>Nhận requirement → <strong>thiết kế bảng trước</strong> (ERD).</li>
+<li>Generate/viết ORM entity từ bảng: class toàn field + getter/setter, không hành vi.</li>
+<li>Cần logic? Viết vào <code>OrderService</code>. Service nhận entity, đọc field, tính toán, set field, save.</li>
+<li>Sáu tháng sau: <code>OrderService</code> 3.000 dòng, logic về Order còn rải thêm ở <code>PaymentService</code>, <code>AdminService</code>, <code>CronJob</code>, và 2 cái stored procedure không ai dám đụng.</li>
+</ol>
+<p>Kết quả là <strong>Anemic Domain Model</strong> — model &ldquo;thiếu máu&rdquo;: class mang tên nghiệp vụ (<code>Order</code>, <code>Customer</code>) nhưng bên trong rỗng ruột, toàn data không behavior. Martin Fowler gọi đây là anti-pattern vì nó trả chi phí của OOP (class, object, mapping) mà không nhận lợi ích nào của OOP (encapsulation, hành vi gắn dữ liệu).</p>
+<p>Tại sao anemic model nguy hiểm, cụ thể?</p>
+<ul>
+<li><strong>Rule không có địa chỉ thường trú.</strong> &ldquo;Đơn DELIVERED không được hủy&rdquo; nằm ở service nào? Developer mới không biết → viết lại → hai version rule → drift → bug sự cố 2.</li>
+<li><strong>Mọi state đều sửa được từ mọi nơi.</strong> Public setter = lời mời bypass rule. Không phải developer cẩu thả — mà là <em>không có cách nào biết</em> rule tồn tại.</li>
+<li><strong>Test đắt đỏ.</strong> Muốn test rule phải dựng service, mà service kéo theo repository, kéo theo DB/mock. Trong khi rich model: <code>new Order(...); order.cancel(); expect(...)</code> — pure, chạy hàng nghìn test trong một giây.</li>
+<li><strong>Ubiquitous Language chết.</strong> Nghiệp vụ nói &ldquo;hủy đơn&rdquo;, code nói <code>setStatus(CANCELLED)</code> + <code>setUpdatedAt(now)</code> + <code>setCancelReason(...)</code> ở ba nơi. Khoảng cách ngôn ngữ (chương 3) mở rộng dần cho đến khi không ai dịch nổi.</li>
+</ul>
+<p>Cần công bằng: anemic model <strong>không phải lúc nào cũng sai</strong>. Với CRUD thuần túy (quản lý danh mục tỉnh thành, config), anemic + ORM là lựa chọn <em>đúng</em> — rẻ và đủ. Nó chỉ trở thành anti-pattern khi domain có rule thật mà model không chứa rule. Xem mục 12 (Khi nào KHÔNG nên dùng).</p>
+<hr>
+<h2 id="6-code-mẫu-money-value-object-và-order-entity--typescript-và-go">6. Code mẫu: Money Value Object và Order Entity — TypeScript và Go<a hidden class="anchor" aria-hidden="true" href="#6-code-mẫu-money-value-object-và-order-entity--typescript-và-go">#</a></h2>
+<h3 id="61-money-value-object--typescript-dùng-được-trong-nestjs">6.1. Money Value Object — TypeScript (dùng được trong NestJS)<a hidden class="anchor" aria-hidden="true" href="#61-money-value-object--typescript-dùng-được-trong-nestjs">#</a></h3>
+<p>Yêu cầu nghiệp vụ của <code>Money</code>: lưu bằng đơn vị nhỏ nhất (đồng/cent) dưới dạng số nguyên để tránh floating point; không cho cộng/trừ/so sánh khác currency; không âm khi trừ quá; immutable tuyệt đối.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// src/shared/domain/money.ts — KHÔNG import gì từ TypeORM/NestJS
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">type</span> <span style="color:#a6e22e">CurrencyCode</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;VND&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;USD&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;EUR&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">MINOR_UNIT</span>: <span style="color:#66d9ef">Record</span>&lt;<span style="color:#f92672">CurrencyCode</span>, <span style="color:#a6e22e">number</span>&gt; <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">VND</span>: <span style="color:#66d9ef">0</span>,   <span style="color:#75715e">// VND không có đơn vị lẻ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">USD</span>: <span style="color:#66d9ef">2</span>,   <span style="color:#75715e">// cent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">EUR</span>: <span style="color:#66d9ef">2</span>,
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CurrencyMismatchError</span> <span style="color:#66d9ef">extends</span> Error {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">CurrencyCode</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">CurrencyCode</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">super</span>(<span style="color:#e6db74">`Không thể thao tác giữa hai loại tiền khác nhau: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">a</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> và </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">b</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// private + readonly: không sửa được từ ngoài, không sửa được từ trong
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">_amount</span>: <span style="color:#66d9ef">bigint</span>,        <span style="color:#75715e">// đơn vị nhỏ nhất, bigint để không tràn số
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">_currency</span>: <span style="color:#66d9ef">CurrencyCode</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/** Cánh cổng duy nhất — mọi validate nằm ở đây */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">amountInMinorUnit</span>: <span style="color:#66d9ef">bigint</span> <span style="color:#f92672">|</span> <span style="color:#66d9ef">number</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#66d9ef">CurrencyCode</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">amount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">BigInt</span>(<span style="color:#a6e22e">amountInMinorUnit</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">amount</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span><span style="color:#a6e22e">n</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Money không được âm: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">amount</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(<span style="color:#a6e22e">currency</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">MINOR_UNIT</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Currency không được hỗ trợ: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Money</span>(<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">currency</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">zero</span>(<span style="color:#a6e22e">currency</span>: <span style="color:#66d9ef">CurrencyCode</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Money</span>(<span style="color:#ae81ff">0</span><span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">currency</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/** Parse từ số thập phân người dùng nhập, ví dụ &#34;10.50&#34; USD → 1050 cent */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">decimalString</span>: <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#66d9ef">CurrencyCode</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">digits</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">MINOR_UNIT</span>[<span style="color:#a6e22e">currency</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#e6db74">/^\d+(\.\d+)?$/</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">decimalString</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Định dạng số tiền không hợp lệ: &#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">decimalString</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">intPart</span>, <span style="color:#a6e22e">fracPart</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">decimalString</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#39;.&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">fracPart</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">digits</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> chỉ có </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">digits</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> chữ số lẻ, nhận được &#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">decimalString</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">minor</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">BigInt</span>(<span style="color:#a6e22e">intPart</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">BigInt</span>(<span style="color:#ae81ff">10</span> <span style="color:#f92672">**</span> <span style="color:#a6e22e">digits</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>                  <span style="color:#a6e22e">BigInt</span>(<span style="color:#a6e22e">fracPart</span>.<span style="color:#a6e22e">padEnd</span>(<span style="color:#a6e22e">digits</span>, <span style="color:#e6db74">&#39;0&#39;</span>) <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;0&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">minor</span>, <span style="color:#a6e22e">currency</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">amount</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">bigint</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span>; }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">currency</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">CurrencyCode</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">assertSameCurrency</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_currency</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">CurrencyMismatchError</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>, <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_currency</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ===== Mọi phép toán trả về Money MỚI — không bao giờ mutate =====
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">assertSameCurrency</span>(<span style="color:#a6e22e">other</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Money</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_amount</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">subtract</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">assertSameCurrency</span>(<span style="color:#a6e22e">other</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_amount</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">result</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span><span style="color:#a6e22e">n</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">`Kết quả trừ tiền bị âm: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> - </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_amount</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>,
+</span></span><span style="display:flex;"><span>      );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Money</span>(<span style="color:#a6e22e">result</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">multiply</span>(<span style="color:#a6e22e">factor</span>: <span style="color:#66d9ef">number</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>Number.<span style="color:#a6e22e">isInteger</span>(<span style="color:#a6e22e">factor</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">factor</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Hệ số nhân phải là số nguyên không âm: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">factor</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Money</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">BigInt</span>(<span style="color:#a6e22e">factor</span>), <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/** Chia tiền cho n phần, phần dư dồn vào các phần đầu — bài toán split bill kinh điển */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">allocate</span>(<span style="color:#a6e22e">parts</span>: <span style="color:#66d9ef">number</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span>[] {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>Number.<span style="color:#a6e22e">isInteger</span>(<span style="color:#a6e22e">parts</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">parts</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Số phần chia phải nguyên dương: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">parts</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">BigInt</span>(<span style="color:#a6e22e">parts</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">base</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">/</span> <span style="color:#a6e22e">n</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">remainder</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">%</span> <span style="color:#a6e22e">n</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Array.<span style="color:#66d9ef">from</span>({ <span style="color:#a6e22e">length</span>: <span style="color:#66d9ef">parts</span> }, (<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">i</span>) <span style="color:#f92672">=&gt;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Money</span>(<span style="color:#a6e22e">base</span> <span style="color:#f92672">+</span> (<span style="color:#a6e22e">BigInt</span>(<span style="color:#a6e22e">i</span>) <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">remainder</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">1n</span> : <span style="color:#66d9ef">0n</span>), <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>),
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ===== So sánh =====
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">equals</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_currency</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_amount</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">isGreaterThan</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">assertSameCurrency</span>(<span style="color:#a6e22e">other</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_amount</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">isGreaterThanOrEqual</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">assertSameCurrency</span>(<span style="color:#a6e22e">other</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">_amount</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">isZero</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span><span style="color:#a6e22e">n</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">toString</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">string</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">digits</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">MINOR_UNIT</span>[<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">digits</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_amount</span>.<span style="color:#a6e22e">toString</span>().<span style="color:#a6e22e">padStart</span>(<span style="color:#a6e22e">digits</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;0&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">0</span>, <span style="color:#f92672">-</span><span style="color:#a6e22e">digits</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#f92672">-</span><span style="color:#a6e22e">digits</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Đọc lại ba bug ở mục 1 và soi vào class này:</p>
+<ul>
+<li><strong>Tiền âm</strong> → <code>subtract</code> throw ngay tại chỗ, message chỉ đích danh phép trừ nào. Không cần luồng nào &ldquo;nhớ kiểm tra&rdquo;.</li>
+<li><strong>Cộng nhầm currency</strong> → <code>add</code> throw <code>CurrencyMismatchError</code>. Bug 4 tháng trở thành exception trong 4 giây đầu tiên chạy test.</li>
+<li><strong>Floating point</strong> → <code>bigint</code> đơn vị nhỏ nhất. <code>0.1 + 0.2</code> không còn tồn tại trong hệ quy chiếu này.</li>
+</ul>
+<p>Chú ý <code>allocate</code>: chia 100 VND cho 3 người ra <code>[34, 33, 33]</code> — tổng vẫn đúng 100. Nếu dùng <code>number</code> và chia float, tổng ba phần là <code>99.99999...</code>. Đây là loại rule &ldquo;nhỏ mà chí mạng&rdquo; chỉ có chỗ đứng tự nhiên trong Value Object.</p>
+<h3 id="62-money-value-object--go">6.2. Money Value Object — Go<a hidden class="anchor" aria-hidden="true" href="#62-money-value-object--go">#</a></h3>
+<p>Go không có class/private constructor, nhưng đạt được cùng mức bảo vệ bằng <strong>unexported field + package boundary</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// package domain/money — file money.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">money</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Currency</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">VND</span> <span style="color:#a6e22e">Currency</span> = <span style="color:#e6db74">&#34;VND&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">USD</span> <span style="color:#a6e22e">Currency</span> = <span style="color:#e6db74">&#34;USD&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">EUR</span> <span style="color:#a6e22e">Currency</span> = <span style="color:#e6db74">&#34;EUR&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">minorUnitDigits</span> = <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">Currency</span>]<span style="color:#66d9ef">int</span>{<span style="color:#a6e22e">VND</span>: <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">USD</span>: <span style="color:#ae81ff">2</span>, <span style="color:#a6e22e">EUR</span>: <span style="color:#ae81ff">2</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrCurrencyMismatch</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;hai loại tiền khác nhau&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrNegativeAmount</span>   = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;số tiền không được âm&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrUnknownCurrency</span>  = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;currency không được hỗ trợ&#34;</span>)
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Money là value object: field unexported, chỉ tạo được qua New.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Truyền theo VALUE (không phải *Money) → mỗi bên giữ bản copy riêng,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// immutability được đảm bảo bởi ngữ nghĩa copy của Go.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Money</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">amount</span>   <span style="color:#66d9ef">int64</span> <span style="color:#75715e">// đơn vị nhỏ nhất</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">currency</span> <span style="color:#a6e22e">Currency</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">amountMinor</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">c</span> <span style="color:#a6e22e">Currency</span>) (<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">minorUnitDigits</span>[<span style="color:#a6e22e">c</span>]; !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: %s&#34;</span>, <span style="color:#a6e22e">ErrUnknownCurrency</span>, <span style="color:#a6e22e">c</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">amountMinor</span> &lt; <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: %d %s&#34;</span>, <span style="color:#a6e22e">ErrNegativeAmount</span>, <span style="color:#a6e22e">amountMinor</span>, <span style="color:#a6e22e">c</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#a6e22e">amountMinor</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">c</span>}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Zero</span>(<span style="color:#a6e22e">c</span> <span style="color:#a6e22e">Currency</span>) <span style="color:#a6e22e">Money</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">c</span>} }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">Amount</span>() <span style="color:#66d9ef">int64</span>      { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">Currency</span>() <span style="color:#a6e22e">Currency</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">IsZero</span>() <span style="color:#66d9ef">bool</span>       { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">assertSame</span>(<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Money</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">currency</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: %s và %s&#34;</span>, <span style="color:#a6e22e">ErrCurrencyMismatch</span>, <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">currency</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Add trả về Money MỚI — receiver theo value nên không thể mutate m gốc.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Money</span>) (<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">assertSame</span>(<span style="color:#a6e22e">o</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">Subtract</span>(<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Money</span>) (<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">assertSame</span>(<span style="color:#a6e22e">o</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> &lt; <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">amount</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: %d - %d %s&#34;</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">ErrNegativeAmount</span>, <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">Multiply</span>(<span style="color:#a6e22e">factor</span> <span style="color:#66d9ef">int64</span>) (<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">factor</span> &lt; <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: hệ số %d&#34;</span>, <span style="color:#a6e22e">ErrNegativeAmount</span>, <span style="color:#a6e22e">factor</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">factor</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Equals: value object so sánh bằng TOÀN BỘ giá trị.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Go cho phép m == o với struct comparable — nhưng viết method rõ ràng hơn.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">Equals</span>(<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Money</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">currency</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">amount</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">GreaterThanOrEqual</span>(<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Money</span>) (<span style="color:#66d9ef">bool</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">assertSame</span>(<span style="color:#a6e22e">o</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">amount</span>, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Khác biệt phong cách đáng chú ý giữa hai ngôn ngữ:</p>
+<ul>
+<li>TypeScript throw exception; Go trả <code>error</code>. Cả hai đều là &ldquo;fail sớm, fail rõ&rdquo; — chọn theo idiom của ngôn ngữ, đừng bê exception style sang Go.</li>
+<li>Go dùng <strong>value semantics</strong> (receiver và tham số theo value, không pointer) — đây là cách tự nhiên nhất để có immutability trong Go. Nếu bạn thấy <code>*Money</code> ở đâu đó, gần như chắc chắn là code smell.</li>
+<li>Field unexported + constructor trong cùng package = chỉ package <code>money</code> tạo được <code>Money</code> hợp lệ. Lưu ý một lỗ hổng của Go: <code>money.Money{}</code> (zero value) vẫn tạo được từ ngoài package — vì vậy nên thiết kế sao cho zero value vô hại (amount 0, currency rỗng sẽ fail ở phép toán đầu tiên do mismatch), và có thể thêm check <code>m.currency == &quot;&quot;</code> trong <code>assertSame</code> nếu muốn chặt hơn.</li>
+</ul>
+<h3 id="63-order-entity-có-hành-vi--typescript">6.3. Order Entity có hành vi — TypeScript<a hidden class="anchor" aria-hidden="true" href="#63-order-entity-có-hành-vi--typescript">#</a></h3>
+<p>Đây là Entity theo đúng nghĩa DDD: state private, thay đổi duy nhất qua hành vi mang tên nghiệp vụ, mỗi hành vi tự bảo vệ rule của nó.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// src/ordering/domain/order.ts — thuần TypeScript, zero dependency framework
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">Money</span>, <span style="color:#a6e22e">CurrencyCode</span> } <span style="color:#66d9ef">from</span> <span style="color:#e6db74">&#39;../../shared/domain/money&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderId</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(<span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">value</span>: <span style="color:#66d9ef">string</span>) {}
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">value</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">OrderId</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#e6db74">/^[0-9a-f-]{36}$/i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">value</span>)) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`OrderId không hợp lệ: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">value</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderId</span>(<span style="color:#a6e22e">value</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">equals</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">OrderId</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">value</span>; }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">enum</span> <span style="color:#a6e22e">OrderStatus</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">PENDING</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;PENDING&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">CONFIRMED</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CONFIRMED&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">SHIPPED</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;SHIPPED&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">DELIVERED</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;DELIVERED&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">CANCELLED</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CANCELLED&#39;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderLine</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">productId</span>: <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">unitPrice</span>: <span style="color:#66d9ef">Money</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">_quantity</span>: <span style="color:#66d9ef">number</span>,
+</span></span><span style="display:flex;"><span>  ) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>Number.<span style="color:#a6e22e">isInteger</span>(<span style="color:#a6e22e">_quantity</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">_quantity</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Số lượng phải nguyên dương: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">_quantity</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">quantity</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">number</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_quantity</span>; }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">subtotal</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">unitPrice</span>.<span style="color:#a6e22e">multiply</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_quantity</span>); }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">increaseQuantity</span>(<span style="color:#a6e22e">by</span>: <span style="color:#66d9ef">number</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>Number.<span style="color:#a6e22e">isInteger</span>(<span style="color:#a6e22e">by</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">by</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Tăng số lượng phải nguyên dương`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_quantity</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">by</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">DomainError</span> <span style="color:#66d9ef">extends</span> Error {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">OrderId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">_status</span>: <span style="color:#66d9ef">OrderStatus</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">_currency</span>: <span style="color:#66d9ef">CurrencyCode</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">_lines</span>: <span style="color:#66d9ef">OrderLine</span>[],
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">_cancelReason</span>: <span style="color:#66d9ef">string</span> <span style="color:#f92672">|</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">OrderId</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#66d9ef">CurrencyCode</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Order</span>(<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">PENDING</span>, <span style="color:#a6e22e">currency</span>, [], <span style="color:#66d9ef">null</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">status</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">OrderStatus</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span>; }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/** Trả về bản copy — không cho bên ngoài mutate mảng nội bộ */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">lines</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">OrderLine</span>[] { <span style="color:#66d9ef">return</span> [...<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_lines</span>]; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ===== HÀNH VI, không phải setter =====
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">addItem</span>(<span style="color:#a6e22e">productId</span>: <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">unitPrice</span>: <span style="color:#66d9ef">Money</span>, <span style="color:#a6e22e">quantity</span>: <span style="color:#66d9ef">number</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">PENDING</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">`Chỉ thêm được item khi đơn ở trạng thái PENDING, hiện tại: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>,
+</span></span><span style="display:flex;"><span>      );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">unitPrice</span>.<span style="color:#a6e22e">currency</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">`Đơn hàng dùng </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, item lại có giá </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">unitPrice</span>.<span style="color:#a6e22e">currency</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>,
+</span></span><span style="display:flex;"><span>      );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">existing</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_lines</span>.<span style="color:#a6e22e">find</span>((<span style="color:#a6e22e">l</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">productId</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">productId</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">existing</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">existing</span>.<span style="color:#a6e22e">increaseQuantity</span>(<span style="color:#a6e22e">quantity</span>); <span style="color:#75715e">// gộp line, không tạo line trùng
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_lines</span>.<span style="color:#a6e22e">push</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderLine</span>(<span style="color:#a6e22e">productId</span>, <span style="color:#a6e22e">unitPrice</span>, <span style="color:#a6e22e">quantity</span>));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">removeItem</span>(<span style="color:#a6e22e">productId</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">PENDING</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">`Không sửa được item khi đơn đã </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">idx</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_lines</span>.<span style="color:#a6e22e">findIndex</span>((<span style="color:#a6e22e">l</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">productId</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">productId</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">idx</span> <span style="color:#f92672">===</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">`Đơn không chứa sản phẩm </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">productId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_lines</span>.<span style="color:#a6e22e">splice</span>(<span style="color:#a6e22e">idx</span>, <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">confirm</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">PENDING</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">`Không confirm được đơn đang ở trạng thái </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_lines</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">`Không confirm được đơn rỗng`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">CONFIRMED</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cancel</span>(<span style="color:#a6e22e">reason</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// RULE của sự cố 2 — giờ nó sống ở đây, MỘT nơi, không thể bypass
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cancellable</span> <span style="color:#f92672">=</span> [<span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">PENDING</span>, <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">CONFIRMED</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">cancellable</span>.<span style="color:#a6e22e">includes</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">`Đơn ở trạng thái </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> không thể hủy (chỉ hủy được PENDING/CONFIRMED)`</span>,
+</span></span><span style="display:flex;"><span>      );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">reason</span><span style="color:#f92672">?</span>.<span style="color:#a6e22e">trim</span>()) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">`Hủy đơn bắt buộc có lý do`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">OrderStatus</span>.<span style="color:#a6e22e">CANCELLED</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_cancelReason</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reason</span>.<span style="color:#a6e22e">trim</span>();
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">total</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_lines</span>.<span style="color:#a6e22e">reduce</span>(
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">line</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">sum</span>.<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">line</span>.<span style="color:#a6e22e">subtotal</span>()),
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">zero</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currency</span>),
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>So sánh trực diện với phiên bản anemic:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ANEMIC — mọi nơi đều làm được điều này:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CANCELLED&#39;</span>;           <span style="color:#75715e">// đơn DELIVERED? Kệ.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">totalAmount</span> <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">500</span>;             <span style="color:#75715e">// tiền âm? Kệ.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// RICH — chỉ có một con đường, và con đường đó có rule:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">cancel</span>(<span style="color:#e6db74">&#39;Khách đổi ý&#39;</span>);          <span style="color:#75715e">// throw nếu đã DELIVERED
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">total</span>();                        <span style="color:#75715e">// luôn được TÍNH từ lines, không set được → không bao giờ lệch
+</span></span></span></code></pre></div><p>Điểm tinh tế nhất: <code>total()</code> là <strong>giá trị dẫn xuất (derived)</strong> — nó được tính, không được lưu như một field có setter. Cả một họ bug &ldquo;tổng tiền lệch với chi tiết&rdquo; biến mất vì trạng thái lệch <em>không thể biểu diễn được</em>.</p>
+<h3 id="64-order-entity--go">6.4. Order Entity — Go<a hidden class="anchor" aria-hidden="true" href="#64-order-entity--go">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// package ordering/domain — file order.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">domain</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;yourapp/domain/money&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderStatus</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">StatusPending</span>   <span style="color:#a6e22e">OrderStatus</span> = <span style="color:#e6db74">&#34;PENDING&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">StatusConfirmed</span> <span style="color:#a6e22e">OrderStatus</span> = <span style="color:#e6db74">&#34;CONFIRMED&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">StatusShipped</span>   <span style="color:#a6e22e">OrderStatus</span> = <span style="color:#e6db74">&#34;SHIPPED&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">StatusDelivered</span> <span style="color:#a6e22e">OrderStatus</span> = <span style="color:#e6db74">&#34;DELIVERED&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">StatusCancelled</span> <span style="color:#a6e22e">OrderStatus</span> = <span style="color:#e6db74">&#34;CANCELLED&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ErrDomainRule</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;vi phạm rule nghiệp vụ&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderLine</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ProductID</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">UnitPrice</span> <span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Money</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Quantity</span>  <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">l</span> <span style="color:#a6e22e">OrderLine</span>) <span style="color:#a6e22e">Subtotal</span>() (<span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">UnitPrice</span>.<span style="color:#a6e22e">Multiply</span>(<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">Quantity</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Order là ENTITY: identity (id) bất biến, state unexported,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// mọi thay đổi đi qua method có tên nghiệp vụ.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Order</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">id</span>           <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">status</span>       <span style="color:#a6e22e">OrderStatus</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">currency</span>     <span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Currency</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">lines</span>        []<span style="color:#a6e22e">OrderLine</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cancelReason</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewOrder</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">c</span> <span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Currency</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">id</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: order id rỗng&#34;</span>, <span style="color:#a6e22e">ErrDomainRule</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Order</span>{<span style="color:#a6e22e">id</span>: <span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">status</span>: <span style="color:#a6e22e">StatusPending</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">c</span>}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">ID</span>() <span style="color:#66d9ef">string</span>          { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">id</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">Status</span>() <span style="color:#a6e22e">OrderStatus</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Lines trả về COPY để bên ngoài không mutate được slice nội bộ.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">Lines</span>() []<span style="color:#a6e22e">OrderLine</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">out</span> <span style="color:#f92672">:=</span> make([]<span style="color:#a6e22e">OrderLine</span>, len(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>))
+</span></span><span style="display:flex;"><span>	copy(<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">out</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">AddItem</span>(<span style="color:#a6e22e">productID</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">unitPrice</span> <span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Money</span>, <span style="color:#a6e22e">qty</span> <span style="color:#66d9ef">int64</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">StatusPending</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: chỉ thêm item khi PENDING, hiện tại %s&#34;</span>, <span style="color:#a6e22e">ErrDomainRule</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">unitPrice</span>.<span style="color:#a6e22e">Currency</span>() <span style="color:#f92672">!=</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">currency</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: đơn dùng %s, item có giá %s&#34;</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">ErrDomainRule</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">currency</span>, <span style="color:#a6e22e">unitPrice</span>.<span style="color:#a6e22e">Currency</span>())
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">qty</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: số lượng phải dương, nhận %d&#34;</span>, <span style="color:#a6e22e">ErrDomainRule</span>, <span style="color:#a6e22e">qty</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">ProductID</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">productID</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">Quantity</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">qty</span> <span style="color:#75715e">// gộp line trùng</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span> = append(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>, <span style="color:#a6e22e">OrderLine</span>{<span style="color:#a6e22e">ProductID</span>: <span style="color:#a6e22e">productID</span>, <span style="color:#a6e22e">UnitPrice</span>: <span style="color:#a6e22e">unitPrice</span>, <span style="color:#a6e22e">Quantity</span>: <span style="color:#a6e22e">qty</span>})
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">Confirm</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">StatusPending</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: không confirm được đơn %s&#34;</span>, <span style="color:#a6e22e">ErrDomainRule</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: không confirm được đơn rỗng&#34;</span>, <span style="color:#a6e22e">ErrDomainRule</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> = <span style="color:#a6e22e">StatusConfirmed</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">Cancel</span>(<span style="color:#a6e22e">reason</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">StatusPending</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">StatusConfirmed</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: đơn %s không thể hủy&#34;</span>, <span style="color:#a6e22e">ErrDomainRule</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reason</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: hủy đơn bắt buộc có lý do&#34;</span>, <span style="color:#a6e22e">ErrDomainRule</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> = <span style="color:#a6e22e">StatusCancelled</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">cancelReason</span> = <span style="color:#a6e22e">reason</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">Total</span>() (<span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sum</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Zero</span>(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">currency</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">l</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sub</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">Subtotal</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">sum</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">sub</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">money</span>.<span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sum</span>, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Nhận xét cho Go engineer: Entity dùng <strong>pointer receiver</strong> (<code>*Order</code>) vì nó <em>có</em> vòng đời và <em>được phép</em> thay đổi trạng thái — ngược với Value Object dùng value receiver. Chính quy ước receiver này trong Go là tín hiệu đọc-code rất tốt: thấy value receiver → value object, thấy pointer receiver + field unexported → entity.</p>
+<hr>
+<h2 id="7-ví-dụ-refactor-từ-crudanemic-sang-rich-model--từng-bước">7. Ví dụ refactor: từ CRUD/anemic sang rich model — từng bước<a hidden class="anchor" aria-hidden="true" href="#7-ví-dụ-refactor-từ-crudanemic-sang-rich-model--từng-bước">#</a></h2>
+<p>Kịch bản thật: hệ thống subscription SaaS. Yêu cầu mới: &ldquo;khách được nâng cấp gói bất kỳ lúc nào, nhưng hạ cấp chỉ có hiệu lực từ kỳ thanh toán sau; gói đã hủy không được đổi&rdquo;.</p>
+<h3 id="bước-0--hiện-trạng-anemic">Bước 0 — hiện trạng anemic<a hidden class="anchor" aria-hidden="true" href="#bước-0--hiện-trạng-anemic">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// subscription.entity.ts (TypeORM) — túi dữ liệu
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Entity</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Subscription</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@PrimaryColumn</span>() <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">plan</span>: <span style="color:#66d9ef">string</span>;              <span style="color:#75715e">// &#39;free&#39; | &#39;pro&#39; | &#39;enterprise&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">string</span>;            <span style="color:#75715e">// &#39;active&#39; | &#39;cancelled&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">nextBillingDate</span>: <span style="color:#66d9ef">Date</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>({ <span style="color:#a6e22e">nullable</span>: <span style="color:#66d9ef">true</span> }) <span style="color:#a6e22e">pendingPlan</span>: <span style="color:#66d9ef">string</span> <span style="color:#f92672">|</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// subscription.service.ts — 100% logic ở đây
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">async</span> <span style="color:#a6e22e">changePlan</span>(<span style="color:#a6e22e">subId</span>: <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">newPlan</span>: <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sub</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">findOneBy</span>({ <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">subId</span> });
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">rank</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">free</span>: <span style="color:#66d9ef">0</span>, <span style="color:#a6e22e">pro</span>: <span style="color:#66d9ef">1</span>, <span style="color:#a6e22e">enterprise</span>: <span style="color:#66d9ef">2</span> };
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">sub</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;cancelled&#39;</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>(<span style="color:#e6db74">&#39;cancelled&#39;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">rank</span>[<span style="color:#a6e22e">newPlan</span>] <span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">rank</span>[<span style="color:#a6e22e">sub</span>.<span style="color:#a6e22e">plan</span>]) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sub</span>.<span style="color:#a6e22e">plan</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newPlan</span>;                 <span style="color:#75715e">// upgrade ngay
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sub</span>.<span style="color:#a6e22e">pendingPlan</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newPlan</span>;          <span style="color:#75715e">// downgrade chờ kỳ sau
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">sub</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Vấn đề tiềm tàng: một cron job billing khác đọc <code>pendingPlan</code> và apply — nhưng nó được viết bởi team khác, quên check <code>status === 'cancelled'</code>. Một admin tool thì set thẳng <code>sub.plan</code>. Rule &ldquo;gói đã hủy không được đổi&rdquo; tồn tại ở đúng một hàm, trong khi có ba đường ghi dữ liệu.</p>
+<h3 id="bước-1--gom-khái-niệm-vào-value-object">Bước 1 — gom khái niệm vào Value Object<a hidden class="anchor" aria-hidden="true" href="#bước-1--gom-khái-niệm-vào-value-object">#</a></h3>
+<p><code>plan</code> là string trôi nổi kèm bảng <code>rank</code> — đó là một khái niệm nghiệp vụ (<code>Plan</code>) đang bị nghiền thành primitive:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Plan</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">RANK</span>: <span style="color:#66d9ef">Record</span>&lt;<span style="color:#f92672">string</span>, <span style="color:#a6e22e">number</span>&gt; <span style="color:#f92672">=</span> { <span style="color:#a6e22e">free</span>: <span style="color:#66d9ef">0</span>, <span style="color:#a6e22e">pro</span>: <span style="color:#66d9ef">1</span>, <span style="color:#a6e22e">enterprise</span>: <span style="color:#66d9ef">2</span> };
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(<span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">string</span>) {}
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Plan</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">Plan</span>.<span style="color:#a6e22e">RANK</span>)) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`Plan không tồn tại: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">name</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Plan</span>(<span style="color:#a6e22e">name</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">isUpgradeFrom</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Plan</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Plan</span>.<span style="color:#a6e22e">RANK</span>[<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span>] <span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">Plan</span>.<span style="color:#a6e22e">RANK</span>[<span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">name</span>]; }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">equals</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Plan</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">name</span>; }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="bước-2--chuyển-hành-vi-vào-entity">Bước 2 — chuyển hành vi vào Entity<a hidden class="anchor" aria-hidden="true" href="#bước-2--chuyển-hành-vi-vào-entity">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Subscription</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">_plan</span>: <span style="color:#66d9ef">Plan</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">_status</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;active&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;cancelled&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">_pendingPlan</span>: <span style="color:#66d9ef">Plan</span> <span style="color:#f92672">|</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">_nextBillingDate</span>: <span style="color:#66d9ef">Date</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">changePlan</span>(<span style="color:#a6e22e">newPlan</span>: <span style="color:#66d9ef">Plan</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;cancelled&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Gói đã hủy không thể thay đổi&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newPlan</span>.<span style="color:#a6e22e">equals</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_plan</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Gói mới trùng gói hiện tại&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newPlan</span>.<span style="color:#a6e22e">isUpgradeFrom</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_plan</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_plan</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newPlan</span>;              <span style="color:#75715e">// upgrade: hiệu lực ngay
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_pendingPlan</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;          <span style="color:#75715e">// upgrade xóa mọi downgrade đang chờ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_pendingPlan</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newPlan</span>;       <span style="color:#75715e">// downgrade: chờ kỳ billing
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/** Cron billing gọi hàm này — rule vẫn được bảo vệ vì đi qua cùng entity */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">applyBillingCycle</span>(<span style="color:#a6e22e">now</span>: <span style="color:#66d9ef">Date</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;cancelled&#39;</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_pendingPlan</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_plan</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_pendingPlan</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_pendingPlan</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_nextBillingDate</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">addMonths</span>(<span style="color:#a6e22e">now</span>, <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="bước-3--service-teo-lại-thành-điều-phối">Bước 3 — service teo lại thành điều phối<a hidden class="anchor" aria-hidden="true" href="#bước-3--service-teo-lại-thành-điều-phối">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#a6e22e">changePlan</span>(<span style="color:#a6e22e">subId</span>: <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">newPlanName</span>: <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">plan</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Plan</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">newPlanName</span>);               <span style="color:#75715e">// validate tại biên
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sub</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">subscriptionRepo</span>.<span style="color:#a6e22e">findById</span>(<span style="color:#a6e22e">subId</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sub</span>.<span style="color:#a6e22e">changePlan</span>(<span style="color:#a6e22e">plan</span>);                            <span style="color:#75715e">// rule chạy trong entity
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">subscriptionRepo</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">sub</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Điều đã thay đổi về chất: cron job, admin tool, API — <strong>mọi đường ghi giờ buộc phải đi qua <code>changePlan</code>/<code>applyBillingCycle</code></strong>, vì field đã private. Rule có một địa chỉ thường trú. Test rule giờ là pure unit test không cần DB. Và đây là điểm thường bị bỏ qua: refactor này <strong>không đụng schema database</strong> — bảng giữ nguyên, chỉ model trong code thay đổi. Refactor sang rich model có thể làm dần, module nào đau nhất làm trước.</p>
+<hr>
+<h2 id="8-persistence-mapping-tách-domain-model-khỏi-orm-model-hay-chấp-nhận-trộn">8. Persistence mapping: tách domain model khỏi ORM model, hay chấp nhận trộn?<a hidden class="anchor" aria-hidden="true" href="#8-persistence-mapping-tách-domain-model-khỏi-orm-model-hay-chấp-nhận-trộn">#</a></h2>
+<p>Câu hỏi thực dụng nhất chương này: <code>Order</code> rich model ở trên không có decorator TypeORM — vậy lưu xuống DB kiểu gì? Có hai trường phái, và <strong>cả hai đều hợp lệ tùy bối cảnh</strong>.</p>
+<h3 id="phương-án-a-tách-hẳn--domain-model-riêng-persistence-model-riêng">Phương án A: Tách hẳn — domain model riêng, persistence model riêng<a hidden class="anchor" aria-hidden="true" href="#phương-án-a-tách-hẳn--domain-model-riêng-persistence-model-riêng">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">flowchart LR
+    subgraph domain [&#34;Domain Layer (thuần, zero framework)&#34;]
+        DM[&#34;Order (rich model)&lt;br/&gt;private state + behavior&#34;]
+    end
+    subgraph infra [&#34;Infrastructure Layer&#34;]
+        PM[&#34;OrderRecord (@Entity TypeORM)&lt;br/&gt;public fields, map 1-1 bảng&#34;]
+        MAP[&#34;OrderMapper&lt;br/&gt;toDomain() / toRecord()&#34;]
+        DB[(PostgreSQL)]
+    end
+    DM &lt;--&gt; MAP
+    MAP &lt;--&gt; PM
+    PM &lt;--&gt; DB
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// infrastructure/order.record.ts — ORM entity, chỉ là hình dạng của bảng
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Entity</span>(<span style="color:#e6db74">&#39;orders&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderRecord</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@PrimaryColumn</span>() <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">currency</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@OneToMany</span>(() <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">OrderLineRecord</span>, (<span style="color:#a6e22e">l</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">order</span>, { <span style="color:#a6e22e">cascade</span>: <span style="color:#66d9ef">true</span>, <span style="color:#a6e22e">eager</span>: <span style="color:#66d9ef">true</span> })
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">lines</span>: <span style="color:#66d9ef">OrderLineRecord</span>[];
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// infrastructure/order.mapper.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderMapper</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">toDomain</span>(<span style="color:#a6e22e">r</span>: <span style="color:#66d9ef">OrderRecord</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Dùng hàm reconstitute — khôi phục entity từ dữ liệu ĐÃ hợp lệ trong DB,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// không chạy lại rule &#34;create&#34; (đơn cũ có thể được tạo dưới rule cũ)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Order</span>.<span style="color:#a6e22e">reconstitute</span>(
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">OrderId</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">id</span>),
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">status</span> <span style="color:#66d9ef">as</span> <span style="color:#a6e22e">OrderStatus</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">currency</span> <span style="color:#66d9ef">as</span> <span style="color:#a6e22e">CurrencyCode</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">l</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderLine</span>(<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">productId</span>, <span style="color:#a6e22e">Money</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">BigInt</span>(<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">unitPriceMinor</span>), <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">currency</span> <span style="color:#66d9ef">as</span> <span style="color:#a6e22e">CurrencyCode</span>), <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">quantity</span>)),
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">toRecord</span>(<span style="color:#a6e22e">o</span>: <span style="color:#66d9ef">Order</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">OrderRecord</span> { <span style="color:#75715e">/* chiều ngược lại */</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li><strong>Được gì:</strong> domain model tự do tuyệt đối (private field, VO, bigint&hellip;), không thỏa hiệp với giới hạn của ORM; đổi ORM/DB không chạm domain; test domain thuần không kéo TypeORM.</li>
+<li><strong>Mất gì:</strong> viết và maintain mapper — mỗi field thêm mới sửa 3 chỗ (domain, record, mapper); dễ lỗi mapping lệch nếu không có test; với model to, mapper là boilerplate thật sự.</li>
+<li><strong>Khi nào chọn:</strong> core domain, model có nhiều VO và invariant, team ≥ trung bình, tuổi thọ hệ thống dài.</li>
+</ul>
+<h3 id="phương-án-b-trộn--một-class-vừa-là-domain-model-vừa-là-orm-entity">Phương án B: Trộn — một class vừa là domain model vừa là ORM entity<a hidden class="anchor" aria-hidden="true" href="#phương-án-b-trộn--một-class-vừa-là-domain-model-vừa-là-orm-entity">#</a></h3>
+<p>Chấp nhận decorator TypeORM/tag GORM nằm ngay trên rich model, nhưng <strong>giữ kỷ luật</strong>: field vẫn private (TypeORM hydrate được qua reflection), không dùng public setter, hành vi vẫn là method nghiệp vụ.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">@Entity</span>(<span style="color:#e6db74">&#39;orders&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@PrimaryColumn</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">OrderStatus</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// behavior giữ nguyên như mục 6.3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">cancel</span>(<span style="color:#a6e22e">reason</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> { <span style="color:#75715e">/* ... rule ... */</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li><strong>Được gì:</strong> không có mapper, ít code hơn hẳn, một nguồn sự thật về hình dạng dữ liệu.</li>
+<li><strong>Mất gì:</strong> domain model bị ORM ràng buộc — VO phải có transformer/embedded để map cột, quan hệ lazy-loading có thể kích hoạt query ngầm trong method nghiệp vụ (nguy hiểm), migration schema kéo domain model thay đổi theo, và cám dỗ &ldquo;thêm cái setter cho tiện&rdquo; luôn thường trực vì decorator nhắc bạn rằng đây &ldquo;chỉ là bảng&rdquo;.</li>
+<li><strong>Khi nào chọn:</strong> supporting subdomain, model đơn giản, team nhỏ, cần tốc độ; hoặc Go + GORM nơi struct tag ít xâm lấn hơn decorator.</li>
+</ul>
+<p><strong>Lời khuyên thực dụng:</strong> đừng chọn một phương án cho toàn hệ thống. Chọn <strong>theo từng Bounded Context</strong>: context lõi (thanh toán, đặt hàng) tách hẳn; context phụ (quản lý banner, config) trộn cho nhanh. Sự nhất quán đáng giá, nhưng không đáng giá bằng việc đặt effort đúng chỗ — đây chính là tinh thần của <a href="02-domain-va-subdomain.md">chương 02 — Domain &amp; Subdomain</a>.</p>
+<hr>
+<h2 id="9-điểm-mạnh--điểm-yếu--trade-off">9. Điểm mạnh — Điểm yếu — Trade-off<a hidden class="anchor" aria-hidden="true" href="#9-điểm-mạnh--điểm-yếu--trade-off">#</a></h2>
+<h3 id="91-điểm-mạnh">9.1. Điểm mạnh<a hidden class="anchor" aria-hidden="true" href="#91-điểm-mạnh">#</a></h3>
+<ol>
+<li><strong>Rule có địa chỉ thường trú và không thể bypass.</strong> Toàn bộ giá trị của Entity/VO quy về một câu: muốn vi phạm rule, bạn phải sửa code của chính class đó — và diff đó sẽ hiện ra ở code review.</li>
+<li><strong>Fail sớm, gần nguồn lỗi.</strong> VO chặn dữ liệu bẩn tại biên hệ thống; stack trace chỉ thẳng nơi gây lỗi thay vì nơi lỗi phát nổ (thường là DB constraint ba tầng phía sau).</li>
+<li><strong>Test rẻ.</strong> Rich model là pure object: hàng nghìn unit test chạy trong một giây, không DB, không mock framework.</li>
+<li><strong>Code tự tài liệu hóa.</strong> <code>order.cancel(reason)</code> đọc như câu nghiệp vụ. Danh sách method của Entity chính là danh sách use case mà nghiệp vụ nói tới — Ubiquitous Language sống trong code.</li>
+<li><strong>Refactor an toàn.</strong> Đổi cách tính <code>total()</code> chỉ đụng một hàm; compiler chỉ ra mọi nơi dùng khi đổi signature của VO.</li>
+</ol>
+<h3 id="92-điểm-yếu">9.2. Điểm yếu<a hidden class="anchor" aria-hidden="true" href="#92-điểm-yếu">#</a></h3>
+<ol>
+<li><strong>Nhiều code hơn cho việc đơn giản.</strong> Một CRUD form 5 field trở thành 3 class + mapper. Với domain nghèo rule, đây là thuần chi phí.</li>
+<li><strong>Đường cong học tập của team.</strong> Dev quen ORM-first sẽ viết setter trá hình (<code>updateStatus(s)</code> không có rule bên trong vẫn là setter). Cần review kỷ luật trong 2–3 tháng đầu.</li>
+<li><strong>Ma sát với ecosystem.</strong> ORM, serializer (<code>class-transformer</code>), validation pipe của NestJS đều được thiết kế quanh object public-field. Dùng rich model là bơi hơi ngược dòng — làm được, nhưng tốn setup.</li>
+<li><strong>Cám dỗ over-engineering.</strong> Không phải string nào cũng cần thành VO. <code>description</code> của sản phẩm là string, cứ để nó là string.</li>
+</ol>
+<h3 id="93-trade-off-trung-tâm-simplicity-vs-rich-domain-model">9.3. Trade-off trung tâm: Simplicity vs Rich Domain Model<a hidden class="anchor" aria-hidden="true" href="#93-trade-off-trung-tâm-simplicity-vs-rich-domain-model">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Tiêu chí</th>
+          <th>Anemic + ORM-first</th>
+          <th>Rich Entity/VO</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Tốc độ viết feature đầu tiên</td>
+          <td><strong>Nhanh hơn rõ rệt</strong></td>
+          <td>Chậm hơn 20–50%</td>
+      </tr>
+      <tr>
+          <td>Tốc độ viết feature thứ 20 (cùng module)</td>
+          <td>Chậm dần — phải dò rule rải rác</td>
+          <td><strong>Nhanh dần — rule đã tập trung</strong></td>
+      </tr>
+      <tr>
+          <td>Xác suất bug vi phạm rule</td>
+          <td>Tăng theo số luồng code</td>
+          <td>Gần như hằng số</td>
+      </tr>
+      <tr>
+          <td>Chi phí onboard dev mới</td>
+          <td>Thấp lúc đầu, cao khi codebase lớn</td>
+          <td>Cao lúc đầu, thấp về sau</td>
+      </tr>
+      <tr>
+          <td>Phù hợp</td>
+          <td>CRUD, prototype, supporting subdomain</td>
+          <td>Core domain, rule dày, tuổi thọ dài</td>
+      </tr>
+  </tbody>
+</table>
+<p>Điểm gãy (break-even) thường nằm ở chỗ: <strong>khi một rule nghiệp vụ được nhắc đến ở ≥ 2 luồng code khác nhau</strong>, chi phí của rich model bắt đầu hoàn vốn. Trước điểm đó, anemic rẻ hơn thật.</p>
+<hr>
+<h2 id="10-production-considerations">10. Production Considerations<a hidden class="anchor" aria-hidden="true" href="#10-production-considerations">#</a></h2>
+<ul>
+<li><strong>Performance của VO:</strong> cấp phát object mới cho mỗi phép toán gần như không bao giờ là bottleneck trong service nghiệp vụ (I/O DB lớn hơn 3–5 bậc). Ngoại lệ: vòng lặp nóng xử lý hàng triệu phần tử (pricing engine, báo cáo) — ở đó cứ dùng primitive <em>cục bộ bên trong</em> một hàm, rồi trả kết quả ra dưới dạng VO. Tối ưu cục bộ, giữ hợp đồng ở biên.</li>
+<li><strong>Serialization:</strong> VO với private field không JSON.stringify đẹp được. Đừng bao giờ serialize domain model trả thẳng ra API — dùng DTO/response model riêng. Điều này nghe như việc thừa nhưng chính nó ngăn schema API bị khóa cứng vào hình dạng domain model (và ngược lại).</li>
+<li><strong>Migration dữ liệu cũ:</strong> khi thêm VO có validation vào hệ thống đang chạy, dữ liệu cũ trong DB có thể <em>không qua nổi</em> constructor (email viết hoa, tiền lẻ float&hellip;). Cần hàm <code>reconstitute</code> khoan dung hơn <code>create</code> (log warning thay vì throw) hoặc chiến dịch làm sạch dữ liệu trước khi bật validation cứng. Đừng để việc load một đơn hàng năm 2019 làm sập luồng đọc năm 2026.</li>
+<li><strong>Testing:</strong> phần lớn test nên là unit test trên Entity/VO thuần (nhanh, không hạ tầng). Thêm một lớp test mapper (round-trip: domain → record → domain phải ra object tương đương) — lớp test rẻ này bắt gần hết bug mapping.</li>
+<li><strong>Đo đạc thực tế:</strong> nếu muốn thuyết phục team, đo hai chỉ số trước/sau refactor một module: (1) số bug production liên quan rule nghiệp vụ của module đó, (2) thời gian viết test cho một rule mới. Số liệu thuyết phục hơn mọi bài giảng về DDD.</li>
+</ul>
+<hr>
+<h2 id="11-best-practices-và-anti-patterns">11. Best Practices và Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#11-best-practices-và-anti-patterns">#</a></h2>
+<h3 id="111-best-practices">11.1. Best Practices<a hidden class="anchor" aria-hidden="true" href="#111-best-practices">#</a></h3>
+<ol>
+<li><strong>Validate trong constructor/factory, và chỉ ở đó.</strong> Một cánh cổng duy nhất. Nếu có nhiều cách tạo (parse từ string, từ minor unit, reconstitute từ DB) — tất cả đều là static factory, tất cả đều hội tụ về cùng bộ check.</li>
+<li><strong>Đặt tên method theo Ubiquitous Language.</strong> <code>cancel()</code>, <code>confirm()</code>, <code>applyBillingCycle()</code> — không phải <code>setStatus()</code>, <code>update()</code>. Nếu không tìm được tên nghiệp vụ cho một thay đổi state, đó là dấu hiệu bạn chưa hiểu nghiệp vụ của thay đổi đó.</li>
+<li><strong>Identity sinh sớm, ở application layer</strong> (UUID/ULID), không đợi DB auto-increment — Entity hợp lệ ngay từ trước khi save, và code không phải xử lý &ldquo;entity nửa vời chưa có id&rdquo;.</li>
+<li><strong>Getter trả về copy hoặc readonly view</strong> cho collection nội bộ (<code>[...this._lines]</code>, <code>copy(out, o.lines)</code>) — nếu không, encapsulation chỉ là trang trí.</li>
+<li><strong>VO nhỏ và tập trung.</strong> <code>Money</code> lo tiền, đừng nhét format hiển thị theo locale vào đó (đó là việc của presentation layer).</li>
+<li><strong>Bắt đầu từ chỗ đau nhất.</strong> Không refactor cả codebase. Chọn module có nhiều bug rule nhất, chuyển nó sang rich model, đo kết quả, rồi lan dần.</li>
+</ol>
+<h3 id="112-anti-patterns-và-vì-sao-nguy-hiểm">11.2. Anti-patterns và vì sao nguy hiểm<a hidden class="anchor" aria-hidden="true" href="#112-anti-patterns-và-vì-sao-nguy-hiểm">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Anti-pattern</th>
+          <th>Biểu hiện</th>
+          <th>Vì sao nguy hiểm</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Setter trá hình</strong></td>
+          <td><code>updateStatus(s: OrderStatus)</code> — nhận giá trị bất kỳ, không rule</td>
+          <td>Có hình dáng rich model nhưng bảo vệ bằng 0; tệ hơn anemic vì tạo cảm giác an toàn giả</td>
+      </tr>
+      <tr>
+          <td><strong>VO mutable</strong></td>
+          <td><code>money.amount += x</code> hoặc <code>Money</code> có setter</td>
+          <td>Mở lại toàn bộ họ aliasing bug mà VO sinh ra để diệt</td>
+      </tr>
+      <tr>
+          <td><strong>Entity so sánh theo giá trị</strong></td>
+          <td><code>deepEqual(orderA, orderB)</code> để xem &ldquo;có phải cùng đơn&rdquo;</td>
+          <td>Hai đơn khác nhau tình cờ giống hệt field → bị coi là một; logic merge/dedupe sai âm thầm</td>
+      </tr>
+      <tr>
+          <td><strong>VO &ldquo;biết quá nhiều&rdquo;</strong></td>
+          <td><code>Money.saveToDatabase()</code>, <code>Email.sendVerification()</code></td>
+          <td>VO kéo dependency hạ tầng vào domain; mất tính pure, mất tính test rẻ</td>
+      </tr>
+      <tr>
+          <td><strong>Validation ở DTO rồi thôi</strong></td>
+          <td>class-validator trên request DTO, domain model nhận primitive</td>
+          <td>Rule chỉ chặn được một cửa (HTTP); cron, message consumer, admin script đi cửa khác — đúng kịch bản sự cố 2</td>
+      </tr>
+      <tr>
+          <td><strong>God Entity</strong></td>
+          <td><code>Order</code> biết inventory, shipping fee, loyalty point, email template</td>
+          <td>Đây là vấn đề ranh giới — thuộc về chương 7 (Aggregate); Entity phình to là triệu chứng ranh giới aggregate sai</td>
+      </tr>
+      <tr>
+          <td><strong>Obsession ngược</strong></td>
+          <td>Mọi string đều thành VO, kể cả <code>note</code>, <code>description</code></td>
+          <td>Chi phí không đổi lấy giá trị bằng 0; làm team dị ứng với VO nói chung</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="12-khi-nào-không-nên-dùng-rich-entityvalue-object">12. Khi nào KHÔNG nên dùng (rich Entity/Value Object)<a hidden class="anchor" aria-hidden="true" href="#12-khi-nào-không-nên-dùng-rich-entityvalue-object">#</a></h2>
+<p>Không thần thánh hóa: rich model là công cụ có giá, và có những nơi giá đó không đáng trả.</p>
+<ol>
+<li><strong>CRUD thuần túy.</strong> Màn hình quản lý danh mục (tỉnh thành, đơn vị tính, banner): dữ liệu vào — hiển thị — sửa — lưu, không rule xuyên field. ORM entity + validation decorator là lựa chọn <em>đúng</em>, không phải &ldquo;DDD chưa tới&rdquo;.</li>
+<li><strong>Prototype / MVP cần tốc độ tối đa.</strong> Khi bạn chưa biết sản phẩm có sống không, chi phí trả trước của rich model là chi phí có thể chết trước khi hoàn vốn. Viết anemic, đánh dấu chỗ có rule bằng comment/TODO, refactor khi sản phẩm chứng minh được sự sống.</li>
+<li><strong>Pipeline dữ liệu / ETL / báo cáo.</strong> Dữ liệu chảy qua để biến đổi hình dạng, không có vòng đời nghiệp vụ. Struct/record + hàm thuần là mô hình tự nhiên hơn.</li>
+<li><strong>Team chưa sẵn sàng và không có người dẫn.</strong> Rich model nửa mùa (setter trá hình khắp nơi) cho cảm giác an toàn giả — nguy hiểm hơn anemic model trung thực. Nếu không có ít nhất một người giữ kỷ luật qua code review trong vài tháng đầu, hoãn lại.</li>
+<li><strong>Domain thật sự nghèo rule.</strong> Có những hệ thống mà độ phức tạp nằm ở hạ tầng (throughput, latency, tích hợp) chứ không nằm ở nghiệp vụ. DDD tactical patterns giải quyết độ phức tạp <em>nghiệp vụ</em> — dùng nó cho độ phức tạp hạ tầng là dùng sai thuốc.</li>
+</ol>
+<p>Quy tắc ngón tay cái: <strong>đếm số câu &ldquo;nếu&hellip; thì không được&hellip;&rdquo; mà domain expert nói về một khái niệm.</strong> Từ 3 câu trở lên → khái niệm đó xứng đáng là rich Entity/VO. Dưới đó → cứ để CRUD.</p>
+<hr>
+<h2 id="tóm-tắt-chương">Tóm tắt chương<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt-chương">#</a></h2>
+<ul>
+<li>Entity = identity + vòng đời + transition hợp lệ; so sánh bằng id. Value Object = giá trị + rule + immutable; so sánh bằng toàn bộ giá trị; đã tồn tại là hợp lệ.</li>
+<li>Immutability của VO không phải thẩm mỹ — nó xóa sổ aliasing bug, temporal coupling và data race, đổi lấy chi phí cấp phát thường không đáng kể.</li>
+<li>Primitive obsession là gốc của họ bug &ldquo;compiler mù nghiệp vụ&rdquo;: nhầm currency, đảo tham số, float trên tiền. VO đưa nghiệp vụ vào type system.</li>
+<li><code>@Entity</code> của ORM là row mapping; Entity của DDD là khái niệm nghiệp vụ có hành vi. Trùng tên là tai nạn thuật ngữ. ORM-first sinh ra anemic model — hợp lệ cho CRUD, tai họa cho domain nhiều rule.</li>
+<li>Persistence mapping: tách domain/ORM model (an toàn, tốn mapper) hay trộn (nhanh, ràng buộc) — chọn theo từng Bounded Context, không chọn một lần cho cả hệ thống.</li>
+<li>Entity/VO mới bảo vệ được <em>từng object</em>. Câu hỏi tiếp theo — bảo vệ invariant <em>xuyên nhiều object</em> trong môi trường concurrent — cần một khái niệm lớn hơn.</li>
+</ul>
+<h2 id="đọc-tiếp">Đọc tiếp<a hidden class="anchor" aria-hidden="true" href="#đọc-tiếp">#</a></h2>
+<ul>
+<li><strong><a href="07-aggregate.md">Chương 07 — Aggregate &amp; Aggregate Root</a></strong>: chương quan trọng nhất của Tactical Design — consistency boundary, transaction boundary, và bài toán oversell kinh điển.</li>
+<li><a href="08-repository-va-factory.md">Chương 08 — Repository &amp; Factory</a>: lưu và tái tạo aggregate mà không để ORM dắt mũi domain.</li>
+<li><a href="09-domain-service-va-application-service.md">Chương 09 — Domain Service &amp; Application Service</a>: logic không thuộc về Entity/VO nào thì sống ở đâu.</li>
+<li>Quay lại: <a href="05-context-mapping.md">Chương 05 — Context Mapping</a> · <a href="00-muc-luc.md">Mục lục</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/domain-driven-design/05-context-mapping/">
+    <span class="title">« Prev</span>
+    <br>
+    <span></span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/domain-driven-design/07-aggregate/">
+    <span class="title">Next »</span>
+    <br>
+    <span></span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on x"
+            href="https://x.com/intent/tweet/?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f&amp;title=&amp;summary=&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f&title=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on whatsapp"
+            href="https://api.whatsapp.com/send?text=%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on telegram"
+            href="https://telegram.me/share/url?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f06-entity-va-value-object%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

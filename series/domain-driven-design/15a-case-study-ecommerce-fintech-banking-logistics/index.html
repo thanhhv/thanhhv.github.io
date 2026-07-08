@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Chương 15a — Case Study: E-commerce, FinTech, Banking, Logistics
+
+Vị trí trong bộ tài liệu: Đây là chương đầu tiên trong cặp chương case study (15a/15b), đứng sau Chương 14 — DDD trong Production. Toàn bộ lý thuyết từ chương 01–14 — Subdomain, Bounded Context, Context Mapping, Aggregate, Domain Event, kiến trúc và distributed systems — sẽ được &ldquo;thử lửa&rdquo; qua 4 ngành có độ phức tạp domain rất khác nhau: E-commerce, FinTech (ví điện tử/payment), Banking (core banking &#43; lending), Logistics (last-mile delivery). Mục tiêu không phải là đưa cho bạn thiết kế để copy, mà là cho bạn thấy cách lập luận: cùng một pattern, tại sao ngành này dùng còn ngành kia thì không.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/domain-driven-design/15a-case-study-ecommerce-fintech-banking-logistics/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/domain-driven-design/15a-case-study-ecommerce-fintech-banking-logistics/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/domain-driven-design/"></a></div>
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">53 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="chương-15a--case-study-e-commerce-fintech-banking-logistics">Chương 15a — Case Study: E-commerce, FinTech, Banking, Logistics<a hidden class="anchor" aria-hidden="true" href="#chương-15a--case-study-e-commerce-fintech-banking-logistics">#</a></h1>
+<blockquote>
+<p><strong>Vị trí trong bộ tài liệu:</strong> Đây là chương đầu tiên trong cặp chương case study (15a/15b), đứng sau <a href="14-ddd-trong-production.md">Chương 14 — DDD trong Production</a>. Toàn bộ lý thuyết từ chương 01–14 — Subdomain, Bounded Context, Context Mapping, Aggregate, Domain Event, kiến trúc và distributed systems — sẽ được &ldquo;thử lửa&rdquo; qua 4 ngành có độ phức tạp domain rất khác nhau: <strong>E-commerce, FinTech (ví điện tử/payment), Banking (core banking + lending), Logistics (last-mile delivery)</strong>. Mục tiêu không phải là đưa cho bạn thiết kế để copy, mà là cho bạn thấy <strong>cách lập luận</strong>: cùng một pattern, tại sao ngành này dùng còn ngành kia thì không.</p></blockquote>
+<p>Trước khi vào từng ngành, một nguyên tắc xuyên suốt mà tôi muốn bạn giữ trong đầu: <strong>thiết kế DDD tốt là thiết kế phản chiếu đúng nơi business kiếm tiền và nơi business chết nếu làm sai</strong>. E-commerce chết vì bán hàng không có trong kho và trải nghiệm checkout tệ. FinTech chết vì lệch tiền một đồng. Banking chết vì vi phạm compliance và mất audit trail. Logistics chết vì tối ưu route kém làm chi phí giao mỗi đơn cao hơn đối thủ. Bốn &ldquo;điểm chết&rdquo; khác nhau → bốn cách phân bổ nỗ lực thiết kế khác nhau, dù kỹ thuật nền tảng giống hệt nhau.</p>
+<hr>
+<h2 id="mục-lục-chương">Mục lục chương<a hidden class="anchor" aria-hidden="true" href="#mục-lục-chương">#</a></h2>
+<ol>
+<li><a href="#1-e-commerce">E-commerce — Order là vua, nhưng đừng nhốt cả thế giới vào Order</a></li>
+<li><a href="#2-fintech--v%C3%AD-%C4%91i%E1%BB%87n-t%E1%BB%AD--payment">FinTech — Ledger bất biến và double-entry</a></li>
+<li><a href="#3-banking--core-banking--lending">Banking — Core banking, lending và gánh nặng compliance</a></li>
+<li><a href="#4-logistics--giao-v%E1%BA%ADn-last-mile">Logistics — Shipment, Route và bài toán thời gian thực</a></li>
+</ol>
+<hr>
+<h2 id="1-e-commerce">1. E-commerce<a hidden class="anchor" aria-hidden="true" href="#1-e-commerce">#</a></h2>
+<h3 id="11-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">1.1. Bối cảnh business và điểm phức tạp đặc thù<a hidden class="anchor" aria-hidden="true" href="#11-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">#</a></h3>
+<p>Một sàn/website thương mại điện tử tầm trung: 50.000–200.000 đơn/ngày, catalog vài trăm nghìn SKU, có flash sale, có nhiều kho, có cả bán hàng của chính mình (1P) lẫn seller bên thứ ba (3P).</p>
+<p>Điểm phức tạp đặc thù của e-commerce <strong>không nằm ở từng nghiệp vụ đơn lẻ</strong> — đặt hàng, trừ kho, thanh toán, giao hàng, cái nào tách riêng cũng đơn giản. Phức tạp nằm ở chỗ:</p>
+<ol>
+<li><strong>Vòng đời Order dài và nhiều nhánh.</strong> Một đơn hàng sống qua: đặt → xác nhận thanh toán → tách kiện → xuất kho → giao → đối soát → (có thể) đổi trả, hoàn tiền một phần, hủy một phần. Mỗi nhánh có quy tắc riêng: hủy trước khi xuất kho khác hủy sau khi xuất kho; hoàn tiền COD khác hoàn tiền thẻ.</li>
+<li><strong>Tranh chấp tồn kho tại thời điểm cao tải.</strong> Flash sale là bài toán 10.000 người tranh 100 chiếc điện thoại trong 3 giây. Nếu thiết kế sai, bạn hoặc bán lố (oversell — phải gọi điện xin lỗi khách, hủy đơn, ăn bão 1 sao), hoặc bán hụt (khóa quá chặt, hàng còn mà khách không mua được).</li>
+<li><strong>Pricing và Promotion là chiến trường thay đổi liên tục.</strong> Team marketing muốn ra loại voucher mới mỗi tuần: giảm theo %, giảm cố định, freeship, combo, tặng kèm, stack nhiều voucher, giới hạn theo user segment. Đây là nơi rule nghiệp vụ biến động nhanh nhất.</li>
+<li><strong>Consistency yêu cầu không đồng đều.</strong> Số tiền khách phải trả trên đơn: phải đúng tuyệt đối tại thời điểm đặt. Số lượng &ldquo;còn 5 sản phẩm&rdquo; hiển thị trên trang: sai lệch vài giây không ai chết. Đây là gợi ý vàng để vẽ ranh giới consistency.</li>
+</ol>
+<blockquote>
+<p><strong>Câu hỏi first-principles:</strong> e-commerce kiếm tiền bằng gì? Bằng <strong>chuyển đổi (conversion)</strong> và <strong>biên lợi nhuận trên mỗi đơn</strong>. Vậy Core Domain phải là những gì trực tiếp ảnh hưởng hai con số đó: trải nghiệm đặt hàng trơn tru (Ordering), khả năng hứa đúng và giữ lời về tồn kho (Inventory/Fulfillment promise), và cỗ máy promotion linh hoạt (Pricing). Còn gửi email, quản lý user profile? Quan trọng, nhưng không phải nơi bạn thắng đối thủ.</p></blockquote>
+<h3 id="12-phân-rã-domain-core--supporting--generic">1.2. Phân rã domain: Core / Supporting / Generic<a hidden class="anchor" aria-hidden="true" href="#12-phân-rã-domain-core--supporting--generic">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Subdomain</th>
+          <th>Loại</th>
+          <th>Vì sao</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Ordering</strong> (đặt hàng, vòng đời đơn)</td>
+          <td><strong>Core</strong></td>
+          <td>Là nơi hội tụ mọi rule kiếm tiền: giá cuối cùng, điều kiện hủy/đổi trả, trạng thái đơn. Sai ở đây = mất tiền hoặc mất khách trực tiếp.</td>
+      </tr>
+      <tr>
+          <td><strong>Inventory &amp; Reservation</strong> (tồn kho, giữ hàng)</td>
+          <td><strong>Core</strong></td>
+          <td>Lời hứa &ldquo;còn hàng, giao trong 2 ngày&rdquo; là lợi thế cạnh tranh. Oversell trong flash sale là thảm họa PR. Logic reservation (giữ hàng có thời hạn) là đặc thù, không mua ngoài được.</td>
+      </tr>
+      <tr>
+          <td><strong>Pricing &amp; Promotion</strong></td>
+          <td><strong>Core</strong></td>
+          <td>Biến động nhanh nhất, gắn trực tiếp với chiến lược kinh doanh. Cần mô hình rule linh hoạt (Specification pattern — xem chương 11) mà không sản phẩm đóng gói nào khớp 100%.</td>
+      </tr>
+      <tr>
+          <td><strong>Catalog</strong> (sản phẩm, thuộc tính, tìm kiếm)</td>
+          <td><strong>Supporting</strong></td>
+          <td>Cần thiết nhưng logic không quá đặc thù; nhiều phần (search) có thể dựng trên Elasticsearch. Tuy nhiên với sàn 3P, quản lý listing của seller có thể leo lên gần Core.</td>
+      </tr>
+      <tr>
+          <td><strong>Fulfillment</strong> (tách kiện, xuất kho)</td>
+          <td><strong>Supporting</strong></td>
+          <td>Quan trọng vận hành, nhưng nếu bạn không tự vận hành kho quy mô lớn thì đây là supporting; nếu kho là lợi thế (kiểu Amazon FBA) thì nó là Core — <strong>phân loại subdomain phụ thuộc chiến lược công ty, không phải bản chất kỹ thuật</strong>.</td>
+      </tr>
+      <tr>
+          <td><strong>Payment</strong> (cổng thanh toán)</td>
+          <td><strong>Generic</strong></td>
+          <td>Tích hợp Stripe/VNPay/MoMo. Đừng bao giờ tự viết cổng thanh toán cho một công ty e-commerce.</td>
+      </tr>
+      <tr>
+          <td><strong>Notification, Identity, Shipping label</strong></td>
+          <td><strong>Generic</strong></td>
+          <td>Mua/dùng dịch vụ ngoài, wrap sau ACL.</td>
+      </tr>
+  </tbody>
+</table>
+<p>Bài học ở đây: <strong>cùng một subdomain (Fulfillment) có thể là Core với công ty này và Supporting với công ty kia</strong>. Câu hỏi phân loại không phải &ldquo;cái này khó không?&rdquo; mà là &ldquo;cái này có phải nơi chúng ta khác biệt với đối thủ không, và chúng ta có chủ đích đầu tư để khác biệt ở đó không?&rdquo;.</p>
+<h3 id="13-context-map">1.3. Context map<a hidden class="anchor" aria-hidden="true" href="#13-context-map">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
+    subgraph Core
+        ORD[Ordering BC]
+        INV[Inventory BC]
+        PRC[Pricing &amp; Promotion BC]
+    end
+    subgraph Supporting
+        CAT[Catalog BC]
+        FUL[Fulfillment BC]
+    end
+    subgraph Generic
+        PAY[Payment BC&lt;br/&gt;wrap cổng ngoài]
+        NOTI[Notification BC]
+        IDN[Identity BC]
+    end
+
+    CAT -- &#34;OHS/PL: Product info&lt;br/&gt;(published language)&#34; --&gt; ORD
+    PRC -- &#34;Customer/Supplier&lt;br/&gt;Ordering là customer&#34; --&gt; ORD
+    ORD -- &#34;Domain Event:&lt;br/&gt;OrderPlaced, OrderCancelled&#34; --&gt; INV
+    INV -- &#34;Domain Event:&lt;br/&gt;StockReserved / ReservationRejected&#34; --&gt; ORD
+    ORD -- &#34;ACL trước cổng thanh toán&#34; --&gt; PAY
+    ORD -- &#34;OrderConfirmed event&#34; --&gt; FUL
+    FUL -- &#34;ShipmentDispatched event&#34; --&gt; NOTI
+    ORD -- &#34;event&#34; --&gt; NOTI
+    IDN -- &#34;Conformist:&lt;br/&gt;các BC dùng UserId chuẩn&#34; --&gt; ORD
+</code></pre><p>Mấy quyết định đáng chú ý:</p>
+<ul>
+<li><strong>Catalog là Open Host Service (OHS) với Published Language:</strong> nhiều BC cần thông tin sản phẩm (Ordering cần tên + ảnh để snapshot vào đơn, Pricing cần category để áp rule). Catalog công bố một schema ổn định thay vì để từng BC gọi thẳng vào bảng của nó. Đánh đổi: team Catalog phải cam kết versioning schema — chậm hơn khi thay đổi, nhưng tránh được cảnh một lần đổi cột làm sập 4 BC.</li>
+<li><strong>Pricing ↔ Ordering là Customer/Supplier:</strong> Ordering là downstream customer, có quyền yêu cầu Pricing cung cấp API &ldquo;tính giá cho giỏ hàng này&rdquo;. Vì cả hai đều Core và cùng công ty, quan hệ đàm phán được — khác với quan hệ Conformist khi bạn dùng API của bên thứ ba và phải chịu.</li>
+<li><strong>Payment nằm sau ACL:</strong> model của VNPay/Stripe (charge, intent, capture) <strong>không được phép</strong> rò rỉ vào Ordering. Ordering chỉ biết khái niệm <code>PaymentConfirmed</code>/<code>PaymentFailed</code> của chính nó. Nếu mai đổi cổng thanh toán, chỉ ACL đổi. Làm sai (để <code>stripe_payment_intent_id</code> len vào entity Order và code Order xử lý theo trạng thái riêng của Stripe): đổi cổng thanh toán trở thành dự án 6 tháng thay vì 6 tuần.</li>
+</ul>
+<h3 id="14-aggregate-quan-trọng-nhất-order--và-tại-sao-inventory-phải-đứng-ngoài">1.4. Aggregate quan trọng nhất: Order — và tại sao Inventory phải đứng ngoài<a hidden class="anchor" aria-hidden="true" href="#14-aggregate-quan-trọng-nhất-order--và-tại-sao-inventory-phải-đứng-ngoài">#</a></h3>
+<p><strong>Invariant của Order aggregate:</strong></p>
+<ol>
+<li>Tổng tiền đơn = Σ(line item sau giảm giá) + phí ship − voucher toàn đơn, và <strong>bất biến sau khi đơn được xác nhận</strong> (giá là snapshot, không bao giờ tính lại từ Catalog).</li>
+<li>Chuyển trạng thái chỉ theo máy trạng thái hợp lệ: không thể <code>Shipped → Cancelled</code> toàn phần, chỉ có thể đi qua luồng return.</li>
+<li>Một đơn không quá N line item (rule vận hành kho), không âm số lượng.</li>
+<li>Không được sửa line item sau khi đã <code>Confirmed</code> — mọi thay đổi sau đó là nghiệp vụ mới (partial cancel, return) với rule riêng.</li>
+</ol>
+<p><strong>Cái gì KHÔNG thuộc Order:</strong> số tồn kho. Đây là lỗi kinh điển sẽ phân tích ở mục 1.7. Order chỉ giữ <strong>kết quả</strong> của việc giữ hàng (<code>reservationId</code>), không giữ con số tồn.</p>
+<p>Phác thảo TypeScript:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ordering/domain/order.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderStatus</span> <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;PENDING_PAYMENT&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;CONFIRMED&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;FULFILLING&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;SHIPPED&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;COMPLETED&#39;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;CANCELLED&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Value Object: tiền không bao giờ là number trần trụi
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">amount</span>: <span style="color:#66d9ef">bigint</span>,      <span style="color:#75715e">// đơn vị nhỏ nhất (đồng), bigint để không dính floating point
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">currency</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;VND&#39;</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">vnd</span>(<span style="color:#a6e22e">amount</span>: <span style="color:#66d9ef">bigint</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">amount</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span><span style="color:#a6e22e">n</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Money không âm trong ngữ cảnh Order&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Money</span>(<span style="color:#a6e22e">amount</span>, <span style="color:#e6db74">&#39;VND&#39;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">other</span>: <span style="color:#66d9ef">Money</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> { <span style="color:#75715e">/* check cùng currency */</span> <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">vnd</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">amount</span>); }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Value Object: snapshot sản phẩm tại thời điểm đặt — KHÔNG tham chiếu sống sang Catalog
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderLine</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">productId</span>: <span style="color:#66d9ef">ProductId</span>,     <span style="color:#75715e">// chỉ là ID tham chiếu, không phải object Catalog
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">nameSnapshot</span>: <span style="color:#66d9ef">string</span>,     <span style="color:#75715e">// tên tại thời điểm đặt
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">unitPrice</span>: <span style="color:#66d9ef">Money</span>,         <span style="color:#75715e">// giá đã chốt — Catalog đổi giá sau đó không ảnh hưởng
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">quantity</span>: <span style="color:#66d9ef">number</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">appliedDiscount</span>: <span style="color:#66d9ef">Money</span>,
+</span></span><span style="display:flex;"><span>  ) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">quantity</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span>Number.<span style="color:#a6e22e">isInteger</span>(<span style="color:#a6e22e">quantity</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Số lượng phải là số nguyên dương&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">lineTotal</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> { <span style="color:#75715e">/* unitPrice * quantity - appliedDiscount */</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">OrderId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">customerId</span>: <span style="color:#66d9ef">CustomerId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">lines</span>: <span style="color:#66d9ef">OrderLine</span>[],
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">OrderStatus</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">pricingSnapshot</span>: <span style="color:#66d9ef">PricingSnapshot</span>, <span style="color:#75715e">// voucher, phí ship đã chốt
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">reservationId</span>: <span style="color:#66d9ef">ReservationId</span> <span style="color:#f92672">|</span> <span style="color:#66d9ef">null</span>,       <span style="color:#75715e">// tham chiếu sang Inventory BC — chỉ ID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">domainEvents</span>: <span style="color:#66d9ef">DomainEvent</span>[] <span style="color:#f92672">=</span> [],
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Factory method — điểm duy nhất tạo Order hợp lệ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">static</span> <span style="color:#a6e22e">place</span>(<span style="color:#a6e22e">cmd</span>: <span style="color:#66d9ef">PlaceOrderCommand</span>, <span style="color:#a6e22e">pricing</span>: <span style="color:#66d9ef">PricingSnapshot</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Đơn hàng phải có ít nhất 1 sản phẩm&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">50</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Đơn hàng tối đa 50 dòng&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Order</span>(<span style="color:#a6e22e">OrderId</span>.<span style="color:#a6e22e">next</span>(), <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">customerId</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">lines</span>, <span style="color:#e6db74">&#39;PENDING_PAYMENT&#39;</span>, <span style="color:#a6e22e">pricing</span>, <span style="color:#66d9ef">null</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderPlaced</span>(<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">total</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">lineSummaries</span>()));
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Invariant tổng tiền: luôn derive từ lines + snapshot, không lưu cột total có thể lệch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">total</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lines</span>
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">l</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">sum</span>.<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">lineTotal</span>), <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">vnd</span>(<span style="color:#ae81ff">0</span><span style="color:#a6e22e">n</span>))
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">add</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">pricingSnapshot</span>.<span style="color:#a6e22e">shippingFee</span>)
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">subtract</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">pricingSnapshot</span>.<span style="color:#a6e22e">orderLevelDiscount</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">attachReservation</span>(<span style="color:#a6e22e">reservationId</span>: <span style="color:#66d9ef">ReservationId</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;PENDING_PAYMENT&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Chỉ gắn reservation khi đơn chờ thanh toán&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reservationId</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reservationId</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">confirmPayment</span>(<span style="color:#a6e22e">paymentRef</span>: <span style="color:#66d9ef">PaymentRef</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">assertTransition</span>(<span style="color:#e6db74">&#39;PENDING_PAYMENT&#39;</span>, <span style="color:#e6db74">&#39;CONFIRMED&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reservationId</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">null</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Không thể confirm đơn chưa giữ được hàng&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CONFIRMED&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderConfirmed</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reservationId</span>, <span style="color:#a6e22e">paymentRef</span>));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cancel</span>(<span style="color:#a6e22e">reason</span>: <span style="color:#66d9ef">CancelReason</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;SHIPPED&#39;</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;COMPLETED&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Đơn đã giao — dùng luồng return, không phải cancel&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CANCELLED&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Event này sẽ khiến Inventory nhả reservation, Payment refund nếu đã thu
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderCancelled</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reservationId</span>, <span style="color:#a6e22e">reason</span>));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Điểm cần soi kỹ:</p>
+<ul>
+<li><strong><code>OrderLine</code> snapshot toàn bộ dữ liệu cần thiết.</strong> Tại sao? Vì Catalog đổi giá/tên/ảnh hàng ngày. Nếu Order tham chiếu sống, hóa đơn của khách sẽ &ldquo;tự thay đổi&rdquo; theo thời gian — thảm họa cả về pháp lý lẫn CSKH. Đánh đổi: dữ liệu trùng lặp, tốn storage. Chấp nhận — storage rẻ, kiện tụng đắt.</li>
+<li><strong>Order tham chiếu Inventory bằng <code>ReservationId</code></strong>, không nhúng. Hai aggregate, hai transaction, nối với nhau bằng saga (xem luồng event bên dưới).</li>
+<li><strong><code>total</code> là derived, không phải cột được cộng dồn thủ công.</strong> Bất cứ khi nào bạn thấy code <code>order.total += x</code> rải rác nhiều nơi, đó là mầm mống của bug lệch tiền.</li>
+</ul>
+<h3 id="15-domain-event-và-luồng-chính-đặt-hàng-flash-sale">1.5. Domain Event và luồng chính: đặt hàng flash sale<a hidden class="anchor" aria-hidden="true" href="#15-domain-event-và-luồng-chính-đặt-hàng-flash-sale">#</a></h3>
+<p>Các event quan trọng: <code>OrderPlaced</code>, <code>StockReserved</code>, <code>ReservationRejected</code>, <code>PaymentConfirmed</code>, <code>OrderConfirmed</code>, <code>OrderCancelled</code>, <code>ReservationExpired</code>.</p>
+<p>Luồng chính — đặt hàng với reservation pattern (saga choreography):</p>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    autonumber
+    participant C as Client
+    participant ORD as Ordering BC
+    participant INV as Inventory BC
+    participant PAY as Payment BC (ACL)
+
+    C-&gt;&gt;ORD: PlaceOrder(cart)
+    ORD-&gt;&gt;ORD: Tạo Order (PENDING_PAYMENT)&lt;br/&gt;chốt pricing snapshot
+    ORD--)INV: OrderPlaced event
+    INV-&gt;&gt;INV: Reserve stock (TTL 15 phút)&lt;br/&gt;invariant: reserved ≤ onHand
+    alt Còn hàng
+        INV--)ORD: StockReserved(reservationId)
+        ORD-&gt;&gt;ORD: attachReservation()
+        ORD-&gt;&gt;PAY: Khởi tạo thanh toán
+        PAY--)ORD: PaymentConfirmed
+        ORD-&gt;&gt;ORD: confirmPayment() → CONFIRMED
+        ORD--)INV: OrderConfirmed → chuyển reservation thành deduction
+    else Hết hàng
+        INV--)ORD: ReservationRejected
+        ORD-&gt;&gt;ORD: cancel(OUT_OF_STOCK)
+        ORD--)C: Thông báo hết hàng
+    end
+    Note over INV: Nếu 15 phút không thấy OrderConfirmed:&lt;br/&gt;ReservationExpired → nhả hàng về pool
+</code></pre><p>Tại sao reservation có TTL? Vì khách bỏ giỏ giữa chừng là chuyện thường (tỷ lệ abandon 60–70%). Không có TTL, hàng bị &ldquo;giam&rdquo; vô hạn bởi những đơn không bao giờ thanh toán — flash sale hiển thị hết hàng trong khi kho còn nguyên. TTL là cơ chế <strong>compensating tự động theo thời gian</strong>, một dạng saga timeout.</p>
+<h3 id="16-trade-off-đặc-thù-ngành">1.6. Trade-off đặc thù ngành<a hidden class="anchor" aria-hidden="true" href="#16-trade-off-đặc-thù-ngành">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Quyết định</th>
+          <th>Chọn</th>
+          <th>Đánh đổi</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Consistency giữa Order và Inventory</td>
+          <td><strong>Eventual (saga + reservation)</strong>, không distributed transaction</td>
+          <td>Có khoảng vài trăm ms đơn ở trạng thái &ldquo;chưa biết còn hàng không&rdquo;. Đổi lại: hai BC scale độc lập, flash sale không kéo sập Ordering. Nếu chọn 2PC: đơn giản về lý luận nhưng throughput chết ở khóa phân tán.</td>
+      </tr>
+      <tr>
+          <td>Hiển thị tồn kho trên trang sản phẩm</td>
+          <td><strong>Cache, eventual, lệch được vài giây</strong></td>
+          <td>Đôi khi khách bấm mua thì hết hàng — chấp nhận, xử lý bằng UX (&ldquo;rất tiếc, vừa hết&rdquo;). Bù lại trang sản phẩm chịu được hàng trăm nghìn RPS.</td>
+      </tr>
+      <tr>
+          <td>Giá trên đơn</td>
+          <td><strong>Strong — snapshot bất biến trong aggregate</strong></td>
+          <td>Tốn storage, phải xử lý bài toán &ldquo;khách thấy giá cũ vài giây trước khi giá đổi&rdquo; bằng rule nghiệp vụ (tôn trọng giá khách thấy trong X phút).</td>
+      </tr>
+      <tr>
+          <td>Promotion engine</td>
+          <td>Mô hình rule bằng Specification, evaluate lúc checkout</td>
+          <td>Phức tạp hơn if-else, nhưng team marketing ra voucher mới không cần deploy code core. Nếu hardcode: mỗi campaign là một lần sửa Order service — nơi nguy hiểm nhất để sửa thường xuyên.</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="17-ít-nhất-3-lỗi-thiết-kế-thường-gặp">1.7. Ít nhất 3 lỗi thiết kế thường gặp<a hidden class="anchor" aria-hidden="true" href="#17-ít-nhất-3-lỗi-thiết-kế-thường-gặp">#</a></h3>
+<p><strong>Lỗi 1 — Nhốt Inventory vào trong Order aggregate.</strong>
+Triệu chứng: <code>Order.place()</code> vừa tạo đơn vừa <code>UPDATE products SET stock = stock - ?</code> trong cùng transaction. Hậu quả: (a) mọi đơn hàng chạm cùng row sản phẩm hot → lock contention, flash sale biến database thành hàng đợi tuần tự, p99 checkout vọt lên nhiều giây; (b) Order và Inventory không thể tách service khi cần scale; (c) rule tồn kho đa kho (kho nào gần khách nhất còn hàng?) không có chỗ sống — nó không phải rule của Order. Nguyên nhân gốc: nhầm &ldquo;những gì thay đổi cùng nhau trong một use case&rdquo; với &ldquo;những gì phải nhất quán trong một transaction&rdquo;. Aggregate vẽ theo <strong>invariant</strong>, không vẽ theo use case.</p>
+<p><strong>Lỗi 2 — Order tham chiếu sống sang Catalog thay vì snapshot.</strong>
+Triệu chứng: bảng <code>order_lines</code> chỉ có <code>product_id</code>, mọi màn hình đơn hàng join sang <code>products</code>. Hậu quả: khách đặt máy giá 20 triệu, tuần sau sale còn 15 triệu, khách mở lại đơn thấy 15 triệu và đòi hoàn chênh lệch; báo cáo doanh thu chạy lại ra số khác; xóa sản phẩm khỏi catalog làm gãy trang lịch sử đơn hàng. Đây là lỗi hiểu sai Value Object: dữ liệu trên đơn là <strong>sự kiện lịch sử bất biến</strong>, không phải view của hiện tại.</p>
+<p><strong>Lỗi 3 — Promotion logic rải trong Order service dưới dạng if-else.</strong>
+Triệu chứng: <code>if (voucher.type === 'FREESHIP' &amp;&amp; order.total &gt; 500000 &amp;&amp; user.isNew) ...</code> nằm trong <code>OrderService</code>, mỗi campaign thêm một nhánh. Hậu quả sau 2 năm: hàm tính giá 800 dòng không ai dám sửa, campaign Tết cần 3 tuần dev + regression test toàn bộ luồng đặt hàng, và bug giảm giá stack sai làm lỗ tiền thật. Cách đúng: Pricing là BC riêng với rule model (Specification/rule engine nhẹ), Ordering chỉ nhận <code>PricingSnapshot</code> đã tính xong.</p>
+<p><strong>Lỗi 4 (bonus) — Dùng trạng thái đơn làm &ldquo;biến toàn cục&rdquo; cho mọi BC.</strong>
+Fulfillment, CSKH, Finance đều đọc-ghi trực tiếp cột <code>orders.status</code>, mỗi team thêm vài trạng thái (<code>WAITING_3PL_PICKUP</code>, <code>FINANCE_HOLD</code>&hellip;). Sau 3 năm: 40 trạng thái, không ai biết máy trạng thái thật là gì, mọi thay đổi cần họp 4 team. Cách đúng: mỗi BC có máy trạng thái riêng cho khái niệm của nó (Ordering có OrderStatus, Fulfillment có ShipmentStatus), đồng bộ bằng event.</p>
+<h3 id="18-khi-lưu-lượng-x100">1.8. Khi lưu lượng x100<a hidden class="anchor" aria-hidden="true" href="#18-khi-lưu-lượng-x100">#</a></h3>
+<ul>
+<li><strong>Đọc/ghi tách hẳn (CQRS đúng nghĩa):</strong> trang sản phẩm, lịch sử đơn → read model riêng (Elasticsearch/denormalized store) build từ event. Write path của Ordering chỉ còn lo transaction đặt hàng.</li>
+<li><strong>Inventory hot item cần thoát khỏi mô hình &ldquo;một row một khóa&rdquo;:</strong> chuyển sang đếm trên Redis với Lua script atomic, hoặc chia tồn kho thành bucket (sharded counter), DB chỉ là nguồn đối soát. Invariant &ldquo;reserved ≤ onHand&rdquo; giờ được enforce ở tầng in-memory có persistence log — <strong>aggregate về mặt khái niệm không đổi, hiện thực hóa đổi hoàn toàn</strong>. Đây là điểm nhiều người hiểu nhầm: DDD không bắt aggregate phải là ORM entity.</li>
+<li><strong>Order ID sharding theo customer:</strong> mọi truy vấn nóng của Ordering đều theo customer → shard theo <code>customerId</code> gần như miễn phí. Nhưng báo cáo cross-customer phải đi qua read model, chấp nhận trễ.</li>
+<li><strong>Event bus trở thành hạ tầng sống còn:</strong> ở x100, &ldquo;mất event&rdquo; không còn là sự cố hiếm, phải có outbox pattern + idempotent consumer làm chuẩn bắt buộc, không phải best practice tùy chọn (xem chương 13).</li>
+</ul>
+<hr>
+<h2 id="2-fintech--ví-điện-tử--payment">2. FinTech — Ví điện tử / Payment<a hidden class="anchor" aria-hidden="true" href="#2-fintech--ví-điện-tử--payment">#</a></h2>
+<h3 id="21-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">2.1. Bối cảnh business và điểm phức tạp đặc thù<a hidden class="anchor" aria-hidden="true" href="#21-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">#</a></h3>
+<p>Một ví điện tử kiểu MoMo/ZaloPay thu nhỏ: nạp tiền từ ngân hàng, chuyển P2P, thanh toán merchant, rút về ngân hàng, có chương trình cashback. Vài triệu ví, vài trăm giao dịch/giây giờ cao điểm.</p>
+<p>Điểm đặc thù của FinTech gói gọn trong một câu: <strong>tiền không được sai một đồng, và khi bị chất vấn, bạn phải chứng minh được từng đồng đi đâu</strong>. Cụ thể:</p>
+<ol>
+<li><strong>Tính đúng tuyệt đối của số dư.</strong> Ở e-commerce, tồn kho lệch 1 đơn vị là phiền toái; ở ví điện tử, tổng tiền trong hệ thống lệch 1 đồng so với tiền thật ở ngân hàng đối tác là <strong>sự cố nghiêm trọng phải báo cáo</strong>, lệch nhiều là giấy phép bị treo.</li>
+<li><strong>Ledger bất biến (immutable) là yêu cầu bản chất, không phải lựa chọn kiến trúc.</strong> Kiểm toán, Ngân hàng Nhà nước, đối soát với bank — tất cả đều cần trả lời câu hỏi &ldquo;tại thời điểm T, số dư ví X là bao nhiêu và vì sao&rdquo;. Chỉ có ledger append-only trả lời được. Cột <code>balance</code> bị UPDATE đè không trả lời được.</li>
+<li><strong>Mọi giao dịch tiền là giao dịch phân tán với bên ngoài.</strong> Nạp tiền = chờ bank xác nhận. Rút tiền = gọi bank, có thể timeout, có thể &ldquo;không rõ thành công hay thất bại&rdquo;. Trạng thái lấp lửng (in-doubt) là trạng thái <strong>hạng nhất</strong> trong domain, không phải edge case.</li>
+<li><strong>Idempotency là luật sống.</strong> Retry một lệnh chuyển tiền mà không có idempotency key = chuyển hai lần = mất tiền thật. Ở đây, ubiquitous language phải có từ &ldquo;idempotency key&rdquo;, &ldquo;reversal&rdquo;, &ldquo;reconciliation&rdquo; ngay từ ngày đầu.</li>
+<li><strong>Đối soát (reconciliation) là một nghiệp vụ lớn, không phải cron job phụ.</strong> Mỗi ngày phải khớp: ledger nội bộ ↔ sao kê bank ↔ số liệu merchant. Lệch là phải có quy trình điều tra và bút toán điều chỉnh — cũng append-only.</li>
+</ol>
+<h3 id="22-phân-rã-domain">2.2. Phân rã domain<a hidden class="anchor" aria-hidden="true" href="#22-phân-rã-domain">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Subdomain</th>
+          <th>Loại</th>
+          <th>Vì sao</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Ledger</strong> (sổ cái double-entry)</td>
+          <td><strong>Core của Core</strong></td>
+          <td>Đây là &ldquo;sự thật&rdquo; duy nhất về tiền. Mọi thứ khác có thể rebuild từ ledger. Không mua ngoài được vì rule hạch toán gắn chặt sản phẩm (ví chính, ví khuyến mãi, tiền treo, phí&hellip;).</td>
+      </tr>
+      <tr>
+          <td><strong>Payment Orchestration</strong> (luồng nạp/rút/chuyển, saga với bank)</td>
+          <td><strong>Core</strong></td>
+          <td>Xử lý trạng thái in-doubt, retry, reversal — nơi tập trung độ phức tạp phân tán và cũng là nơi quyết định trải nghiệm &ldquo;chuyển tiền 3 giây&rdquo; so với đối thủ &ldquo;chờ 5 phút&rdquo;.</td>
+      </tr>
+      <tr>
+          <td><strong>Reconciliation</strong></td>
+          <td><strong>Core</strong></td>
+          <td>Nghe như back-office nhưng là năng lực sống còn để vận hành đúng luật và phát hiện mất tiền sớm. Công ty payment trưởng thành đầu tư rất nặng vào đây.</td>
+      </tr>
+      <tr>
+          <td><strong>Risk &amp; Fraud</strong></td>
+          <td><strong>Core</strong> (hoặc Supporting giai đoạn đầu)</td>
+          <td>Chặn giao dịch đáng ngờ theo rule + model. Giai đoạn đầu có thể dùng rule đơn giản (Supporting), càng lớn càng trở thành lợi thế cạnh tranh (giảm tỷ lệ fraud = giảm chi phí = phí rẻ hơn đối thủ).</td>
+      </tr>
+      <tr>
+          <td><strong>KYC/Onboarding</strong></td>
+          <td><strong>Supporting</strong></td>
+          <td>Bắt buộc theo luật, nhưng quy trình khá chuẩn hóa; phần eKYC (OCR, face matching) mua từ vendor, phần luồng nghiệp vụ tự viết.</td>
+      </tr>
+      <tr>
+          <td><strong>Cashback/Loyalty</strong></td>
+          <td><strong>Supporting</strong></td>
+          <td>Quan trọng cho growth nhưng logic sai không làm mất tiền gốc của khách — miễn là tiền cashback cũng đi qua ledger.</td>
+      </tr>
+      <tr>
+          <td><strong>Notification, Statement PDF, CSKH tooling</strong></td>
+          <td><strong>Generic</strong></td>
+          <td>Mua hoặc dùng thư viện.</td>
+      </tr>
+  </tbody>
+</table>
+<p>Chú ý một nghịch lý: <strong>Reconciliation không tạo ra doanh thu nhưng vẫn là Core</strong>. Lý do: phân loại Core không chỉ theo &ldquo;kiếm tiền&rdquo; mà theo &ldquo;nếu làm tệ thì công ty có tồn tại được không&rdquo;. Với ngành bị regulate, năng lực chứng minh tính đúng của tiền là điều kiện tồn tại.</p>
+<h3 id="23-context-map">2.3. Context map<a hidden class="anchor" aria-hidden="true" href="#23-context-map">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
+    subgraph Core
+        LED[Ledger BC&lt;br/&gt;double-entry, append-only]
+        PO[Payment Orchestration BC&lt;br/&gt;saga nạp/rút/chuyển]
+        REC[Reconciliation BC]
+        RISK[Risk &amp; Fraud BC]
+    end
+    subgraph Supporting
+        KYC[KYC BC]
+        LOY[Cashback BC]
+    end
+    subgraph External
+        BANK[(Bank Partner API)]
+        MER[(Merchant API)]
+    end
+
+    PO -- &#34;Command: PostTransaction&lt;br/&gt;(đồng bộ, strong consistency)&#34; --&gt; LED
+    PO -- &#34;ACL: BankGateway&#34; --&gt; BANK
+    RISK -- &#34;Customer/Supplier:&lt;br/&gt;PO hỏi Risk trước khi thực hiện&#34; --&gt; PO
+    LED -- &#34;OHS: Balance &amp; Entry query&lt;br/&gt;(read-only published API)&#34; --&gt; LOY
+    LED -- &#34;event stream: EntryPosted&#34; --&gt; REC
+    BANK -- &#34;sao kê file/API&#34; --&gt; REC
+    KYC -- &#34;event: WalletActivated&#34; --&gt; PO
+    LOY -- &#34;Command tạo transaction cashback&lt;br/&gt;(đi qua PO như mọi giao dịch)&#34; --&gt; PO
+    MER -- &#34;ACL&#34; --&gt; PO
+</code></pre><p>Ba quyết định then chốt:</p>
+<ul>
+<li><strong>Ledger là downstream của không ai cả về mặt ghi.</strong> Chỉ một cửa ghi duy nhất: Payment Orchestration gửi command <code>PostTransaction</code>. Cashback muốn cộng tiền? Đi qua PO như một giao dịch bình thường. Điều này bảo đảm mọi đồng tiền vào/ra đều qua cùng một bộ rule kiểm tra. Đánh đổi: PO thành điểm nghẽn về throughput — chấp nhận, và giải bằng scale ngang theo shard ví (mục 2.8), không giải bằng cách mở thêm cửa ghi.</li>
+<li><strong>Risk đứng trước PO theo quan hệ Customer/Supplier đồng bộ</strong> cho giao dịch rút/chuyển lớn (phải chặn trước khi tiền đi), nhưng <strong>bất đồng bộ (event)</strong> cho phân tích sau giao dịch nhỏ. Cùng một cặp BC, hai kiểu tích hợp tùy mức rủi ro — context mapping không phải chọn một kiểu cho mọi tương tác.</li>
+<li><strong>Bank luôn nằm sau ACL</strong>, và ACL này phải dịch cả <strong>mô hình lỗi</strong>: bank timeout không phải &ldquo;thất bại&rdquo;, nó là &ldquo;không rõ&rdquo; — ACL trả về <code>InDoubt</code> chứ không được trả <code>Failed</code>. Nhiều sự cố mất tiền thật bắt nguồn từ ACL dịch sai timeout thành failed rồi hệ thống tự động refund, trong khi bank thực ra đã chuyển thành công.</li>
+</ul>
+<h3 id="24-aggregate-quan-trọng-nhất-ledgertransaction-double-entry">2.4. Aggregate quan trọng nhất: LedgerTransaction (double-entry)<a hidden class="anchor" aria-hidden="true" href="#24-aggregate-quan-trọng-nhất-ledgertransaction-double-entry">#</a></h3>
+<p>Mô hình sai phổ biến nhất: coi <code>Wallet</code> với cột <code>balance</code> là aggregate trung tâm. Mô hình đúng: <strong>aggregate trung tâm là LedgerTransaction — một bút toán gồm nhiều entry, tổng Nợ = tổng Có</strong>. Balance chỉ là derived/materialized view.</p>
+<p><strong>Invariant của LedgerTransaction:</strong></p>
+<ol>
+<li><strong>Cân bằng:</strong> Σ(debit) = Σ(credit) trong cùng transaction — bất biến tuyệt đối, kiểm tại thời điểm tạo, và vì entry bất biến nên không bao giờ bị phá sau đó.</li>
+<li><strong>Bất biến:</strong> entry đã post không bao giờ UPDATE/DELETE. Sửa sai = post transaction đảo (reversal) tham chiếu transaction gốc.</li>
+<li><strong>Idempotent:</strong> mỗi transaction mang <code>idempotencyKey</code> duy nhất; post lại cùng key phải trả về kết quả cũ, không tạo entry mới.</li>
+<li><strong>Không âm có điều kiện:</strong> ví khách hàng không được âm (kiểm bằng số dư tính đến entry hiện tại); một số account nội bộ (tiền treo, phải thu bank) được phép âm theo thiết kế hạch toán.</li>
+</ol>
+<p>Phác thảo Go:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ledger/domain/transaction.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">ledger</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;errors&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">EntryDirection</span> <span style="color:#66d9ef">int8</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Debit</span>  <span style="color:#a6e22e">EntryDirection</span> = <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Credit</span> <span style="color:#a6e22e">EntryDirection</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Money: số nguyên đơn vị đồng. Cấm float trong toàn bộ BC này.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Money</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Amount</span>   <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Currency</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// &#34;VND&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Entry là Value Object bên trong aggregate — bất biến sau khi tạo.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Entry</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">AccountID</span> <span style="color:#a6e22e">AccountID</span> <span style="color:#75715e">// ví khách, account nội bộ (cash-at-bank, suspense, fee-revenue...)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Direction</span> <span style="color:#a6e22e">EntryDirection</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Amount</span>    <span style="color:#a6e22e">Money</span> <span style="color:#75715e">// luôn dương; chiều nằm ở Direction</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">TxType</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// TOPUP, WITHDRAW, P2P_TRANSFER, MERCHANT_PAY, REVERSAL, RECON_ADJUSTMENT</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// LedgerTransaction là Aggregate Root.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Ranh giới transaction DB = một bút toán trọn vẹn. Không hơn, không kém.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">LedgerTransaction</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ID</span>             <span style="color:#a6e22e">TxID</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">IdempotencyKey</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Type</span>           <span style="color:#a6e22e">TxType</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Entries</span>        []<span style="color:#a6e22e">Entry</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ReversalOf</span>     <span style="color:#f92672">*</span><span style="color:#a6e22e">TxID</span> <span style="color:#75715e">// khác nil nếu là bút toán đảo</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">PostedAt</span>       <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// NewTransaction là Factory duy nhất — enforce invariant cân bằng ngay tại cửa.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewTransaction</span>(<span style="color:#a6e22e">key</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">txType</span> <span style="color:#a6e22e">TxType</span>, <span style="color:#a6e22e">entries</span> []<span style="color:#a6e22e">Entry</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">LedgerTransaction</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">entries</span>) &lt; <span style="color:#ae81ff">2</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;double-entry cần tối thiểu 2 entry&#34;</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">sum</span> <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">entries</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Amount</span>.<span style="color:#a6e22e">Amount</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;amount của entry phải dương; chiều thể hiện bằng Direction&#34;</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span> <span style="color:#f92672">+=</span> int64(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Direction</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Amount</span>.<span style="color:#a6e22e">Amount</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">sum</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Đây là invariant thiêng liêng nhất của toàn hệ thống.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">ErrUnbalanced</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">LedgerTransaction</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ID</span>: <span style="color:#a6e22e">NewTxID</span>(), <span style="color:#a6e22e">IdempotencyKey</span>: <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">Type</span>: <span style="color:#a6e22e">txType</span>, <span style="color:#a6e22e">Entries</span>: <span style="color:#a6e22e">entries</span>,
+</span></span><span style="display:flex;"><span>	}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Ví dụ nghiệp vụ: khách A chuyển 100k cho khách B, phí 1k.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 3 entry, vẫn cân: Debit ví A 101k / Credit ví B 100k / Credit account phí 1k.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewP2PTransfer</span>(<span style="color:#a6e22e">key</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">from</span>, <span style="color:#a6e22e">to</span> <span style="color:#a6e22e">AccountID</span>, <span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">fee</span> <span style="color:#a6e22e">Money</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">LedgerTransaction</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">NewTransaction</span>(<span style="color:#a6e22e">key</span>, <span style="color:#e6db74">&#34;P2P_TRANSFER&#34;</span>, []<span style="color:#a6e22e">Entry</span>{
+</span></span><span style="display:flex;"><span>		{<span style="color:#a6e22e">AccountID</span>: <span style="color:#a6e22e">from</span>, <span style="color:#a6e22e">Direction</span>: <span style="color:#a6e22e">Debit</span>, <span style="color:#a6e22e">Amount</span>: <span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">fee</span>)},
+</span></span><span style="display:flex;"><span>		{<span style="color:#a6e22e">AccountID</span>: <span style="color:#a6e22e">to</span>, <span style="color:#a6e22e">Direction</span>: <span style="color:#a6e22e">Credit</span>, <span style="color:#a6e22e">Amount</span>: <span style="color:#a6e22e">amount</span>},
+</span></span><span style="display:flex;"><span>		{<span style="color:#a6e22e">AccountID</span>: <span style="color:#a6e22e">FeeRevenueAccount</span>, <span style="color:#a6e22e">Direction</span>: <span style="color:#a6e22e">Credit</span>, <span style="color:#a6e22e">Amount</span>: <span style="color:#a6e22e">fee</span>},
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Và phía repository — nơi enforce invariant &ldquo;không âm&rdquo; và idempotency, vì hai invariant này cần nhìn thấy trạng thái ngoài aggregate:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ledger/infra/postgres_repo.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// PostTransaction chạy trong MỘT transaction DB:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//  1. INSERT ... ON CONFLICT (idempotency_key) DO NOTHING → nếu conflict, đọc và trả kết quả cũ</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//  2. Với mỗi account khách bị Debit: khóa dòng balance-projection</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//     (SELECT ... FOR UPDATE) và kiểm balance - amount &gt;= 0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//  3. INSERT toàn bộ entries (append-only; bảng entries KHÔNG có UPDATE/DELETE grant</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//     — quyền này bị thu hồi ở tầng DB, không chỉ ở code)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//  4. UPDATE balance projection (đây là cache, nguồn sự thật vẫn là entries)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//  5. INSERT outbox event EntryPosted</span>
+</span></span></code></pre></div><p>Chi tiết đáng giá nhất ở đây: <strong>quyền UPDATE/DELETE trên bảng entries bị thu hồi ở tầng database</strong>. Invariant &ldquo;bất biến&rdquo; không nên chỉ sống trong code — code có bug, có người viết script sửa liệu. Defense in depth cho invariant quan trọng nhất.</p>
+<p>Còn <code>Wallet</code> thì sao? Wallet là aggregate <strong>nhẹ</strong> ở BC khác (quản lý trạng thái ví: active/frozen/closed, hạn mức, KYC tier) — nó không giữ tiền. &ldquo;Số dư của ví&rdquo; = tổng entries của account tương ứng, được cache trong balance projection.</p>
+<h3 id="25-domain-event-và-luồng-chính-rút-tiền-về-ngân-hàng">2.5. Domain Event và luồng chính: rút tiền về ngân hàng<a hidden class="anchor" aria-hidden="true" href="#25-domain-event-và-luồng-chính-rút-tiền-về-ngân-hàng">#</a></h3>
+<p>Đây là luồng khó nhất vì dính bên thứ ba có thể trả lời &ldquo;không rõ&rdquo;:</p>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    autonumber
+    participant U as User
+    participant PO as Payment Orchestration
+    participant RISK as Risk BC
+    participant LED as Ledger BC
+    participant ACL as Bank ACL
+    participant BANK as Bank Partner
+
+    U-&gt;&gt;PO: Withdraw(500k, idempotencyKey)
+    PO-&gt;&gt;RISK: Assess(withdraw, 500k) — đồng bộ
+    RISK--&gt;&gt;PO: APPROVED
+    PO-&gt;&gt;LED: Post: Debit ví user 500k / Credit &#34;Withdraw-Pending&#34; 500k
+    Note over LED: Tiền RỜI ví user NGAY — chuyển sang account treo.&lt;br/&gt;User không thể double-spend trong lúc chờ bank.
+    LED--&gt;&gt;PO: EntryPosted
+    PO-&gt;&gt;ACL: TransferToBank(500k)
+    ACL-&gt;&gt;BANK: API call
+    alt Bank xác nhận thành công
+        BANK--&gt;&gt;ACL: OK
+        PO-&gt;&gt;LED: Post: Debit &#34;Withdraw-Pending&#34; / Credit &#34;Cash-at-Bank&#34;
+        PO--)U: WithdrawCompleted event → notification
+    else Bank trả lỗi rõ ràng (tài khoản không tồn tại...)
+        BANK--&gt;&gt;ACL: FAILED
+        PO-&gt;&gt;LED: Post REVERSAL: Debit &#34;Withdraw-Pending&#34; / Credit ví user
+        PO--)U: WithdrawFailed → tiền đã hoàn
+    else Timeout / không rõ
+        ACL--&gt;&gt;PO: IN_DOUBT
+        Note over PO: KHÔNG reversal! Giữ nguyên tiền ở account treo.&lt;br/&gt;Scheduler truy vấn trạng thái bank (status inquiry)&lt;br/&gt;đến khi có kết quả chắc chắn, hoặc chờ recon cuối ngày.
+    end
+</code></pre><p>Ba bài học từ luồng này:</p>
+<ol>
+<li><strong>Tiền treo (suspense account) là mô hình hóa trực tiếp của sự không chắc chắn.</strong> Không có nó, bạn buộc phải chọn giữa &ldquo;trừ ví trước, bank fail thì user mất tiền tạm thời&rdquo; và &ldquo;gọi bank trước, thành công rồi trừ ví — nhưng nếu trừ ví fail thì công ty mất tiền&rdquo;. Suspense account cho phép hệ thống trung thực: &ldquo;tiền đang trên đường&rdquo;.</li>
+<li><strong>In-doubt không được tự động resolve bằng đoán.</strong> Chỉ resolve bằng status inquiry hoặc reconciliation. Mọi shortcut ở đây đều từng làm mất tiền thật ở đâu đó.</li>
+<li><strong>Reversal là bút toán mới, không phải xóa bút toán cũ</strong> — lịch sử phản ánh đúng những gì đã xảy ra, kể cả sai lầm.</li>
+</ol>
+<h3 id="26-trade-off-đặc-thù-ngành">2.6. Trade-off đặc thù ngành<a hidden class="anchor" aria-hidden="true" href="#26-trade-off-đặc-thù-ngành">#</a></h3>
+<ul>
+<li><strong>Strong consistency ở ledger, không thương lượng.</strong> Post bút toán là ACID transaction, kể cả khi phải hy sinh throughput. Eventual consistency cho ledger nghĩa là có thời điểm tồn tại trạng thái mất cân bằng — với sổ cái, &ldquo;tạm thời sai&rdquo; đồng nghĩa &ldquo;sai&rdquo;.</li>
+<li><strong>Eventual ở mọi thứ phái sinh:</strong> notification, lịch sử giao dịch hiển thị, thống kê chi tiêu, cashback. Notification trễ 5 giây không ai mất tiền.</li>
+<li><strong>Latency vs an toàn ở Risk:</strong> kiểm tra fraud đồng bộ thêm 50–200ms vào mọi giao dịch. Chọn phân tầng: giao dịch nhỏ trong hạn mức → risk async (chấp nhận rủi ro nhỏ, thu hồi sau); giao dịch lớn → risk sync bắt buộc. Trade-off được <strong>định lượng bằng tiền</strong>: chi phí fraud kỳ vọng vs chi phí conversion mất do latency.</li>
+<li><strong>Balance projection: đọc từ đâu?</strong> Đọc balance từ projection (nhanh, có thể trễ 1 tick) hay tính từ entries (chậm, luôn đúng)? Quyết định: kiểm tra &ldquo;không âm&rdquo; khi post → dùng projection nhưng khóa dòng trong cùng transaction với insert entry (nên không trễ); hiển thị app → projection thoải mái; đối soát → luôn tính lại từ entries.</li>
+</ul>
+<h3 id="27-lỗi-thiết-kế-thường-gặp">2.7. Lỗi thiết kế thường gặp<a hidden class="anchor" aria-hidden="true" href="#27-lỗi-thiết-kế-thường-gặp">#</a></h3>
+<p><strong>Lỗi 1 — Lưu balance là cột UPDATE trực tiếp, không có ledger.</strong>
+<code>UPDATE wallets SET balance = balance - 500000 WHERE id = ?</code>. Hậu quả: (a) không trả lời được &ldquo;vì sao số dư ra thế này&rdquo; — khiếu nại của khách thành đi tìm log rải rác; (b) bug double-update hoặc race không có dấu vết để phát hiện, tiền lệch âm thầm hàng tháng trời; (c) không thể đối soát với bank vì không có dữ liệu giao dịch chuẩn; (d) kiểm toán fail. Đây là lỗi <strong>đắt nhất để sửa về sau</strong> — migration từ balance-only sang ledger trên hệ thống đang chạy là dự án nhiều quý. Nếu bạn chỉ nhớ một điều từ case study này: <strong>ngày đầu tiên của một hệ thống tiền phải là ngày ledger append-only ra đời</strong>.</p>
+<p><strong>Lỗi 2 — Single-entry thay vì double-entry.</strong>
+Có bảng transaction log nhưng mỗi giao dịch một dòng &ldquo;ví A -500k&rdquo;. Tiền đi đâu? Không thể hiện. Hậu quả: tổng tiền toàn hệ thống không thể kiểm bằng một invariant duy nhất (Σ mọi entry = 0); tiền phí, tiền treo, tiền ở bank nằm ngoài mô hình → recon thủ công bằng Excel; khi thêm loại giao dịch mới (cashback, hoàn tiền một phần) mỗi loại một kiểu ghi log, không đồng nhất. Double-entry không phải nghi thức kế toán cổ — nó là <strong>invariant toàn cục rẻ nhất từng được phát minh</strong> để phát hiện mất tiền.</p>
+<p><strong>Lỗi 3 — Coi timeout của bank là failure và tự động refund.</strong>
+Đã phân tích ở 2.5. Hậu quả cụ thể: bank thực ra đã chuyển 500k cho user, hệ thống refund thêm 500k vào ví → user nhận 1 triệu, công ty mất 500k mỗi lần xảy ra. Nhân với tần suất timeout của bank Việt Nam giờ cao điểm — con số không nhỏ, và tệ hơn: user nhanh chóng học được cách khai thác (rút tiền đúng giờ bank chậm).</p>
+<p><strong>Lỗi 4 — Không có idempotency key từ client đến ledger.</strong>
+Mobile app retry khi mạng chập chờn → hai lệnh chuyển giống hệt nhau cách nhau 3 giây. Nếu idempotency chỉ có ở tầng API gateway (dedupe theo request hash trong 60s) mà không xuyên xuống ledger, mọi retry qua đường khác (job retry, saga retry) vẫn nhân đôi tiền. Idempotency phải là thuộc tính của <strong>domain model</strong> (key nằm trong LedgerTransaction), không phải của tầng vận chuyển.</p>
+<h3 id="28-khi-lưu-lượng-x100">2.8. Khi lưu lượng x100<a hidden class="anchor" aria-hidden="true" href="#28-khi-lưu-lượng-x100">#</a></h3>
+<ul>
+<li><strong>Shard ledger theo account, và chấp nhận hệ quả:</strong> giao dịch nội-shard (P2P cùng shard) vẫn ACID một transaction; giao dịch xuyên shard phải thành saga hai bút toán qua account trung gian liên-shard (mô hình y hệt cách các ngân hàng thật chuyển tiền liên ngân hàng — domain cũ 400 năm đã giải bài này, đừng phát minh lại). Invariant cân bằng giờ là: mỗi shard tự cân + account trung gian giữa các shard cân với nhau, kiểm bằng recon liên tục.</li>
+<li><strong>Hot account là kẻ thù số một:</strong> account phí, account merchant lớn (một merchant nhận hàng nghìn thanh toán/giây) sẽ nghẽn ở row lock. Giải: <strong>sub-account sharding</strong> — account phí chia thành 64 sub-account, credit ngẫu nhiên một sub, tổng hợp định kỳ. Invariant không đổi, cấu trúc account đổi.</li>
+<li><strong>Recon phải chuyển từ batch cuối ngày sang streaming:</strong> ở x100, lệch phát hiện sau 24h = 24h tiền chảy sai. Continuous reconciliation trên event stream, alert trong phút.</li>
+<li><strong>Balance projection tách hẳn thành read-model service</strong> với cache, vì lượng đọc balance (mỗi lần mở app) gấp hàng trăm lần lượng ghi.</li>
+</ul>
+<hr>
+<h2 id="3-banking--core-banking--lending">3. Banking — Core Banking + Lending<a hidden class="anchor" aria-hidden="true" href="#3-banking--core-banking--lending">#</a></h2>
+<h3 id="31-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">3.1. Bối cảnh business và điểm phức tạp đặc thù<a hidden class="anchor" aria-hidden="true" href="#31-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">#</a></h3>
+<p>Một ngân hàng số (digital bank) hoặc công ty tài chính: tài khoản thanh toán, tiết kiệm có kỳ hạn, và mảng lending (vay tiêu dùng, vay trả góp). Khác ví điện tử ở chỗ: ngân hàng <strong>tạo ra tiền qua tín dụng</strong>, chịu regulate nặng hơn nhiều, và sản phẩm có vòng đời dài (khoản vay 36 tháng, sổ tiết kiệm 13 tháng).</p>
+<p>Điểm phức tạp đặc thù, cộng dồn lên trên mọi thứ của FinTech:</p>
+<ol>
+<li><strong>Sản phẩm tài chính là hợp đồng theo thời gian.</strong> Khoản vay không phải một giao dịch — nó là một <strong>lịch trình</strong> (schedule) 36 kỳ, mỗi kỳ có gốc, lãi, phí; trả sớm thì tính lại; trễ hạn thì phạt và nhảy nhóm nợ. Lãi suất tính <strong>dồn tích theo ngày (accrual)</strong> dù khách không làm gì — domain có &ldquo;thời gian trôi&rdquo; như một tác nhân.</li>
+<li><strong>Phân loại nợ và trích lập dự phòng theo quy định (Thông tư của NHNN).</strong> Khoản vay quá hạn 10 ngày nhảy nhóm 2, 91 ngày nhóm 3&hellip; — rule pháp định, sai là bị phạt, và rule <strong>thay đổi theo văn bản pháp luật</strong>, model phải sửa được mà không đập đi làm lại.</li>
+<li><strong>Bút toán kế toán ngân hàng phức tạp hơn ví:</strong> hạch toán dồn tích lãi (interest accrual), thoái lãi (interest reversal khi nhảy nhóm nợ), off-balance-sheet. Ledger vẫn là trái tim nhưng <strong>Chart of Accounts</strong> lớn và có tầng.</li>
+<li><strong>Audit trail và maker-checker:</strong> thao tác nhạy cảm (giải ngân, điều chỉnh lãi) cần người tạo (maker) và người duyệt (checker) khác nhau. Đây là rule domain, không phải tính năng UI.</li>
+<li><strong>EOD (End of Day) batch là công dân hạng nhất:</strong> tính lãi dồn tích, nhảy nhóm nợ, sinh sao kê — chạy hàng đêm trên hàng triệu hợp đồng, phải xong trước giờ mở cửa, phải chạy lại được (rerunnable) khi lỗi giữa chừng.</li>
+</ol>
+<blockquote>
+<p><strong>First principles:</strong> ngân hàng kiếm tiền chủ yếu từ <strong>NIM (chênh lệch lãi suất huy động − cho vay)</strong> và kiểm soát <strong>rủi ro tín dụng</strong>. Vậy Core Domain là: mô hình hóa đúng sản phẩm tín dụng (Lending), quyết định cho vay ai (Credit Decisioning), và sổ sách đúng (Ledger/GL). Mobile app đẹp là supporting — quan trọng cho acquisition nhưng mọi ngân hàng đều copy được nhau trong 6 tháng; mô hình rủi ro tín dụng tốt thì không.</p></blockquote>
+<h3 id="32-phân-rã-domain">3.2. Phân rã domain<a hidden class="anchor" aria-hidden="true" href="#32-phân-rã-domain">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Subdomain</th>
+          <th>Loại</th>
+          <th>Vì sao</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Lending</strong> (hợp đồng vay, schedule, accrual, delinquency)</td>
+          <td><strong>Core</strong></td>
+          <td>Sản phẩm sinh lời chính. Mỗi ngân hàng cấu trúc sản phẩm vay khác nhau (ân hạn, lãi phạt, trả góp linh hoạt) — chính sự linh hoạt này là cạnh tranh.</td>
+      </tr>
+      <tr>
+          <td><strong>Credit Decisioning</strong> (chấm điểm, phê duyệt)</td>
+          <td><strong>Core</strong></td>
+          <td>Quyết định trực tiếp tỷ lệ nợ xấu. Data + model + rule phê duyệt là tài sản chiến lược.</td>
+      </tr>
+      <tr>
+          <td><strong>Deposit &amp; Account</strong> (CASA, tiết kiệm)</td>
+          <td><strong>Core</strong> (nhưng &ldquo;ổn định&rdquo;)</td>
+          <td>Nghiệp vụ chuẩn hóa cao — nhiều ngân hàng mua core banking package (T24, Flexcube) cho phần này. Nếu mua: nó thành <strong>Generic có ACL dày</strong>. Quyết định build-vs-buy ở đây là quyết định chiến lược lớn nhất của kiến trúc ngân hàng.</td>
+      </tr>
+      <tr>
+          <td><strong>General Ledger</strong></td>
+          <td><strong>Core</strong></td>
+          <td>Như FinTech nhưng Chart of Accounts phức tạp hơn và phải khớp chuẩn báo cáo NHNN.</td>
+      </tr>
+      <tr>
+          <td><strong>Collections</strong> (thu hồi nợ)</td>
+          <td><strong>Supporting → Core khi nợ xấu tăng</strong></td>
+          <td>Quy trình nhắc nợ, cam kết trả, phân bổ cho đội thu hồi.</td>
+      </tr>
+      <tr>
+          <td><strong>Customer/KYC/AML</strong></td>
+          <td><strong>Supporting</strong></td>
+          <td>Bắt buộc, chuẩn hóa; sanction screening mua vendor.</td>
+      </tr>
+      <tr>
+          <td><strong>Statement, Notification, Card processing</strong></td>
+          <td><strong>Generic</strong></td>
+          <td>Card processing gần như luôn outsource cho processor (mắc quá đắt để tự làm).</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="33-context-map">3.3. Context map<a hidden class="anchor" aria-hidden="true" href="#33-context-map">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
+    subgraph Core
+        LEN[Lending BC&lt;br/&gt;LoanContract, Schedule, Accrual]
+        CRD[Credit Decisioning BC]
+        GL[General Ledger BC]
+        DEP[Deposit/Account BC&lt;br/&gt;hoặc core banking package + ACL]
+    end
+    subgraph Supporting
+        COL[Collections BC]
+        CUS[Customer/KYC BC]
+    end
+    subgraph External
+        CIC[(CIC - Trung tâm&lt;br/&gt;tín dụng quốc gia)]
+        NAPAS[(NAPAS/Citad)]
+    end
+
+    CRD -- &#34;event: LoanApproved&#34; --&gt; LEN
+    CRD -- &#34;ACL&#34; --&gt; CIC
+    LEN -- &#34;Command: bút toán giải ngân,&lt;br/&gt;accrual, repayment&#34; --&gt; GL
+    DEP -- &#34;bút toán&#34; --&gt; GL
+    LEN -- &#34;event: InstallmentOverdue&#34; --&gt; COL
+    COL -- &#34;event: PromiseToPay,&lt;br/&gt;PaymentCollected&#34; --&gt; LEN
+    CUS -- &#34;OHS: Customer profile&#34; --&gt; CRD
+    CUS -- &#34;OHS&#34; --&gt; LEN
+    DEP -- &#34;ACL&#34; --&gt; NAPAS
+    LEN -- &#34;Partnership:&lt;br/&gt;repayment trừ từ tài khoản&#34; --&gt; DEP
+</code></pre><p>Điểm nhấn:</p>
+<ul>
+<li><strong>Nếu Deposit chạy trên core banking package mua ngoài</strong>, toàn bộ phần còn lại phải nói chuyện với nó qua <strong>ACL rất dày</strong> — model của T24/Flexcube cổ điển và khác hẳn ubiquitous language của bạn. Sai lầm chết người: để khái niệm của package (arrangement, AA product&hellip;) lan ra toàn hệ thống. Khi đó bạn không có domain model — bạn có một cái vỏ quanh package, và mọi giới hạn của package thành giới hạn của ngân hàng.</li>
+<li><strong>Lending ↔ Deposit là Partnership:</strong> trả nợ tự động cần trừ tiền tài khoản — hai team phải release phối hợp cho tính năng này, quan hệ hai chiều bình đẳng. Partnership đắt (coupling về lịch release) nên chỉ dùng khi thực sự cần; ở đây cần vì đây là luồng doanh thu chính.</li>
+<li><strong>Collections nhận event từ Lending chứ không đọc DB của Lending.</strong> Nghe hiển nhiên, nhưng ở rất nhiều ngân hàng thật, Collections là một team mua tool ngoài rồi ETL thẳng từ bảng của Lending — sau 2 năm, Lending không dám đổi schema vì sợ gãy 7 hệ thống downstream không được khai báo. Context map tồn tại để làm những dependency này <strong>hiện hình và có chủ</strong>.</li>
+</ul>
+<h3 id="34-aggregate-quan-trọng-nhất-loancontract">3.4. Aggregate quan trọng nhất: LoanContract<a hidden class="anchor" aria-hidden="true" href="#34-aggregate-quan-trọng-nhất-loancontract">#</a></h3>
+<p><strong>Invariant của LoanContract:</strong></p>
+<ol>
+<li>Σ(gốc của các kỳ trong schedule) = số tiền giải ngân. Regenerate schedule (trả sớm một phần) phải giữ nguyên đẳng thức này.</li>
+<li>Một khoản trả (repayment) được phân bổ (allocate) theo thứ tự pháp định/hợp đồng: <strong>phí → lãi phạt → lãi → gốc</strong> (thứ tự cụ thể theo chính sách sản phẩm, nhưng luôn là rule tường minh trong domain, không phải ngầm định trong SQL).</li>
+<li>Nhóm nợ (delinquency bucket) chỉ được nhảy theo quy tắc DPD (days past due) hiện hành; nhảy nhóm xấu hơn kéo theo nghiệp vụ thoái lãi dồn tích — hai việc này <strong>phải xảy ra cùng nhau</strong> (một transaction, hoặc một saga có bù trừ được giám sát).</li>
+<li>Mọi thao tác điều chỉnh thủ công (miễn phí phạt, cơ cấu nợ) phải có maker ≠ checker và đều sinh event audit.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// lending/domain/loan-contract.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">LoanStatus</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;ACTIVE&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;CLOSED&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;WRITTEN_OFF&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;RESTRUCTURED&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">DelinquencyBucket</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CURRENT&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;GROUP_2&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;GROUP_3&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;GROUP_4&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;GROUP_5&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Installment</span> {           <span style="color:#75715e">// Entity con trong aggregate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">seq</span>: <span style="color:#66d9ef">number</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">dueDate</span>: <span style="color:#66d9ef">LocalDate</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">principalDue</span>: <span style="color:#66d9ef">Money</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">interestDue</span>: <span style="color:#66d9ef">Money</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">paidPrincipal</span>: <span style="color:#66d9ef">Money</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">paidInterest</span>: <span style="color:#66d9ef">Money</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">paidPenalty</span>: <span style="color:#66d9ef">Money</span>,
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">isSettled</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span> { <span style="color:#75715e">/* đủ gốc + lãi + phạt */</span> }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">outstanding</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">InstallmentOutstanding</span> { <span style="color:#75715e">/* ... */</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">LoanContract</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">LoanId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">customerId</span>: <span style="color:#66d9ef">CustomerId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">principal</span>: <span style="color:#66d9ef">Money</span>,            <span style="color:#75715e">// số tiền giải ngân — bất biến
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">terms</span>: <span style="color:#66d9ef">LoanTerms</span>,            <span style="color:#75715e">// VO: lãi suất, kỳ hạn, phương pháp tính lãi, ân hạn
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">schedule</span>: <span style="color:#66d9ef">Installment</span>[],
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">LoanStatus</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">bucket</span>: <span style="color:#66d9ef">DelinquencyBucket</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">accruedInterest</span>: <span style="color:#66d9ef">Money</span>,       <span style="color:#75715e">// lãi dồn tích chưa đến hạn
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">events</span>: <span style="color:#66d9ef">DomainEvent</span>[] <span style="color:#f92672">=</span> [],
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Invariant 1: schedule luôn khớp principal
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">assertScheduleIntegrity</span>(<span style="color:#a6e22e">schedule</span>: <span style="color:#66d9ef">Installment</span>[])<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">totalPrincipal</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">schedule</span>.<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">s</span>, <span style="color:#a6e22e">i</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">principalDue</span>), <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">zero</span>());
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">totalPrincipal</span>.<span style="color:#a6e22e">equals</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">principal</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Tổng gốc trong schedule phải bằng số tiền giải ngân&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Nghiệp vụ trung tâm: nhận một khoản trả và phân bổ theo thứ tự ưu tiên
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">applyRepayment</span>(<span style="color:#a6e22e">payment</span>: <span style="color:#66d9ef">Money</span>, <span style="color:#a6e22e">valueDate</span>: <span style="color:#66d9ef">LocalDate</span>, <span style="color:#a6e22e">policy</span>: <span style="color:#66d9ef">AllocationPolicy</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">RepaymentResult</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;ACTIVE&#39;</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DomainError</span>(<span style="color:#e6db74">&#39;Khoản vay không ở trạng thái nhận thanh toán&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// AllocationPolicy là Domain Service được inject — thứ tự phí/phạt/lãi/gốc
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// khác nhau theo sản phẩm, không hardcode trong aggregate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">allocation</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">policy</span>.<span style="color:#a6e22e">allocate</span>(<span style="color:#a6e22e">payment</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">outstandingItems</span>(<span style="color:#a6e22e">valueDate</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">allocation</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">schedule</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Event mang dữ liệu phân bổ chi tiết → GL sẽ hạch toán từng phần vào account khác nhau
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RepaymentApplied</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">valueDate</span>, <span style="color:#a6e22e">allocation</span>.<span style="color:#a6e22e">breakdown</span>()));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">isFullySettled</span>()) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;CLOSED&#39;</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">LoanClosed</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">allocation</span>.<span style="color:#a6e22e">result</span>();
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// &#34;Thời gian trôi&#34; là một command tường minh — EOD job gọi hàm này
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">accrueDailyInterest</span>(<span style="color:#a6e22e">asOf</span>: <span style="color:#66d9ef">LocalDate</span>, <span style="color:#a6e22e">calc</span>: <span style="color:#66d9ef">InterestCalculator</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">interest</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">calc</span>.<span style="color:#a6e22e">dailyAccrual</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">outstandingPrincipal</span>(), <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">terms</span>, <span style="color:#a6e22e">asOf</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">accruedInterest</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">accruedInterest</span>.<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">interest</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">InterestAccrued</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">asOf</span>, <span style="color:#a6e22e">interest</span>));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Invariant 3: nhảy nhóm nợ + thoái lãi là một hành vi nguyên tử của domain
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">reclassify</span>(<span style="color:#a6e22e">asOf</span>: <span style="color:#66d9ef">LocalDate</span>, <span style="color:#a6e22e">rules</span>: <span style="color:#66d9ef">DelinquencyRules</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newBucket</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">rules</span>.<span style="color:#a6e22e">bucketFor</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">daysPastDue</span>(<span style="color:#a6e22e">asOf</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newBucket</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bucket</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">old</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bucket</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bucket</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newBucket</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">rules</span>.<span style="color:#a6e22e">requiresInterestReversal</span>(<span style="color:#a6e22e">old</span>, <span style="color:#a6e22e">newBucket</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">reversed</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">accruedInterest</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">accruedInterest</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">zero</span>();
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">AccruedInterestReversed</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">reversed</span>)); <span style="color:#75715e">// GL thoái lãi + off-balance
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">record</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">LoanReclassified</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">old</span>, <span style="color:#a6e22e">newBucket</span>, <span style="color:#a6e22e">asOf</span>));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Nhận xét thiết kế:</p>
+<ul>
+<li><strong><code>DelinquencyRules</code> và <code>AllocationPolicy</code> là Domain Service/Policy được inject</strong>, không nằm cứng trong aggregate. Lý do: đây là những rule thay đổi theo văn bản pháp luật và theo sản phẩm. Khi Thông tư mới ra, bạn đổi một implementation, chạy lại reclassification — aggregate không đổi. Nếu hardcode: mỗi lần NHNN ra văn bản là một lần mổ aggregate quan trọng nhất hệ thống.</li>
+<li><strong>Aggregate này to</strong> (chứa cả schedule vài chục installment) — và điều đó <strong>đúng</strong>, vì invariant &ldquo;schedule khớp principal&rdquo; và &ldquo;phân bổ thanh toán đúng thứ tự trên toàn schedule&rdquo; cần nhìn toàn bộ schedule trong một ranh giới nhất quán. Đừng máy móc &ldquo;aggregate phải nhỏ&rdquo;: kích thước đúng = kích thước của invariant. Một khoản vay có concurrency thấp (vài giao dịch/ngày), aggregate to không gây contention.</li>
+<li>Ngược lại, <strong>lãi dồn tích của hàng triệu khoản vay trong EOD</strong> không load từng aggregate qua ORM — dùng đường batch tối ưu nhưng <strong>phát cùng loại event</strong> để GL hạch toán, và logic tính nằm trong cùng module domain để không có hai phiên bản công thức lãi.</li>
+</ul>
+<h3 id="35-domain-event-và-luồng-chính-giải-ngân-khoản-vay">3.5. Domain Event và luồng chính: giải ngân khoản vay<a hidden class="anchor" aria-hidden="true" href="#35-domain-event-và-luồng-chính-giải-ngân-khoản-vay">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    autonumber
+    participant APP as Loan App (channel)
+    participant CRD as Credit Decisioning
+    participant LEN as Lending BC
+    participant GL as General Ledger
+    participant DEP as Deposit BC
+
+    APP-&gt;&gt;CRD: SubmitApplication
+    CRD-&gt;&gt;CRD: Score + rules (CIC, thu nhập, DTI)&lt;br/&gt;maker-checker nếu vượt hạn mức auto
+    CRD--)LEN: LoanApproved(terms, amount)
+    LEN-&gt;&gt;LEN: Tạo LoanContract + generate Schedule&lt;br/&gt;invariant: Σ gốc = principal
+    LEN-&gt;&gt;GL: Post: Debit &#34;Cho vay KH&#34; / Credit &#34;Tiền gửi KH&#34;
+    Note over GL: Giải ngân = bút toán. Tiền &#34;xuất hiện&#34;&lt;br/&gt;trong tài khoản khách qua ledger, không qua API cộng tiền.
+    GL--)DEP: EntryPosted → cập nhật available balance
+    LEN--)APP: LoanDisbursed event → notification, e-contract
+    Note over LEN: Từ đây, EOD hằng đêm:&lt;br/&gt;InterestAccrued → GL (Debit lãi phải thu / Credit thu nhập lãi)&lt;br/&gt;quá hạn → LoanReclassified → Collections
+</code></pre><p>Chi tiết quan trọng: <strong>giải ngân là một bút toán, không phải một lệnh &ldquo;cộng tiền&rdquo; gọi sang Deposit API</strong>. Nếu làm kiểu gọi API cộng tiền: hai hệ thống có hai sự thật, lệch nhau khi một bên fail, và GL phải &ldquo;được thông báo&rdquo; thay vì là nguồn ghi nhận — toàn bộ tính đúng của báo cáo tài chính đổ vỡ từ đây.</p>
+<h3 id="36-trade-off-đặc-thù-ngành">3.6. Trade-off đặc thù ngành<a hidden class="anchor" aria-hidden="true" href="#36-trade-off-đặc-thù-ngành">#</a></h3>
+<ul>
+<li><strong>Strong consistency: GL, số dư khả dụng, giải ngân, phân bổ thanh toán.</strong> Eventual: notification, sao kê, dashboard quản trị, đồng bộ sang data warehouse. Ranh giới rất giống FinTech nhưng thêm một lớp: <strong>báo cáo regulatory tính từ GL snapshot cuối ngày</strong> — nghĩa là hệ thống cần khái niệm &ldquo;ngày làm việc&rdquo; và &ldquo;chốt ngày&rdquo; tường minh trong domain (business date ≠ calendar date), một khái niệm dân web thuần thường bỏ sót.</li>
+<li><strong>Build vs buy core banking:</strong> mua package = time-to-market nhanh, đúng chuẩn kế toán sẵn, nhưng mọi sản phẩm sáng tạo bị giới hạn bởi package và chi phí license/vendor lock khổng lồ. Tự build = kiểm soát trọn nhưng 2–4 năm và rủi ro sai kế toán. Pattern thực dụng của nhiều digital bank: <strong>mua cho Deposit/GL (nghiệp vụ chuẩn hóa), tự build Lending + Decisioning (nơi khác biệt)</strong> — đúng tinh thần phân loại Core/Generic.</li>
+<li><strong>EOD batch vs real-time:</strong> mơ ước &ldquo;mọi thứ real-time&rdquo; đắt vô ích ở banking — lãi dồn tích theo ngày thì tính theo ngày là đủ đúng. Trade-off thật: batch window co lại khi số hợp đồng tăng; thiết kế accrual để chạy song song theo shard hợp đồng ngay từ đầu.</li>
+<li><strong>Maker-checker làm chậm mọi thao tác nội bộ</strong> — đó là tính năng, không phải bug. Đừng &ldquo;tối ưu UX&rdquo; bằng cách cho phép bypass; mọi vụ gian lận nội bộ lớn đều bắt đầu bằng một đường bypass &ldquo;tạm thời&rdquo;.</li>
+</ul>
+<h3 id="37-lỗi-thiết-kế-thường-gặp">3.7. Lỗi thiết kế thường gặp<a hidden class="anchor" aria-hidden="true" href="#37-lỗi-thiết-kế-thường-gặp">#</a></h3>
+<p><strong>Lỗi 1 — Mô hình hóa khoản vay như &ldquo;số dư âm&rdquo; trên tài khoản.</strong>
+Tưởng thông minh: tái dùng model Account, vay = balance âm. Hậu quả: không có chỗ cho schedule, ân hạn, phân bổ gốc/lãi, nhóm nợ — tất cả bị nhét vào bảng phụ và service procedural bên ngoài, aggregate thật (LoanContract) không tồn tại, rule phân tán khắp nơi. Khi cần cơ cấu nợ (restructure) — nghiệp vụ đòi regenerate schedule giữ nguyên nợ gốc — không có ranh giới nào enforce được. Bài học: <strong>hai khái niệm nghiệp vụ khác nhau (tiền gửi và tín dụng) là hai model khác nhau dù nhìn bề ngoài đều là &ldquo;con số tiền&rdquo;</strong>. Đây chính là lý do Bounded Context tồn tại.</p>
+<p><strong>Lỗi 2 — Tính lãi ở nhiều nơi với nhiều công thức &ldquo;gần giống nhau&rdquo;.</strong>
+App hiển thị lãi tạm tính (code frontend/BFF tự tính), EOD tính lãi thật (SQL procedure), màn hình tất toán sớm tính kiểu thứ ba (service khác). Hậu quả: khách thấy ba con số khác nhau, khiếu nại, và có ngân hàng đã phải <strong>hoàn tiền hàng loạt</strong> vì con số hiển thị (thấp hơn) được tòa coi là cam kết. Cách đúng: <code>InterestCalculator</code> là domain service duy nhất, mọi kênh — kể cả màn hình tạm tính — gọi qua nó. Ubiquitous Language áp dụng cho cả công thức: một khái niệm, một chỗ định nghĩa.</p>
+<p><strong>Lỗi 3 — Reclassification (nhảy nhóm nợ) chạy bằng UPDATE hàng loạt ngoài domain.</strong>
+EOD chạy <code>UPDATE loans SET bucket = ... WHERE dpd &gt; 90</code> trực tiếp. Nhanh, nhưng: không sinh event → Collections không biết, GL không thoái lãi → <strong>lãi dồn tích của nợ xấu vẫn nằm trong thu nhập</strong>, báo cáo tài chính sai kiểu bị phạt nặng nhất. Tối ưu batch được phép, nhưng phải đi qua cùng đường domain logic + event (mục 3.4), không được &ldquo;đi tắt qua SQL&rdquo;.</p>
+<p><strong>Lỗi 4 — Không mô hình hóa business date / cut-off.</strong>
+Dùng <code>NOW()</code> cho mọi thứ. Hậu quả: giao dịch lúc 23:59:59 và 00:00:01 rơi vào hai ngày sao kê tùy độ trễ xử lý; chạy lại EOD sau sự cố ra kết quả khác lần chạy đầu; đối chiếu với báo cáo NHNN không khớp. <code>BusinessDate</code> phải là Value Object tường minh, gắn vào mọi giao dịch và mọi phép tính lãi (<code>valueDate</code> trong code ở 3.4 chính là nó).</p>
+<h3 id="38-khi-lưu-lượng-x100">3.8. Khi lưu lượng x100<a hidden class="anchor" aria-hidden="true" href="#38-khi-lưu-lượng-x100">#</a></h3>
+<ul>
+<li><strong>EOD là thứ gãy đầu tiên:</strong> 100 nghìn hợp đồng accrual trong 1 giờ ổn; 10 triệu thì không. Chuyển sang: accrual song song theo shard, checkpoint từng shard để rerun cục bộ, và tách &ldquo;tính toán&rdquo; (stateless, scale ngang) khỏi &ldquo;ghi sổ&rdquo; (đi qua GL có thứ tự). Một số ngân hàng chuyển hẳn sang <strong>continuous accrual</strong> (tính khi có sự kiện đọc/ghi liên quan + chốt ngày logic) để xóa batch window.</li>
+<li><strong>GL với hàng trăm triệu entry/ngày:</strong> giống FinTech — shard theo account, sub-account cho hot account (thu nhập lãi là account nóng nhất), và <strong>khớp tổng liên shard là một BC recon riêng</strong> chạy streaming.</li>
+<li><strong>Credit Decisioning tách hẳn đường online (quyết định trong giây) và offline (train model, backtest)</strong> — đường online chỉ phụ thuộc feature store read-only, không bao giờ query DB nghiệp vụ trực tiếp lúc chấm điểm.</li>
+<li><strong>Điều không đổi khi x100:</strong> ranh giới aggregate LoanContract. Một khoản vay vẫn chỉ có vài sự kiện/ngày — bài toán scale của banking là <strong>số lượng aggregate</strong> (fan-out của batch), không phải contention trên một aggregate. Ngược hẳn với ví điện tử (hot account) và booking (hot resource) — nhận diện đúng <strong>trục scale</strong> của ngành quyết định bạn tối ưu cái gì.</li>
+</ul>
+<hr>
+<h2 id="4-logistics--giao-vận-last-mile">4. Logistics — Giao vận, last-mile<a hidden class="anchor" aria-hidden="true" href="#4-logistics--giao-vận-last-mile">#</a></h2>
+<h3 id="41-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">4.1. Bối cảnh business và điểm phức tạp đặc thù<a hidden class="anchor" aria-hidden="true" href="#41-bối-cảnh-business-và-điểm-phức-tạp-đặc-thù">#</a></h3>
+<p>Một công ty giao vận kiểu GHN/GHTK/AhaMove: nhận đơn từ shop và sàn TMĐT, mạng lưới hub + bưu cục, đội shipper last-mile, COD (thu hộ tiền mặt). 500 nghìn – 2 triệu kiện/ngày.</p>
+<p>Điểm phức tạp đặc thù:</p>
+<ol>
+<li><strong>Thế giới vật lý không tuân theo model của bạn.</strong> Kiện hàng bị ướt, thất lạc, shipper quét nhầm mã, khách hẹn lại 3 lần, xe tải hỏng giữa đường. Hệ thống logistics tốt không phải hệ thống mô hình hóa &ldquo;happy path&rdquo; đẹp — mà là hệ thống coi <strong>exception là nghiệp vụ chính</strong>: tỷ lệ giao thành công lần đầu chỉ ~85–90%, nghĩa là 10–15% khối lượng là xử lý ngoại lệ.</li>
+<li><strong>Dữ liệu đến muộn và sai thứ tự là bình thường.</strong> Shipper offline trong hầm chung cư, app sync lại sau 2 giờ — event &ldquo;đã giao 14:00&rdquo; đến sau event &ldquo;khách khiếu nại chưa nhận 15:30&rdquo;. Model phải phân biệt <strong>thời điểm xảy ra (occurred_at)</strong> và <strong>thời điểm ghi nhận (recorded_at)</strong>.</li>
+<li><strong>Tối ưu vận hành là bài toán tiền tươi:</strong> ghép route tốt hơn 5% = giảm 5% chi phí giao mỗi đơn = toàn bộ biên lợi nhuận của ngành (ngành này margin mỏng như dao cạo). Routing/allocation là nơi thuật toán tạo lợi thế cạnh tranh.</li>
+<li><strong>COD biến công ty giao vận thành công ty cầm tiền:</strong> shipper cầm hàng chục triệu tiền mặt mỗi ngày; đối soát COD với shop là nghiệp vụ tài chính thật sự — mini-fintech bên trong công ty logistics.</li>
+<li><strong>SLA là sản phẩm:</strong> &ldquo;giao trong 24h nội thành&rdquo; là cam kết bán được giá. Theo dõi SLA từng kiện, cảnh báo sớm kiện sắp trễ để can thiệp — đây là năng lực vận hành khác biệt.</li>
+</ol>
+<h3 id="42-phân-rã-domain">4.2. Phân rã domain<a hidden class="anchor" aria-hidden="true" href="#42-phân-rã-domain">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Subdomain</th>
+          <th>Loại</th>
+          <th>Vì sao</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Shipment Lifecycle</strong> (vòng đời kiện: nhận → trung chuyển → giao/hoàn)</td>
+          <td><strong>Core</strong></td>
+          <td>Trái tim vận hành. Máy trạng thái + xử lý exception (hẹn lại, hoàn, thất lạc) là know-how tích lũy nhiều năm.</td>
+      </tr>
+      <tr>
+          <td><strong>Routing &amp; Allocation</strong> (chia tuyến, gán shipper, ghép chuyến trung chuyển)</td>
+          <td><strong>Core</strong></td>
+          <td>Nơi thuật toán ăn thẳng vào chi phí. Đối thủ không copy được nhanh.</td>
+      </tr>
+      <tr>
+          <td><strong>COD &amp; Settlement</strong> (thu hộ, đối soát, trả tiền shop)</td>
+          <td><strong>Core</strong></td>
+          <td>Cầm tiền của khách hàng — sai là mất niềm tin lập tức. Bên trong dùng đúng mô hình ledger của FinTech (mục 2).</td>
+      </tr>
+      <tr>
+          <td><strong>Hub Operations</strong> (nhập/xuất kho bưu cục, kiểm đếm)</td>
+          <td><strong>Supporting</strong></td>
+          <td>Quan trọng nhưng quy trình khá chuẩn (scan in/scan out); phần cứng (băng chuyền, sorter) mua ngoài.</td>
+      </tr>
+      <tr>
+          <td><strong>Pricing</strong> (biểu phí theo vùng, cân nặng, dịch vụ)</td>
+          <td><strong>Supporting</strong></td>
+          <td>Cấu hình phức tạp nhưng thay đổi chậm hơn promotion e-commerce.</td>
+      </tr>
+      <tr>
+          <td><strong>Tracking công khai, Notification, Maps/Geocoding</strong></td>
+          <td><strong>Generic</strong></td>
+          <td>Maps mua Google/OSM vendor; tracking page là read model đơn giản.</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="43-context-map">4.3. Context map<a hidden class="anchor" aria-hidden="true" href="#43-context-map">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
+    subgraph Core
+        SHP[Shipment BC&lt;br/&gt;vòng đời kiện]
+        RTE[Routing &amp; Allocation BC]
+        COD[COD &amp; Settlement BC&lt;br/&gt;ledger bên trong]
+    end
+    subgraph Supporting
+        HUB[Hub Operations BC]
+        PRC2[Pricing BC]
+    end
+    subgraph Generic/External
+        TRK[Tracking Read Model]
+        GEO[(Maps/Geocode vendor)]
+        CLI[(Sàn TMĐT / Shop API)]
+    end
+
+    CLI -- &#34;OHS/PL: API tạo đơn công khai&lt;br/&gt;+ webhook trạng thái&#34; --&gt; SHP
+    SHP -- &#34;event: ShipmentReadyForPickup,&lt;br/&gt;ArrivedAtHub, OutForDelivery...&#34; --&gt; RTE
+    RTE -- &#34;command: AssignToRoute&#34; --&gt; SHP
+    RTE -- &#34;ACL&#34; --&gt; GEO
+    SHP -- &#34;event: Delivered(codAmount)&#34; --&gt; COD
+    COD -- &#34;settlement event&#34; --&gt; CLI
+    SHP -- &#34;event stream&#34; --&gt; TRK
+    HUB -- &#34;event: ScannedIn/ScannedOut&#34; --&gt; SHP
+    PRC2 -- &#34;Customer/Supplier&#34; --&gt; SHP
+</code></pre><ul>
+<li><strong>API tạo đơn cho shop/sàn là Open Host Service với Published Language</strong> đúng nghĩa đen: hàng chục nghìn shop tích hợp, schema phải versioned và ổn định nhiều năm. Đây là ví dụ OHS &ldquo;sách giáo khoa&rdquo; — bạn không thể đàm phán riêng với từng khách hàng.</li>
+<li><strong>Shipment và Routing tách BC</strong> dù nghe đều là &ldquo;giao hàng&rdquo;: Shipment quan tâm <em>chuyện gì xảy ra với một kiện</em>, Routing quan tâm <em>tối ưu tập hợp kiện + tài xế + xe theo thời gian thực</em>. Ngôn ngữ khác nhau (kiện/trạng thái vs tuyến/điểm dừng/tải trọng), nhịp thay đổi khác nhau (Routing đổi thuật toán hàng tháng), và <strong>mô hình dữ liệu tối ưu khác nhau</strong> (event-sourced state machine vs bài toán tối ưu trên đồ thị trong bộ nhớ). Gộp chung = thuật toán routing bóp chết schema của shipment và ngược lại.</li>
+<li><strong>COD nhận event <code>Delivered</code> và từ đó là thế giới ledger</strong> — tiền mặt shipper cầm ghi Nợ vào &ldquo;tài khoản tạm ứng shipper&rdquo;, nộp về bưu cục ghi Có&hellip; Toàn bộ mục 2 áp dụng lại ở quy mô nhỏ hơn.</li>
+</ul>
+<h3 id="44-aggregate-quan-trọng-nhất-shipment-và-deliveryroute">4.4. Aggregate quan trọng nhất: Shipment và DeliveryRoute<a hidden class="anchor" aria-hidden="true" href="#44-aggregate-quan-trọng-nhất-shipment-và-deliveryroute">#</a></h3>
+<p>Ngành này có <strong>hai</strong> aggregate xứng đáng phân tích, vì chúng minh họa hai kiểu ranh giới khác nhau.</p>
+<p><strong>Shipment — máy trạng thái chịu được dữ liệu sai thứ tự.</strong></p>
+<p>Invariant:</p>
+<ol>
+<li>Chuyển trạng thái theo state machine, <strong>nhưng</strong> chấp nhận event đến muộn: event hợp lệ theo <code>occurred_at</code> phải được chèn đúng dòng thời gian và trạng thái hiện tại được tính lại (mini event-sourcing).</li>
+<li>Số lần giao tối đa N lần (thường 3) — quá N chuyển <code>RETURNING</code> tự động.</li>
+<li>COD amount bất biến sau khi tạo (đổi COD = nghiệp vụ riêng cần shop xác nhận, sinh event riêng).</li>
+<li>Kiện đã <code>DELIVERED</code> có COD thì <strong>bắt buộc</strong> tồn tại nghĩa vụ đối soát bên COD BC (kiểm bằng recon, không phải cùng transaction).</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// shipment/domain/shipment.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">shipment</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Status</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Created</span>        <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;CREATED&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">PickedUp</span>       <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;PICKED_UP&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">AtHub</span>          <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;AT_HUB&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">InTransit</span>      <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;IN_TRANSIT&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">OutForDelivery</span> <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;OUT_FOR_DELIVERY&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Delivered</span>      <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;DELIVERED&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">DeliveryFailed</span> <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;DELIVERY_FAILED&#34;</span> <span style="color:#75715e">// trạng thái tạm, quay lại OutForDelivery hoặc Returning</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Returning</span>      <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;RETURNING&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Returned</span>       <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;RETURNED&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Lost</span>           <span style="color:#a6e22e">Status</span> = <span style="color:#e6db74">&#34;LOST&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// TrackingEvent: phân biệt occurred vs recorded — sống còn với dữ liệu offline-sync</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">TrackingEvent</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Type</span>       <span style="color:#a6e22e">Status</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">OccurredAt</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span> <span style="color:#75715e">// lúc shipper bấm nút (giờ thiết bị, đã hiệu chỉnh)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">RecordedAt</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span> <span style="color:#75715e">// lúc server nhận</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ActorID</span>    <span style="color:#66d9ef">string</span>    <span style="color:#75715e">// shipper/hub nào</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Evidence</span>   <span style="color:#f92672">*</span><span style="color:#a6e22e">Evidence</span> <span style="color:#75715e">// ảnh, chữ ký, tọa độ GPS</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Shipment</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ID</span>           <span style="color:#a6e22e">ShipmentID</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CODAmount</span>    <span style="color:#a6e22e">Money</span> <span style="color:#75715e">// bất biến — không có setter</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">SLADeadline</span>  <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">maxAttempts</span>  <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">attempts</span>     []<span style="color:#a6e22e">DeliveryAttempt</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">timeline</span>     []<span style="color:#a6e22e">TrackingEvent</span> <span style="color:#75715e">// append-only, sắp theo OccurredAt</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">status</span>       <span style="color:#a6e22e">Status</span>          <span style="color:#75715e">// derived từ timeline — không set trực tiếp</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pendingEvents</span> []<span style="color:#a6e22e">DomainEvent</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ApplyTrackingEvent: điểm vào duy nhất cho mọi cập nhật trạng thái.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Shipment</span>) <span style="color:#a6e22e">ApplyTrackingEvent</span>(<span style="color:#a6e22e">ev</span> <span style="color:#a6e22e">TrackingEvent</span>, <span style="color:#a6e22e">rules</span> <span style="color:#a6e22e">TransitionRules</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. Chèn vào timeline đúng vị trí theo OccurredAt (event có thể đến muộn)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">insertChronologically</span>(<span style="color:#a6e22e">ev</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. Tính lại trạng thái từ timeline — nếu event muộn làm đổi lịch sử,</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//    trạng thái mới vẫn nhất quán với toàn bộ những gì đã biết</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">newStatus</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rules</span>.<span style="color:#a6e22e">Replay</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">timeline</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Event mâu thuẫn (giao xong lại pickup?) → không văng lỗi mất dữ liệu,</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// mà chuyển vào hàng đợi điều tra: exception LÀ nghiệp vụ.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#a6e22e">AnomalyDetected</span>{<span style="color:#a6e22e">ShipmentID</span>: <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#a6e22e">Event</span>: <span style="color:#a6e22e">ev</span>, <span style="color:#a6e22e">Reason</span>: <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>()})
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">newStatus</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">status</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">old</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">status</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">status</span> = <span style="color:#a6e22e">newStatus</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#a6e22e">StatusChanged</span>{<span style="color:#a6e22e">ShipmentID</span>: <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#a6e22e">From</span>: <span style="color:#a6e22e">old</span>, <span style="color:#a6e22e">To</span>: <span style="color:#a6e22e">newStatus</span>, <span style="color:#a6e22e">At</span>: <span style="color:#a6e22e">ev</span>.<span style="color:#a6e22e">OccurredAt</span>})
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">newStatus</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">Delivered</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">CODAmount</span>.<span style="color:#a6e22e">Amount</span> &gt; <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#a6e22e">CODObligationCreated</span>{<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#a6e22e">ev</span>.<span style="color:#a6e22e">ActorID</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">CODAmount</span>})
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Shipment</span>) <span style="color:#a6e22e">RecordFailedAttempt</span>(<span style="color:#a6e22e">reason</span> <span style="color:#a6e22e">FailureReason</span>, <span style="color:#a6e22e">at</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">attempts</span> = append(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">attempts</span>, <span style="color:#a6e22e">DeliveryAttempt</span>{<span style="color:#a6e22e">Reason</span>: <span style="color:#a6e22e">reason</span>, <span style="color:#a6e22e">At</span>: <span style="color:#a6e22e">at</span>})
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">attempts</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">maxAttempts</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Invariant 2: quá số lần → tự động hoàn, không cần người quyết</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ApplyTrackingEvent</span>(<span style="color:#a6e22e">TrackingEvent</span>{<span style="color:#a6e22e">Type</span>: <span style="color:#a6e22e">Returning</span>, <span style="color:#a6e22e">OccurredAt</span>: <span style="color:#a6e22e">at</span>}, <span style="color:#a6e22e">defaultRules</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#a6e22e">RedeliveryScheduled</span>{<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ID</span>, len(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">attempts</span>)})
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>DeliveryRoute — aggregate có vòng đời ngắn, ranh giới theo ca làm việc.</strong></p>
+<p>Invariant: tổng tải trọng/kích thước kiện ≤ năng lực xe; số điểm dừng ≤ giới hạn ca; một shipment chỉ thuộc <strong>một</strong> route active tại một thời điểm (invariant xuyên aggregate → enforce bằng unique constraint <code>shipment_id WHERE status='ACTIVE'</code> ở DB + kiểm tra khi gán, chấp nhận đây là invariant mức hệ thống chứ không nằm trọn trong một aggregate).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">DeliveryRoute</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ID</span>       <span style="color:#a6e22e">RouteID</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CourierID</span> <span style="color:#a6e22e">CourierID</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Shift</span>    <span style="color:#a6e22e">Shift</span>        <span style="color:#75715e">// VO: ngày + ca</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Stops</span>    []<span style="color:#a6e22e">Stop</span>       <span style="color:#75715e">// có thứ tự — thứ tự LÀ dữ liệu (kết quả tối ưu hóa)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Capacity</span> <span style="color:#a6e22e">VehicleCapacity</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">status</span>   <span style="color:#a6e22e">RouteStatus</span>  <span style="color:#75715e">// PLANNED → DISPATCHED → COMPLETED</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">DeliveryRoute</span>) <span style="color:#a6e22e">AddStop</span>(<span style="color:#a6e22e">sh</span> <span style="color:#a6e22e">ShipmentSummary</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Planned</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;route đã xuất phát — dùng nghiệp vụ reassign, không sửa route đang chạy&#34;</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Capacity</span>.<span style="color:#a6e22e">CanFit</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">currentLoad</span>().<span style="color:#a6e22e">Plus</span>(<span style="color:#a6e22e">sh</span>.<span style="color:#a6e22e">Parcel</span>)) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ErrOverCapacity</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Stops</span> = append(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Stops</span>, <span style="color:#a6e22e">NewStop</span>(<span style="color:#a6e22e">sh</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Chú ý: <code>Shipment</code> trong route chỉ là <code>ShipmentSummary</code> (VO copy dữ liệu cần cho routing: địa chỉ, khối lượng, khung giờ) — Route <strong>không</strong> tham chiếu aggregate Shipment. Hai vòng đời độc lập: route bị hủy không ảnh hưởng kiện, kiện đổi trạng thái không cần khóa route.</p>
+<h3 id="45-domain-event-và-luồng-chính-giao-hàng-thất-bại--hẹn-lại--giao-thành-công-có-cod">4.5. Domain Event và luồng chính: giao hàng thất bại → hẹn lại → giao thành công có COD<a hidden class="anchor" aria-hidden="true" href="#45-domain-event-và-luồng-chính-giao-hàng-thất-bại--hẹn-lại--giao-thành-công-có-cod">#</a></h3>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+    autonumber
+    participant SHIP as Shipper App
+    participant SHP as Shipment BC
+    participant RTE as Routing BC
+    participant COD as COD/Settlement BC
+    participant SHOP as Shop (webhook)
+
+    SHIP-&gt;&gt;SHP: FailDelivery(khách không nghe máy, 10:32)
+    SHP-&gt;&gt;SHP: RecordFailedAttempt (lần 1/3)
+    SHP--)RTE: RedeliveryScheduled
+    SHP--)SHOP: webhook: DELIVERY_FAILED + lý do
+    RTE-&gt;&gt;RTE: Xếp kiện vào route ca chiều&lt;br/&gt;(check capacity, tối ưu lại thứ tự stop)
+    RTE--)SHP: AssignedToRoute(routeId, ca chiều)
+    SHIP-&gt;&gt;SHP: Delivered(15:47, ảnh + GPS + tiền COD 850k)
+    SHP-&gt;&gt;SHP: ApplyTrackingEvent → DELIVERED
+    SHP--)COD: CODObligationCreated(shipper X nợ 850k)
+    COD-&gt;&gt;COD: Ledger: Debit &#34;Tạm ứng shipper X&#34; /&lt;br/&gt;Credit &#34;Phải trả shop Y&#34; 850k
+    SHP--)SHOP: webhook: DELIVERED
+    Note over COD: Cuối ngày: shipper nộp tiền tại bưu cục →&lt;br/&gt;Debit tiền mặt / Credit tạm ứng shipper.&lt;br/&gt;Chu kỳ đối soát: trả shop Y theo lịch (D+1/D+3)&lt;br/&gt;trừ phí ship → SettlementCompleted → SHOP
+</code></pre><p>Luồng này cho thấy chuỗi ngành nối nhau: <strong>một event <code>Delivered</code> của thế giới vật lý kích hoạt cả một chuỗi nghiệp vụ tài chính</strong> — và hai thế giới đó nhất quán với nhau bằng event + reconciliation, không phải transaction chung.</p>
+<h3 id="46-trade-off-đặc-thù-ngành">4.6. Trade-off đặc thù ngành<a hidden class="anchor" aria-hidden="true" href="#46-trade-off-đặc-thù-ngành">#</a></h3>
+<ul>
+<li><strong>Chấp nhận dữ liệu trễ, đổi lấy vận hành liên tục:</strong> app shipper phải hoạt động offline (hầm, vùng sóng yếu) → mọi thao tác ghi local rồi sync. Hệ quả kiến trúc: server-side model phải xử lý out-of-order (mục 4.4), idempotent theo device-generated ID, và <strong>không bao giờ</strong> dùng &ldquo;trạng thái hiện tại trên server&rdquo; để từ chối event quá khứ hợp lệ. Nếu bắt app online mới thao tác được: shipper đứng chờ sóng trước cửa nhà khách — vận hành chết.</li>
+<li><strong>Routing: tối ưu toàn cục vs phản ứng cục bộ.</strong> Tối ưu lại toàn bộ route khi có đơn mới cho kết quả tốt nhất nhưng làm route của shipper nhảy loạn (shipper ghét nhất điều này — họ nghỉ việc). Chọn: tối ưu toàn cục theo đợt (trước ca), trong ca chỉ chèn cục bộ. Đánh đổi vài % hiệu quả thuật toán lấy sự ổn định cho con người — <strong>domain có con người vận hành bên trong thì &ldquo;con người chịu được&rdquo; là một ràng buộc thiết kế ngang hàng invariant</strong>.</li>
+<li><strong>Tracking cho khách: eventual thoải mái (trễ 1–2 phút chấp nhận được), nhưng COD: strong</strong> trong ranh giới ledger của nó. Một công ty, hai chế độ consistency, ranh giới rõ ràng theo BC.</li>
+<li><strong>SLA monitoring: đẩy hay kéo?</strong> Quét định kỳ hàng triệu kiện tìm &ldquo;sắp trễ&rdquo; rất đắt; thay bằng scheduler theo deadline (mỗi kiện đặt một timer tại <code>SLADeadline - buffer</code>) — đổi độ phức tạp hạ tầng timer lấy chi phí quét.</li>
+</ul>
+<h3 id="47-lỗi-thiết-kế-thường-gặp">4.7. Lỗi thiết kế thường gặp<a hidden class="anchor" aria-hidden="true" href="#47-lỗi-thiết-kế-thường-gặp">#</a></h3>
+<p><strong>Lỗi 1 — Chỉ lưu trạng thái hiện tại, không lưu timeline.</strong>
+Bảng <code>shipments</code> có mỗi cột <code>status</code> được UPDATE đè. Hậu quả: event đến muộn ghi đè trạng thái mới hơn (kiện đã DELIVERED bị lùi về IN_TRANSIT vì hub sync muộn); tranh chấp &ldquo;shipper nói giao rồi, khách nói chưa&rdquo; không có evidence timeline để phân xử; phân tích vận hành (kiện nằm ở hub bao lâu?) bất khả thi. Với domain mà <strong>quá khứ là bằng chứng pháp lý và dữ liệu tối ưu</strong>, timeline append-only không phải lựa chọn — nó là model đúng, cột status chỉ là cache.</p>
+<p><strong>Lỗi 2 — Gộp Routing vào Shipment aggregate (&ldquo;route chỉ là danh sách kiện thôi mà&rdquo;).</strong>
+Route ôm list Shipment entity thật. Hậu quả: gán 200 kiện vào route = khóa 200 aggregate; thuật toán tối ưu chạy 30 giây giữ lock làm shipper không cập nhật được trạng thái; và mỗi lần Routing đổi cách tối ưu lại phải migrate schema của Shipment. Đã phân tích ở 4.3 — hai ngôn ngữ, hai nhịp thay đổi, hai BC.</p>
+<p><strong>Lỗi 3 — COD xử lý bằng cột <code>cod_collected boolean</code> trên shipment.</strong>
+Không có ledger, tiền COD theo dõi bằng flag + báo cáo SQL tổng hợp. Hậu quả: shipper nộp thiếu không phát hiện được theo từng kiện; shop khiếu nại thiếu tiền phải điều tra thủ công hàng giờ; nhân viên bưu cục gian lận có chỗ ẩn nấp (không có đối ứng Nợ/Có thì không có gì để khớp). Tiền mặt + không ledger = mất tiền, chỉ là sớm hay muộn. Lặp lại bài học FinTech: <strong>ở đâu có tiền di chuyển, ở đó phải có double-entry</strong>, kể cả khi công ty bạn &ldquo;không phải fintech&rdquo;.</p>
+<p><strong>Lỗi 4 — Model địa chỉ là string.</strong>
+<code>address VARCHAR(500)</code>. Hậu quả: không phân vùng để chia tuyến, không geocode ổn định, mỗi lần khách sửa &ldquo;ngõ 12&rdquo; thành &ldquo;ngách 12/5&rdquo; là một lần giao thất bại 20 nghìn đồng chi phí. Address phải là Value Object có cấu trúc (tỉnh/huyện/xã chuẩn hóa theo danh mục + chi tiết + geocode + độ tin cậy geocode), và chuẩn hóa địa chỉ là một năng lực domain (đặc biệt ở Việt Nam sau các đợt sáp nhập đơn vị hành chính — danh mục địa giới là dữ liệu <strong>có version theo thời gian</strong>).</p>
+<h3 id="48-khi-lưu-lượng-x100">4.8. Khi lưu lượng x100<a hidden class="anchor" aria-hidden="true" href="#48-khi-lưu-lượng-x100">#</a></h3>
+<ul>
+<li><strong>Tracking event trở thành bài toán ingest:</strong> 2 triệu kiện × 15–20 event = 40 triệu event/ngày, đỉnh theo ca. Đường ghi chuyển sang log-based (Kafka) → consumer build aggregate state; <code>ApplyTrackingEvent</code> chạy trong consumer partition theo <code>ShipmentID</code> — được ordering trong partition miễn phí, aggregate không cần lock phân tán.</li>
+<li><strong>Routing tách thành nền tảng tính toán riêng</strong> (solver cluster, dữ liệu in-memory theo khu vực địa lý), giao tiếp với phần còn lại thuần bằng event/command. Đây là lúc ranh giới BC vẽ đúng từ đầu trả cổ tức: solver scale trên trục hoàn toàn khác (CPU-bound) so với shipment (IO-bound).</li>
+<li><strong>Partition tự nhiên theo địa lý:</strong> kiện Hà Nội hiếm khi liên quan kiện Cần Thơ — shard theo vùng cho cả storage lẫn compute, chỉ kiện liên vùng đi qua luồng trung chuyển (vốn đã được mô hình hóa tường minh). Ngành có locality địa lý mạnh là ngành dễ scale nhất <strong>nếu</strong> model không vô tình tạo coupling toàn cục (ví dụ: sequence number toàn quốc cho mã vận đơn — dùng mã có prefix vùng thay vì sequence tập trung).</li>
+<li><strong>COD ledger:</strong> áp nguyên bài x100 của FinTech (mục 2.8).</li>
+</ul>
+<hr>
+<h2 id="tổng-kết-chéo-4-ngành">Tổng kết chéo 4 ngành<a hidden class="anchor" aria-hidden="true" href="#tổng-kết-chéo-4-ngành">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>E-commerce</th>
+          <th>FinTech</th>
+          <th>Banking</th>
+          <th>Logistics</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>&ldquo;Điểm chết&rdquo;</td>
+          <td>Oversell, checkout tệ</td>
+          <td>Lệch tiền, mất audit</td>
+          <td>Sai kế toán, vi phạm quy định</td>
+          <td>Chi phí/đơn cao, mất kiện/COD</td>
+      </tr>
+      <tr>
+          <td>Aggregate vua</td>
+          <td>Order</td>
+          <td>LedgerTransaction</td>
+          <td>LoanContract</td>
+          <td>Shipment</td>
+      </tr>
+      <tr>
+          <td>Invariant thiêng nhất</td>
+          <td>Total bất biến sau confirm</td>
+          <td>Σdebit = Σcredit</td>
+          <td>Schedule khớp principal</td>
+          <td>Timeline nhất quán + COD có đối ứng</td>
+      </tr>
+      <tr>
+          <td>Consistency mặc định</td>
+          <td>Eventual, strong ở tiền</td>
+          <td>Strong ở ledger</td>
+          <td>Strong ở GL + business date</td>
+          <td>Eventual, strong ở COD ledger</td>
+      </tr>
+      <tr>
+          <td>Trục scale</td>
+          <td>Hot item contention</td>
+          <td>Hot account</td>
+          <td>Fan-out batch EOD</td>
+          <td>Ingest event + địa lý</td>
+      </tr>
+      <tr>
+          <td>Đặc sản</td>
+          <td>Reservation + TTL</td>
+          <td>Suspense account, in-doubt</td>
+          <td>Thời gian trôi là tác nhân</td>
+          <td>Out-of-order là bình thường</td>
+      </tr>
+  </tbody>
+</table>
+<p>Ba bài học xuyên ngành đáng mang theo:</p>
+<ol>
+<li><strong>Ledger append-only xuất hiện ở 3/4 ngành</strong> (FinTech, Banking, COD của Logistics) — bất cứ khi nào domain của bạn có &ldquo;giá trị di chuyển giữa các bên và cần chứng minh&rdquo;, hãy nghĩ đến double-entry trước khi nghĩ đến cột balance.</li>
+<li><strong>Cùng một pattern, quyết định ngược nhau:</strong> e-commerce chấp nhận tồn kho hiển thị sai vài giây, fintech không chấp nhận balance sai một tick khi kiểm tra chi tiêu. Pattern không có đúng/sai tuyệt đối — chỉ có phù hợp với chi phí sai lệch của từng ngành.</li>
+<li><strong>Trục scale của mỗi ngành khác nhau</strong> (contention vs fan-out vs ingest) — thiết kế aggregate đúng invariant trước, rồi chọn hiện thực hóa theo trục scale. Làm ngược lại (chọn công nghệ trước) là nguồn gốc của phần lớn hệ thống &ldquo;dùng Kafka mà vẫn chậm&rdquo;.</li>
+</ol>
+<h2 id="đọc-tiếp">Đọc tiếp<a hidden class="anchor" aria-hidden="true" href="#đọc-tiếp">#</a></h2>
+<p>→ <a href="15b-case-study-saas-blockchain-booking-social.md">Chương 15b — Case Study: SaaS, Blockchain, Booking, Social Network</a>: bốn ngành với các thái cực khác — tenant isolation, tiền on-chain/off-chain, tranh chấp tài nguyên theo thời gian, và hệ thống read-heavy nơi eventual consistency là mặc định.</p>
+<p>Tham chiếu lý thuyết: <a href="07-aggregate.md">Chương 07 — Aggregate</a> · <a href="05-context-mapping.md">Chương 05 — Context Mapping</a> · <a href="10-domain-event.md">Chương 10 — Domain Event</a> · <a href="13-ddd-va-distributed-systems.md">Chương 13 — DDD và Distributed Systems</a></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/domain-driven-design/14-ddd-trong-production/">
+    <span class="title">« Prev</span>
+    <br>
+    <span></span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/domain-driven-design/15b-case-study-saas-blockchain-booking-social/">
+    <span class="title">Next »</span>
+    <br>
+    <span></span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on x"
+            href="https://x.com/intent/tweet/?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f&amp;title=&amp;summary=&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f&title=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on whatsapp"
+            href="https://api.whatsapp.com/send?text=%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on telegram"
+            href="https://telegram.me/share/url?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f15a-case-study-ecommerce-fintech-banking-logistics%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

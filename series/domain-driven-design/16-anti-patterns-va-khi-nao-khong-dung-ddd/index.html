@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="Chương 16: Anti-patterns &amp; Khi nào KHÔNG nên dùng DDD
+
+Vị trí chương này trong tài liệu: Đây là chương cuối cùng. Sau khi đã đi qua toàn bộ strategic design (chương 01–05), tactical patterns (06–11), kiến trúc và distributed systems (12–13), đưa vào production (14) và các case study (15a, 15b), chương này làm hai việc mà một tài liệu trung thực bắt buộc phải làm: liệt kê những cách người ta làm hỏng DDD trong thực tế — với code thật, dấu hiệu nhận biết thật — và nói thẳng khi nào đừng dùng DDD. Cuối chương là phần tổng kết toàn bộ tài liệu và lộ trình học tiếp.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/domain-driven-design/16-anti-patterns-va-khi-nao-khong-dung-ddd/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/domain-driven-design/16-anti-patterns-va-khi-nao-khong-dung-ddd/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/domain-driven-design/"></a></div>
+    <h1 class="post-title entry-hint-parent">
+      
+    </h1>
+    <div class="post-meta">29 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="chương-16-anti-patterns--khi-nào-không-nên-dùng-ddd">Chương 16: Anti-patterns &amp; Khi nào KHÔNG nên dùng DDD<a hidden class="anchor" aria-hidden="true" href="#chương-16-anti-patterns--khi-nào-không-nên-dùng-ddd">#</a></h1>
+<blockquote>
+<p><strong>Vị trí chương này trong tài liệu:</strong> Đây là chương cuối cùng. Sau khi đã đi qua toàn bộ strategic design (chương 01–05), tactical patterns (06–11), kiến trúc và distributed systems (12–13), đưa vào production (14) và các case study (15a, 15b), chương này làm hai việc mà một tài liệu trung thực bắt buộc phải làm: <strong>liệt kê những cách người ta làm hỏng DDD trong thực tế</strong> — với code thật, dấu hiệu nhận biết thật — và <strong>nói thẳng khi nào đừng dùng DDD</strong>. Cuối chương là phần tổng kết toàn bộ tài liệu và lộ trình học tiếp.</p></blockquote>
+<p>Sau 20 năm nhìn các dự án &ldquo;làm DDD&rdquo;, tôi rút ra một quan sát khó nghe: <strong>số dự án thất bại vì áp dụng DDD sai nhiều hơn số dự án thất bại vì không dùng DDD.</strong> Không dùng DDD, tệ nhất bạn có một mớ code khó bảo trì — vẫn ship được. Dùng DDD sai, bạn có mớ code khó bảo trì đó <em>cộng thêm</em> ba tầng abstraction, năm loại object trung gian, một team kiệt sức vì tranh cãi thuật ngữ, và một management đã mất niềm tin vào mọi đề xuất kiến trúc trong 5 năm tới.</p>
+<p>Vì vậy chương này không phải phụ lục. Nó là phanh xe. Một công cụ mạnh mà không có phanh thì không phải công cụ — là tai nạn đang chờ lịch.</p>
+<hr>
+<h2 id="mục-lục-chương">Mục lục chương<a hidden class="anchor" aria-hidden="true" href="#mục-lục-chương">#</a></h2>
+<ul>
+<li><a href="#161-danh-m%E1%BB%A5c-anti-pattern">16.1 Danh mục anti-pattern</a></li>
+<li><a href="#162-khi-n%C3%A0o-kh%C3%B4ng-n%C3%AAn-d%C3%B9ng-ddd">16.2 Khi nào KHÔNG nên dùng DDD</a></li>
+<li><a href="#163-ma-tr%E1%BA%ADn-quy%E1%BA%BFt-%C4%91%E1%BB%8Bnh-m%E1%BB%A9c-%C4%91%E1%BB%99-%C3%A1p-d%E1%BB%A5ng-ddd">16.3 Ma trận quyết định</a></li>
+<li><a href="#164-checklist-tr%C6%B0%E1%BB%9Bc-khi-quy%E1%BA%BFt-%C4%91%E1%BB%8Bnh-%C3%A1p-d%E1%BB%A5ng-ddd">16.4 Checklist trước khi quyết định áp dụng DDD</a></li>
+<li><a href="#165-t%E1%BB%95ng-k%E1%BA%BFt-to%C3%A0n-b%E1%BB%99-t%C3%A0i-li%E1%BB%87u--l%E1%BB%99-tr%C3%ACnh-h%E1%BB%8Dc-ti%E1%BA%BFp">16.5 Tổng kết toàn bộ tài liệu &amp; lộ trình học tiếp</a></li>
+</ul>
+<hr>
+<h2 id="161-danh-mục-anti-pattern">16.1 Danh mục anti-pattern<a hidden class="anchor" aria-hidden="true" href="#161-danh-mục-anti-pattern">#</a></h2>
+<p>Mỗi anti-pattern dưới đây trình bày theo cùng khung: <strong>mô tả → cách nhận biết trong code thật → vì sao nguy hiểm → cách sửa</strong>. Thứ tự sắp theo tần suất tôi gặp trong audit thực tế, từ phổ biến nhất.</p>
+<h3 id="1611-anemic-domain-model--mô-hình-thiếu-máu">16.1.1 Anemic Domain Model — mô hình thiếu máu<a hidden class="anchor" aria-hidden="true" href="#1611-anemic-domain-model--mô-hình-thiếu-máu">#</a></h3>
+<p><strong>Mô tả.</strong> Domain object chỉ có dữ liệu (getter/setter), toàn bộ logic nghiệp vụ nằm ở tầng service. Object trở thành túi đựng dữ liệu có tên nghiệp vụ nhưng không có hành vi nghiệp vụ. Đây là anti-pattern được Fowler đặt tên từ 2003 và đến nay vẫn là số 1 về độ phổ biến — phần vì ORM và code generator khuyến khích nó, phần vì nó <em>trông giống</em> code &ldquo;chuẩn layer&rdquo;.</p>
+<p><strong>Nhận biết trong code thật (TypeScript/NestJS):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ANTI-PATTERN: entity chỉ là túi dữ liệu
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Entity</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@PrimaryColumn</span>() <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">string</span>;          <span style="color:#75715e">// string tự do — dấu hiệu đi kèm kinh điển
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">totalAmount</span>: <span style="color:#66d9ef">number</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@OneToMany</span>(() <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">OrderLine</span>, <span style="color:#a6e22e">l</span> <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">order</span>) <span style="color:#a6e22e">lines</span>: <span style="color:#66d9ef">OrderLine</span>[];
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 40 dòng decorator, 0 dòng logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Toàn bộ &#34;domain logic&#34; nằm ở service — và bị lặp ở service khác
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderService</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">addLine</span>(<span style="color:#a6e22e">orderId</span>: <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">dto</span>: <span style="color:#66d9ef">AddLineDto</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">findOne</span>(<span style="color:#a6e22e">orderId</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rule nghiệp vụ nằm ngoài object mà nó bảo vệ:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;PAID&#39;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;SHIPPED&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BadRequestException</span>(<span style="color:#e6db74">&#39;Cannot modify paid order&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">push</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">mapper</span>.<span style="color:#a6e22e">toLine</span>(<span style="color:#a6e22e">dto</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">totalAmount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">s</span>, <span style="color:#a6e22e">l</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">price</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">qty</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">order</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ...trong khi đó ở AdminOrderService, một đồng nghiệp khác viết:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//   if (order.status === &#39;PAID&#39;) { ... }   ← quên mất &#39;SHIPPED&#39;. Bug ủ sẵn.
+</span></span></span></code></pre></div><p>Dấu hiệu nhận biết nhanh khi audit: (1) entity không có method nào ngoài getter/setter/constructor; (2) cùng một cụm <code>if (x.status === ...)</code> xuất hiện ở ≥ 2 service (grep là ra); (3) mọi field đều public hoặc có setter — nghĩa là bất kỳ ai cũng đặt được object vào trạng thái vô nghĩa (<code>status = 'PAID'</code> nhưng <code>paidAt = null</code>).</p>
+<p><strong>Vì sao nguy hiểm.</strong> Invariant không có chủ. Rule &ldquo;đơn đã thanh toán không được sửa&rdquo; phải được <em>mọi</em> service nhớ thi hành — và xác suất mọi người cùng nhớ mãi mãi là zero. Mỗi service mới chạm vào <code>Order</code> là một cơ hội bỏ sót rule. Bug loại này không nổ ngay: nó ủ vài tháng rồi hiện ra dưới dạng dữ liệu bẩn trong DB — loại bug đắt nhất để truy nguồn. Và lưu ý một điều thường bị hiểu nhầm: <strong>anemic model chỉ là anti-pattern khi hệ thống có invariant đáng bảo vệ.</strong> Với CRUD thuần, &ldquo;anemic&rdquo; chính là thiết kế đúng (xem 16.2).</p>
+<p><strong>Cách sửa.</strong> Kéo hành vi về nơi có dữ liệu; đóng cửa mọi lối đi vòng:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// SỬA: rule sống bên trong object mà nó bảo vệ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constructor</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">OrderId</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">OrderStatus</span>,       <span style="color:#75715e">// value object, hết string tự do
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">lines</span>: <span style="color:#66d9ef">OrderLine</span>[],
+</span></span><span style="display:flex;"><span>  ) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">addLine</span>(<span style="color:#a6e22e">product</span>: <span style="color:#66d9ef">ProductRef</span>, <span style="color:#a6e22e">qty</span>: <span style="color:#66d9ef">Quantity</span>)<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span>.<span style="color:#a6e22e">isModifiable</span>()) {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Rule có MỘT chỗ ở. Ai gọi addLine cũng bị kiểm, không cần nhớ.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OrderNotModifiableError</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">id</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">OrderLine</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">product</span>, <span style="color:#a6e22e">qty</span>));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">get</span> <span style="color:#a6e22e">total</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> {                 <span style="color:#75715e">// total là giá trị dẫn xuất — không ai set được
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lines</span>.<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">s</span>, <span style="color:#a6e22e">l</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">subtotal</span>()), <span style="color:#a6e22e">Money</span>.<span style="color:#a6e22e">zero</span>(<span style="color:#a6e22e">Currency</span>.<span style="color:#a6e22e">VND</span>));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Service teo lại thành điều phối — đúng vai của nó (xem chương 09)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">@Injectable</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">OrderAppService</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">addLine</span>(<span style="color:#a6e22e">cmd</span>: <span style="color:#66d9ef">AddLineCommand</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">byId</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">orderId</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">addLine</span>(<span style="color:#a6e22e">ProductRef</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">productId</span>), <span style="color:#a6e22e">Quantity</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">qty</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">order</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Chiến thuật refactor khi codebase đã lớn: đừng sửa cả entity một lần. Chọn <em>một</em> invariant đang gây bug, chuyển nó vào entity, xóa mọi bản sao rải rác (grep theo tên field), lặp lại. Sau 5–7 vòng, entity tự &ldquo;đầy máu&rdquo; trở lại.</p>
+<h3 id="1612-god-aggregate--aggregate-thần-thánh-ôm-cả-thế-giới">16.1.2 God Aggregate — aggregate thần thánh ôm cả thế giới<a hidden class="anchor" aria-hidden="true" href="#1612-god-aggregate--aggregate-thần-thánh-ôm-cả-thế-giới">#</a></h3>
+<p><strong>Mô tả.</strong> Một aggregate phình ra ôm mọi thứ liên quan xa gần: <code>Customer</code> chứa orders, payments, support tickets, loyalty points, addresses, preferences&hellip; Thường sinh ra từ tư duy ERD: &ldquo;customer <em>có</em> các orders&rdquo; → nhét orders vào aggregate Customer. Nhưng aggregate không phải object graph — nó là <strong>ranh giới nhất quán giao dịch</strong> (chương 07), và &ldquo;có quan hệ&rdquo; không có nghĩa &ldquo;cần nhất quán tức thì cùng nhau&rdquo;.</p>
+<p><strong>Nhận biết trong code thật (Go):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ANTI-PATTERN: aggregate &#34;Customer&#34; 1.500 dòng</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Customer</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ID</span>            <span style="color:#a6e22e">CustomerID</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Profile</span>       <span style="color:#a6e22e">Profile</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Addresses</span>     []<span style="color:#a6e22e">Address</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Orders</span>        []<span style="color:#a6e22e">Order</span>          <span style="color:#75715e">// 4 năm mua hàng = 3.000 orders</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Payments</span>      []<span style="color:#a6e22e">Payment</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LoyaltyPoints</span> <span style="color:#a6e22e">LoyaltyAccount</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Tickets</span>       []<span style="color:#a6e22e">SupportTicket</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ... 23 field nữa</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Mọi thao tác đều phải load cả vũ trụ</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">CustomerService</span>) <span style="color:#a6e22e">AddLoyaltyPoints</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">id</span> <span style="color:#a6e22e">CustomerID</span>, <span style="color:#a6e22e">pts</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">Load</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">id</span>) <span style="color:#75715e">// kéo 3.000 orders từ DB để... cộng điểm</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">LoyaltyPoints</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">pts</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">c</span>)     <span style="color:#75715e">// và ghi đè cả vũ trụ, đè luôn thay đổi của người khác</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Dấu hiệu: repository load mất &gt; 100ms và kéo N bảng; <code>Save</code> ghi lại những thứ không đổi; lock contention hoặc optimistic-lock conflict giữa hai thao tác <em>chẳng liên quan gì nhau</em> (cộng điểm loyalty fail vì ai đó vừa đổi địa chỉ); test cần builder 200 dòng để dựng nổi một instance.</p>
+<p><strong>Vì sao nguy hiểm.</strong> Ba mặt. <em>Performance:</em> mọi thao tác trả chi phí load/save của thao tác nặng nhất. <em>Concurrency:</em> aggregate là đơn vị lock — gom cả thế giới vào một aggregate nghĩa là serialize mọi hoạt động của một khách hàng; hệ thống có traffic là nghẽn ngay điểm này. <em>Tổ chức:</em> mọi team đều phải sửa cùng một struct — merge conflict và coupling team vĩnh viễn.</p>
+<p><strong>Cách sửa.</strong> Câu hỏi kim chỉ nam của Vernon: <em>&ldquo;invariant nào cần nhất quán TỨC THÌ trong cùng một transaction?&rdquo;</em> — chỉ những thứ đó ở chung aggregate. Còn lại tách ra, tham chiếu nhau <strong>bằng ID</strong>, đồng bộ bằng event nếu cần:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// SỬA: mỗi ranh giới nhất quán một aggregate — tham chiếu bằng ID</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Customer</span> <span style="color:#66d9ef">struct</span> {          <span style="color:#75715e">// chỉ còn identity + profile + invariant của chính nó</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ID</span>        <span style="color:#a6e22e">CustomerID</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Profile</span>   <span style="color:#a6e22e">Profile</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Addresses</span> []<span style="color:#a6e22e">Address</span>         <span style="color:#75715e">// ok ở lại: đổi address có rule ràng với profile</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Order</span> <span style="color:#66d9ef">struct</span> {             <span style="color:#75715e">// aggregate riêng — invariant của đơn không dính profile</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ID</span>         <span style="color:#a6e22e">OrderID</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CustomerID</span> <span style="color:#a6e22e">CustomerID</span>       <span style="color:#75715e">// tham chiếu bằng ID, KHÔNG nhúng object</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Lines</span>      []<span style="color:#a6e22e">OrderLine</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">LoyaltyAccount</span> <span style="color:#66d9ef">struct</span> {    <span style="color:#75715e">// aggregate riêng — điểm cộng trừ độc lập, hay bị đụng đồng thời</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CustomerID</span> <span style="color:#a6e22e">CustomerID</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Balance</span>    <span style="color:#a6e22e">Points</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LoyaltyService</span>) <span style="color:#a6e22e">AddPoints</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">id</span> <span style="color:#a6e22e">CustomerID</span>, <span style="color:#a6e22e">pts</span> <span style="color:#a6e22e">Points</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">acc</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loyalty</span>.<span style="color:#a6e22e">ByCustomer</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">id</span>) <span style="color:#75715e">// load MỘT dòng, lock MỘT dòng</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">acc</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">pts</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loyalty</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">acc</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Đánh đổi phải nói rõ: tách xong, những rule <em>xuyên</em> aggregate (ví dụ &ldquo;tổng nợ mọi đơn ≤ hạn mức khách&rdquo;) chuyển từ nhất quán tức thì sang <strong>eventual consistency hoặc cần thiết kế riêng</strong> (aggregate <code>CreditLimit</code> chuyên trách, hoặc chấp nhận kiểm tra &ldquo;gần đúng&rdquo; + đối soát). Đó không phải khiếm khuyết của cách sửa — đó là chi phí thật mà God Aggregate đã <em>giấu</em> bằng cách trả nó ở dạng lock contention.</p>
+<h3 id="1613-shared-domain-model-giữa-các-context">16.1.3 Shared Domain Model giữa các context<a hidden class="anchor" aria-hidden="true" href="#1613-shared-domain-model-giữa-các-context">#</a></h3>
+<p><strong>Mô tả.</strong> Một class <code>Product</code>/<code>Customer</code>/<code>Order</code> &ldquo;dùng chung&rdquo; cho mọi bounded context — thường nằm trong package <code>common/</code>, <code>shared/</code>, hoặc một thư viện <code>company-domain-models</code> được mọi service import. Xuất phát từ trực giác DRY: &ldquo;Product là Product, viết hai lần làm gì?&rdquo;. Nhưng như chương <a href="04-bounded-context.md">04</a> đã chỉ ra: <code>Product</code> của Catalog (mô tả, ảnh, SEO) và <code>Product</code> của Inventory (tồn kho, vị trí kệ) và <code>Product</code> của Pricing (giá, thuế) là <strong>ba khái niệm khác nhau tình cờ trùng tên</strong>. DRY áp dụng cho <em>tri thức</em>, không phải cho <em>chữ</em>.</p>
+<p><strong>Nhận biết trong code thật (TypeScript):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ANTI-PATTERN: libs/shared-domain/src/product.ts — &#34;một Product cho tất cả&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Product</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">description</span>: <span style="color:#66d9ef">string</span>;      <span style="color:#75715e">// chỉ Catalog cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">seoSlug</span>: <span style="color:#66d9ef">string</span>;          <span style="color:#75715e">// chỉ Catalog cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">stockQuantity</span>: <span style="color:#66d9ef">number</span>;    <span style="color:#75715e">// chỉ Inventory cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">warehouseLocation</span>: <span style="color:#66d9ef">string</span>;<span style="color:#75715e">// chỉ Inventory cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">basePrice</span>: <span style="color:#66d9ef">number</span>;        <span style="color:#75715e">// chỉ Pricing cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">taxCategory</span>: <span style="color:#66d9ef">string</span>;      <span style="color:#75715e">// chỉ Pricing cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">weightGrams</span>: <span style="color:#66d9ef">number</span>;      <span style="color:#75715e">// chỉ Shipping cần
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 31 field — mỗi context dùng ~20%, nhưng chịu 100% thay đổi
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Dấu hiệu: class có nhóm field &ldquo;chỉ dùng ở X&rdquo;; PR đổi model phải được 4 team approve; version bump của lib <code>shared-domain</code> gây deploy dây chuyền toàn công ty; field kiểu <code>status2</code>, <code>priceV2</code> xuất hiện vì không ai dám đổi field cũ.</p>
+<p><strong>Vì sao nguy hiểm.</strong> Đây là coupling ở mức nguy hiểm nhất — <strong>coupling ngữ nghĩa</strong>. Mọi context bị xích vào nhịp thay đổi của mọi context khác: Pricing muốn đổi <code>basePrice: number</code> thành cấu trúc <code>Money</code> phải đàm phán với Shipping — bên chẳng liên quan gì đến tiền. Kết quả sau 2 năm: model chung đóng băng (không ai dám đổi), mọi tiến hóa nghiệp vụ diễn ra <em>bên ngoài</em> model (field phụ, bảng phụ, map &ldquo;extra&rdquo;), và bạn quay lại đúng cái big ball of mud mà DDD sinh ra để tránh — chỉ là phiên bản phân tán qua npm registry.</p>
+<p><strong>Cách sửa.</strong> Mỗi context tự định nghĩa model của mình, chỉ chứa những gì <em>nó</em> cần, theo ngôn ngữ của <em>nó</em>. Dữ liệu chảy giữa các context qua <strong>contract</strong> (event/API DTO) — thứ được phép chung — chứ không qua domain class:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// catalog/domain/product.ts — Product theo nghĩa của Catalog
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Product</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(<span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">ProductId</span>, <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">ProductName</span>,
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">description</span>: <span style="color:#66d9ef">RichText</span>, <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">seo</span>: <span style="color:#66d9ef">SeoMetadata</span>) {}
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">rename</span>(<span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">ProductName</span>) { <span style="color:#75715e">/* rule đặt tên của Catalog */</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// pricing/domain/priced-item.ts — cùng &#34;sản phẩm&#34;, khái niệm khác, tên khác
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PricedItem</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">constructor</span>(<span style="color:#66d9ef">readonly</span> <span style="color:#a6e22e">productId</span>: <span style="color:#66d9ef">ProductId</span>,   <span style="color:#75715e">// CHỈ chia sẻ identity
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">base</span>: <span style="color:#66d9ef">Money</span>, <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">tax</span>: <span style="color:#66d9ef">TaxCategory</span>) {}
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">priceFor</span>(<span style="color:#a6e22e">tier</span>: <span style="color:#66d9ef">CustomerTier</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Money</span> { <span style="color:#75715e">/* rule giá */</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cái DUY NHẤT được chia sẻ: contract sự kiện (published language, chương 05)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// libs/contracts/catalog-events.ts — DTO thuần, version hóa, không hành vi
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">ProductRegisteredV1</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">productId</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">occurredAt</span>: <span style="color:#66d9ef">string</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Đánh đổi: có duplication <em>hình thức</em> (ba class cùng mang ID sản phẩm), thêm mapping ở biên. Chấp nhận — chi phí mapping là tuyến tính và nhìn thấy được; chi phí coupling ngữ nghĩa là phi tuyến và vô hình cho đến ngày nó khóa chết mọi thay đổi. Thứ duy nhất nên nằm trong <code>shared/</code>: value object thật sự phổ quát và ổn định (<code>Money</code>, <code>Email</code>), và các contract DTO có version.</p>
+<h3 id="1614-shared-database--nhiều-contextservice-chung-một-database">16.1.4 Shared Database — nhiều context/service chung một database<a hidden class="anchor" aria-hidden="true" href="#1614-shared-database--nhiều-contextservice-chung-một-database">#</a></h3>
+<p><strong>Mô tả.</strong> Nhiều bounded context (hoặc tệ hơn, nhiều microservice) cùng đọc-ghi một schema. Anh em song sinh của 16.1.3 nhưng ở tầng dữ liệu — và còn nguy hiểm hơn, vì ranh giới bị xuyên thủng một cách <em>vô hình</em>: không có import statement nào để lint bắt, chỉ có những câu SQL rải rác.</p>
+<p><strong>Nhận biết trong code thật:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ANTI-PATTERN: service &#34;reporting&#34; JOIN thẳng vào bảng của Ordering và Pricing</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// reporting/query.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">rows</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">QueryContext</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">`
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    SELECT o.id, o.status, p.final_price, c.tier
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    FROM orders o                          -- bảng của Ordering context
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    JOIN price_quotes p ON p.order_id = o.id   -- bảng của Pricing context
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    JOIN customers c    ON c.id = o.customer_id -- bảng của CRM context
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    WHERE o.created_at &gt; $1`</span>, <span style="color:#a6e22e">since</span>)
+</span></span></code></pre></div><p>Dấu hiệu: một bảng xuất hiện trong connection string của ≥ 2 service; team Ordering muốn đổi tên cột <code>status</code> phải gửi email &ldquo;to: all-engineering&rdquo;; migration của context A làm đỏ dashboard của context B; và dấu hiệu tổ chức đặc trưng — <em>không ai dám xóa bất kỳ cột nào</em> vì không biết ai đang đọc.</p>
+<p><strong>Vì sao nguy hiểm.</strong> Schema trở thành <strong>public API không có version, không có contract, không có deprecation policy</strong>. Mọi cột là surface area. Encapsulation của aggregate trở nên vô nghĩa: bạn viết invariant cẩn thận trong <code>Order.addLine()</code>, nhưng service khác <code>UPDATE orders SET status = 'PAID'</code> thẳng vào bảng — invariant chết không kèn không trống. Với microservices, shared database còn triệt tiêu chính lý do tồn tại của việc tách service: không deploy độc lập được (migration là chuyện chung), không scale độc lập được (chung connection pool, chung IOPS), fault không cô lập được (một service làm nghẽn DB là chết cả cụm).</p>
+<p><strong>Cách sửa.</strong> Theo mức độ khả thi tăng dần chi phí:</p>
+<ol>
+<li><strong>Mức tối thiểu (trong monolith):</strong> quy ước ownership — mỗi bảng thuộc đúng một context, context khác muốn dữ liệu phải qua public API của module. Enforce bằng review + grep định kỳ (<code>grep -rn &quot;FROM orders&quot; --include=&quot;*.go&quot; | grep -v ordering/</code>).</li>
+<li><strong>Mức khá:</strong> schema riêng cho từng context trong cùng DB instance, user DB riêng với quyền chỉ trên schema của mình — vi phạm ranh giới thành <em>lỗi permission</em> thay vì thành thói quen.</li>
+<li><strong>Với nhu cầu đọc chéo (như reporting ở trên):</strong> không JOIN chéo — mỗi context publish event, reporting xây read model riêng của nó từ các event đó. Đắt hơn, đúng — nhưng reporting giờ tùy biến thoải mái mà không xích chân ai.</li>
+<li><strong>Khi đã tách service:</strong> database riêng thật sự, dữ liệu chảy qua event/API. Đây là điều kiện <em>định nghĩa</em> của microservice — chưa tách được DB thì chưa tách xong service, chỉ là monolith phân tán.</li>
+</ol>
+<p><strong>Không sửa thì sao?</strong> Hệ thống vẫn chạy — shared database là anti-pattern &ldquo;sống dai&rdquo; nhất vì nó <em>tiện</em> mỗi ngày và chỉ <em>đắt</em> mỗi quý. Hóa đơn đến dưới dạng: mọi thay đổi schema cần họp liên team (velocity giảm dần đều), và một ngày nào đó, một <code>UPDATE</code> từ service lạ tạo ra trạng thái dữ liệu mà domain model coi là bất khả — và on-call mất ba ngày để hiểu chuyện gì xảy ra.</p>
+<h3 id="1615-transaction-xuyên-nhiều-aggregate">16.1.5 Transaction xuyên nhiều aggregate<a hidden class="anchor" aria-hidden="true" href="#1615-transaction-xuyên-nhiều-aggregate">#</a></h3>
+<p><strong>Mô tả.</strong> Một transaction database gói việc thay đổi 2+ aggregate — thường kèm lý luận &ldquo;cho chắc, đằng nào cũng chung DB&rdquo;. Điều này phá vỡ hợp đồng thiết kế của aggregate: aggregate được <em>định nghĩa</em> là ranh giới transaction (chương 07). Nếu bạn thường xuyên cần sửa hai aggregate trong một transaction, thì hoặc ranh giới aggregate sai, hoặc bạn đang cưỡng ép nhất quán tức thì cho thứ nghiệp vụ vốn chấp nhận eventual.</p>
+<p><strong>Nhận biết trong code thật (Go):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ANTI-PATTERN: một transaction, ba aggregate</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">OrderService</span>) <span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">cmd</span> <span style="color:#a6e22e">PlaceOrderCmd</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">WithinTx</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">tx</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Tx</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">order</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">NewOrder</span>(<span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">SaveTx</span>(<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">order</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Aggregate thứ 2 trong cùng tx:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">inv</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">LoadTx</span>(<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">ProductID</span>) <span style="color:#75715e">// + row lock</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">inv</span>.<span style="color:#a6e22e">Reserve</span>(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Qty</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">SaveTx</span>(<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">inv</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Aggregate thứ 3, khác context luôn:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">loyalty</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loyalty</span>.<span style="color:#a6e22e">LoadTx</span>(<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">CustomerID</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">loyalty</span>.<span style="color:#a6e22e">AddPoints</span>(<span style="color:#a6e22e">pointsFor</span>(<span style="color:#a6e22e">order</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loyalty</span>.<span style="color:#a6e22e">SaveTx</span>(<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">loyalty</span>)
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Dấu hiệu: hàm <code>WithinTx</code>/<code>@Transactional</code> ở application service mà bên trong gọi save cho nhiều repository; deadlock xuất hiện theo cặp thao tác cụ thể (place-order vs adjust-inventory); latency ghi tăng theo số aggregate bị gom; và khi ai đó đề xuất tách service, phát hiện <em>không tách nổi</em> vì transaction dính chùm.</p>
+<p><strong>Vì sao nguy hiểm.</strong> <em>Kỹ thuật:</em> transaction càng rộng, lock giữ càng lâu, deadlock và contention tăng theo cấp số; hot aggregate (Inventory của sản phẩm đang sale) thành nút cổ chai toàn hệ thống. <em>Kiến trúc:</em> nó hàn cứng các aggregate — và cả các context — vào một DB vĩnh viễn; mọi kế hoạch tách sau này chết từ đây. <em>Nghiệp vụ — điểm ít người để ý nhất:</em> nó thường <strong>mã hóa sai nghiệp vụ thật</strong>. Hỏi domain expert: &ldquo;đơn đặt thành công nhưng cộng điểm loyalty trễ 5 giây thì có sao không?&rdquo; — &ldquo;Không sao.&rdquo; Nghĩa là nhất quán tức thì ở đây là <em>yêu cầu bịa</em> của engineer, và bạn đang trả giá hiệu năng + coupling cho một yêu cầu không tồn tại.</p>
+<p><strong>Cách sửa.</strong> Quy tắc: <strong>một transaction — một aggregate; phần còn lại đi bằng domain event</strong> (chương <a href="10-domain-event.md">10</a>), với outbox pattern để không mất event (chương <a href="13-ddd-va-distributed-systems.md">13</a>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// SỬA: transaction chỉ ôm Order + outbox; phần còn lại eventual</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">OrderService</span>) <span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">cmd</span> <span style="color:#a6e22e">PlaceOrderCmd</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">WithinTx</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">tx</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Tx</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">order</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">NewOrder</span>(<span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">SaveTx</span>(<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">order</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Event ghi CÙNG transaction với aggregate → không bao giờ lạc</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">outbox</span>.<span style="color:#a6e22e">AppendTx</span>(<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">OrderPlaced</span>{
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">OrderID</span>: <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#a6e22e">CustomerID</span>: <span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">CustomerID</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Lines</span>: <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">LineSnapshots</span>(),
+</span></span><span style="display:flex;"><span>        })
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Consumer riêng (idempotent): InventoryReserver xử lý OrderPlaced → reserve;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// LoyaltyAccrual xử lý OrderPlaced → cộng điểm.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Reserve THẤT BẠI thì sao? → event ReservationFailed → Order chuyển</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// trạng thái/hủy — đây là saga tối giản, và là nghiệp vụ THẬT:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ngoài đời, hết hàng sau khi đặt là chuyện có quy trình xử lý hẳn hoi.</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Đánh đổi — nói đủ hai chiều: bạn đổi tính đơn giản của strong consistency lấy khả năng scale và tách rời, và phải trả bằng idempotency, retry, bù trừ (compensation), UI phản ánh trạng thái trung gian (&ldquo;đang giữ hàng&hellip;&rdquo;). <strong>Nếu nghiệp vụ thật sự đòi hai thứ thay đổi nguyên tử cùng nhau</strong> (trừ tiền tài khoản A cộng tài khoản B nội bộ một ledger) — thì đó là <em>một</em> aggregate bị vẽ nhầm thành hai; sửa ranh giới, đừng sửa bằng transaction rộng. Transaction xuyên aggregate hợp lệ duy nhất ở một chỗ: cùng aggregate type, thao tác batch có chủ đích, hiếm và được cô lập.</p>
+<h3 id="1616-generic-repository-lạm-dụng">16.1.6 Generic Repository lạm dụng<a hidden class="anchor" aria-hidden="true" href="#1616-generic-repository-lạm-dụng">#</a></h3>
+<p><strong>Mô tả.</strong> Một <code>Repository&lt;T&gt;</code> với đủ bộ <code>findAll / findById / save / delete / findBy(criteria)</code> cho <em>mọi</em> entity, thường kèm base class và query builder tự chế. Trông rất DRY, rất &ldquo;framework&rdquo;. Nhưng repository trong DDD không phải lớp bọc DB — nó là <strong>cửa khẩu của aggregate</strong>, và interface của nó phải nói ngôn ngữ nghiệp vụ: aggregate này được lấy lên <em>theo cách nào</em> và <em>vì mục đích gì</em>.</p>
+<p><strong>Nhận biết trong code thật (TypeScript):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// ANTI-PATTERN
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">GenericRepository</span>&lt;<span style="color:#f92672">T</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">findAll</span>()<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">T</span><span style="color:#960050;background-color:#1e0010">[]</span>&gt; { ... }                    <span style="color:#75715e">// ai gọi findAll trên bảng 40 triệu dòng?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">findBy</span>(<span style="color:#a6e22e">criteria</span>: <span style="color:#66d9ef">Partial</span>&lt;<span style="color:#f92672">T</span>&gt;)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">T</span><span style="color:#960050;background-color:#1e0010">[]</span>&gt; { ... } <span style="color:#75715e">// query ngẫu hứng không giới hạn
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">entity</span>: <span style="color:#66d9ef">T</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">void</span>&gt; { ... }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">delete</span>(<span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">void</span>&gt; { ... }          <span style="color:#75715e">// xóa Order? nghiệp vụ có cho phép xóa?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Hệ quả tất yếu — logic nghiệp vụ TRÀN ra caller dưới dạng criteria:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">overdue</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">orderRepo</span>.<span style="color:#a6e22e">findBy</span>({ <span style="color:#a6e22e">status</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;CONFIRMED&#39;</span> })
+</span></span><span style="display:flex;"><span>  .<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">os</span> <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">o</span> <span style="color:#f92672">=&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">confirmedAt</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">subDays</span>(<span style="color:#66d9ef">new</span> Date(), <span style="color:#ae81ff">3</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">remindedAt</span>)); <span style="color:#75715e">// rule &#34;quá hạn&#34; là gì? — tri thức nghiệp vụ nằm vất vưởng ở đây
+</span></span></span></code></pre></div><p>Dấu hiệu: mọi repository giống hệt nhau; các rule chọn lọc nghiệp vụ (&ldquo;đơn quá hạn&rdquo;, &ldquo;khách rủi ro&rdquo;) tồn tại dưới dạng tổ hợp filter lặp lại ở nhiều caller; method <code>delete</code> tồn tại cho cả những khái niệm nghiệp vụ <em>không bao giờ được xóa</em> (lệnh chuyển tiền!); và performance thảm vì filter chạy trong RAM thay vì trong DB.</p>
+<p><strong>Vì sao nguy hiểm.</strong> Ba lý do. Một: <strong>tri thức nghiệp vụ rò rỉ và phân mảnh</strong> — &ldquo;đơn quá hạn nhắc&rdquo; định nghĩa ở 3 nơi, sửa 2 nơi, bug ở nơi thứ 3. Hai: <strong>interface rộng vô hạn = không kiểm soát được truy cập dữ liệu</strong> — không ai trả lời được câu &ldquo;những đường truy vấn nào tồn tại vào bảng orders?&rdquo;, nên không tối ưu index nổi, không audit nổi. Ba: <strong>nó xóa vai trò thiết kế của repository</strong>: chặn được ai xóa Order đâu, khi <code>delete</code> nằm sẵn trên base class.</p>
+<p><strong>Cách sửa.</strong> Repository riêng cho từng aggregate, interface hẹp, mỗi method là một <em>nhu cầu nghiệp vụ có tên</em>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// SỬA: interface do domain định nghĩa, nói tiếng nghiệp vụ
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">OrderRepository</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">byId</span>(<span style="color:#a6e22e">id</span>: <span style="color:#66d9ef">OrderId</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">Order</span> <span style="color:#960050;background-color:#1e0010">|</span> <span style="color:#a6e22e">null</span>&gt;;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">order</span>: <span style="color:#66d9ef">Order</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">void</span>&gt;;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Rule &#34;quá hạn nhắc&#34; có MỘT tên, MỘT định nghĩa, chạy bằng SQL có index:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">overdueForReminder</span>(<span style="color:#a6e22e">asOf</span>: <span style="color:#66d9ef">Date</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">Order</span><span style="color:#960050;background-color:#1e0010">[]</span>&gt;;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// KHÔNG có delete — Order không bao giờ bị xóa, chỉ bị cancel (một method trên Order)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// KHÔNG có findAll — không tồn tại nhu cầu nghiệp vụ &#34;lấy tất cả đơn&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Hai lưu ý thực dụng. (1) Dùng generic repository làm <strong>chi tiết cài đặt nội bộ</strong> thì được — <code>class PgOrderRepository extends BaseRepo implements OrderRepository</code> tái dùng plumbing thoải mái, miễn là <em>interface public</em> vẫn hẹp và mang tên nghiệp vụ. Cái bị cấm là phơi generic interface ra cho application service. (2) Nhu cầu đọc màn hình (danh sách, filter tùy ý của admin UI) đừng nhét vào repository của aggregate — đó là việc của đường đọc/read model (chương 14, mục 14.6.5): query DTO trực tiếp, tự do và nhanh, không đi qua domain.</p>
+<h3 id="1617-cargo-cult-ddd--đủ-lễ-phục-rỗng-nội-dung">16.1.7 Cargo-cult DDD — đủ lễ phục, rỗng nội dung<a hidden class="anchor" aria-hidden="true" href="#1617-cargo-cult-ddd--đủ-lễ-phục-rỗng-nội-dung">#</a></h3>
+<p><strong>Mô tả</strong>: codebase có đầy đủ <code>domain/</code>, <code>application/</code>, <code>infrastructure/</code>, có class tên <code>*.aggregate.ts</code>, có <code>ValueObject</code> base class — nhưng aggregate toàn getter/setter, business rule vẫn nằm hết trong service, và &ldquo;domain event&rdquo; chỉ được phát chứ không ai subscribe. Hình thức của DDD, linh hồn của CRUD.</p>
+<p><strong>Nhận biết trong code thật</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// order.aggregate.ts — tên là aggregate, thân là túi dữ liệu
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Order</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">AggregateRoot</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">@Column</span>() <span style="color:#a6e22e">status</span>: <span style="color:#66d9ef">string</span>;              <span style="color:#75715e">// public, ai gán gì cũng được
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">getStatus() {</span> <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span>; }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">setStatus</span>(<span style="color:#a6e22e">s</span>: <span style="color:#66d9ef">string</span>) { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">s</span>; }   <span style="color:#75715e">// &#34;hành vi&#34; duy nhất
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// order.service.ts — rule vẫn ở đây, như chưa hề có DDD
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">getStatus</span>() <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;PAID&#39;</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;cannot cancel&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">setStatus</span>(<span style="color:#e6db74">&#39;CANCELLED&#39;</span>);
+</span></span></code></pre></div><p>Bài kiểm 30 giây: mở aggregate lớn nhất của codebase, đếm số method mang <strong>tên nghiệp vụ có kiểm tra invariant bên trong</strong>. Bằng 0 → cargo cult.</p>
+<p><strong>Vì sao nguy hiểm</strong>: đây là anti-pattern đắt nhất về mặt niềm tin — team trả đủ chi phí của DDD (nhiều file, nhiều tầng, học từ vựng mới) mà nhận zero lợi ích, rồi kết luận &ldquo;DDD là vẽ vời&rdquo;. Lần sau ai đề xuất domain model thật sẽ bị dí vào mặt chính cái codebase này làm bằng chứng chống lại.</p>
+<p><strong>Cách sửa</strong>: không sửa cấu trúc thư mục — sửa <em>một</em> luồng nghiệp vụ quan trọng nhất: kéo rule từ service vào aggregate, xóa setter của các field liên quan, viết test invariant. Một luồng làm thật đáng giá hơn mười thư mục đúng chuẩn.</p>
+<h3 id="1618-ubiquitous-language-chỉ-tồn-tại-trong-tài-liệu">16.1.8 Ubiquitous Language chỉ tồn tại trong tài liệu<a hidden class="anchor" aria-hidden="true" href="#1618-ubiquitous-language-chỉ-tồn-tại-trong-tài-liệu">#</a></h3>
+<p><strong>Mô tả</strong>: có glossary trên Confluence, có buổi event storming chụp ảnh đăng Slack — nhưng code vẫn <code>data</code>, <code>info</code>, <code>processOrder(payload)</code>, ticket vẫn viết bằng từ của dev, và domain expert sáu tháng chưa được hỏi lại câu nào. <strong>Nhận biết</strong>: lấy 5 từ quan trọng nhất trong glossary, grep codebase — không ra kết quả nào là ngôn ngữ đã chết lâm sàng. <strong>Vì sao nguy hiểm</strong>: mọi pattern tactical phía sau đặt tên theo một ngôn ngữ không ai nói — model đúng hình thức nhưng lệch ngữ nghĩa, và độ lệch tăng dần theo mỗi tính năng (chương <a href="03-ubiquitous-language.md">03</a> đã phân tích cơ chế). <strong>Cách sửa</strong>: đưa ngôn ngữ vào Definition of Done của PR; mỗi sprint một lần rename theo glossary; và quan trọng nhất — nối lại kênh nói chuyện định kỳ với domain expert, vì ngôn ngữ chết là <em>triệu chứng</em> của kênh giao tiếp chết.</p>
+<h3 id="1619-event-như-rpc-trá-hình">16.1.9 Event như RPC trá hình<a hidden class="anchor" aria-hidden="true" href="#1619-event-như-rpc-trá-hình">#</a></h3>
+<p><strong>Mô tả</strong>: phát &ldquo;event&rdquo; <code>SendWelcomeEmailRequested</code>, <code>DeductInventoryCommand</code> — tên là event, ngữ nghĩa là mệnh lệnh chờ đúng một kẻ thi hành. <strong>Nhận biết</strong>: tên event chứa động từ nguyên thể/mệnh lệnh thay vì quá khứ; producer <em>biết và cần</em> consumer cụ thể làm gì; nếu consumer đó tắt thì luồng nghiệp vụ của producer coi như fail. <strong>Vì sao nguy hiểm</strong>: bạn nhận đủ nhược điểm của cả hai thế giới — coupling ngữ nghĩa chặt như gọi hàm trực tiếp, nhưng mất stack trace, mất type-check, thêm độ trễ và thêm broker phải nuôi. Khi cần ra lệnh, hãy ra lệnh tường minh (command + handler, hoặc gọi API); event chỉ dành cho <em>thông báo điều đã xảy ra</em> mà producer không quan tâm ai phản ứng (chương <a href="10-domain-event.md">10</a>, mục anti-pattern).</p>
+<h3 id="16110-bounded-context--microservice-một-cách-máy-móc">16.1.10 Bounded Context = Microservice một cách máy móc<a hidden class="anchor" aria-hidden="true" href="#16110-bounded-context--microservice-một-cách-máy-móc">#</a></h3>
+<p><strong>Mô tả</strong>: đọc xong chương strategic design, team vẽ được 8 bounded context — và lập tức dựng 8 repo, 8 pipeline, 8 database. <strong>Vì sao nguy hiểm</strong>: bounded context là ranh giới <em>ngữ nghĩa của model</em>; microservice là ranh giới <em>triển khai và vận hành</em>. Trùng nhau được thì tốt, nhưng quan hệ đúng là &ldquo;một service không nên chứa nhiều hơn một context&rdquo; chứ không phải &ldquo;mỗi context một service&rdquo;. Tách 8 service với một team 6 người là mua toàn bộ chi phí chương <a href="13-ddd-va-distributed-systems.md">13</a> (outbox, saga, idempotency, distributed debugging) để giải một bài toán tổ chức&hellip; không tồn tại — vì chỉ có một team. Kết quả kinh điển: distributed monolith — 8 service deploy phải cùng nhau, gọi nhau đồng bộ dây chuyền, một cái chết kéo cả chùm. <strong>Cách sửa</strong>: modular monolith với ranh giới module = ranh giới context (chương <a href="12-ddd-va-kien-truc.md">12</a>); tách service khi và chỉ khi có <em>lực kéo vận hành đo được</em> — team đông phải chia, nhu cầu scale lệch nhau, nhịp deploy xung đột (chương <a href="14-ddd-trong-production.md">14</a>).</p>
+<h3 id="16111-ddd-lite-mọi-nơi--trải-mỏng-thay-vì-đầu-tư-đúng-chỗ">16.1.11 DDD-lite mọi nơi — trải mỏng thay vì đầu tư đúng chỗ<a hidden class="anchor" aria-hidden="true" href="#16111-ddd-lite-mọi-nơi--trải-mỏng-thay-vì-đầu-tư-đúng-chỗ">#</a></h3>
+<p><strong>Mô tả</strong>: áp một &ldquo;chuẩn DDD toàn công ty&rdquo; đồng đều cho mọi module — CRUD danh mục cũng aggregate + repository interface + 4 tầng như core domain. Nghe có vẻ kỷ luật, thực chất là phiên bản tổ chức của cargo cult: chi phí trải đều, lợi ích dồn cục. <strong>Vì sao nguy hiểm</strong>: vi phạm chính nguyên lý chiến lược nền tảng nhất của DDD (chương <a href="02-domain-va-subdomain.md">02</a>) — nguồn lực phải dồn cho Core Domain. Team tiêu 40% quỹ thời gian để duy trì nghi lễ ở các module Supporting/Generic, và đến lượt core domain cần modeling sâu thì hết quỹ. <strong>Cách sửa</strong>: bản đồ subdomain quyết định &ldquo;liều lượng&rdquo; — core: full tactical + strategic; supporting: transaction script sạch sẽ; generic: mua/dùng framework thẳng. Sự không đồng đều này là <em>có chủ đích và lành mạnh</em>.</p>
+<hr>
+<h2 id="162-khi-nào-không-nên-dùng-ddd">16.2 Khi nào KHÔNG nên dùng DDD<a hidden class="anchor" aria-hidden="true" href="#162-khi-nào-không-nên-dùng-ddd">#</a></h2>
+<p>Nguyên tắc gốc để suy mọi trường hợp: <strong>DDD là khoản đầu tư trả trước để mua khả năng chịu đựng thay đổi của business phức tạp</strong>. Không có business phức tạp, hoặc không có tương lai dài để thu hồi vốn — khoản đầu tư lỗ. Cụ thể:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Trường hợp</th>
+          <th>Vì sao DDD không mang lại giá trị</th>
+          <th>Phương pháp phù hợp hơn</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>CRUD app thuần</strong> (quản lý danh mục, form nhập liệu)</td>
+          <td>Không có business rule để bảo vệ — model &ldquo;giàu&rdquo; mà không có gì để giàu</td>
+          <td>Active Record / scaffold của framework (NestJS + TypeORM thẳng, Rails-style), validation ở DTO</td>
+      </tr>
+      <tr>
+          <td><strong>CMS / website nội dung</strong></td>
+          <td>Complexity nằm ở trình bày và quản lý nội dung — bài toán đã được ngành giải sẵn</td>
+          <td>WordPress/Strapi/headless CMS — mua Generic, đừng xây</td>
+      </tr>
+      <tr>
+          <td><strong>Landing page / web giới thiệu</strong></td>
+          <td>Không có domain — chỉ có giao diện</td>
+          <td>Static site, no-code</td>
+      </tr>
+      <tr>
+          <td><strong>MVP chưa có product-market fit</strong></td>
+          <td>Nghiệp vụ đổi hàng tuần theo khám phá thị trường; model hóa sâu thứ tuần sau vứt là lãng phí kép (xây + phá). Điều MVP cần là <em>tốc độ học</em>, không phải độ bền</td>
+          <td>Transaction script + khung code sạch tối thiểu; đặt tên tử tế (Ubiquitous Language mức 0 — miễn phí); ghi lại các quyết định để ngày pivot thành công thì biết đường refactor</td>
+      </tr>
+      <tr>
+          <td><strong>Tool nội bộ nhỏ, ít người dùng</strong></td>
+          <td>Chi phí sai của nó thấp — bug thì sửa, người dùng ngồi cạnh</td>
+          <td>CRUD framework, thậm chí Airtable/Retool</td>
+      </tr>
+      <tr>
+          <td><strong>Hệ thống tích hợp/ETL thuần</strong> (đọc chỗ này ghi chỗ kia)</td>
+          <td>Complexity nằm ở data mapping và vận hành pipeline, không ở business rule</td>
+          <td>Pipeline tooling (Airflow&hellip;), schema contract</td>
+      </tr>
+      <tr>
+          <td><strong>Team không có đường tới domain expert</strong></td>
+          <td>DDD không có nguyên liệu — model xây từ phỏng đoán của dev là model sai có tổ chức, tệ hơn CRUD trung thực</td>
+          <td>Làm CRUD tốt + đầu tư <em>giành lấy</em> kênh domain expert trước, DDD sau</td>
+      </tr>
+      <tr>
+          <td><strong>Business đơn giản thật sự</strong> (quy tắc đếm trên một bàn tay, ổn định nhiều năm)</td>
+          <td>Phần thưởng của model hóa ~ 0; transaction script đọc hiểu trong một buổi</td>
+          <td>Giữ nguyên — đơn giản là một tài sản, đừng phá</td>
+      </tr>
+  </tbody>
+</table>
+<p>Điểm cần trung thực nói thêm: &ldquo;không dùng DDD&rdquo; hiếm khi là quyết định vĩnh viễn cho cả công ty. Câu hỏi đúng luôn ở mức <strong>từng bộ phận của hệ thống, tại thời điểm này</strong>: sàn TMĐT có thể CRUD ở quản lý banner nhưng rất cần DDD ở pricing; startup có thể transaction script toàn bộ năm nay và cần aggregate cho module thanh toán năm sau. Và chiều ngược cũng đúng — hệ thống <em>đang</em> DDD đầy đủ có thể hạ liều lượng ở module đã ổn định vĩnh viễn.</p>
+<hr>
+<h2 id="163-ma-trận-quyết-định-mức-độ-áp-dụng-ddd">16.3 Ma trận quyết định mức độ áp dụng DDD<a hidden class="anchor" aria-hidden="true" href="#163-ma-trận-quyết-định-mức-độ-áp-dụng-ddd">#</a></h2>
+<p>Ba biến đầu vào: <strong>độ phức tạp business rule</strong> (đếm: số rule ràng buộc nhiều dữ liệu, số trạng thái và chuyển trạng thái, tần suất business đổi rule), <strong>tuổi thọ kỳ vọng của hệ thống</strong>, và <strong>quy mô team/tổ chức</strong>.</p>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">quadrantChart
+    title Liều lượng DDD theo complexity và tuổi thọ
+    x-axis Tuổi thọ ngắn --&gt; Tuổi thọ dài
+    y-axis Business đơn giản --&gt; Business phức tạp
+    quadrant-1 Full DDD: strategic + tactical
+    quadrant-2 Tactical chọn lọc, sẵn sàng nâng cấp
+    quadrant-3 CRUD / transaction script
+    quadrant-4 CRUD sạch + Ubiquitous Language
+</code></pre><p>Diễn giải thành bốn mức, kèm ngưỡng gợi ý:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Mức</th>
+          <th>Điều kiện</th>
+          <th>Áp dụng cụ thể</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>0 — Không DDD</strong></td>
+          <td>Business đơn giản, tuổi thọ &lt; 1 năm, team ≤ 3</td>
+          <td>CRUD trung thực. Chỉ giữ: đặt tên tử tế</td>
+      </tr>
+      <tr>
+          <td><strong>1 — Nền móng miễn phí</strong></td>
+          <td>Business bắt đầu có rule, hệ thống sẽ sống &gt; 1 năm</td>
+          <td>Ubiquitous Language + tách module theo hướng business capability + value object cho tiền/thời gian (chống primitive obsession). Chưa cần aggregate/repository nghi lễ</td>
+      </tr>
+      <tr>
+          <td><strong>2 — Tactical chọn lọc</strong></td>
+          <td>Có ≥ 1 vùng rule dày (tính giá, tồn kho, trạng thái đơn), team 5–15</td>
+          <td>Vùng rule dày: aggregate + domain event + repository interface đúng bài. Vùng còn lại: mức 1. Modular monolith</td>
+      </tr>
+      <tr>
+          <td><strong>3 — Full strategic + tactical</strong></td>
+          <td>Nhiều team, nhiều context, business phức tạp, hệ thống sống nhiều năm</td>
+          <td>Toàn bộ tài liệu này: subdomain map, context map, team alignment, và các pattern chương 13 khi tách service</td>
+      </tr>
+  </tbody>
+</table>
+<p>Hai quy tắc dùng ma trận: (1) <strong>đánh giá theo từng bounded context</strong>, không theo cả công ty; (2) <strong>được phép lên mức dần</strong> — mức 1 hôm nay không cản mức 3 sau này, ngược lại chính là đường nâng cấp tự nhiên (chương <a href="14-ddd-trong-production.md">14</a>, incremental adoption). Sai lầm cần tránh là <em>nhảy</em> mức: từ 0 lên 3 trong một quý là công thức cargo cult.</p>
+<hr>
+<h2 id="164-checklist-trước-khi-quyết-định-áp-dụng-ddd">16.4 Checklist trước khi quyết định áp dụng DDD<a hidden class="anchor" aria-hidden="true" href="#164-checklist-trước-khi-quyết-định-áp-dụng-ddd">#</a></h2>
+<p>Trả lời trung thực 10 câu — mỗi &ldquo;có&rdquo; là một điểm:</p>
+<ol>
+<li>Business rule có ràng buộc <strong>nhiều dữ liệu phải đúng cùng nhau</strong> không (không chỉ validation từng field)?</li>
+<li>Domain expert có <strong>tồn tại và tiếp cận được</strong> ít nhất hàng tuần không?</li>
+<li>Hệ thống có sống <strong>≥ 2 năm</strong> và tiếp tục được phát triển (không chỉ bảo trì) không?</li>
+<li>Business có <strong>đổi rule thường xuyên</strong> (hàng quý trở lên) không?</li>
+<li>Đã từng có <strong>bug do hai nơi hiểu một khái niệm khác nhau</strong> chưa?</li>
+<li>Có <strong>≥ 2 team</strong> cùng đụng vào hệ thống không?</li>
+<li>Có vùng nghiệp vụ là <strong>lợi thế cạnh tranh thật</strong> (làm tốt hơn đối thủ thì thắng) không?</li>
+<li>Team có ít nhất <strong>1–2 người đã làm domain model thật</strong> (không chỉ đọc sách) không?</li>
+<li>Tổ chức có chấp nhận <strong>đầu tư chậm hơn 20–30% trong 2–3 tháng đầu</strong> để nhanh hơn về sau không?</li>
+<li>Có <strong>kênh phản hồi từ vận hành/CS về dev</strong> để model được sửa theo thực tế không?</li>
+</ol>
+<p>Thang điểm gợi ý: <strong>0–3</strong>: mức 0–1 của ma trận — DDD đầy đủ sẽ là gánh nặng. <strong>4–6</strong>: mức 1–2 — bắt đầu từ Ubiquitous Language và một context thí điểm. <strong>7–10</strong>: mức 2–3 — không những nên, mà <em>không</em> làm mới là rủi ro. Lưu ý câu 2 và câu 8 là hai câu <strong>phủ quyết</strong>: thiếu domain expert thì DDD không có nguyên liệu; thiếu người từng làm thì hãy thuê/mượn một người dẫn (hoặc thí điểm phạm vi rất nhỏ để tự học) trước khi cam kết cả hệ thống.</p>
+<hr>
+<h2 id="165-tổng-kết-toàn-bộ-tài-liệu--lộ-trình-học-tiếp">16.5 Tổng kết toàn bộ tài liệu &amp; lộ trình học tiếp<a hidden class="anchor" aria-hidden="true" href="#165-tổng-kết-toàn-bộ-tài-liệu--lộ-trình-học-tiếp">#</a></h2>
+<h3 id="sợi-chỉ-đỏ-xuyên-16-chương">Sợi chỉ đỏ xuyên 16 chương<a hidden class="anchor" aria-hidden="true" href="#sợi-chỉ-đỏ-xuyên-16-chương">#</a></h3>
+<p>Nếu phải nén toàn bộ tài liệu vào năm câu: (1) Kẻ thù chính của phần mềm doanh nghiệp là <strong>business complexity</strong>, không phải technical complexity — và không kỹ thuật nào giết được nó, chỉ có thể <em>tổ chức</em> nó (chương 01). (2) Tổ chức bắt đầu bằng <strong>chiến lược</strong>: biết chỗ nào đáng đầu tư (02), nói một thứ tiếng (03), vẽ ranh giới ngữ nghĩa (04) và quản trị quan hệ giữa các ranh giới (05). (3) Bên trong ranh giới, <strong>tactical patterns</strong> không phải nghi lễ mà là các công cụ bảo vệ: VO bảo vệ tính đúng của giá trị (06), aggregate bảo vệ invariant trước concurrency (07), repository bảo vệ ranh giới ở tầng dữ liệu (08), service tách &ldquo;điều phối&rdquo; khỏi &ldquo;nghiệp vụ&rdquo; (09), event tách &ldquo;việc chính&rdquo; khỏi &ldquo;hậu quả&rdquo; (10), specification cho rule-dạng-câu-hỏi một mái nhà (11). (4) Kiến trúc và hạ tầng phân tán (12, 13) là <strong>hệ quả</strong> của ranh giới đã vẽ — không phải điểm xuất phát. (5) Và tất cả chỉ sống được trong một tổ chức biết đưa nó vào từng bước, tôn trọng Conway&rsquo;s Law, và trung thực về chi phí (14, 15, 16).</p>
+<p>DDD, cuối cùng, không phải là một bộ class. Nó là kỷ luật giữ cho <strong>model trong code</strong> và <strong>thực tại trong đầu người làm nghiệp vụ</strong> không trôi xa nhau — vì mọi hệ thống lớn sụp đổ đều bắt đầu từ khoảng cách đó.</p>
+<h3 id="lộ-trình-đọc-tiếp">Lộ trình đọc tiếp<a hidden class="anchor" aria-hidden="true" href="#lộ-trình-đọc-tiếp">#</a></h3>
+<p>Theo thứ tự khuyên đọc: <strong>Vaughn Vernon — &ldquo;Implementing Domain-Driven Design&rdquo;</strong> (thực hành đầy đủ nhất, đặc biệt phần aggregate và context mapping); <strong>Vlad Khononov — &ldquo;Learning Domain-Driven Design&rdquo;</strong> (2021, hiện đại và cô đọng, cây cầu tốt nhất giữa strategic design và kiến trúc hiện đại); <strong>Eric Evans — &ldquo;Domain-Driven Design&rdquo;</strong> (2003 — đọc <em>sau</em> khi đã thực hành, phần I–II và XIV–XVII vẫn không có bản thay thế); <strong>Matthew Skelton &amp; Manuel Pais — &ldquo;Team Topologies&rdquo;</strong> (mảnh ghép tổ chức mà chương 14 chỉ chạm bề mặt); và <strong>Alberto Brandolini — &ldquo;Introducing EventStorming&rdquo;</strong> (kỹ năng workshop — thứ đưa mọi lý thuyết ở đây vào phòng họp thật). Kèm hai nguồn thực hành: repo mẫu <code>ddd-forum</code>/<code>ddd-crew</code> trên GitHub, và các bài viết của Khononov về &ldquo;balancing coupling&rdquo;.</p>
+<p>Chúc bạn xây được những hệ thống mà ba năm sau người kế nhiệm mở ra vẫn đọc được nghiệp vụ trong code — đó là thước đo thật của mọi thứ trong tài liệu này.</p>
+<hr>
+<ul>
+<li>Quay lại: <a href="15b-case-study-saas-blockchain-booking-social.md">15b — Case Study: SaaS, Blockchain, Booking, Social</a> · <a href="00-muc-luc.md">Mục lục</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/domain-driven-design/15b-case-study-saas-blockchain-booking-social/">
+    <span class="title">« Prev</span>
+    <br>
+    <span></span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on x"
+            href="https://x.com/intent/tweet/?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f&amp;title=&amp;summary=&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f&title=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on whatsapp"
+            href="https://api.whatsapp.com/send?text=%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on telegram"
+            href="https://telegram.me/share/url?text=&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share  on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fdomain-driven-design%2f16-anti-patterns-va-khi-nao-khong-dung-ddd%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>
