@@ -43,14 +43,20 @@ Node cung cấp ba công cụ với ba mục đích khác nhau — chọn nhầm
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>data</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>promises</span>.<span style=color:#a6e22e>readFile</span>(<span style=color:#e6db74>&#39;video.mp4&#39;</span>);
 </span></span><span style=display:flex><span><span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>end</span>(<span style=color:#a6e22e>data</span>);
 </span></span><span style=display:flex><span><span style=color:#75715e>// 10 request đồng thời = 20GB RAM = OOM
-</span></span></span></code></pre></div><p>Stream xử lý dữ liệu <strong>theo khúc (chunk)</strong>: memory là O(chunk) thay vì O(file). Bốn loại: Readable, Writable, Duplex, Transform.</p><h3 id=52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ>5.2. Backpressure — cơ chế và cách nó bị phá vỡ<a hidden class=anchor aria-hidden=true href=#52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ>#</a></h3><p>Chênh lệch tốc độ: disk đọc 500MB/s, client mạng yếu nhận 1MB/s. Không kiểm soát → 499MB/s tích vào RAM.</p><p>Cơ chế trong Node:</p><pre tabindex=0><code>readable.pipe(writable) bên trong làm:
+</span></span></span></code></pre></div><p>Stream xử lý dữ liệu <strong>theo khúc (chunk)</strong>: memory là O(chunk) thay vì O(file). Bốn loại: Readable, Writable, Duplex, Transform.</p><h3 id=52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ>5.2. Backpressure — cơ chế và cách nó bị phá vỡ<a hidden class=anchor aria-hidden=true href=#52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ>#</a></h3><p>Chênh lệch tốc độ: disk đọc 500MB/s, client mạng yếu nhận 1MB/s. Không kiểm soát → 499MB/s tích vào RAM.</p><p>Cơ chế trong Node:</p><pre class=mermaid>readable.pipe(writable) bên trong làm:
   chunk = read()
   ok = writable.write(chunk)
   if (!ok)                        ← buffer nội bộ vượt highWaterMark (mặc định 16-64KB)
       readable.pause()            ← DỪNG nguồn
   writable.on(&#39;drain&#39;, () =&gt;      ← buffer đã xả
-      readable.resume())          ← chạy tiếp
-</code></pre><p><strong>Điểm khác biệt triết học với Go đáng suy ngẫm:</strong> trong Go, backpressure là <em>mặc định</em> (channel đầy → block, không làm gì cũng đúng). Trong Node, backpressure là <em>giao thức tự nguyện</em> — <code>write()</code> <strong>không bao giờ từ chối</strong>, nó chỉ <em>gợi ý</em> qua giá trị trả về <code>false</code>. Code bỏ qua gợi ý vẫn chạy&mldr; cho đến ngày OOM:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#75715e>// BOM HẸN GIỜ: bỏ qua return value của write
+      readable.resume())          ← chạy tiếp</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: document.body.classList.contains("dark") ? "dark" : "default",
+    securityLevel: "loose",
+  });
+</script><p><strong>Điểm khác biệt triết học với Go đáng suy ngẫm:</strong> trong Go, backpressure là <em>mặc định</em> (channel đầy → block, không làm gì cũng đúng). Trong Node, backpressure là <em>giao thức tự nguyện</em> — <code>write()</code> <strong>không bao giờ từ chối</strong>, nó chỉ <em>gợi ý</em> qua giá trị trả về <code>false</code>. Code bỏ qua gợi ý vẫn chạy&mldr; cho đến ngày OOM:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#75715e>// BOM HẸN GIỜ: bỏ qua return value của write
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>row</span> <span style=color:#66d9ef>of</span> <span style=color:#a6e22e>millionRows</span>) {
 </span></span><span style=display:flex><span>  <span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>write</span>(<span style=color:#a6e22e>render</span>(<span style=color:#a6e22e>row</span>));   <span style=color:#75715e>// client chậm → triệu chunk chất trong RAM process
 </span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
