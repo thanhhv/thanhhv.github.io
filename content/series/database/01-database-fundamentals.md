@@ -6,8 +6,6 @@ tags = ["backend", "database"]
 series = ["Database Thực Chiến"]
 +++
 
-# Database Fundamentals
-
 > **Đối tượng:** Software Engineer → Software Architect
 > **Mục tiêu:** Hiểu bản chất vật lý và logic của mọi database engine, làm nền tảng để hiểu sâu PostgreSQL, MongoDB và ClickHouse ở các chương sau.
 

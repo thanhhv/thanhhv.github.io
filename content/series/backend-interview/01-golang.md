@@ -6,8 +6,6 @@ tags = ["backend", "golang", "interview"]
 series = ["Backend Interview"]
 +++
 
-# Golang Internals
-
 ---
 
 ## Câu 1 — [Fundamental → Senior] Goroutine khác gì OS thread? Giải thích mô hình GPM.

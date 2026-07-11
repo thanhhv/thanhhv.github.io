@@ -6,8 +6,6 @@ tags = ["backend", "interview"]
 series = ["Backend Interview"]
 +++
 
-# Security & Authentication
-
 ---
 
 ## Câu 1 — [Fundamental → Senior] JWT vs Session: khác nhau bản chất ở đâu, và tại sao thu hồi JWT lại khó?

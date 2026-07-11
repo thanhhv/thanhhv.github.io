@@ -6,8 +6,6 @@ tags = ["backend", "database"]
 series = ["Database Thực Chiến"]
 +++
 
-# Bộ tài liệu chuyên sâu: PostgreSQL · MongoDB · ClickHouse
-
 **Database Engineering — từ First Principles đến quyết định kiến trúc production**
 
 Dành cho Software Engineer, Backend Engineer, Senior Engineer, Tech Lead, Solution Architect và Software Architect. Viết theo tinh thần Principal Engineer hướng dẫn Senior Engineer: mọi kết luận đều trả lời *tại sao*, *đánh đổi điều gì*, và *điều gì xảy ra nếu làm ngược lại*.

@@ -6,8 +6,6 @@ tags = ["backend", "database", "interview"]
 series = ["Backend Interview"]
 +++
 
-# PostgreSQL
-
 ---
 
 ## Câu 1 — [Fundamental → Senior] Tại sao PostgreSQL cần MVCC? Nó hoạt động thế nào và cái giá phải trả là gì?

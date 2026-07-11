@@ -6,8 +6,6 @@ tags = ["backend", "database"]
 series = ["Database Thực Chiến"]
 +++
 
-# ClickHouse
-
 > **Tiền đề:** Chương 1 (columnar vs row, LSM, vectorized execution) và các chương PostgreSQL/MongoDB để đối chiếu.
 > **Chủ đề trung tâm của chương:** ClickHouse nhanh không phải vì "code giỏi hơn", mà vì nó **từ bỏ một cách có chủ đích** những thứ OLAP không cần.
 

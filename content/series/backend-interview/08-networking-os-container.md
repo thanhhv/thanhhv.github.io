@@ -6,8 +6,6 @@ tags = ["backend", "interview"]
 series = ["Backend Interview"]
 +++
 
-# Linux/OS & Container/Kubernetes
-
 ---
 
 ## Câu 1 — [Fundamental → Senior] TCP hoạt động thế nào? TIME_WAIT là gì và tại sao nó làm cạn kiệt kết nối?

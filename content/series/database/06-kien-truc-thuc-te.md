@@ -6,8 +6,6 @@ tags = ["backend", "database"]
 series = ["Database Thực Chiến"]
 +++
 
-# Kiến trúc thực tế: chọn database cho 12 loại hệ thống
-
 > **Cách đọc:** mỗi mục trả lời năm câu hỏi — chọn gì, vì sao, vì sao KHÔNG chọn phương án khác, scale/chi phí dự kiến, và rủi ro chính. Các con số là mức định cỡ (order of magnitude) để lập luận, không phải cam kết hiệu năng.
 
 ---

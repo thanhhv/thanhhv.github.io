@@ -6,8 +6,6 @@ tags = ["backend", "interview"]
 series = ["Backend Interview"]
 +++
 
-# Bộ Tài Liệu Ôn Phỏng Vấn Senior Backend Engineer
-
 > Viết bởi góc nhìn của một Principal Software Architect đã phỏng vấn hàng trăm ứng viên Senior/Staff/Principal. Mục tiêu: không phải học thuộc đáp án, mà là **học cách tư duy**.
 
 ## Danh sách chương

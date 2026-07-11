@@ -6,8 +6,6 @@ tags = ["backend", "database"]
 series = ["Database Thực Chiến"]
 +++
 
-# MongoDB
-
 > **Tiền đề:** Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC).
 > **Góc nhìn:** từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.
 

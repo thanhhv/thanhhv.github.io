@@ -6,8 +6,6 @@ tags = ["backend", "interview"]
 series = ["Backend Interview"]
 +++
 
-# Architecture & System Design
-
 ---
 
 ## Câu 1 — [Intermediate → Senior] Clean Architecture / Hexagonal Architecture: giải quyết vấn đề gì và khi nào là over-engineering?

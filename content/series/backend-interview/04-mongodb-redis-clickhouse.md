@@ -6,8 +6,6 @@ tags = ["backend", "database", "interview"]
 series = ["Backend Interview"]
 +++
 
-# MongoDB, Redis, ClickHouse
-
 ---
 
 # PHẦN A — MONGODB

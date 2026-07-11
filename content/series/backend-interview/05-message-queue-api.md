@@ -6,8 +6,6 @@ tags = ["backend", "kafka", "interview"]
 series = ["Backend Interview"]
 +++
 
-# Message Queue & API
-
 ---
 
 # PHẦN A — MESSAGE QUEUE

@@ -6,8 +6,6 @@ tags = ["backend", "interview"]
 series = ["Backend Interview"]
 +++
 
-# System Design Case Studies
-
 > Các chương trước dạy **nguyên liệu** (cache, queue, shard, replication...). Chương này dạy cách **nấu** — dẫn dắt một buổi system design 45 phút end-to-end. Khác biệt cốt lõi: system design không kiểm tra bạn biết bao nhiêu công nghệ, mà kiểm tra bạn **dẫn dắt sự mơ hồ thành một thiết kế có cơ sở** thế nào. Interviewer đóng vai khách hàng mơ hồ; bạn phải hỏi đúng, ước lượng, vẽ, rồi đào sâu.
 
 ---

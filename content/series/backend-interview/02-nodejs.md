@@ -6,8 +6,6 @@ tags = ["backend", "nodejs", "interview"]
 series = ["Backend Interview"]
 +++
 
-# Node.js Internals
-
 ---
 
 ## Câu 1 — [Fundamental → Senior] Event Loop hoạt động thế nào? Tại sao Node single-thread mà vẫn xử lý được hàng chục nghìn kết nối?

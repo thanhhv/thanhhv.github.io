@@ -6,8 +6,6 @@ tags = ["backend", "database"]
 series = ["Database Thực Chiến"]
 +++
 
-# PostgreSQL
-
 > **Tiền đề:** đã đọc Chương 1 (WAL, MVCC, B+Tree, buffer pool, replication).
 > **Góc nhìn:** từ vị trí người thiết kế engine, không phải người dùng API.
 

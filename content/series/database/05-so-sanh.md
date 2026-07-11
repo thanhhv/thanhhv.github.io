@@ -6,8 +6,6 @@ tags = ["backend", "database"]
 series = ["Database Thực Chiến"]
 +++
 
-# So sánh PostgreSQL, MongoDB và ClickHouse
-
 > **Nguyên tắc đọc chương này:** ba hệ không cùng hạng cân trên cùng một trục. So sánh đúng nghĩa là *ánh xạ workload → điểm mạnh cấu trúc*, không phải tìm "database tốt nhất". Mỗi ô dưới đây là hệ quả của kiến trúc đã phân tích ở Chương 2–4; khi nghi ngờ, quay lại chương tương ứng để xem "vì sao".
 
 ---
