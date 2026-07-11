@@ -1,577 +1,119 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Chương 9 — Clean Architecture &amp; DDD: Lấp đầy vòng trong | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, golang, clean-architecture">
-<meta name="description" content="
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong | Thanh HV's Blog</title>
+<meta name=keywords content="backend,golang,clean-architecture"><meta name=description content="
 Level 3 – Senior · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.
 
 1. Problem Statement
-Clean Architecture nói &ldquo;đặt business rule vào vòng trong&rdquo; nhưng không nói business rule trông như thế nào. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào &ldquo;service&rdquo; — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình.">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:54040/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:54040/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:54040/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
+Clean Architecture nói &ldquo;đặt business rule vào vòng trong&rdquo; nhưng không nói business rule trông như thế nào. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào &ldquo;service&rdquo; — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong"><meta property="og:description" content=" Level 3 – Senior · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.
+1. Problem Statement Clean Architecture nói “đặt business rule vào vòng trong” nhưng không nói business rule trông như thế nào. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào “service” — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-08T08:00:00+07:00"><meta property="article:modified_time" content="2026-07-08T08:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Golang"><meta property="article:tag" content="Clean-Architecture"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong"><meta name=twitter:description content="
+Level 3 – Senior · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.
 
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:54040/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/clean-architect/">Clean Architecture với Golang</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Chương 9 — Clean Architecture &amp; DDD: Lấp đầy vòng trong
-    </h1>
-    <div class="post-meta"><span title='2026-07-08 08:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min
-
-</div>
-  </header> 
-  <div class="post-content"><blockquote>
-<p><strong>Level 3 – Senior</strong> · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.</p></blockquote>
-<hr>
-<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
-<p>Clean Architecture nói &ldquo;đặt business rule vào vòng trong&rdquo; nhưng <strong>không nói business rule trông như thế nào</strong>. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào &ldquo;service&rdquo; — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình.</p>
-<p>DDD trả lời đúng câu hỏi còn thiếu: mô hình hóa nghiệp vụ phức tạp thành code như thế nào. Nhưng DDD đầy đủ (Evans, 2003) là bộ công cụ nặng; áp nguyên xi vào mọi dự án là over-engineering kinh điển. Chương này: các khối DDD chiến thuật đáng dùng trong Go, cách chúng khớp vào các vòng, và <strong>liều lượng</strong>.</p>
-<h2 id="2-ánh-xạ-ddd--clean-architecture">2. Ánh xạ DDD ↔ Clean Architecture<a hidden class="anchor" aria-hidden="true" href="#2-ánh-xạ-ddd--clean-architecture">#</a></h2>
-<table>
-  <thead>
-      <tr>
-          <th>Khối DDD</th>
-          <th>Vòng Clean Architecture</th>
-          <th>Ghi chú</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Entity, Value Object, Aggregate</td>
-          <td>Vòng 1 — Entities</td>
-          <td>Chính là &ldquo;Enterprise Business Rules&rdquo;</td>
-      </tr>
-      <tr>
-          <td>Domain Service</td>
-          <td>Vòng 1</td>
-          <td>Rule không thuộc riêng entity nào</td>
-      </tr>
-      <tr>
-          <td>Domain Event</td>
-          <td>Vòng 1 (định nghĩa), vòng 2 (phát)</td>
-          <td></td>
-      </tr>
-      <tr>
-          <td>Application Service</td>
-          <td>Vòng 2 — Use Cases</td>
-          <td>Hai tên cho gần cùng một thứ</td>
-      </tr>
-      <tr>
-          <td>Repository (interface)</td>
-          <td>Vòng 2 sở hữu</td>
-          <td>Implementation ở vòng 3</td>
-      </tr>
-      <tr>
-          <td>Bounded Context</td>
-          <td>Ranh giới <strong>module/service</strong></td>
-          <td>Lớn hơn mọi vòng — mỗi context có bộ vòng riêng</td>
-      </tr>
-      <tr>
-          <td>Ubiquitous Language</td>
-          <td>Xuyên suốt</td>
-          <td>Tên package, struct, method = từ vựng nghiệp vụ</td>
-      </tr>
-  </tbody>
-</table>
-<p>Insight quan trọng nhất: <strong>Bounded Context quyết định trước, các vòng quyết định sau.</strong> Chia sai context (gộp &ldquo;sản phẩm&rdquo; của team catalog với &ldquo;sản phẩm&rdquo; của team kho vào một model) thì Clean Architecture bên trong không cứu được — model phình thành god-model phục vụ mọi ngữ nghĩa. Mỗi context một model riêng, trùng tên nhưng khác nghĩa là <em>bình thường và đúng</em>: <code>catalog.Product</code> có mô tả/giá/ảnh, <code>inventory.Product</code> có tồn kho/vị trí kệ — hai struct, hai package, không chung &ldquo;base&rdquo;.</p>
-<h2 id="3-value-object--vũ-khí-bị-bỏ-quên-nhiều-nhất">3. Value Object — vũ khí bị bỏ quên nhiều nhất<a hidden class="anchor" aria-hidden="true" href="#3-value-object--vũ-khí-bị-bỏ-quên-nhiều-nhất">#</a></h2>
-<p>Value Object: bất biến, so sánh bằng giá trị, <strong>tự bảo vệ tính hợp lệ</strong>. Đây là khối lợi ích/chi phí tốt nhất của DDD — dùng được cả trong dự án không &ldquo;làm DDD&rdquo;:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// domain/money.go — kiểu tiền tệ không thể sai</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">domain</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Currency</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">VND</span> <span style="color:#a6e22e">Currency</span> = <span style="color:#e6db74">&#34;VND&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">USD</span> <span style="color:#a6e22e">Currency</span> = <span style="color:#e6db74">&#34;USD&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Money là value object: unexported field, tạo qua constructor, immutable.</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Money</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">amount</span>   <span style="color:#66d9ef">int64</span> <span style="color:#75715e">// đơn vị nhỏ nhất (đồng, cent)</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">currency</span> <span style="color:#a6e22e">Currency</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ErrCurrencyMismatch</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;money: currency mismatch&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewMoney</span>(<span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">c</span> <span style="color:#a6e22e">Currency</span>) (<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">amount</span> &lt; <span style="color:#ae81ff">0</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;money: negative amount %d&#34;</span>, <span style="color:#a6e22e">amount</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">c</span>}, <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">other</span> <span style="color:#a6e22e">Money</span>) (<span style="color:#a6e22e">Money</span>, <span style="color:#66d9ef">error</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">currency</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: %s + %s&#34;</span>, <span style="color:#a6e22e">ErrCurrencyMismatch</span>, <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>, <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">currency</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">other</span>.<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>}, <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#a6e22e">Money</span>) <span style="color:#a6e22e">MultiplyPercent</span>(<span style="color:#a6e22e">p</span> <span style="color:#66d9ef">int64</span>) <span style="color:#a6e22e">Money</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Money</span>{<span style="color:#a6e22e">amount</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">amount</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">p</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">100</span>, <span style="color:#a6e22e">currency</span>: <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">currency</span>}
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>So với <code>totalVND int64</code> rải khắp code: cộng nhầm USD với VND giờ là <strong>lỗi compile/lỗi tường minh</strong> thay vì bug tiền bạc âm thầm. Các ứng viên VO tự nhiên: <code>Email</code>, <code>PhoneNumber</code>, <code>OrderID</code> (typed ID chống truyền nhầm <code>userID</code> vào chỗ <code>orderID</code>!), <code>Quantity</code>, <code>DateRange</code>, <code>Address</code>. Chi phí: constructor + method thay vì thao tác primitive — rẻ. Đây là thuốc giải cho <strong>Primitive Obsession</strong>.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Typed ID — một dòng, diệt cả họ bug</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderID</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">CustomerID</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// func Cancel(id OrderID) — compiler chặn Cancel(customerID) ngay</span>
-</span></span></code></pre></div><h2 id="4-aggregate--đơn-vị-nhất-quán">4. Aggregate — đơn vị nhất quán<a hidden class="anchor" aria-hidden="true" href="#4-aggregate--đơn-vị-nhất-quán">#</a></h2>
-<p>Aggregate = cụm entity/VO thay đổi <strong>nhất quán cùng nhau</strong>, có một <strong>root</strong> làm cổng vào duy nhất. Ví dụ <code>Order</code> (root) + <code>OrderLine</code>s + rule &ldquo;tổng tiền = tổng line, đơn confirmed không sửa line&rdquo;:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// domain/order.go</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Order</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">id</span>        <span style="color:#a6e22e">OrderID</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">status</span>    <span style="color:#a6e22e">Status</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">lines</span>     []<span style="color:#a6e22e">OrderLine</span> <span style="color:#75715e">// KHÔNG expose slice ra ngoài</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">total</span>     <span style="color:#a6e22e">Money</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ErrOrderLocked</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;order: confirmed order cannot change&#34;</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Mọi thay đổi đi qua root — root giữ bất biến</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">AddLine</span>(<span style="color:#a6e22e">sku</span> <span style="color:#a6e22e">SKU</span>, <span style="color:#a6e22e">qty</span> <span style="color:#a6e22e">Quantity</span>, <span style="color:#a6e22e">unitPrice</span> <span style="color:#a6e22e">Money</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">StatusDraft</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ErrOrderLocked</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">line</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">OrderLine</span>{<span style="color:#a6e22e">sku</span>: <span style="color:#a6e22e">sku</span>, <span style="color:#a6e22e">qty</span>: <span style="color:#a6e22e">qty</span>, <span style="color:#a6e22e">unitPrice</span>: <span style="color:#a6e22e">unitPrice</span>}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span> = append(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>, <span style="color:#a6e22e">line</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">recalcTotal</span>() <span style="color:#75715e">// bất biến &#34;total = sum(lines)&#34; KHÔNG THỂ bị bỏ quên</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">Lines</span>() []<span style="color:#a6e22e">OrderLine</span> { <span style="color:#75715e">// trả bản copy — bảo vệ nội tạng</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">out</span> <span style="color:#f92672">:=</span> make([]<span style="color:#a6e22e">OrderLine</span>, len(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>))
-</span></span><span style="display:flex;"><span>	copy(<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">out</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Ba quy tắc aggregate quan trọng trong thiết kế hệ thống:</p>
-<ol>
-<li><strong>Ranh giới transaction = ranh giới aggregate</strong> (chương 5): một tx ghi một aggregate. Cần đổi 2 aggregate → 2 tx + domain event + eventual consistency.</li>
-<li><strong>Aggregate tham chiếu aggregate khác bằng ID</strong>, không bằng con trỏ: <code>Order</code> giữ <code>CustomerID</code>, không giữ <code>*Customer</code> — nếu không, &ldquo;lưu Order&rdquo; kéo theo cả object graph, repository thành ORM và ranh giới nhất quán vỡ.</li>
-<li><strong>Giữ aggregate NHỎ.</strong> Aggregate to = lock rộng, contention cao, load nặng. &ldquo;Order chứa mọi thứ liên quan đơn hàng&rdquo; là cách hiểu sai; chỉ những gì phải nhất quán <em>ngay lập tức</em> mới vào cùng aggregate.</li>
-</ol>
-<h2 id="5-domain-service-vs-application-service--ai-làm-gì">5. Domain Service vs Application Service — ai làm gì<a hidden class="anchor" aria-hidden="true" href="#5-domain-service-vs-application-service--ai-làm-gì">#</a></h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// DOMAIN service: rule nghiệp vụ liên quan NHIỀU aggregate, vẫn thuần túy</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// &#34;giá cuối = giá đơn - khuyến mãi tốt nhất khách đủ điều kiện&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">BestPrice</span>(<span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Order</span>, <span style="color:#a6e22e">c</span> <span style="color:#a6e22e">Customer</span>, <span style="color:#a6e22e">promos</span> []<span style="color:#a6e22e">Promotion</span>) <span style="color:#a6e22e">Money</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">best</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Total</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">promos</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">EligibleFor</span>(<span style="color:#a6e22e">c</span>) {
-</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">candidate</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">Apply</span>(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Total</span>()); <span style="color:#a6e22e">candidate</span>.<span style="color:#a6e22e">LessThan</span>(<span style="color:#a6e22e">best</span>) {
-</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">best</span> = <span style="color:#a6e22e">candidate</span>
-</span></span><span style="display:flex;"><span>			}
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">best</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Nhận diện: domain service <strong>thuần</strong> (không I/O, không cổng) — chỉ là hàm nhận domain object trả domain object. Application service (use case) thì <strong>điều phối</strong>: load qua repo, gọi entity/domain service, save, phát event. Kim chỉ nam khi phân vân code đặt đâu:</p>
-<ul>
-<li>Nói về <em>cái gì đúng/sai trong nghiệp vụ</em> → domain (entity nếu thuộc một aggregate, domain service nếu nhiều).</li>
-<li>Nói về <em>thứ tự làm việc và I/O</em> → use case.</li>
-<li>Nói về <em>format và giao thức</em> → adapter.</li>
-</ul>
-<h2 id="6-domain-event-trong-module--decoupling-nội-bộ">6. Domain Event trong module — decoupling nội bộ<a hidden class="anchor" aria-hidden="true" href="#6-domain-event-trong-module--decoupling-nội-bộ">#</a></h2>
-<p>Sự kiện nghiệp vụ (&ldquo;OrderPlaced&rdquo;) cho phép module khác phản ứng mà module gốc không biết họ:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// domain/events.go</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderPlaced</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">OrderID</span>    <span style="color:#a6e22e">OrderID</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CustomerID</span> <span style="color:#a6e22e">CustomerID</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Total</span>      <span style="color:#a6e22e">Money</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">At</span>         <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Entity GHI NHẬN event thay vì tự phát (entity không có I/O)</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#a6e22e">Place</span>(<span style="color:#a6e22e">now</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) ([]<span style="color:#a6e22e">DomainEvent</span>, <span style="color:#66d9ef">error</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">lines</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">ErrEmptyOrder</span> }
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">status</span> = <span style="color:#a6e22e">StatusPlaced</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> []<span style="color:#a6e22e">DomainEvent</span>{<span style="color:#a6e22e">OrderPlaced</span>{<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">customerID</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">total</span>, <span style="color:#a6e22e">now</span>}}, <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Use case thu event từ entity và giao cho publisher (outbox — chương 7)</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">events</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ord</span>.<span style="color:#a6e22e">Place</span>(<span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">now</span>())
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">ord</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span> }
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#a6e22e">uc</span>.<span style="color:#a6e22e">publisher</span>.<span style="color:#a6e22e">Publish</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">events</span><span style="color:#f92672">...</span>)
-</span></span></code></pre></div><p>Pattern &ldquo;entity trả event, use case phát&rdquo; giữ entity thuần và điểm phát tập trung. Trong monolith, publisher có thể là in-process bus gọi handler của module khác — chuẩn bị sẵn đường tách service sau này (chương 12).</p>
-<h2 id="7-liều-lượng--dùng-bao-nhiêu-ddd-là-đủ">7. Liều lượng — dùng bao nhiêu DDD là đủ<a hidden class="anchor" aria-hidden="true" href="#7-liều-lượng--dùng-bao-nhiêu-ddd-là-đủ">#</a></h2>
-<p>DDD chiến thuật có thang liều:</p>
-<table>
-  <thead>
-      <tr>
-          <th>Mức</th>
-          <th>Dùng gì</th>
-          <th>Khi nào</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>0</td>
-          <td>Struct + hàm, transaction script</td>
-          <td>CRUD, ít rule</td>
-      </tr>
-      <tr>
-          <td>1</td>
-          <td><strong>Value Object + typed ID</strong></td>
-          <td>Hầu như luôn đáng — chi phí ~0</td>
-      </tr>
-      <tr>
-          <td>2</td>
-          <td>Entity giữ bất biến + sentinel error domain</td>
-          <td>Có rule thật quanh trạng thái</td>
-      </tr>
-      <tr>
-          <td>3</td>
-          <td>Aggregate rõ ràng + repository theo aggregate</td>
-          <td>Nhiều object nhất quán cùng nhau, concurrent write</td>
-      </tr>
-      <tr>
-          <td>4</td>
-          <td>Domain event + domain service</td>
-          <td>Nhiều module phản ứng lẫn nhau, rule đa aggregate</td>
-      </tr>
-      <tr>
-          <td>5</td>
-          <td>Bounded context tách bạch + context mapping</td>
-          <td>Nhiều team, domain lớn, ngữ nghĩa xung đột</td>
-      </tr>
-  </tbody>
-</table>
-<p>Sai lầm phổ biến: nhảy thẳng mức 5 cho startup 2 người (&ldquo;mình làm DDD mà&rdquo;), hoặc kẹt mức 0 cho hệ thống tài chính 50 rule (&ldquo;DDD phức tạp lắm&rdquo;). Liều đúng đo bằng <strong>độ phức tạp của rule nghiệp vụ</strong>, không bằng độ ngầu của kiến trúc. Và các mức tăng dần được: bắt đầu mức 1–2, nâng khi rule dày lên.</p>
-<h2 id="8-anti-patterns">8. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#8-anti-patterns">#</a></h2>
-<ul>
-<li><strong>Anemic Domain Model có nghi thức</strong>: entity chỉ getter/setter, mọi rule trong service — mất encapsulation (rule quanh một dữ liệu rải ở N service), test khó hơn, chính xác thứ SRP/aggregate sinh ra để tránh. Nếu domain <em>thật sự</em> không có rule → thừa nhận và bỏ nghi thức (mức 0), đừng giữ vỏ DDD rỗng.</li>
-<li><strong>Thin Domain giả tạo</strong>: entity có method nhưng method chỉ <code>SetStatus(s)</code> — gán không kiểm tra gì. Bất biến vẫn không được bảo vệ; tệ hơn anemic vì <em>trông như</em> được bảo vệ.</li>
-<li><strong>God Aggregate</strong>: <code>Customer</code> chứa orders, wallet, tickets, addresses — mọi tx đụng Customer, contention và merge conflict cực đại. Tách theo ranh giới nhất quán thật.</li>
-<li><strong>DDD-cargo-cult vocabulary</strong>: đổi tên <code>Service</code> thành <code>ApplicationService</code>, folder <code>valueobjects/</code> — từ vựng thay đổi, thiết kế y nguyên. DDD là mô hình hóa, không phải danh pháp.</li>
-<li><strong>Bounded context chia theo bảng DB</strong> thay vì theo ngôn ngữ nghiệp vụ — context là ranh giới <em>ngữ nghĩa</em>; hai context có thể cùng lưu một DB (tách schema) trong monolith.</li>
-</ul>
-<h2 id="tóm-tắt">Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt">#</a></h2>
-<ul>
-<li>DDD lấp ruột cho vòng trong: VO/Entity/Aggregate = vòng 1, use case = application service, bounded context = ranh giới module.</li>
-<li>Đáng dùng gần như luôn: value object, typed ID, entity giữ bất biến. Đáng dùng khi phức tạp thật: aggregate, domain event, domain service. Bounded context: quyết định quan trọng nhất và phải quyết trước kiến trúc bên trong.</li>
-<li>Liều lượng theo độ dày của rule, không theo trend.</li>
-</ul>
-<p><strong>Chương tiếp theo:</strong> <a href="/series/clean-architect/10-cqrs/01-clean-architecture-va-cqrs/">Clean Architecture &amp; CQRS</a></p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:54040/tags/golang/">Golang</a></li>
-      <li><a href="http://localhost:54040/tags/clean-architecture/">Clean-Architecture</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:54040/series/clean-architect/10-cqrs/01-clean-architecture-va-cqrs/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Chương 10 — Clean Architecture &amp; CQRS: Đường ghi và đường đọc</span>
-  </a>
-  <a class="next" href="http://localhost:54040/series/clean-architect/08-testing/01-testing-strategy/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Chương 8 — Testing Strategy: Unit, Integration, Mock vs Fake, Testcontainers</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on x"
-            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f&amp;hashtags=backend%2cgolang%2cclean-architecture">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f&amp;title=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;summary=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f&title=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on whatsapp"
-            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on telegram"
-            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&u=http%3a%2f%2flocalhost%3a54040%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+1. Problem Statement
+Clean Architecture nói &ldquo;đặt business rule vào vòng trong&rdquo; nhưng không nói business rule trông như thế nào. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào &ldquo;service&rdquo; — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Clean Architecture với Golang","item":"https://thanhhv.github.io/series/clean-architect/"},{"@type":"ListItem","position":3,"name":"Chương 9 — Clean Architecture \u0026 DDD: Lấp đầy vòng trong","item":"https://thanhhv.github.io/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 9 — Clean Architecture \u0026 DDD: Lấp đầy vòng trong","name":"Chương 9 — Clean Architecture \u0026 DDD: Lấp đầy vòng trong","description":" Level 3 – Senior · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.\n1. Problem Statement Clean Architecture nói \u0026ldquo;đặt business rule vào vòng trong\u0026rdquo; nhưng không nói business rule trông như thế nào. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào \u0026ldquo;service\u0026rdquo; — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình.\n","keywords":["backend","golang","clean-architecture"],"articleBody":" Level 3 – Senior · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.\n1. Problem Statement Clean Architecture nói “đặt business rule vào vòng trong” nhưng không nói business rule trông như thế nào. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào “service” — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình.\nDDD trả lời đúng câu hỏi còn thiếu: mô hình hóa nghiệp vụ phức tạp thành code như thế nào. Nhưng DDD đầy đủ (Evans, 2003) là bộ công cụ nặng; áp nguyên xi vào mọi dự án là over-engineering kinh điển. Chương này: các khối DDD chiến thuật đáng dùng trong Go, cách chúng khớp vào các vòng, và liều lượng.\n2. Ánh xạ DDD ↔ Clean Architecture Khối DDD Vòng Clean Architecture Ghi chú Entity, Value Object, Aggregate Vòng 1 — Entities Chính là “Enterprise Business Rules” Domain Service Vòng 1 Rule không thuộc riêng entity nào Domain Event Vòng 1 (định nghĩa), vòng 2 (phát) Application Service Vòng 2 — Use Cases Hai tên cho gần cùng một thứ Repository (interface) Vòng 2 sở hữu Implementation ở vòng 3 Bounded Context Ranh giới module/service Lớn hơn mọi vòng — mỗi context có bộ vòng riêng Ubiquitous Language Xuyên suốt Tên package, struct, method = từ vựng nghiệp vụ Insight quan trọng nhất: Bounded Context quyết định trước, các vòng quyết định sau. Chia sai context (gộp “sản phẩm” của team catalog với “sản phẩm” của team kho vào một model) thì Clean Architecture bên trong không cứu được — model phình thành god-model phục vụ mọi ngữ nghĩa. Mỗi context một model riêng, trùng tên nhưng khác nghĩa là bình thường và đúng: catalog.Product có mô tả/giá/ảnh, inventory.Product có tồn kho/vị trí kệ — hai struct, hai package, không chung “base”.\n3. Value Object — vũ khí bị bỏ quên nhiều nhất Value Object: bất biến, so sánh bằng giá trị, tự bảo vệ tính hợp lệ. Đây là khối lợi ích/chi phí tốt nhất của DDD — dùng được cả trong dự án không “làm DDD”:\n// domain/money.go — kiểu tiền tệ không thể sai package domain import ( \"errors\" \"fmt\" ) type Currency string const ( VND Currency = \"VND\" USD Currency = \"USD\" ) // Money là value object: unexported field, tạo qua constructor, immutable. type Money struct { amount int64 // đơn vị nhỏ nhất (đồng, cent) currency Currency } var ErrCurrencyMismatch = errors.New(\"money: currency mismatch\") func NewMoney(amount int64, c Currency) (Money, error) { if amount \u003c 0 { return Money{}, fmt.Errorf(\"money: negative amount %d\", amount) } return Money{amount: amount, currency: c}, nil } func (m Money) Add(other Money) (Money, error) { if m.currency != other.currency { return Money{}, fmt.Errorf(\"%w: %s + %s\", ErrCurrencyMismatch, m.currency, other.currency) } return Money{amount: m.amount + other.amount, currency: m.currency}, nil } func (m Money) MultiplyPercent(p int64) Money { return Money{amount: m.amount * p / 100, currency: m.currency} } So với totalVND int64 rải khắp code: cộng nhầm USD với VND giờ là lỗi compile/lỗi tường minh thay vì bug tiền bạc âm thầm. Các ứng viên VO tự nhiên: Email, PhoneNumber, OrderID (typed ID chống truyền nhầm userID vào chỗ orderID!), Quantity, DateRange, Address. Chi phí: constructor + method thay vì thao tác primitive — rẻ. Đây là thuốc giải cho Primitive Obsession.\n// Typed ID — một dòng, diệt cả họ bug type OrderID string type CustomerID string // func Cancel(id OrderID) — compiler chặn Cancel(customerID) ngay 4. Aggregate — đơn vị nhất quán Aggregate = cụm entity/VO thay đổi nhất quán cùng nhau, có một root làm cổng vào duy nhất. Ví dụ Order (root) + OrderLines + rule “tổng tiền = tổng line, đơn confirmed không sửa line”:\n// domain/order.go type Order struct { id OrderID status Status lines []OrderLine // KHÔNG expose slice ra ngoài total Money } var ErrOrderLocked = errors.New(\"order: confirmed order cannot change\") // Mọi thay đổi đi qua root — root giữ bất biến func (o *Order) AddLine(sku SKU, qty Quantity, unitPrice Money) error { if o.status != StatusDraft { return ErrOrderLocked } line := OrderLine{sku: sku, qty: qty, unitPrice: unitPrice} o.lines = append(o.lines, line) o.recalcTotal() // bất biến \"total = sum(lines)\" KHÔNG THỂ bị bỏ quên return nil } func (o *Order) Lines() []OrderLine { // trả bản copy — bảo vệ nội tạng out := make([]OrderLine, len(o.lines)) copy(out, o.lines) return out } Ba quy tắc aggregate quan trọng trong thiết kế hệ thống:\nRanh giới transaction = ranh giới aggregate (chương 5): một tx ghi một aggregate. Cần đổi 2 aggregate → 2 tx + domain event + eventual consistency. Aggregate tham chiếu aggregate khác bằng ID, không bằng con trỏ: Order giữ CustomerID, không giữ *Customer — nếu không, “lưu Order” kéo theo cả object graph, repository thành ORM và ranh giới nhất quán vỡ. Giữ aggregate NHỎ. Aggregate to = lock rộng, contention cao, load nặng. “Order chứa mọi thứ liên quan đơn hàng” là cách hiểu sai; chỉ những gì phải nhất quán ngay lập tức mới vào cùng aggregate. 5. Domain Service vs Application Service — ai làm gì // DOMAIN service: rule nghiệp vụ liên quan NHIỀU aggregate, vẫn thuần túy // \"giá cuối = giá đơn - khuyến mãi tốt nhất khách đủ điều kiện\" func BestPrice(o Order, c Customer, promos []Promotion) Money { best := o.Total() for _, p := range promos { if p.EligibleFor(c) { if candidate := p.Apply(o.Total()); candidate.LessThan(best) { best = candidate } } } return best } Nhận diện: domain service thuần (không I/O, không cổng) — chỉ là hàm nhận domain object trả domain object. Application service (use case) thì điều phối: load qua repo, gọi entity/domain service, save, phát event. Kim chỉ nam khi phân vân code đặt đâu:\nNói về cái gì đúng/sai trong nghiệp vụ → domain (entity nếu thuộc một aggregate, domain service nếu nhiều). Nói về thứ tự làm việc và I/O → use case. Nói về format và giao thức → adapter. 6. Domain Event trong module — decoupling nội bộ Sự kiện nghiệp vụ (“OrderPlaced”) cho phép module khác phản ứng mà module gốc không biết họ:\n// domain/events.go type OrderPlaced struct { OrderID OrderID CustomerID CustomerID Total Money At time.Time } // Entity GHI NHẬN event thay vì tự phát (entity không có I/O) func (o *Order) Place(now time.Time) ([]DomainEvent, error) { if len(o.lines) == 0 { return nil, ErrEmptyOrder } o.status = StatusPlaced return []DomainEvent{OrderPlaced{o.id, o.customerID, o.total, now}}, nil } // Use case thu event từ entity và giao cho publisher (outbox — chương 7) events, err := ord.Place(uc.now()) if err != nil { return err } if err := uc.orders.Save(ctx, ord); err != nil { return err } return uc.publisher.Publish(ctx, events...) Pattern “entity trả event, use case phát” giữ entity thuần và điểm phát tập trung. Trong monolith, publisher có thể là in-process bus gọi handler của module khác — chuẩn bị sẵn đường tách service sau này (chương 12).\n7. Liều lượng — dùng bao nhiêu DDD là đủ DDD chiến thuật có thang liều:\nMức Dùng gì Khi nào 0 Struct + hàm, transaction script CRUD, ít rule 1 Value Object + typed ID Hầu như luôn đáng — chi phí ~0 2 Entity giữ bất biến + sentinel error domain Có rule thật quanh trạng thái 3 Aggregate rõ ràng + repository theo aggregate Nhiều object nhất quán cùng nhau, concurrent write 4 Domain event + domain service Nhiều module phản ứng lẫn nhau, rule đa aggregate 5 Bounded context tách bạch + context mapping Nhiều team, domain lớn, ngữ nghĩa xung đột Sai lầm phổ biến: nhảy thẳng mức 5 cho startup 2 người (“mình làm DDD mà”), hoặc kẹt mức 0 cho hệ thống tài chính 50 rule (“DDD phức tạp lắm”). Liều đúng đo bằng độ phức tạp của rule nghiệp vụ, không bằng độ ngầu của kiến trúc. Và các mức tăng dần được: bắt đầu mức 1–2, nâng khi rule dày lên.\n8. Anti-patterns Anemic Domain Model có nghi thức: entity chỉ getter/setter, mọi rule trong service — mất encapsulation (rule quanh một dữ liệu rải ở N service), test khó hơn, chính xác thứ SRP/aggregate sinh ra để tránh. Nếu domain thật sự không có rule → thừa nhận và bỏ nghi thức (mức 0), đừng giữ vỏ DDD rỗng. Thin Domain giả tạo: entity có method nhưng method chỉ SetStatus(s) — gán không kiểm tra gì. Bất biến vẫn không được bảo vệ; tệ hơn anemic vì trông như được bảo vệ. God Aggregate: Customer chứa orders, wallet, tickets, addresses — mọi tx đụng Customer, contention và merge conflict cực đại. Tách theo ranh giới nhất quán thật. DDD-cargo-cult vocabulary: đổi tên Service thành ApplicationService, folder valueobjects/ — từ vựng thay đổi, thiết kế y nguyên. DDD là mô hình hóa, không phải danh pháp. Bounded context chia theo bảng DB thay vì theo ngôn ngữ nghiệp vụ — context là ranh giới ngữ nghĩa; hai context có thể cùng lưu một DB (tách schema) trong monolith. Tóm tắt DDD lấp ruột cho vòng trong: VO/Entity/Aggregate = vòng 1, use case = application service, bounded context = ranh giới module. Đáng dùng gần như luôn: value object, typed ID, entity giữ bất biến. Đáng dùng khi phức tạp thật: aggregate, domain event, domain service. Bounded context: quyết định quan trọng nhất và phải quyết trước kiến trúc bên trong. Liều lượng theo độ dày của rule, không theo trend. Chương tiếp theo: Clean Architecture \u0026 CQRS\n","wordCount":"1639","inLanguage":"en","datePublished":"2026-07-08T08:00:00+07:00","dateModified":"2026-07-08T08:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/clean-architect/>Clean Architecture với Golang</a></div><h1 class="post-title entry-hint-parent">Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong</h1><div class=post-meta><span title='2026-07-08 08:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</div></header><div class=post-content><blockquote><p><strong>Level 3 – Senior</strong> · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.</p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Clean Architecture nói &ldquo;đặt business rule vào vòng trong&rdquo; nhưng <strong>không nói business rule trông như thế nào</strong>. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào &ldquo;service&rdquo; — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình.</p><p>DDD trả lời đúng câu hỏi còn thiếu: mô hình hóa nghiệp vụ phức tạp thành code như thế nào. Nhưng DDD đầy đủ (Evans, 2003) là bộ công cụ nặng; áp nguyên xi vào mọi dự án là over-engineering kinh điển. Chương này: các khối DDD chiến thuật đáng dùng trong Go, cách chúng khớp vào các vòng, và <strong>liều lượng</strong>.</p><h2 id=2-ánh-xạ-ddd--clean-architecture>2. Ánh xạ DDD ↔ Clean Architecture<a hidden class=anchor aria-hidden=true href=#2-ánh-xạ-ddd--clean-architecture>#</a></h2><table><thead><tr><th>Khối DDD</th><th>Vòng Clean Architecture</th><th>Ghi chú</th></tr></thead><tbody><tr><td>Entity, Value Object, Aggregate</td><td>Vòng 1 — Entities</td><td>Chính là &ldquo;Enterprise Business Rules&rdquo;</td></tr><tr><td>Domain Service</td><td>Vòng 1</td><td>Rule không thuộc riêng entity nào</td></tr><tr><td>Domain Event</td><td>Vòng 1 (định nghĩa), vòng 2 (phát)</td><td></td></tr><tr><td>Application Service</td><td>Vòng 2 — Use Cases</td><td>Hai tên cho gần cùng một thứ</td></tr><tr><td>Repository (interface)</td><td>Vòng 2 sở hữu</td><td>Implementation ở vòng 3</td></tr><tr><td>Bounded Context</td><td>Ranh giới <strong>module/service</strong></td><td>Lớn hơn mọi vòng — mỗi context có bộ vòng riêng</td></tr><tr><td>Ubiquitous Language</td><td>Xuyên suốt</td><td>Tên package, struct, method = từ vựng nghiệp vụ</td></tr></tbody></table><p>Insight quan trọng nhất: <strong>Bounded Context quyết định trước, các vòng quyết định sau.</strong> Chia sai context (gộp &ldquo;sản phẩm&rdquo; của team catalog với &ldquo;sản phẩm&rdquo; của team kho vào một model) thì Clean Architecture bên trong không cứu được — model phình thành god-model phục vụ mọi ngữ nghĩa. Mỗi context một model riêng, trùng tên nhưng khác nghĩa là <em>bình thường và đúng</em>: <code>catalog.Product</code> có mô tả/giá/ảnh, <code>inventory.Product</code> có tồn kho/vị trí kệ — hai struct, hai package, không chung &ldquo;base&rdquo;.</p><h2 id=3-value-object--vũ-khí-bị-bỏ-quên-nhiều-nhất>3. Value Object — vũ khí bị bỏ quên nhiều nhất<a hidden class=anchor aria-hidden=true href=#3-value-object--vũ-khí-bị-bỏ-quên-nhiều-nhất>#</a></h2><p>Value Object: bất biến, so sánh bằng giá trị, <strong>tự bảo vệ tính hợp lệ</strong>. Đây là khối lợi ích/chi phí tốt nhất của DDD — dùng được cả trong dự án không &ldquo;làm DDD&rdquo;:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// domain/money.go — kiểu tiền tệ không thể sai</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>domain</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;errors&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Currency</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>const</span> (
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>VND</span> <span style=color:#a6e22e>Currency</span> = <span style=color:#e6db74>&#34;VND&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>USD</span> <span style=color:#a6e22e>Currency</span> = <span style=color:#e6db74>&#34;USD&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Money là value object: unexported field, tạo qua constructor, immutable.</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Money</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>amount</span>   <span style=color:#66d9ef>int64</span> <span style=color:#75715e>// đơn vị nhỏ nhất (đồng, cent)</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>currency</span> <span style=color:#a6e22e>Currency</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>ErrCurrencyMismatch</span> = <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;money: currency mismatch&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewMoney</span>(<span style=color:#a6e22e>amount</span> <span style=color:#66d9ef>int64</span>, <span style=color:#a6e22e>c</span> <span style=color:#a6e22e>Currency</span>) (<span style=color:#a6e22e>Money</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>amount</span> &lt; <span style=color:#ae81ff>0</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Money</span>{}, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;money: negative amount %d&#34;</span>, <span style=color:#a6e22e>amount</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Money</span>{<span style=color:#a6e22e>amount</span>: <span style=color:#a6e22e>amount</span>, <span style=color:#a6e22e>currency</span>: <span style=color:#a6e22e>c</span>}, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>m</span> <span style=color:#a6e22e>Money</span>) <span style=color:#a6e22e>Add</span>(<span style=color:#a6e22e>other</span> <span style=color:#a6e22e>Money</span>) (<span style=color:#a6e22e>Money</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>currency</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>other</span>.<span style=color:#a6e22e>currency</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Money</span>{}, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;%w: %s + %s&#34;</span>, <span style=color:#a6e22e>ErrCurrencyMismatch</span>, <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>currency</span>, <span style=color:#a6e22e>other</span>.<span style=color:#a6e22e>currency</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Money</span>{<span style=color:#a6e22e>amount</span>: <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>amount</span> <span style=color:#f92672>+</span> <span style=color:#a6e22e>other</span>.<span style=color:#a6e22e>amount</span>, <span style=color:#a6e22e>currency</span>: <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>currency</span>}, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>m</span> <span style=color:#a6e22e>Money</span>) <span style=color:#a6e22e>MultiplyPercent</span>(<span style=color:#a6e22e>p</span> <span style=color:#66d9ef>int64</span>) <span style=color:#a6e22e>Money</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Money</span>{<span style=color:#a6e22e>amount</span>: <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>amount</span> <span style=color:#f92672>*</span> <span style=color:#a6e22e>p</span> <span style=color:#f92672>/</span> <span style=color:#ae81ff>100</span>, <span style=color:#a6e22e>currency</span>: <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>currency</span>}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>So với <code>totalVND int64</code> rải khắp code: cộng nhầm USD với VND giờ là <strong>lỗi compile/lỗi tường minh</strong> thay vì bug tiền bạc âm thầm. Các ứng viên VO tự nhiên: <code>Email</code>, <code>PhoneNumber</code>, <code>OrderID</code> (typed ID chống truyền nhầm <code>userID</code> vào chỗ <code>orderID</code>!), <code>Quantity</code>, <code>DateRange</code>, <code>Address</code>. Chi phí: constructor + method thay vì thao tác primitive — rẻ. Đây là thuốc giải cho <strong>Primitive Obsession</strong>.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Typed ID — một dòng, diệt cả họ bug</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>OrderID</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>CustomerID</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// func Cancel(id OrderID) — compiler chặn Cancel(customerID) ngay</span>
+</span></span></code></pre></div><h2 id=4-aggregate--đơn-vị-nhất-quán>4. Aggregate — đơn vị nhất quán<a hidden class=anchor aria-hidden=true href=#4-aggregate--đơn-vị-nhất-quán>#</a></h2><p>Aggregate = cụm entity/VO thay đổi <strong>nhất quán cùng nhau</strong>, có một <strong>root</strong> làm cổng vào duy nhất. Ví dụ <code>Order</code> (root) + <code>OrderLine</code>s + rule &ldquo;tổng tiền = tổng line, đơn confirmed không sửa line&rdquo;:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// domain/order.go</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Order</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>id</span>        <span style=color:#a6e22e>OrderID</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>status</span>    <span style=color:#a6e22e>Status</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>lines</span>     []<span style=color:#a6e22e>OrderLine</span> <span style=color:#75715e>// KHÔNG expose slice ra ngoài</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>total</span>     <span style=color:#a6e22e>Money</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>ErrOrderLocked</span> = <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;order: confirmed order cannot change&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Mọi thay đổi đi qua root — root giữ bất biến</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Order</span>) <span style=color:#a6e22e>AddLine</span>(<span style=color:#a6e22e>sku</span> <span style=color:#a6e22e>SKU</span>, <span style=color:#a6e22e>qty</span> <span style=color:#a6e22e>Quantity</span>, <span style=color:#a6e22e>unitPrice</span> <span style=color:#a6e22e>Money</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>status</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>StatusDraft</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>ErrOrderLocked</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>line</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>OrderLine</span>{<span style=color:#a6e22e>sku</span>: <span style=color:#a6e22e>sku</span>, <span style=color:#a6e22e>qty</span>: <span style=color:#a6e22e>qty</span>, <span style=color:#a6e22e>unitPrice</span>: <span style=color:#a6e22e>unitPrice</span>}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>lines</span> = append(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>lines</span>, <span style=color:#a6e22e>line</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>recalcTotal</span>() <span style=color:#75715e>// bất biến &#34;total = sum(lines)&#34; KHÔNG THỂ bị bỏ quên</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Order</span>) <span style=color:#a6e22e>Lines</span>() []<span style=color:#a6e22e>OrderLine</span> { <span style=color:#75715e>// trả bản copy — bảo vệ nội tạng</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>out</span> <span style=color:#f92672>:=</span> make([]<span style=color:#a6e22e>OrderLine</span>, len(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>lines</span>))
+</span></span><span style=display:flex><span>	copy(<span style=color:#a6e22e>out</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>lines</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>out</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Ba quy tắc aggregate quan trọng trong thiết kế hệ thống:</p><ol><li><strong>Ranh giới transaction = ranh giới aggregate</strong> (chương 5): một tx ghi một aggregate. Cần đổi 2 aggregate → 2 tx + domain event + eventual consistency.</li><li><strong>Aggregate tham chiếu aggregate khác bằng ID</strong>, không bằng con trỏ: <code>Order</code> giữ <code>CustomerID</code>, không giữ <code>*Customer</code> — nếu không, &ldquo;lưu Order&rdquo; kéo theo cả object graph, repository thành ORM và ranh giới nhất quán vỡ.</li><li><strong>Giữ aggregate NHỎ.</strong> Aggregate to = lock rộng, contention cao, load nặng. &ldquo;Order chứa mọi thứ liên quan đơn hàng&rdquo; là cách hiểu sai; chỉ những gì phải nhất quán <em>ngay lập tức</em> mới vào cùng aggregate.</li></ol><h2 id=5-domain-service-vs-application-service--ai-làm-gì>5. Domain Service vs Application Service — ai làm gì<a hidden class=anchor aria-hidden=true href=#5-domain-service-vs-application-service--ai-làm-gì>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// DOMAIN service: rule nghiệp vụ liên quan NHIỀU aggregate, vẫn thuần túy</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// &#34;giá cuối = giá đơn - khuyến mãi tốt nhất khách đủ điều kiện&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>BestPrice</span>(<span style=color:#a6e22e>o</span> <span style=color:#a6e22e>Order</span>, <span style=color:#a6e22e>c</span> <span style=color:#a6e22e>Customer</span>, <span style=color:#a6e22e>promos</span> []<span style=color:#a6e22e>Promotion</span>) <span style=color:#a6e22e>Money</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>best</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Total</span>()
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>p</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>promos</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>EligibleFor</span>(<span style=color:#a6e22e>c</span>) {
+</span></span><span style=display:flex><span>			<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>candidate</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>Apply</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Total</span>()); <span style=color:#a6e22e>candidate</span>.<span style=color:#a6e22e>LessThan</span>(<span style=color:#a6e22e>best</span>) {
+</span></span><span style=display:flex><span>				<span style=color:#a6e22e>best</span> = <span style=color:#a6e22e>candidate</span>
+</span></span><span style=display:flex><span>			}
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>best</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Nhận diện: domain service <strong>thuần</strong> (không I/O, không cổng) — chỉ là hàm nhận domain object trả domain object. Application service (use case) thì <strong>điều phối</strong>: load qua repo, gọi entity/domain service, save, phát event. Kim chỉ nam khi phân vân code đặt đâu:</p><ul><li>Nói về <em>cái gì đúng/sai trong nghiệp vụ</em> → domain (entity nếu thuộc một aggregate, domain service nếu nhiều).</li><li>Nói về <em>thứ tự làm việc và I/O</em> → use case.</li><li>Nói về <em>format và giao thức</em> → adapter.</li></ul><h2 id=6-domain-event-trong-module--decoupling-nội-bộ>6. Domain Event trong module — decoupling nội bộ<a hidden class=anchor aria-hidden=true href=#6-domain-event-trong-module--decoupling-nội-bộ>#</a></h2><p>Sự kiện nghiệp vụ (&ldquo;OrderPlaced&rdquo;) cho phép module khác phản ứng mà module gốc không biết họ:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// domain/events.go</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>OrderPlaced</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>OrderID</span>    <span style=color:#a6e22e>OrderID</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>CustomerID</span> <span style=color:#a6e22e>CustomerID</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Total</span>      <span style=color:#a6e22e>Money</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>At</span>         <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Entity GHI NHẬN event thay vì tự phát (entity không có I/O)</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Order</span>) <span style=color:#a6e22e>Place</span>(<span style=color:#a6e22e>now</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>) ([]<span style=color:#a6e22e>DomainEvent</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>lines</span>) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> { <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>ErrEmptyOrder</span> }
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>status</span> = <span style=color:#a6e22e>StatusPlaced</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> []<span style=color:#a6e22e>DomainEvent</span>{<span style=color:#a6e22e>OrderPlaced</span>{<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>id</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>customerID</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>total</span>, <span style=color:#a6e22e>now</span>}}, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Use case thu event từ entity và giao cho publisher (outbox — chương 7)</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>events</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ord</span>.<span style=color:#a6e22e>Place</span>(<span style=color:#a6e22e>uc</span>.<span style=color:#a6e22e>now</span>())
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span> }
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>uc</span>.<span style=color:#a6e22e>orders</span>.<span style=color:#a6e22e>Save</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>ord</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span> }
+</span></span><span style=display:flex><span><span style=color:#66d9ef>return</span> <span style=color:#a6e22e>uc</span>.<span style=color:#a6e22e>publisher</span>.<span style=color:#a6e22e>Publish</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>events</span><span style=color:#f92672>...</span>)
+</span></span></code></pre></div><p>Pattern &ldquo;entity trả event, use case phát&rdquo; giữ entity thuần và điểm phát tập trung. Trong monolith, publisher có thể là in-process bus gọi handler của module khác — chuẩn bị sẵn đường tách service sau này (chương 12).</p><h2 id=7-liều-lượng--dùng-bao-nhiêu-ddd-là-đủ>7. Liều lượng — dùng bao nhiêu DDD là đủ<a hidden class=anchor aria-hidden=true href=#7-liều-lượng--dùng-bao-nhiêu-ddd-là-đủ>#</a></h2><p>DDD chiến thuật có thang liều:</p><table><thead><tr><th>Mức</th><th>Dùng gì</th><th>Khi nào</th></tr></thead><tbody><tr><td>0</td><td>Struct + hàm, transaction script</td><td>CRUD, ít rule</td></tr><tr><td>1</td><td><strong>Value Object + typed ID</strong></td><td>Hầu như luôn đáng — chi phí ~0</td></tr><tr><td>2</td><td>Entity giữ bất biến + sentinel error domain</td><td>Có rule thật quanh trạng thái</td></tr><tr><td>3</td><td>Aggregate rõ ràng + repository theo aggregate</td><td>Nhiều object nhất quán cùng nhau, concurrent write</td></tr><tr><td>4</td><td>Domain event + domain service</td><td>Nhiều module phản ứng lẫn nhau, rule đa aggregate</td></tr><tr><td>5</td><td>Bounded context tách bạch + context mapping</td><td>Nhiều team, domain lớn, ngữ nghĩa xung đột</td></tr></tbody></table><p>Sai lầm phổ biến: nhảy thẳng mức 5 cho startup 2 người (&ldquo;mình làm DDD mà&rdquo;), hoặc kẹt mức 0 cho hệ thống tài chính 50 rule (&ldquo;DDD phức tạp lắm&rdquo;). Liều đúng đo bằng <strong>độ phức tạp của rule nghiệp vụ</strong>, không bằng độ ngầu của kiến trúc. Và các mức tăng dần được: bắt đầu mức 1–2, nâng khi rule dày lên.</p><h2 id=8-anti-patterns>8. Anti-patterns<a hidden class=anchor aria-hidden=true href=#8-anti-patterns>#</a></h2><ul><li><strong>Anemic Domain Model có nghi thức</strong>: entity chỉ getter/setter, mọi rule trong service — mất encapsulation (rule quanh một dữ liệu rải ở N service), test khó hơn, chính xác thứ SRP/aggregate sinh ra để tránh. Nếu domain <em>thật sự</em> không có rule → thừa nhận và bỏ nghi thức (mức 0), đừng giữ vỏ DDD rỗng.</li><li><strong>Thin Domain giả tạo</strong>: entity có method nhưng method chỉ <code>SetStatus(s)</code> — gán không kiểm tra gì. Bất biến vẫn không được bảo vệ; tệ hơn anemic vì <em>trông như</em> được bảo vệ.</li><li><strong>God Aggregate</strong>: <code>Customer</code> chứa orders, wallet, tickets, addresses — mọi tx đụng Customer, contention và merge conflict cực đại. Tách theo ranh giới nhất quán thật.</li><li><strong>DDD-cargo-cult vocabulary</strong>: đổi tên <code>Service</code> thành <code>ApplicationService</code>, folder <code>valueobjects/</code> — từ vựng thay đổi, thiết kế y nguyên. DDD là mô hình hóa, không phải danh pháp.</li><li><strong>Bounded context chia theo bảng DB</strong> thay vì theo ngôn ngữ nghiệp vụ — context là ranh giới <em>ngữ nghĩa</em>; hai context có thể cùng lưu một DB (tách schema) trong monolith.</li></ul><h2 id=tóm-tắt>Tóm tắt<a hidden class=anchor aria-hidden=true href=#tóm-tắt>#</a></h2><ul><li>DDD lấp ruột cho vòng trong: VO/Entity/Aggregate = vòng 1, use case = application service, bounded context = ranh giới module.</li><li>Đáng dùng gần như luôn: value object, typed ID, entity giữ bất biến. Đáng dùng khi phức tạp thật: aggregate, domain event, domain service. Bounded context: quyết định quan trọng nhất và phải quyết trước kiến trúc bên trong.</li><li>Liều lượng theo độ dày của rule, không theo trend.</li></ul><p><strong>Chương tiếp theo:</strong> <a href=/series/clean-architect/10-cqrs/01-clean-architecture-va-cqrs/>Clean Architecture & CQRS</a></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/golang/>Golang</a></li><li><a href=https://thanhhv.github.io/tags/clean-architecture/>Clean-Architecture</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/clean-architect/10-cqrs/01-clean-architecture-va-cqrs/><span class=title>« Prev</span><br><span>Chương 10 — Clean Architecture & CQRS: Đường ghi và đường đọc</span>
+</a><a class=next href=https://thanhhv.github.io/series/clean-architect/08-testing/01-testing-strategy/><span class=title>Next »</span><br><span>Chương 8 — Testing Strategy: Unit, Integration, Mock vs Fake, Testcontainers</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f&amp;hashtags=backend%2cgolang%2cclean-architecture"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f&amp;title=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;summary=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f&title=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%209%20%e2%80%94%20Clean%20Architecture%20%26%20DDD%3a%20L%e1%ba%a5p%20%c4%91%e1%ba%a7y%20v%c3%b2ng%20trong&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f09-ddd%2f01-clean-architecture-va-ddd%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

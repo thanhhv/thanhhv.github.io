@@ -1,13 +1,5 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Bài 10 — Concurrency &amp; Stream trong Node | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, nodejs">
-<meta name="description" content="Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream &amp; Backpressure
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Bài 10 — Concurrency & Stream trong Node | Thanh HV's Blog</title>
+<meta name=keywords content="backend,nodejs"><meta name=description content="Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream & Backpressure
 
 1. Problem Statement
 Node đơn luồng JS → hai bài toán không tự giải được:
@@ -15,499 +7,69 @@ Node đơn luồng JS → hai bài toán không tự giải được:
 Tận dụng nhiều core: máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn.
 Việc CPU nặng không được chặn loop (chương 9).
 
-Node cung cấp ba công cụ với ba mục đích khác nhau — chọn nhầm công cụ là mô típ sai lầm phổ biến:">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:54040/series/nodejs-golang/10-node-concurrency-stream/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:54040/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:54040/series/nodejs-golang/10-node-concurrency-stream/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
+Node cung cấp ba công cụ với ba mục đích khác nhau — chọn nhầm công cụ là mô típ sai lầm phổ biến:"><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Bài 10 — Concurrency & Stream trong Node"><meta property="og:description" content="Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream & Backpressure 1. Problem Statement Node đơn luồng JS → hai bài toán không tự giải được:
+Tận dụng nhiều core: máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn. Việc CPU nặng không được chặn loop (chương 9). Node cung cấp ba công cụ với ba mục đích khác nhau — chọn nhầm công cụ là mô típ sai lầm phổ biến:"><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-06-21T08:00:00+07:00"><meta property="article:modified_time" content="2026-06-21T08:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Nodejs"><meta name=twitter:card content="summary"><meta name=twitter:title content="Bài 10 — Concurrency & Stream trong Node"><meta name=twitter:description content="Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream & Backpressure
 
-    </style>
-</noscript>
-</head>
+1. Problem Statement
+Node đơn luồng JS → hai bài toán không tự giải được:
 
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
+Tận dụng nhiều core: máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn.
+Việc CPU nặng không được chặn loop (chương 9).
 
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:54040/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/nodejs-golang/">NodeJS &amp; Golang</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Bài 10 — Concurrency &amp; Stream trong Node
-    </h1>
-    <div class="post-meta"><span title='2026-06-21 08:00:00 +0700 +07'>June 21, 2026</span>&nbsp;·&nbsp;7 min
-
-</div>
-  </header> 
-  <div class="post-content"><h1 id="concurrency-trong-node--worker-threads-cluster-child-process-stream--backpressure">Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream &amp; Backpressure<a hidden class="anchor" aria-hidden="true" href="#concurrency-trong-node--worker-threads-cluster-child-process-stream--backpressure">#</a></h1>
-<hr>
-<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
-<p>Node đơn luồng JS → hai bài toán không tự giải được:</p>
-<ol>
-<li><strong>Tận dụng nhiều core:</strong> máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn.</li>
-<li><strong>Việc CPU nặng không được chặn loop</strong> (chương 9).</li>
-</ol>
-<p>Node cung cấp ba công cụ với ba mục đích <strong>khác nhau</strong> — chọn nhầm công cụ là mô típ sai lầm phổ biến:</p>
-<table>
-  <thead>
-      <tr>
-          <th></th>
-          <th>Cluster</th>
-          <th>Worker Threads</th>
-          <th>Child Process</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Bản chất</td>
-          <td>N process Node, chia socket</td>
-          <td>N thread V8 trong 1 process</td>
-          <td>Process con bất kỳ</td>
-      </tr>
-      <tr>
-          <td>Mục đích</td>
-          <td><strong>Scale HTTP ra nhiều core</strong></td>
-          <td><strong>Việc CPU-bound</strong></td>
-          <td>Chạy chương trình ngoài</td>
-      </tr>
-      <tr>
-          <td>Memory</td>
-          <td>Cách ly hoàn toàn, N × heap</td>
-          <td>Heap riêng/worker, share được SharedArrayBuffer</td>
-          <td>Cách ly hoàn toàn</td>
-      </tr>
-      <tr>
-          <td>Giao tiếp</td>
-          <td>IPC (serialize)</td>
-          <td>postMessage (structured clone) + transferable + SAB</td>
-          <td>stdio/IPC</td>
-      </tr>
-      <tr>
-          <td>Chi phí tạo</td>
-          <td>~30-80ms, ~30-100MB</td>
-          <td>~5-15ms, ~5-10MB</td>
-          <td>Cao (spawn OS process)</td>
-      </tr>
-  </tbody>
-</table>
-<hr>
-<h2 id="2-cluster--nhân-bản-process-theo-core">2. Cluster — nhân bản process theo core<a hidden class="anchor" aria-hidden="true" href="#2-cluster--nhân-bản-process-theo-core">#</a></h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">cluster</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;node:cluster&#39;</span>;
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">availableParallelism</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;node:os&#39;</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">cluster</span>.<span style="color:#a6e22e">isPrimary</span>) {
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">availableParallelism</span>(); <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) <span style="color:#a6e22e">cluster</span>.<span style="color:#a6e22e">fork</span>();
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">cluster</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;exit&#39;</span>, (<span style="color:#a6e22e">worker</span>, <span style="color:#a6e22e">code</span>) =&gt; {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">error</span>({ <span style="color:#a6e22e">pid</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">worker</span>.<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">pid</span>, <span style="color:#a6e22e">code</span> }, <span style="color:#e6db74">&#39;worker died&#39;</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cluster</span>.<span style="color:#a6e22e">fork</span>();                     <span style="color:#75715e">// hồi sinh — bắt buộc
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  });
-</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">createServer</span>(<span style="color:#a6e22e">app</span>).<span style="color:#a6e22e">listen</span>(<span style="color:#ae81ff">8080</span>);  <span style="color:#75715e">// các worker CHIA SẺ port
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
-</span></span></code></pre></div><p>Cơ chế chia kết nối: primary nhận connection, phát cho worker round-robin (mặc định trên Linux từ Node 16 — trước đó để kernel tranh chấp, phân phối lệch).</p>
-<p><strong>Điểm cần hiểu ở mức kiến trúc:</strong></p>
-<ul>
-<li>Mỗi worker là <strong>process cách ly</strong>: không share biến, không share cache in-memory, không share connection pool. Cache trong RAM của worker 1 vô hình với worker 2 → cache hit rate chia N, và <strong>state trong RAM là bug chờ nổ</strong> (sticky session cần LB hỗ trợ). Bài học đúng đắn hơn: thiết kế <strong>stateless</strong>, state ra Redis — và khi đã stateless, câu hỏi tiếp theo là&hellip;</li>
-<li><strong>Cluster vs nhiều container:</strong> trong Kubernetes, chạy N pod (mỗi pod 1 process Node, 1 core) thường tốt hơn 1 pod N worker: orchestrator quản lý health/restart/scale từng đơn vị, resource limit rõ, đơn giản hơn. Cluster module hợp với VM/bare metal hoặc PM2. Trên K8s, cluster module gần như hết vai trò.</li>
-<li>Chi phí thật của cluster: <strong>N × baseline memory</strong> (mỗi worker chứa nguyên V8 + app). 16 core × 250MB = 4GB trước khi phục vụ request nào — so với Go: 1 process dùng cả 16 core với 1 heap chung (~50-100MB). Đây là một trong những khác biệt chi phí hạ tầng lớn nhất giữa hai nền tảng.</li>
-</ul>
-<hr>
-<h2 id="3-worker-threads--thread-thật-cho-việc-cpu">3. Worker Threads — thread thật cho việc CPU<a hidden class="anchor" aria-hidden="true" href="#3-worker-threads--thread-thật-cho-việc-cpu">#</a></h2>
-<h3 id="31-mô-hình">3.1. Mô hình<a hidden class="anchor" aria-hidden="true" href="#31-mô-hình">#</a></h3>
-<p>Mỗi worker = một V8 isolate riêng (heap riêng, event loop riêng) trong cùng process. Giao tiếp qua <code>postMessage</code> — dữ liệu bị <strong>structured clone</strong> (copy). Ba cách chuyển dữ liệu, chi phí khác hẳn nhau:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">worker</span>.<span style="color:#a6e22e">postMessage</span>(<span style="color:#a6e22e">bigObject</span>);                    <span style="color:#75715e">// 1. CLONE: copy toàn bộ — 100MB là 100MB copy
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">worker</span>.<span style="color:#a6e22e">postMessage</span>(<span style="color:#a6e22e">buf</span>, [<span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">buffer</span>]);            <span style="color:#75715e">// 2. TRANSFER: chuyển quyền sở hữu ArrayBuffer,
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                                  <span style="color:#75715e">//    zero-copy, bên gửi mất quyền dùng
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sab</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SharedArrayBuffer</span>(<span style="color:#a6e22e">n</span>);             <span style="color:#75715e">// 3. SHARE: bộ nhớ chung thật sự
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                                  <span style="color:#75715e">//    → quay lại thế giới Atomics/race như Go!
-</span></span></span></code></pre></div><p>Điểm trớ trêu đáng ghi nhớ: dùng SharedArrayBuffer là từ bỏ ưu thế &ldquo;không data race&rdquo; của Node — bạn nhận lại đúng những vấn đề mutex/atomic mà single-thread đã giải thoát, nhưng với tooling nghèo nàn hơn Go (không race detector).</p>
-<h3 id="32-pattern-đúng-worker-pool">3.2. Pattern đúng: worker pool<a hidden class="anchor" aria-hidden="true" href="#32-pattern-đúng-worker-pool">#</a></h3>
-<p>Spawn worker mỗi request là anti-pattern (10-15ms + memory mỗi lần). Chuẩn: pool cố định tạo lúc boot, phát việc qua queue — dùng <code>piscina</code> thay vì tự viết:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Piscina</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;piscina&#39;</span>;
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">pool</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Piscina</span>({ <span style="color:#a6e22e">filename</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;./heavy-task.js&#39;</span>,
-</span></span><span style="display:flex;"><span>                           <span style="color:#a6e22e">maxThreads</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">availableParallelism</span>() <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span> }); <span style="color:#75715e">// chừa main thread
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">post</span>(<span style="color:#e6db74">&#39;/render&#39;</span>, <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">json</span>(<span style="color:#66d9ef">await</span> <span style="color:#a6e22e">pool</span>.<span style="color:#a6e22e">run</span>(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>));   <span style="color:#75715e">// main thread TỰ DO trong lúc worker tính
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>});
-</span></span></code></pre></div><p><strong>Ngưỡng đáng dùng:</strong> việc CPU &gt; ~10-20ms và đủ thường xuyên. Việc 2ms mà đẩy qua worker thì chi phí serialize + scheduling ăn hết lợi ích. Và nếu 80% workload của service là CPU-bound — dấu hiệu nên viết service đó bằng Go/Rust thay vì xây tháp worker trong Node.</p>
-<hr>
-<h2 id="4-child-process--cổng-ra-thế-giới-ngoài">4. Child Process — cổng ra thế giới ngoài<a hidden class="anchor" aria-hidden="true" href="#4-child-process--cổng-ra-thế-giới-ngoài">#</a></h2>
-<p><code>spawn</code> (stream, cho output lớn — ffmpeg, backup), <code>execFile</code> (gọn, output nhỏ), <code>fork</code> (child Node có kênh IPC). Hai quy tắc an toàn sống còn: <strong>không bao giờ</strong> dùng <code>exec</code> nối chuỗi input người dùng (command injection — <code>execFile</code> với mảng args tách riêng); luôn đặt timeout + <code>maxBuffer</code>, xử lý cả <code>error</code> lẫn <code>exit</code> event. Zombie process từ child không được reap là leak tài nguyên kinh điển trong container.</p>
-<hr>
-<h2 id="5-stream-và-backpressure--phần-quan-trọng-nhất-chương">5. Stream và Backpressure — phần quan trọng nhất chương<a hidden class="anchor" aria-hidden="true" href="#5-stream-và-backpressure--phần-quan-trọng-nhất-chương">#</a></h2>
-<h3 id="51-vấn-đề-dữ-liệu-lớn-hơn-ram">5.1. Vấn đề: dữ liệu lớn hơn RAM<a hidden class="anchor" aria-hidden="true" href="#51-vấn-đề-dữ-liệu-lớn-hơn-ram">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// TAI HỌA: đọc cả file 2GB vào RAM để trả cho client
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">promises</span>.<span style="color:#a6e22e">readFile</span>(<span style="color:#e6db74">&#39;video.mp4&#39;</span>);
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">end</span>(<span style="color:#a6e22e">data</span>);
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 10 request đồng thời = 20GB RAM = OOM
-</span></span></span></code></pre></div><p>Stream xử lý dữ liệu <strong>theo khúc (chunk)</strong>: memory là O(chunk) thay vì O(file). Bốn loại: Readable, Writable, Duplex, Transform.</p>
-<h3 id="52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ">5.2. Backpressure — cơ chế và cách nó bị phá vỡ<a hidden class="anchor" aria-hidden="true" href="#52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ">#</a></h3>
-<p>Chênh lệch tốc độ: disk đọc 500MB/s, client mạng yếu nhận 1MB/s. Không kiểm soát → 499MB/s tích vào RAM.</p>
-<p>Cơ chế trong Node:</p>
-<pre tabindex="0"><code>readable.pipe(writable) bên trong làm:
+Node cung cấp ba công cụ với ba mục đích khác nhau — chọn nhầm công cụ là mô típ sai lầm phổ biến:"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"NodeJS \u0026 Golang","item":"https://thanhhv.github.io/series/nodejs-golang/"},{"@type":"ListItem","position":3,"name":"Bài 10 — Concurrency \u0026 Stream trong Node","item":"https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Bài 10 — Concurrency \u0026 Stream trong Node","name":"Bài 10 — Concurrency \u0026 Stream trong Node","description":"Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream \u0026amp; Backpressure 1. Problem Statement Node đơn luồng JS → hai bài toán không tự giải được:\nTận dụng nhiều core: máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn. Việc CPU nặng không được chặn loop (chương 9). Node cung cấp ba công cụ với ba mục đích khác nhau — chọn nhầm công cụ là mô típ sai lầm phổ biến:\n","keywords":["backend","nodejs"],"articleBody":"Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream \u0026 Backpressure 1. Problem Statement Node đơn luồng JS → hai bài toán không tự giải được:\nTận dụng nhiều core: máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn. Việc CPU nặng không được chặn loop (chương 9). Node cung cấp ba công cụ với ba mục đích khác nhau — chọn nhầm công cụ là mô típ sai lầm phổ biến:\nCluster Worker Threads Child Process Bản chất N process Node, chia socket N thread V8 trong 1 process Process con bất kỳ Mục đích Scale HTTP ra nhiều core Việc CPU-bound Chạy chương trình ngoài Memory Cách ly hoàn toàn, N × heap Heap riêng/worker, share được SharedArrayBuffer Cách ly hoàn toàn Giao tiếp IPC (serialize) postMessage (structured clone) + transferable + SAB stdio/IPC Chi phí tạo ~30-80ms, ~30-100MB ~5-15ms, ~5-10MB Cao (spawn OS process) 2. Cluster — nhân bản process theo core import cluster from 'node:cluster'; import { availableParallelism } from 'node:os'; if (cluster.isPrimary) { for (let i = 0; i \u003c availableParallelism(); i++) cluster.fork(); cluster.on('exit', (worker, code) =\u003e { log.error({ pid: worker.process.pid, code }, 'worker died'); cluster.fork(); // hồi sinh — bắt buộc }); } else { http.createServer(app).listen(8080); // các worker CHIA SẺ port } Cơ chế chia kết nối: primary nhận connection, phát cho worker round-robin (mặc định trên Linux từ Node 16 — trước đó để kernel tranh chấp, phân phối lệch).\nĐiểm cần hiểu ở mức kiến trúc:\nMỗi worker là process cách ly: không share biến, không share cache in-memory, không share connection pool. Cache trong RAM của worker 1 vô hình với worker 2 → cache hit rate chia N, và state trong RAM là bug chờ nổ (sticky session cần LB hỗ trợ). Bài học đúng đắn hơn: thiết kế stateless, state ra Redis — và khi đã stateless, câu hỏi tiếp theo là… Cluster vs nhiều container: trong Kubernetes, chạy N pod (mỗi pod 1 process Node, 1 core) thường tốt hơn 1 pod N worker: orchestrator quản lý health/restart/scale từng đơn vị, resource limit rõ, đơn giản hơn. Cluster module hợp với VM/bare metal hoặc PM2. Trên K8s, cluster module gần như hết vai trò. Chi phí thật của cluster: N × baseline memory (mỗi worker chứa nguyên V8 + app). 16 core × 250MB = 4GB trước khi phục vụ request nào — so với Go: 1 process dùng cả 16 core với 1 heap chung (~50-100MB). Đây là một trong những khác biệt chi phí hạ tầng lớn nhất giữa hai nền tảng. 3. Worker Threads — thread thật cho việc CPU 3.1. Mô hình Mỗi worker = một V8 isolate riêng (heap riêng, event loop riêng) trong cùng process. Giao tiếp qua postMessage — dữ liệu bị structured clone (copy). Ba cách chuyển dữ liệu, chi phí khác hẳn nhau:\nworker.postMessage(bigObject); // 1. CLONE: copy toàn bộ — 100MB là 100MB copy worker.postMessage(buf, [buf.buffer]); // 2. TRANSFER: chuyển quyền sở hữu ArrayBuffer, // zero-copy, bên gửi mất quyền dùng const sab = new SharedArrayBuffer(n); // 3. SHARE: bộ nhớ chung thật sự // → quay lại thế giới Atomics/race như Go! Điểm trớ trêu đáng ghi nhớ: dùng SharedArrayBuffer là từ bỏ ưu thế “không data race” của Node — bạn nhận lại đúng những vấn đề mutex/atomic mà single-thread đã giải thoát, nhưng với tooling nghèo nàn hơn Go (không race detector).\n3.2. Pattern đúng: worker pool Spawn worker mỗi request là anti-pattern (10-15ms + memory mỗi lần). Chuẩn: pool cố định tạo lúc boot, phát việc qua queue — dùng piscina thay vì tự viết:\nimport Piscina from 'piscina'; const pool = new Piscina({ filename: './heavy-task.js', maxThreads: availableParallelism() - 1 }); // chừa main thread app.post('/render', async (req, res) =\u003e { res.json(await pool.run(req.body)); // main thread TỰ DO trong lúc worker tính }); Ngưỡng đáng dùng: việc CPU \u003e ~10-20ms và đủ thường xuyên. Việc 2ms mà đẩy qua worker thì chi phí serialize + scheduling ăn hết lợi ích. Và nếu 80% workload của service là CPU-bound — dấu hiệu nên viết service đó bằng Go/Rust thay vì xây tháp worker trong Node.\n4. Child Process — cổng ra thế giới ngoài spawn (stream, cho output lớn — ffmpeg, backup), execFile (gọn, output nhỏ), fork (child Node có kênh IPC). Hai quy tắc an toàn sống còn: không bao giờ dùng exec nối chuỗi input người dùng (command injection — execFile với mảng args tách riêng); luôn đặt timeout + maxBuffer, xử lý cả error lẫn exit event. Zombie process từ child không được reap là leak tài nguyên kinh điển trong container.\n5. Stream và Backpressure — phần quan trọng nhất chương 5.1. Vấn đề: dữ liệu lớn hơn RAM // TAI HỌA: đọc cả file 2GB vào RAM để trả cho client const data = await fs.promises.readFile('video.mp4'); res.end(data); // 10 request đồng thời = 20GB RAM = OOM Stream xử lý dữ liệu theo khúc (chunk): memory là O(chunk) thay vì O(file). Bốn loại: Readable, Writable, Duplex, Transform.\n5.2. Backpressure — cơ chế và cách nó bị phá vỡ Chênh lệch tốc độ: disk đọc 500MB/s, client mạng yếu nhận 1MB/s. Không kiểm soát → 499MB/s tích vào RAM.\nCơ chế trong Node:\nreadable.pipe(writable) bên trong làm: chunk = read() ok = writable.write(chunk) if (!ok) ← buffer nội bộ vượt highWaterMark (mặc định 16-64KB) readable.pause() ← DỪNG nguồn writable.on('drain', () =\u003e ← buffer đã xả readable.resume()) ← chạy tiếp Điểm khác biệt triết học với Go đáng suy ngẫm: trong Go, backpressure là mặc định (channel đầy → block, không làm gì cũng đúng). Trong Node, backpressure là giao thức tự nguyện — write() không bao giờ từ chối, nó chỉ gợi ý qua giá trị trả về false. Code bỏ qua gợi ý vẫn chạy… cho đến ngày OOM:\n// BOM HẸN GIỜ: bỏ qua return value của write for (const row of millionRows) { res.write(render(row)); // client chậm → triệu chunk chất trong RAM process } 5.3. Cách viết đúng hiện đại import { pipeline } from 'node:stream/promises'; await pipeline( // backpressure tự động + cleanup + error fs.createReadStream('huge.csv'), csvParse(), // Transform new TransformEnrich(), // Transform async của bạn createGzip(), fs.createWriteStream('out.gz'), { signal } // hủy được bằng AbortController ); Luôn dùng pipeline, không dùng .pipe() trần: .pipe() không destroy các stream còn lại khi một cái lỗi → file descriptor leak + memory leak âm ỉ — một trong những leak khó tìm nhất của Node. pipeline dọn dẹp tất cả và trả lỗi về một chỗ.\nTừ Node 16+, Readable có .map(), .filter(), và for await...of — xử lý stream như vòng lặp thường, backpressure tự nhiên (không đọc chunk kế khi thân vòng lặp chưa xong):\nfor await (const chunk of readable) { await process(chunk); // nguồn tự dừng chờ mình — backpressure miễn phí } 5.4. Ví dụ thất bại thực tế (mô típ phổ biến) Service export báo cáo: query 2 triệu row → rows.map(toCSVLine).join('\\n') → res.send(). Chạy tốt ở staging (10K row). Production tháng thứ ba, khách hàng lớn export 2M row: 1.2GB string trong heap → vượt heap limit → crash cả process, rớt toàn bộ request đang chạy của mọi user khác. Fix: stream từ DB cursor (pg-query-stream) → Transform CSV → response, pipeline; memory từ 1.2GB xuống ~30MB bất kể kích thước export. Bài học kép: (1) dữ liệu production luôn lớn hơn staging 100 lần; (2) trong Node, một request tham ăn giết tất cả — blast radius của lỗi memory là cả process.\n6. Trade-off tổng hợp \u0026 lời khuyên Nhu cầu Công cụ đúng HTTP tận dụng N core Nhiều pod/container (K8s) \u003e cluster module Tác vụ CPU 10ms-10s, thường xuyên Worker pool (piscina) Đa số workload là CPU-bound Đổi công nghệ cho service đó (Go/Rust) Chạy tool ngoài (ffmpeg, git) child_process spawn/execFile Dữ liệu lớn/không biết kích thước Stream + pipeline, luôn luôn Anti-pattern tổng hợp: spawn worker mỗi request; SharedArrayBuffer khi postMessage đủ dùng (mua race, bán simplicity); state trong RAM khi chạy cluster; .pipe() không xử lý lỗi; đọc cả file khi có thể stream; bỏ qua giá trị trả về của write().\nChương tiếp theo: 11 — Memory trong Node: V8 Heap, GC, Memory Leak\n","wordCount":"1382","inLanguage":"en","datePublished":"2026-06-21T08:00:00+07:00","dateModified":"2026-06-21T08:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/nodejs-golang/>NodeJS & Golang</a></div><h1 class="post-title entry-hint-parent">Bài 10 — Concurrency & Stream trong Node</h1><div class=post-meta><span title='2026-06-21 08:00:00 +0700 +07'>June 21, 2026</span>&nbsp;·&nbsp;7 min</div></header><div class=post-content><h1 id=concurrency-trong-node--worker-threads-cluster-child-process-stream--backpressure>Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream & Backpressure<a hidden class=anchor aria-hidden=true href=#concurrency-trong-node--worker-threads-cluster-child-process-stream--backpressure>#</a></h1><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Node đơn luồng JS → hai bài toán không tự giải được:</p><ol><li><strong>Tận dụng nhiều core:</strong> máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn.</li><li><strong>Việc CPU nặng không được chặn loop</strong> (chương 9).</li></ol><p>Node cung cấp ba công cụ với ba mục đích <strong>khác nhau</strong> — chọn nhầm công cụ là mô típ sai lầm phổ biến:</p><table><thead><tr><th></th><th>Cluster</th><th>Worker Threads</th><th>Child Process</th></tr></thead><tbody><tr><td>Bản chất</td><td>N process Node, chia socket</td><td>N thread V8 trong 1 process</td><td>Process con bất kỳ</td></tr><tr><td>Mục đích</td><td><strong>Scale HTTP ra nhiều core</strong></td><td><strong>Việc CPU-bound</strong></td><td>Chạy chương trình ngoài</td></tr><tr><td>Memory</td><td>Cách ly hoàn toàn, N × heap</td><td>Heap riêng/worker, share được SharedArrayBuffer</td><td>Cách ly hoàn toàn</td></tr><tr><td>Giao tiếp</td><td>IPC (serialize)</td><td>postMessage (structured clone) + transferable + SAB</td><td>stdio/IPC</td></tr><tr><td>Chi phí tạo</td><td>~30-80ms, ~30-100MB</td><td>~5-15ms, ~5-10MB</td><td>Cao (spawn OS process)</td></tr></tbody></table><hr><h2 id=2-cluster--nhân-bản-process-theo-core>2. Cluster — nhân bản process theo core<a hidden class=anchor aria-hidden=true href=#2-cluster--nhân-bản-process-theo-core>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>cluster</span> <span style=color:#a6e22e>from</span> <span style=color:#e6db74>&#39;node:cluster&#39;</span>;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>import</span> { <span style=color:#a6e22e>availableParallelism</span> } <span style=color:#a6e22e>from</span> <span style=color:#e6db74>&#39;node:os&#39;</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>cluster</span>.<span style=color:#a6e22e>isPrimary</span>) {
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>let</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> <span style=color:#f92672>&lt;</span> <span style=color:#a6e22e>availableParallelism</span>(); <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span>) <span style=color:#a6e22e>cluster</span>.<span style=color:#a6e22e>fork</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>cluster</span>.<span style=color:#a6e22e>on</span>(<span style=color:#e6db74>&#39;exit&#39;</span>, (<span style=color:#a6e22e>worker</span>, <span style=color:#a6e22e>code</span>) =&gt; {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>error</span>({ <span style=color:#a6e22e>pid</span><span style=color:#f92672>:</span> <span style=color:#a6e22e>worker</span>.<span style=color:#a6e22e>process</span>.<span style=color:#a6e22e>pid</span>, <span style=color:#a6e22e>code</span> }, <span style=color:#e6db74>&#39;worker died&#39;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>cluster</span>.<span style=color:#a6e22e>fork</span>();                     <span style=color:#75715e>// hồi sinh — bắt buộc
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  });
+</span></span><span style=display:flex><span>} <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>createServer</span>(<span style=color:#a6e22e>app</span>).<span style=color:#a6e22e>listen</span>(<span style=color:#ae81ff>8080</span>);  <span style=color:#75715e>// các worker CHIA SẺ port
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><p>Cơ chế chia kết nối: primary nhận connection, phát cho worker round-robin (mặc định trên Linux từ Node 16 — trước đó để kernel tranh chấp, phân phối lệch).</p><p><strong>Điểm cần hiểu ở mức kiến trúc:</strong></p><ul><li>Mỗi worker là <strong>process cách ly</strong>: không share biến, không share cache in-memory, không share connection pool. Cache trong RAM của worker 1 vô hình với worker 2 → cache hit rate chia N, và <strong>state trong RAM là bug chờ nổ</strong> (sticky session cần LB hỗ trợ). Bài học đúng đắn hơn: thiết kế <strong>stateless</strong>, state ra Redis — và khi đã stateless, câu hỏi tiếp theo là&mldr;</li><li><strong>Cluster vs nhiều container:</strong> trong Kubernetes, chạy N pod (mỗi pod 1 process Node, 1 core) thường tốt hơn 1 pod N worker: orchestrator quản lý health/restart/scale từng đơn vị, resource limit rõ, đơn giản hơn. Cluster module hợp với VM/bare metal hoặc PM2. Trên K8s, cluster module gần như hết vai trò.</li><li>Chi phí thật của cluster: <strong>N × baseline memory</strong> (mỗi worker chứa nguyên V8 + app). 16 core × 250MB = 4GB trước khi phục vụ request nào — so với Go: 1 process dùng cả 16 core với 1 heap chung (~50-100MB). Đây là một trong những khác biệt chi phí hạ tầng lớn nhất giữa hai nền tảng.</li></ul><hr><h2 id=3-worker-threads--thread-thật-cho-việc-cpu>3. Worker Threads — thread thật cho việc CPU<a hidden class=anchor aria-hidden=true href=#3-worker-threads--thread-thật-cho-việc-cpu>#</a></h2><h3 id=31-mô-hình>3.1. Mô hình<a hidden class=anchor aria-hidden=true href=#31-mô-hình>#</a></h3><p>Mỗi worker = một V8 isolate riêng (heap riêng, event loop riêng) trong cùng process. Giao tiếp qua <code>postMessage</code> — dữ liệu bị <strong>structured clone</strong> (copy). Ba cách chuyển dữ liệu, chi phí khác hẳn nhau:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#a6e22e>worker</span>.<span style=color:#a6e22e>postMessage</span>(<span style=color:#a6e22e>bigObject</span>);                    <span style=color:#75715e>// 1. CLONE: copy toàn bộ — 100MB là 100MB copy
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>worker</span>.<span style=color:#a6e22e>postMessage</span>(<span style=color:#a6e22e>buf</span>, [<span style=color:#a6e22e>buf</span>.<span style=color:#a6e22e>buffer</span>]);            <span style=color:#75715e>// 2. TRANSFER: chuyển quyền sở hữu ArrayBuffer,
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>                                                  <span style=color:#75715e>//    zero-copy, bên gửi mất quyền dùng
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>sab</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>SharedArrayBuffer</span>(<span style=color:#a6e22e>n</span>);             <span style=color:#75715e>// 3. SHARE: bộ nhớ chung thật sự
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>                                                  <span style=color:#75715e>//    → quay lại thế giới Atomics/race như Go!
+</span></span></span></code></pre></div><p>Điểm trớ trêu đáng ghi nhớ: dùng SharedArrayBuffer là từ bỏ ưu thế &ldquo;không data race&rdquo; của Node — bạn nhận lại đúng những vấn đề mutex/atomic mà single-thread đã giải thoát, nhưng với tooling nghèo nàn hơn Go (không race detector).</p><h3 id=32-pattern-đúng-worker-pool>3.2. Pattern đúng: worker pool<a hidden class=anchor aria-hidden=true href=#32-pattern-đúng-worker-pool>#</a></h3><p>Spawn worker mỗi request là anti-pattern (10-15ms + memory mỗi lần). Chuẩn: pool cố định tạo lúc boot, phát việc qua queue — dùng <code>piscina</code> thay vì tự viết:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>Piscina</span> <span style=color:#a6e22e>from</span> <span style=color:#e6db74>&#39;piscina&#39;</span>;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>pool</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>Piscina</span>({ <span style=color:#a6e22e>filename</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#39;./heavy-task.js&#39;</span>,
+</span></span><span style=display:flex><span>                           <span style=color:#a6e22e>maxThreads</span><span style=color:#f92672>:</span> <span style=color:#a6e22e>availableParallelism</span>() <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span> }); <span style=color:#75715e>// chừa main thread
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>app</span>.<span style=color:#a6e22e>post</span>(<span style=color:#e6db74>&#39;/render&#39;</span>, <span style=color:#66d9ef>async</span> (<span style=color:#a6e22e>req</span>, <span style=color:#a6e22e>res</span>) =&gt; {
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>json</span>(<span style=color:#66d9ef>await</span> <span style=color:#a6e22e>pool</span>.<span style=color:#a6e22e>run</span>(<span style=color:#a6e22e>req</span>.<span style=color:#a6e22e>body</span>));   <span style=color:#75715e>// main thread TỰ DO trong lúc worker tính
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>});
+</span></span></code></pre></div><p><strong>Ngưỡng đáng dùng:</strong> việc CPU > ~10-20ms và đủ thường xuyên. Việc 2ms mà đẩy qua worker thì chi phí serialize + scheduling ăn hết lợi ích. Và nếu 80% workload của service là CPU-bound — dấu hiệu nên viết service đó bằng Go/Rust thay vì xây tháp worker trong Node.</p><hr><h2 id=4-child-process--cổng-ra-thế-giới-ngoài>4. Child Process — cổng ra thế giới ngoài<a hidden class=anchor aria-hidden=true href=#4-child-process--cổng-ra-thế-giới-ngoài>#</a></h2><p><code>spawn</code> (stream, cho output lớn — ffmpeg, backup), <code>execFile</code> (gọn, output nhỏ), <code>fork</code> (child Node có kênh IPC). Hai quy tắc an toàn sống còn: <strong>không bao giờ</strong> dùng <code>exec</code> nối chuỗi input người dùng (command injection — <code>execFile</code> với mảng args tách riêng); luôn đặt timeout + <code>maxBuffer</code>, xử lý cả <code>error</code> lẫn <code>exit</code> event. Zombie process từ child không được reap là leak tài nguyên kinh điển trong container.</p><hr><h2 id=5-stream-và-backpressure--phần-quan-trọng-nhất-chương>5. Stream và Backpressure — phần quan trọng nhất chương<a hidden class=anchor aria-hidden=true href=#5-stream-và-backpressure--phần-quan-trọng-nhất-chương>#</a></h2><h3 id=51-vấn-đề-dữ-liệu-lớn-hơn-ram>5.1. Vấn đề: dữ liệu lớn hơn RAM<a hidden class=anchor aria-hidden=true href=#51-vấn-đề-dữ-liệu-lớn-hơn-ram>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#75715e>// TAI HỌA: đọc cả file 2GB vào RAM để trả cho client
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>data</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>promises</span>.<span style=color:#a6e22e>readFile</span>(<span style=color:#e6db74>&#39;video.mp4&#39;</span>);
+</span></span><span style=display:flex><span><span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>end</span>(<span style=color:#a6e22e>data</span>);
+</span></span><span style=display:flex><span><span style=color:#75715e>// 10 request đồng thời = 20GB RAM = OOM
+</span></span></span></code></pre></div><p>Stream xử lý dữ liệu <strong>theo khúc (chunk)</strong>: memory là O(chunk) thay vì O(file). Bốn loại: Readable, Writable, Duplex, Transform.</p><h3 id=52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ>5.2. Backpressure — cơ chế và cách nó bị phá vỡ<a hidden class=anchor aria-hidden=true href=#52-backpressure--cơ-chế-và-cách-nó-bị-phá-vỡ>#</a></h3><p>Chênh lệch tốc độ: disk đọc 500MB/s, client mạng yếu nhận 1MB/s. Không kiểm soát → 499MB/s tích vào RAM.</p><p>Cơ chế trong Node:</p><pre tabindex=0><code>readable.pipe(writable) bên trong làm:
   chunk = read()
   ok = writable.write(chunk)
   if (!ok)                        ← buffer nội bộ vượt highWaterMark (mặc định 16-64KB)
       readable.pause()            ← DỪNG nguồn
   writable.on(&#39;drain&#39;, () =&gt;      ← buffer đã xả
       readable.resume())          ← chạy tiếp
-</code></pre><p><strong>Điểm khác biệt triết học với Go đáng suy ngẫm:</strong> trong Go, backpressure là <em>mặc định</em> (channel đầy → block, không làm gì cũng đúng). Trong Node, backpressure là <em>giao thức tự nguyện</em> — <code>write()</code> <strong>không bao giờ từ chối</strong>, nó chỉ <em>gợi ý</em> qua giá trị trả về <code>false</code>. Code bỏ qua gợi ý vẫn chạy&hellip; cho đến ngày OOM:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// BOM HẸN GIỜ: bỏ qua return value của write
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">row</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">millionRows</span>) {
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">write</span>(<span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">row</span>));   <span style="color:#75715e">// client chậm → triệu chunk chất trong RAM process
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
-</span></span></code></pre></div><h3 id="53-cách-viết-đúng-hiện-đại">5.3. Cách viết đúng hiện đại<a hidden class="anchor" aria-hidden="true" href="#53-cách-viết-đúng-hiện-đại">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">pipeline</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;node:stream/promises&#39;</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">pipeline</span>(                        <span style="color:#75715e">// backpressure tự động + cleanup + error
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">createReadStream</span>(<span style="color:#e6db74">&#39;huge.csv&#39;</span>),
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">csvParse</span>(),                          <span style="color:#75715e">// Transform
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">TransformEnrich</span>(),               <span style="color:#75715e">// Transform async của bạn
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">createGzip</span>(),
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">createWriteStream</span>(<span style="color:#e6db74">&#39;out.gz&#39;</span>),
-</span></span><span style="display:flex;"><span>  { <span style="color:#a6e22e">signal</span> }                           <span style="color:#75715e">// hủy được bằng AbortController
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>);
-</span></span></code></pre></div><p><strong>Luôn dùng <code>pipeline</code>, không dùng <code>.pipe()</code> trần:</strong> <code>.pipe()</code> không destroy các stream còn lại khi một cái lỗi → file descriptor leak + memory leak âm ỉ — một trong những leak khó tìm nhất của Node. <code>pipeline</code> dọn dẹp tất cả và trả lỗi về một chỗ.</p>
-<p>Từ Node 16+, Readable có <code>.map()</code>, <code>.filter()</code>, và <strong><code>for await...of</code></strong> — xử lý stream như vòng lặp thường, backpressure tự nhiên (không đọc chunk kế khi thân vòng lặp chưa xong):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#66d9ef">await</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">chunk</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">readable</span>) {
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">process</span>(<span style="color:#a6e22e">chunk</span>);    <span style="color:#75715e">// nguồn tự dừng chờ mình — backpressure miễn phí
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
-</span></span></code></pre></div><h3 id="54-ví-dụ-thất-bại-thực-tế-mô-típ-phổ-biến">5.4. Ví dụ thất bại thực tế (mô típ phổ biến)<a hidden class="anchor" aria-hidden="true" href="#54-ví-dụ-thất-bại-thực-tế-mô-típ-phổ-biến">#</a></h3>
-<p>Service export báo cáo: query 2 triệu row → <code>rows.map(toCSVLine).join('\n')</code> → <code>res.send()</code>. Chạy tốt ở staging (10K row). Production tháng thứ ba, khách hàng lớn export 2M row: 1.2GB string trong heap → vượt heap limit → <strong>crash cả process, rớt toàn bộ request đang chạy của mọi user khác</strong>. Fix: stream từ DB cursor (<code>pg-query-stream</code>) → Transform CSV → response, pipeline; memory từ 1.2GB xuống ~30MB bất kể kích thước export. Bài học kép: (1) dữ liệu production luôn lớn hơn staging 100 lần; (2) trong Node, một request tham ăn giết tất cả — blast radius của lỗi memory là cả process.</p>
-<hr>
-<h2 id="6-trade-off-tổng-hợp--lời-khuyên">6. Trade-off tổng hợp &amp; lời khuyên<a hidden class="anchor" aria-hidden="true" href="#6-trade-off-tổng-hợp--lời-khuyên">#</a></h2>
-<table>
-  <thead>
-      <tr>
-          <th>Nhu cầu</th>
-          <th>Công cụ đúng</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>HTTP tận dụng N core</td>
-          <td>Nhiều pod/container (K8s) &gt; cluster module</td>
-      </tr>
-      <tr>
-          <td>Tác vụ CPU 10ms-10s, thường xuyên</td>
-          <td>Worker pool (piscina)</td>
-      </tr>
-      <tr>
-          <td>Đa số workload là CPU-bound</td>
-          <td>Đổi công nghệ cho service đó (Go/Rust)</td>
-      </tr>
-      <tr>
-          <td>Chạy tool ngoài (ffmpeg, git)</td>
-          <td>child_process spawn/execFile</td>
-      </tr>
-      <tr>
-          <td>Dữ liệu lớn/không biết kích thước</td>
-          <td>Stream + pipeline, luôn luôn</td>
-      </tr>
-  </tbody>
-</table>
-<p>Anti-pattern tổng hợp: spawn worker mỗi request; SharedArrayBuffer khi postMessage đủ dùng (mua race, bán simplicity); state trong RAM khi chạy cluster; <code>.pipe()</code> không xử lý lỗi; đọc cả file khi có thể stream; bỏ qua giá trị trả về của <code>write()</code>.</p>
-<hr>
-<p><em>Chương tiếp theo: <a href="/series/nodejs-golang/11-node-memory/">11 — Memory trong Node: V8 Heap, GC, Memory Leak</a></em></p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:54040/tags/nodejs/">Nodejs</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:54040/series/nodejs-golang/11-node-memory/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Bài 11 — Memory &amp; Garbage Collection trong Node</span>
-  </a>
-  <a class="next" href="http://localhost:54040/series/nodejs-golang/09-node-event-loop/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Bài 9 — Event Loop Internals</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on x"
-            href="https://x.com/intent/tweet/?text=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f&amp;hashtags=backend%2cnodejs">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f&amp;title=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;summary=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f&title=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on whatsapp"
-            href="https://api.whatsapp.com/send?text=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on telegram"
-            href="https://telegram.me/share/url?text=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&u=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+</code></pre><p><strong>Điểm khác biệt triết học với Go đáng suy ngẫm:</strong> trong Go, backpressure là <em>mặc định</em> (channel đầy → block, không làm gì cũng đúng). Trong Node, backpressure là <em>giao thức tự nguyện</em> — <code>write()</code> <strong>không bao giờ từ chối</strong>, nó chỉ <em>gợi ý</em> qua giá trị trả về <code>false</code>. Code bỏ qua gợi ý vẫn chạy&mldr; cho đến ngày OOM:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#75715e>// BOM HẸN GIỜ: bỏ qua return value của write
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>row</span> <span style=color:#66d9ef>of</span> <span style=color:#a6e22e>millionRows</span>) {
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>write</span>(<span style=color:#a6e22e>render</span>(<span style=color:#a6e22e>row</span>));   <span style=color:#75715e>// client chậm → triệu chunk chất trong RAM process
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><h3 id=53-cách-viết-đúng-hiện-đại>5.3. Cách viết đúng hiện đại<a hidden class=anchor aria-hidden=true href=#53-cách-viết-đúng-hiện-đại>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#66d9ef>import</span> { <span style=color:#a6e22e>pipeline</span> } <span style=color:#a6e22e>from</span> <span style=color:#e6db74>&#39;node:stream/promises&#39;</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>await</span> <span style=color:#a6e22e>pipeline</span>(                        <span style=color:#75715e>// backpressure tự động + cleanup + error
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>createReadStream</span>(<span style=color:#e6db74>&#39;huge.csv&#39;</span>),
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>csvParse</span>(),                          <span style=color:#75715e>// Transform
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>TransformEnrich</span>(),               <span style=color:#75715e>// Transform async của bạn
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#a6e22e>createGzip</span>(),
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>createWriteStream</span>(<span style=color:#e6db74>&#39;out.gz&#39;</span>),
+</span></span><span style=display:flex><span>  { <span style=color:#a6e22e>signal</span> }                           <span style=color:#75715e>// hủy được bằng AbortController
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>);
+</span></span></code></pre></div><p><strong>Luôn dùng <code>pipeline</code>, không dùng <code>.pipe()</code> trần:</strong> <code>.pipe()</code> không destroy các stream còn lại khi một cái lỗi → file descriptor leak + memory leak âm ỉ — một trong những leak khó tìm nhất của Node. <code>pipeline</code> dọn dẹp tất cả và trả lỗi về một chỗ.</p><p>Từ Node 16+, Readable có <code>.map()</code>, <code>.filter()</code>, và <strong><code>for await...of</code></strong> — xử lý stream như vòng lặp thường, backpressure tự nhiên (không đọc chunk kế khi thân vòng lặp chưa xong):</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#66d9ef>await</span> (<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>chunk</span> <span style=color:#66d9ef>of</span> <span style=color:#a6e22e>readable</span>) {
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>process</span>(<span style=color:#a6e22e>chunk</span>);    <span style=color:#75715e>// nguồn tự dừng chờ mình — backpressure miễn phí
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><h3 id=54-ví-dụ-thất-bại-thực-tế-mô-típ-phổ-biến>5.4. Ví dụ thất bại thực tế (mô típ phổ biến)<a hidden class=anchor aria-hidden=true href=#54-ví-dụ-thất-bại-thực-tế-mô-típ-phổ-biến>#</a></h3><p>Service export báo cáo: query 2 triệu row → <code>rows.map(toCSVLine).join('\n')</code> → <code>res.send()</code>. Chạy tốt ở staging (10K row). Production tháng thứ ba, khách hàng lớn export 2M row: 1.2GB string trong heap → vượt heap limit → <strong>crash cả process, rớt toàn bộ request đang chạy của mọi user khác</strong>. Fix: stream từ DB cursor (<code>pg-query-stream</code>) → Transform CSV → response, pipeline; memory từ 1.2GB xuống ~30MB bất kể kích thước export. Bài học kép: (1) dữ liệu production luôn lớn hơn staging 100 lần; (2) trong Node, một request tham ăn giết tất cả — blast radius của lỗi memory là cả process.</p><hr><h2 id=6-trade-off-tổng-hợp--lời-khuyên>6. Trade-off tổng hợp & lời khuyên<a hidden class=anchor aria-hidden=true href=#6-trade-off-tổng-hợp--lời-khuyên>#</a></h2><table><thead><tr><th>Nhu cầu</th><th>Công cụ đúng</th></tr></thead><tbody><tr><td>HTTP tận dụng N core</td><td>Nhiều pod/container (K8s) > cluster module</td></tr><tr><td>Tác vụ CPU 10ms-10s, thường xuyên</td><td>Worker pool (piscina)</td></tr><tr><td>Đa số workload là CPU-bound</td><td>Đổi công nghệ cho service đó (Go/Rust)</td></tr><tr><td>Chạy tool ngoài (ffmpeg, git)</td><td>child_process spawn/execFile</td></tr><tr><td>Dữ liệu lớn/không biết kích thước</td><td>Stream + pipeline, luôn luôn</td></tr></tbody></table><p>Anti-pattern tổng hợp: spawn worker mỗi request; SharedArrayBuffer khi postMessage đủ dùng (mua race, bán simplicity); state trong RAM khi chạy cluster; <code>.pipe()</code> không xử lý lỗi; đọc cả file khi có thể stream; bỏ qua giá trị trả về của <code>write()</code>.</p><hr><p><em>Chương tiếp theo: <a href=/series/nodejs-golang/11-node-memory/>11 — Memory trong Node: V8 Heap, GC, Memory Leak</a></em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/nodejs/>Nodejs</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/nodejs-golang/11-node-memory/><span class=title>« Prev</span><br><span>Bài 11 — Memory & Garbage Collection trong Node</span>
+</a><a class=next href=https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/><span class=title>Next »</span><br><span>Bài 9 — Event Loop Internals</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on x" href="https://x.com/intent/tweet/?text=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f&amp;hashtags=backend%2cnodejs"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f&amp;title=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;summary=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f&title=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on whatsapp" href="https://api.whatsapp.com/send?text=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on telegram" href="https://telegram.me/share/url?text=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 10 — Concurrency & Stream trong Node on ycombinator" href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%2010%20%e2%80%94%20Concurrency%20%26%20Stream%20trong%20Node&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f10-node-concurrency-stream%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

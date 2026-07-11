@@ -1,391 +1,288 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
-  <channel>
-    <title>Nodejs on Thanh HV&#39;s Blog</title>
-    <link>http://localhost:54040/tags/nodejs/</link>
-    <description>Recent content in Nodejs on Thanh HV&#39;s Blog</description>
-    <generator>Hugo -- 0.146.7</generator>
-    <language>en-us</language>
-    <lastBuildDate>Fri, 03 Jul 2026 09:00:00 +0700</lastBuildDate>
-    <atom:link href="http://localhost:54040/tags/nodejs/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Bài 2 — Node.js Internals</title>
-      <link>http://localhost:54040/series/backend-interview/02-nodejs/</link>
-      <pubDate>Fri, 03 Jul 2026 09:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/backend-interview/02-nodejs/</guid>
-      <description>&lt;h1 id=&#34;nodejs-internals&#34;&gt;Node.js Internals&lt;/h1&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;câu-1--fundamental--senior-event-loop-hoạt-động-thế-nào-tại-sao-node-single-thread-mà-vẫn-xử-lý-được-hàng-chục-nghìn-kết-nối&#34;&gt;Câu 1 — [Fundamental → Senior] Event Loop hoạt động thế nào? Tại sao Node single-thread mà vẫn xử lý được hàng chục nghìn kết nối?&lt;/h2&gt;
-&lt;h3 id=&#34;1-câu-hỏi&#34;&gt;1. Câu hỏi&lt;/h3&gt;
-&lt;p&gt;&amp;ldquo;Trình bày các phase của event loop. Node.js &amp;lsquo;single-threaded&amp;rsquo; — điều đó đúng đến mức nào?&amp;rdquo;&lt;/p&gt;
-&lt;h3 id=&#34;2-interviewer-muốn-kiểm-tra-điều-gì&#34;&gt;2. Interviewer muốn kiểm tra điều gì?&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Hiểu mô hình thực thi nền tảng — mọi bug hiệu năng Node đều quy về đây.&lt;/li&gt;
-&lt;li&gt;Phân biệt được microtask vs macrotask — nguồn của các bug thứ tự thực thi.&lt;/li&gt;
-&lt;li&gt;Biết giới hạn của mô hình: CPU-bound giết Node như thế nào.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3 id=&#34;3-câu-trả-lời-ngắn-gọn-30-giây&#34;&gt;3. Câu trả lời ngắn gọn (30 giây)&lt;/h3&gt;
-&lt;p&gt;&amp;ldquo;Node chạy JavaScript trên một thread duy nhất, nhưng I/O được libuv ủy quyền cho kernel (epoll/kqueue) hoặc thread pool (mặc định 4 thread cho file I/O, DNS, crypto). Event loop quay qua các phase: timers → pending callbacks → poll (chờ I/O) → check (setImmediate) → close. Giữa mỗi callback, toàn bộ microtask queue (promise, &lt;code&gt;process.nextTick&lt;/code&gt;) được xả sạch. Node xử lý được C10K vì thread không bao giờ chờ I/O — nó chỉ chạy callback. Điểm chết: một callback tính toán nặng chặn toàn bộ loop, mọi request khác đứng hình.&amp;rdquo;&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 15 — Kiến Trúc Thực Tế</title>
-      <link>http://localhost:54040/series/nodejs-golang/15-kien-truc-thuc-te/</link>
-      <pubDate>Wed, 01 Jul 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/15-kien-truc-thuc-te/</guid>
-      <description>&lt;h1 id=&#34;kiến-trúc-thực-tế--chọn-go-hay-node-cho-11-loại-hệ-thống&#34;&gt;Kiến trúc thực tế — Chọn Go hay Node cho 11 loại hệ thống&lt;/h1&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Cấu trúc mỗi mục: đặc tính tải → lựa chọn khuyến nghị → vì sao / vì sao không phương án kia → scale &amp;amp; chi phí → rủi ro chính. Mọi khuyến nghị là &lt;strong&gt;mặc định hợp lý&lt;/strong&gt;, bị ghi đè bởi yếu tố con người (chương 14, mục 2.2).&lt;/p&gt;&lt;/blockquote&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-api-gateway&#34;&gt;1. API Gateway&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải:&lt;/strong&gt; connection-heavy, mọi request của hệ thống đi qua; việc chính là route, authn, rate limit, transform nhẹ — I/O-bound nhưng &lt;strong&gt;p99 của gateway cộng vào p99 của tất cả&lt;/strong&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị: Go&lt;/strong&gt; (không ngẫu nhiên mà Kong gateway data plane, Traefik, KrakenD, Tyk là Go/nền C). Lý do: tail latency ổn định (GC sub-ms), một process ăn mọi core → ít hop LB nội bộ, memory/connection thấp cho hàng trăm nghìn kết nối keep-alive.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Vì sao không Node:&lt;/strong&gt; một transform plugin viết ẩu block loop là &lt;strong&gt;mọi&lt;/strong&gt; route cùng chậm — blast radius cực đại đúng chỗ nhạy cảm nhất. Vẫn hợp lý khi: gateway nhẹ, đội JS, cần viết plugin logic nghiệp vụ nhanh (BFF-gateway lai).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Thực tế trưởng thành:&lt;/strong&gt; đừng tự viết nếu nhu cầu là chuẩn (authn, rate limit, routing) — dùng Kong/Envoy/Traefik, chỉ viết plugin. Tự viết gateway chỉ đáng khi transform logic là lợi thế cạnh tranh.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; gateway tự viết trở thành SPOF + nút cổ chai kiến thức của một người.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;2-authentication-service&#34;&gt;2. Authentication Service&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải:&lt;/strong&gt; RPS cao (mọi service hỏi), &lt;strong&gt;CPU-bound thật sự ở điểm nóng&lt;/strong&gt;: bcrypt/argon2 (cố ý đắt ~50-300ms CPU), ký/verify JWT, TLS.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị: Go.&lt;/strong&gt; Hash password song song trên mọi core tự nhiên; Node phải đẩy bcrypt qua thread pool libuv (4 thread mặc định — 5 login đồng thời là nghẽn, và nghẽn &lt;em&gt;chung&lt;/em&gt; với fs/DNS!) hoặc worker pool tự quản.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Node vẫn ổn khi:&lt;/strong&gt; dùng managed auth (Auth0, Cognito, Keycloak) và service chỉ là lớp mỏng OIDC — lúc này là I/O-bound thuần.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; không phụ thuộc ngôn ngữ — là crypto tự chế. Dùng thư viện chuẩn, mua/dùng open source (Keycloak, Ory — Ory viết bằng Go) trước khi tự viết.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;3-payment-service&#34;&gt;3. Payment Service&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải:&lt;/strong&gt; RPS thường &lt;strong&gt;thấp&lt;/strong&gt; (nghìn TPS đã là rất lớn), nhưng đòi hỏi đúng đắn tuyệt đối: idempotency, transaction, audit, reconciliation. I/O-bound (chờ ngân hàng/PSP hàng trăm ms).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị: hòa về hiệu năng — quyết định bằng tính đúng đắn.&lt;/strong&gt; Go có lợi thế: static typing chặt + kiểu số rõ ràng (và kỷ luật dùng số nguyên minor unit / thư viện decimal — &lt;strong&gt;không bao giờ float cho tiền&lt;/strong&gt;, đúng ở mọi ngôn ngữ; JS &lt;code&gt;Number&lt;/code&gt; toàn float nên nguy cơ trượt tay cao hơn, phải ép kỷ luật BigInt/decimal.js). Node có lợi thế: tích hợp PSP (Stripe SDK v.v.) tốt.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Kiến trúc quan trọng hơn ngôn ngữ:&lt;/strong&gt; outbox + idempotency key (chương 6) + saga cho flow nhiều bước + ledger append-only. Một team viết Node kỷ luật ăn đứt team Go cẩu thả ở domain này.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; xử lý double-charge/mất tiền do retry không idempotent — lỗi thiết kế, không lỗi runtime.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;4-notification-service-emailpushsms&#34;&gt;4. Notification Service (email/push/SMS)&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải:&lt;/strong&gt; consumer từ queue, fan-out lớn, I/O-bound gần tuyệt đối (chờ FCM/APNs/SMTP), bursty (chiến dịch marketing bắn 10M push).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị: cả hai đều tốt — chọn theo đội.&lt;/strong&gt; Node tự nhiên với template render + SDK provider phong phú. Go tự nhiên với worker pool + rate limit per-provider (chương 3, 6) và tốn ít máy hơn khi burst chục triệu.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Điểm kiến trúc quyết định:&lt;/strong&gt; rate limit theo từng provider (APNs/FCM có quota), retry với DLQ, idempotent theo message ID (gửi trùng notification là lỗi user-facing rất khó chịu), và priority queue (OTP phải vượt mặt marketing).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; retry storm tự DDoS provider → bị throttle toàn tổ chức.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;5-realtime-chat&#34;&gt;5. Realtime Chat&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải:&lt;/strong&gt; connection-heavy (WebSocket giữ lâu), mỗi connection ít việc; fan-out theo room; presence.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị: Go nghiêng nhẹ ở scale lớn.&lt;/strong&gt; 1M kết nối WebSocket: Go ~vài GB (goroutine + buffer/conn kiểm soát được); Node cần nhiều process/pod hơn đáng kể và GC pressure từ churn message object. Ở scale &amp;lt;50K connection: Node + socket.io năng suất hơn (reconnect, room, fallback có sẵn — Go phải tự ghép từ gorilla/nhold + redis pub/sub).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Kiến trúc quan trọng hơn:&lt;/strong&gt; tách connection layer (stateful, scale theo connection) khỏi business layer (stateless, scale theo RPS); pub/sub (Redis/NATS) nối các node connection; sticky theo user chỉ ở tầng connection.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; thundering herd khi deploy/restart node connection (100K client reconnect cùng lúc) — cần jitter reconnect phía client + connection draining.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;6-social-network-feed-profile-graph&#34;&gt;6. Social Network (feed, profile, graph)&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải:&lt;/strong&gt; read-heavy chênh lệch lớn (đọc:ghi ~100:1), fan-out feed là bài toán riêng, cache là trung tâm kiến trúc.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị: đa ngôn ngữ theo tầng&lt;/strong&gt; — mẫu hình ngành: API/BFF bằng Node (tốc độ ra tính năng, đội full-stack), tầng nền bằng Go/Java/C++ (feed ranking, fanout worker, media processing). Cãi nhau &amp;ldquo;một ngôn ngữ cho cả social network&amp;rdquo; là đặt sai câu hỏi khi hệ đủ lớn.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Chi phí:&lt;/strong&gt; ở scale này hạ tầng &amp;raquo; lương — Go ở các đường nóng (feed API đọc 100K RPS) hoàn vốn nhanh.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; cache stampede khi key nóng hết hạn (singleflight — chương 3/12) và hot partition (celebrity problem) — thiết kế fanout hybrid push/pull.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;7-e-commerce&#34;&gt;7. E-commerce&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải:&lt;/strong&gt; hỗn hợp điển hình: catalog read-heavy + cache tốt; checkout write + transactional; search; ảnh; flash sale = burst ×100.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị:&lt;/strong&gt; storefront/BFF: &lt;strong&gt;Node&lt;/strong&gt; (SSR Next.js, đội frontend chủ động end-to-end); inventory/checkout/pricing: &lt;strong&gt;Go&lt;/strong&gt; (concurrency có kỷ luật quanh stock — trừ kho chính xác dưới burst là bài toán lock/atomic đúng sở trường; và flash sale cần headroom + load shedding của chương 3).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Vì sao không thuần một thứ:&lt;/strong&gt; thuần Node → flash sale và tính tồn kho là hai điểm run tay; thuần Go → đội frontend bị tách khỏi backend BFF, vòng lặp tính năng chậm.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; oversell khi flash sale (giải bằng reserve stock atomic — Redis Lua/DB, không giải bằng &amp;ldquo;hy vọng&amp;rdquo;).&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;8-fintech-core-banking-trading-ledger&#34;&gt;8. FinTech (core banking, trading, ledger)&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tải &amp;amp; yêu cầu:&lt;/strong&gt; đúng đắn &amp;gt; tất cả; audit; p99 chặt (trading); compliance.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị: Go là mặc định tốt cho core&lt;/strong&gt; (ledger, matching, risk): static typing, latency ổn, một binary dễ kiểm soát môi trường, ecosystem fintech Go dày (nhiều ngân hàng số lớn xây core bằng Go). Node hợp ở rìa: onboarding flow, dashboard, tích hợp đối tác.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Ranh giới cứng:&lt;/strong&gt; matching engine HFT độ trễ µs → cả Go GC lẫn Node đều không đủ — C++/Rust/FPGA. Biết giới hạn trên của công cụ là năng lực architect.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; dùng float cho tiền (nhắc lần hai vì nó vẫn cứ xảy ra); và eventual consistency đặt nhầm chỗ — số dư khả dụng không được &amp;ldquo;eventual&amp;rdquo;.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;9-streaming-platform-videoaudio&#34;&gt;9. Streaming Platform (video/audio)&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tách bài toán đúng trước khi chọn:&lt;/strong&gt; (a) serve video = bài toán của CDN + nginx/object storage, không viết tay; (b) transcode = FFmpeg/GPU do worker điều phối; (c) control plane (playlist, DRM license, analytics ingest) = API thường.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị:&lt;/strong&gt; worker điều phối transcode: &lt;strong&gt;Go&lt;/strong&gt; (quản lý process, pipeline, tận CPU máy worker); control plane: &lt;strong&gt;Go hoặc Node&lt;/strong&gt; đều ổn (I/O-bound); analytics ingest số lớn: Go/Kafka.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; tự viết cái mà nginx/CDN/FFmpeg đã giải — chi phí cơ hội khổng lồ.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;10-blockchain-infrastructure&#34;&gt;10. Blockchain Infrastructure&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Thực tế ngành:&lt;/strong&gt; node/client blockchain lớn viết bằng Go (go-ethereum, Cosmos SDK, nhiều client Bitcoin alt) và Rust (Solana, Polkadot) — cần: crypto CPU-heavy, P2P networking hàng nghìn peer, kiểm soát binary. Node.js &lt;strong&gt;không phù hợp cho tầng node/consensus&lt;/strong&gt; (CPU + GC không kiểm soát đủ).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Node.js đúng chỗ ở:&lt;/strong&gt; tầng ứng dụng — indexer nhẹ, API đọc chain, bot, dApp backend (ecosystem ethers.js/web3.js mạnh nhất ở JS).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; bug trong code chạm tiền là không thể vá hồi tố; audit + test property-based nặng hơn mọi domain khác.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;11-ai-platform&#34;&gt;11. AI Platform&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Tách tầng:&lt;/strong&gt; training/inference = Python/C++/CUDA (không bàn); &lt;strong&gt;serving &amp;amp; orchestration&lt;/strong&gt; mới là chỗ Go/Node cạnh tranh.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Khuyến nghị:&lt;/strong&gt; model gateway / inference router (batching, quota, streaming token, A/B model): &lt;strong&gt;Go&lt;/strong&gt; — throughput + streaming + đếm token CPU nhẹ nhưng RPS lớn. Application layer trên LLM (chatbot product, RAG glue, tool-calling): &lt;strong&gt;Node/TS rất mạnh&lt;/strong&gt; — vòng lặp sản phẩm nhanh, SDK AI hạng nhất, streaming SSE/WebSocket tự nhiên với async iterator.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Đặc thù đáng chú ý:&lt;/strong&gt; workload LLM là I/O-bound kiểu mới (chờ GPU service hàng giây, giữ hàng nghìn stream mở) — cả hai đều hợp; Go tiết kiệm connection overhead, Node ghép UX nhanh.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Rủi ro chính:&lt;/strong&gt; capacity planning theo token chứ không theo request — sai đơn vị đo là sai hết autoscale/cost model.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;tổng-kết-mẫu-hình-pattern-of-patterns&#34;&gt;Tổng kết mẫu hình (pattern of patterns)&lt;/h2&gt;
-&lt;p&gt;Nhìn lại 11 hệ thống, các quy luật lặp lại:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 14 — So Sánh Golang vs Node.js</title>
-      <link>http://localhost:54040/series/nodejs-golang/14-so-sanh-go-nodejs/</link>
-      <pubDate>Mon, 29 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/14-so-sanh-go-nodejs/</guid>
-      <description>&lt;h1 id=&#34;so-sánh-toàn-diện-golang-vs-nodejs&#34;&gt;So sánh toàn diện Golang vs Node.js&lt;/h1&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Nguyên tắc của chương này: so sánh &lt;strong&gt;cơ chế → hệ quả → điều kiện áp dụng&lt;/strong&gt;, không tuyên bố kẻ thắng chung cuộc. Mọi con số là bậc độ lớn (order of magnitude) để định hướng — con số thật phụ thuộc workload, phải tự benchmark.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-bảng-tổng-hợp&#34;&gt;1. Bảng tổng hợp&lt;/h2&gt;
-&lt;table&gt;
-  &lt;thead&gt;
-      &lt;tr&gt;
-          &lt;th&gt;Tiêu chí&lt;/th&gt;
-          &lt;th&gt;Golang&lt;/th&gt;
-          &lt;th&gt;Node.js&lt;/th&gt;
-          &lt;th&gt;Ghi chú cơ chế&lt;/th&gt;
-      &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Runtime Model&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;AOT compile → machine code; runtime (GC, scheduler) nhúng trong binary&lt;/td&gt;
-          &lt;td&gt;JIT (V8) + event loop (libuv); cần Node runtime cài sẵn&lt;/td&gt;
-          &lt;td&gt;AOT = hiệu năng ổn định từ giây đầu; JIT = cần warm-up, peak cao ở hot path ổn định&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Concurrency&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Goroutine M:N, preemptive; hàng triệu task; blocking-style; race có thể xảy ra (có race detector)&lt;/td&gt;
-          &lt;td&gt;Event loop đơn luồng + async/await; không data race trong JS; CPU đồng thời cần worker/cluster&lt;/td&gt;
-          &lt;td&gt;Go: concurrency + parallelism hợp nhất. Node: concurrency dễ, parallelism là tiện ích gắn thêm&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Throughput&lt;/strong&gt; (API I/O-bound)&lt;/td&gt;
-          &lt;td&gt;Rất cao; 1 process ăn mọi core&lt;/td&gt;
-          &lt;td&gt;Cao trên 1 core; cần N process cho N core&lt;/td&gt;
-          &lt;td&gt;Cùng workload JSON API, Go thường gấp ~2-5x/instance; Fastify thu hẹp đáng kể so với Express&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Latency&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;p99 rất ổn (GC sub-ms, không JIT, preemption)&lt;/td&gt;
-          &lt;td&gt;p50 tốt; p99 dễ nhiễu (GC pause, deopt, event loop block)&lt;/td&gt;
-          &lt;td&gt;Khác biệt lộ rõ nhất ở tail latency dưới tải hỗn hợp&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Memory Usage&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Baseline ~5-20MB/process; 1 heap cho mọi core&lt;/td&gt;
-          &lt;td&gt;Baseline ~50-150MB/process; ×N process khi cluster&lt;/td&gt;
-          &lt;td&gt;Chênh lệch 5-10x là bình thường — thành tiền thật khi chạy trăm instance&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;CPU-bound&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Tốt (song song thật, gần C trong tầm 10-30%)&lt;/td&gt;
-          &lt;td&gt;Yếu — điểm yếu cấu trúc; worker_threads là vá, không phải nền&lt;/td&gt;
-          &lt;td&gt;Khác biệt lớn nhất giữa hai nền tảng&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;I/O-bound&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Rất tốt (netpoller + goroutine)&lt;/td&gt;
-          &lt;td&gt;Rất tốt (sở trường nguyên thủy)&lt;/td&gt;
-          &lt;td&gt;Ở tiêu chí này hai bên gần nhau nhất — quyết định nên dựa tiêu chí khác&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Startup Time&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;~vài ms — chục ms&lt;/td&gt;
-          &lt;td&gt;~50-500ms (tùy lượng require + JIT)&lt;/td&gt;
-          &lt;td&gt;Quan trọng với serverless/cold start, CLI, autoscale gấp&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Scalability&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Dọc tốt (thêm core là ăn) + ngang tốt&lt;/td&gt;
-          &lt;td&gt;Chủ yếu ngang (nhiều process/pod)&lt;/td&gt;
-          &lt;td&gt;Cùng đạt đích; Go cần ít instance hơn cho cùng tải&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Developer Productivity&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Tốt cho backend thuần; ceremony ít nhưng verbose (err check)&lt;/td&gt;
-          &lt;td&gt;Rất cao cho full-stack, prototype, API JSON&lt;/td&gt;
-          &lt;td&gt;Node thắng ở tốc độ khởi đầu; khoảng cách hẹp dần theo tuổi codebase&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Learning Curve&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Nông và ngắn (ngôn ngữ nhỏ, một cách làm)&lt;/td&gt;
-          &lt;td&gt;Vào cửa dễ (JS phổ cập) nhưng master sâu khó (event loop, quirks JS, chọn lựa ecosystem)&lt;/td&gt;
-          &lt;td&gt;Nghịch lý: Node dễ bắt đầu hơn, Go dễ &lt;em&gt;giỏi&lt;/em&gt; hơn&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Ecosystem&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Chuẩn, chất lượng đều, stdlib mạnh; hẹp ở ngoài backend/infra&lt;/td&gt;
-          &lt;td&gt;Lớn nhất thế giới, mọi thứ đều có; chất lượng thượng vàng hạ cám, supply-chain risk&lt;/td&gt;
-          &lt;td&gt;Go: ít lựa chọn, dễ chọn. Node: nhiều lựa chọn, chọn là kỹ năng&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Deployment&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;1 static binary; image từ scratch ~10-20MB&lt;/td&gt;
-          &lt;td&gt;Node + node_modules; image ~100-300MB; cần build step (TS)&lt;/td&gt;
-          &lt;td&gt;Go đơn giản hơn rõ; Node đã cải thiện (multi-stage, standalone bundle)&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Operational Complexity&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;Thấp: ít knob, metric runtime sẵn, ít bất ngờ&lt;/td&gt;
-          &lt;td&gt;Trung bình: heap limit, thread pool size, event loop cần giám sát riêng, leak thường gặp hơn&lt;/td&gt;
-          &lt;td&gt;Chi phí &amp;ldquo;trông trẻ&amp;rdquo; dài hạn của Node cao hơn&lt;/td&gt;
-      &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;2-phân-tích-sâu-các-trục-quan-trọng&#34;&gt;2. Phân tích sâu các trục quan trọng&lt;/h2&gt;
-&lt;h3 id=&#34;21-trục-quyết-định-nhất-bản-chất-workload&#34;&gt;2.1. Trục quyết định nhất: bản chất workload&lt;/h3&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;CPU-bound thuần ──────────────► Go (hoặc Rust), không bàn cãi
-CPU + I/O trộn  ──────────────► Go thoải mái hơn hẳn (không sợ block)
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Nodejs on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/nodejs/</link><description>Recent content in Nodejs on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Fri, 03 Jul 2026 09:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/nodejs/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 2 — Node.js Internals</title><link>https://thanhhv.github.io/series/backend-interview/02-nodejs/</link><pubDate>Fri, 03 Jul 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-interview/02-nodejs/</guid><description>&lt;hr>
+&lt;h2 id="câu-1--fundamental--senior-event-loop-hoạt-động-thế-nào-tại-sao-node-single-thread-mà-vẫn-xử-lý-được-hàng-chục-nghìn-kết-nối">Câu 1 — [Fundamental → Senior] Event Loop hoạt động thế nào? Tại sao Node single-thread mà vẫn xử lý được hàng chục nghìn kết nối?&lt;/h2>
+&lt;h3 id="1-câu-hỏi">1. Câu hỏi&lt;/h3>
+&lt;p>&amp;ldquo;Trình bày các phase của event loop. Node.js &amp;lsquo;single-threaded&amp;rsquo; — điều đó đúng đến mức nào?&amp;rdquo;&lt;/p>
+&lt;h3 id="2-interviewer-muốn-kiểm-tra-điều-gì">2. Interviewer muốn kiểm tra điều gì?&lt;/h3>
+&lt;ul>
+&lt;li>Hiểu mô hình thực thi nền tảng — mọi bug hiệu năng Node đều quy về đây.&lt;/li>
+&lt;li>Phân biệt được microtask vs macrotask — nguồn của các bug thứ tự thực thi.&lt;/li>
+&lt;li>Biết giới hạn của mô hình: CPU-bound giết Node như thế nào.&lt;/li>
+&lt;/ul>
+&lt;h3 id="3-câu-trả-lời-ngắn-gọn-30-giây">3. Câu trả lời ngắn gọn (30 giây)&lt;/h3>
+&lt;p>&amp;ldquo;Node chạy JavaScript trên một thread duy nhất, nhưng I/O được libuv ủy quyền cho kernel (epoll/kqueue) hoặc thread pool (mặc định 4 thread cho file I/O, DNS, crypto). Event loop quay qua các phase: timers → pending callbacks → poll (chờ I/O) → check (setImmediate) → close. Giữa mỗi callback, toàn bộ microtask queue (promise, &lt;code>process.nextTick&lt;/code>) được xả sạch. Node xử lý được C10K vì thread không bao giờ chờ I/O — nó chỉ chạy callback. Điểm chết: một callback tính toán nặng chặn toàn bộ loop, mọi request khác đứng hình.&amp;rdquo;&lt;/p></description></item><item><title>Bài 15 — Kiến Trúc Thực Tế</title><link>https://thanhhv.github.io/series/nodejs-golang/15-kien-truc-thuc-te/</link><pubDate>Wed, 01 Jul 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/15-kien-truc-thuc-te/</guid><description>&lt;h1 id="kiến-trúc-thực-tế--chọn-go-hay-node-cho-11-loại-hệ-thống">Kiến trúc thực tế — Chọn Go hay Node cho 11 loại hệ thống&lt;/h1>
+&lt;blockquote>
+&lt;p>Cấu trúc mỗi mục: đặc tính tải → lựa chọn khuyến nghị → vì sao / vì sao không phương án kia → scale &amp;amp; chi phí → rủi ro chính. Mọi khuyến nghị là &lt;strong>mặc định hợp lý&lt;/strong>, bị ghi đè bởi yếu tố con người (chương 14, mục 2.2).&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-api-gateway">1. API Gateway&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải:&lt;/strong> connection-heavy, mọi request của hệ thống đi qua; việc chính là route, authn, rate limit, transform nhẹ — I/O-bound nhưng &lt;strong>p99 của gateway cộng vào p99 của tất cả&lt;/strong>.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị: Go&lt;/strong> (không ngẫu nhiên mà Kong gateway data plane, Traefik, KrakenD, Tyk là Go/nền C). Lý do: tail latency ổn định (GC sub-ms), một process ăn mọi core → ít hop LB nội bộ, memory/connection thấp cho hàng trăm nghìn kết nối keep-alive.&lt;/li>
+&lt;li>&lt;strong>Vì sao không Node:&lt;/strong> một transform plugin viết ẩu block loop là &lt;strong>mọi&lt;/strong> route cùng chậm — blast radius cực đại đúng chỗ nhạy cảm nhất. Vẫn hợp lý khi: gateway nhẹ, đội JS, cần viết plugin logic nghiệp vụ nhanh (BFF-gateway lai).&lt;/li>
+&lt;li>&lt;strong>Thực tế trưởng thành:&lt;/strong> đừng tự viết nếu nhu cầu là chuẩn (authn, rate limit, routing) — dùng Kong/Envoy/Traefik, chỉ viết plugin. Tự viết gateway chỉ đáng khi transform logic là lợi thế cạnh tranh.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> gateway tự viết trở thành SPOF + nút cổ chai kiến thức của một người.&lt;/li>
+&lt;/ul>
+&lt;h2 id="2-authentication-service">2. Authentication Service&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải:&lt;/strong> RPS cao (mọi service hỏi), &lt;strong>CPU-bound thật sự ở điểm nóng&lt;/strong>: bcrypt/argon2 (cố ý đắt ~50-300ms CPU), ký/verify JWT, TLS.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị: Go.&lt;/strong> Hash password song song trên mọi core tự nhiên; Node phải đẩy bcrypt qua thread pool libuv (4 thread mặc định — 5 login đồng thời là nghẽn, và nghẽn &lt;em>chung&lt;/em> với fs/DNS!) hoặc worker pool tự quản.&lt;/li>
+&lt;li>&lt;strong>Node vẫn ổn khi:&lt;/strong> dùng managed auth (Auth0, Cognito, Keycloak) và service chỉ là lớp mỏng OIDC — lúc này là I/O-bound thuần.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> không phụ thuộc ngôn ngữ — là crypto tự chế. Dùng thư viện chuẩn, mua/dùng open source (Keycloak, Ory — Ory viết bằng Go) trước khi tự viết.&lt;/li>
+&lt;/ul>
+&lt;h2 id="3-payment-service">3. Payment Service&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải:&lt;/strong> RPS thường &lt;strong>thấp&lt;/strong> (nghìn TPS đã là rất lớn), nhưng đòi hỏi đúng đắn tuyệt đối: idempotency, transaction, audit, reconciliation. I/O-bound (chờ ngân hàng/PSP hàng trăm ms).&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị: hòa về hiệu năng — quyết định bằng tính đúng đắn.&lt;/strong> Go có lợi thế: static typing chặt + kiểu số rõ ràng (và kỷ luật dùng số nguyên minor unit / thư viện decimal — &lt;strong>không bao giờ float cho tiền&lt;/strong>, đúng ở mọi ngôn ngữ; JS &lt;code>Number&lt;/code> toàn float nên nguy cơ trượt tay cao hơn, phải ép kỷ luật BigInt/decimal.js). Node có lợi thế: tích hợp PSP (Stripe SDK v.v.) tốt.&lt;/li>
+&lt;li>&lt;strong>Kiến trúc quan trọng hơn ngôn ngữ:&lt;/strong> outbox + idempotency key (chương 6) + saga cho flow nhiều bước + ledger append-only. Một team viết Node kỷ luật ăn đứt team Go cẩu thả ở domain này.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> xử lý double-charge/mất tiền do retry không idempotent — lỗi thiết kế, không lỗi runtime.&lt;/li>
+&lt;/ul>
+&lt;h2 id="4-notification-service-emailpushsms">4. Notification Service (email/push/SMS)&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải:&lt;/strong> consumer từ queue, fan-out lớn, I/O-bound gần tuyệt đối (chờ FCM/APNs/SMTP), bursty (chiến dịch marketing bắn 10M push).&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị: cả hai đều tốt — chọn theo đội.&lt;/strong> Node tự nhiên với template render + SDK provider phong phú. Go tự nhiên với worker pool + rate limit per-provider (chương 3, 6) và tốn ít máy hơn khi burst chục triệu.&lt;/li>
+&lt;li>&lt;strong>Điểm kiến trúc quyết định:&lt;/strong> rate limit theo từng provider (APNs/FCM có quota), retry với DLQ, idempotent theo message ID (gửi trùng notification là lỗi user-facing rất khó chịu), và priority queue (OTP phải vượt mặt marketing).&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> retry storm tự DDoS provider → bị throttle toàn tổ chức.&lt;/li>
+&lt;/ul>
+&lt;h2 id="5-realtime-chat">5. Realtime Chat&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải:&lt;/strong> connection-heavy (WebSocket giữ lâu), mỗi connection ít việc; fan-out theo room; presence.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị: Go nghiêng nhẹ ở scale lớn.&lt;/strong> 1M kết nối WebSocket: Go ~vài GB (goroutine + buffer/conn kiểm soát được); Node cần nhiều process/pod hơn đáng kể và GC pressure từ churn message object. Ở scale &amp;lt;50K connection: Node + socket.io năng suất hơn (reconnect, room, fallback có sẵn — Go phải tự ghép từ gorilla/nhold + redis pub/sub).&lt;/li>
+&lt;li>&lt;strong>Kiến trúc quan trọng hơn:&lt;/strong> tách connection layer (stateful, scale theo connection) khỏi business layer (stateless, scale theo RPS); pub/sub (Redis/NATS) nối các node connection; sticky theo user chỉ ở tầng connection.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> thundering herd khi deploy/restart node connection (100K client reconnect cùng lúc) — cần jitter reconnect phía client + connection draining.&lt;/li>
+&lt;/ul>
+&lt;h2 id="6-social-network-feed-profile-graph">6. Social Network (feed, profile, graph)&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải:&lt;/strong> read-heavy chênh lệch lớn (đọc:ghi ~100:1), fan-out feed là bài toán riêng, cache là trung tâm kiến trúc.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị: đa ngôn ngữ theo tầng&lt;/strong> — mẫu hình ngành: API/BFF bằng Node (tốc độ ra tính năng, đội full-stack), tầng nền bằng Go/Java/C++ (feed ranking, fanout worker, media processing). Cãi nhau &amp;ldquo;một ngôn ngữ cho cả social network&amp;rdquo; là đặt sai câu hỏi khi hệ đủ lớn.&lt;/li>
+&lt;li>&lt;strong>Chi phí:&lt;/strong> ở scale này hạ tầng &amp;raquo; lương — Go ở các đường nóng (feed API đọc 100K RPS) hoàn vốn nhanh.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> cache stampede khi key nóng hết hạn (singleflight — chương 3/12) và hot partition (celebrity problem) — thiết kế fanout hybrid push/pull.&lt;/li>
+&lt;/ul>
+&lt;h2 id="7-e-commerce">7. E-commerce&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải:&lt;/strong> hỗn hợp điển hình: catalog read-heavy + cache tốt; checkout write + transactional; search; ảnh; flash sale = burst ×100.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị:&lt;/strong> storefront/BFF: &lt;strong>Node&lt;/strong> (SSR Next.js, đội frontend chủ động end-to-end); inventory/checkout/pricing: &lt;strong>Go&lt;/strong> (concurrency có kỷ luật quanh stock — trừ kho chính xác dưới burst là bài toán lock/atomic đúng sở trường; và flash sale cần headroom + load shedding của chương 3).&lt;/li>
+&lt;li>&lt;strong>Vì sao không thuần một thứ:&lt;/strong> thuần Node → flash sale và tính tồn kho là hai điểm run tay; thuần Go → đội frontend bị tách khỏi backend BFF, vòng lặp tính năng chậm.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> oversell khi flash sale (giải bằng reserve stock atomic — Redis Lua/DB, không giải bằng &amp;ldquo;hy vọng&amp;rdquo;).&lt;/li>
+&lt;/ul>
+&lt;h2 id="8-fintech-core-banking-trading-ledger">8. FinTech (core banking, trading, ledger)&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tải &amp;amp; yêu cầu:&lt;/strong> đúng đắn &amp;gt; tất cả; audit; p99 chặt (trading); compliance.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị: Go là mặc định tốt cho core&lt;/strong> (ledger, matching, risk): static typing, latency ổn, một binary dễ kiểm soát môi trường, ecosystem fintech Go dày (nhiều ngân hàng số lớn xây core bằng Go). Node hợp ở rìa: onboarding flow, dashboard, tích hợp đối tác.&lt;/li>
+&lt;li>&lt;strong>Ranh giới cứng:&lt;/strong> matching engine HFT độ trễ µs → cả Go GC lẫn Node đều không đủ — C++/Rust/FPGA. Biết giới hạn trên của công cụ là năng lực architect.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> dùng float cho tiền (nhắc lần hai vì nó vẫn cứ xảy ra); và eventual consistency đặt nhầm chỗ — số dư khả dụng không được &amp;ldquo;eventual&amp;rdquo;.&lt;/li>
+&lt;/ul>
+&lt;h2 id="9-streaming-platform-videoaudio">9. Streaming Platform (video/audio)&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tách bài toán đúng trước khi chọn:&lt;/strong> (a) serve video = bài toán của CDN + nginx/object storage, không viết tay; (b) transcode = FFmpeg/GPU do worker điều phối; (c) control plane (playlist, DRM license, analytics ingest) = API thường.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị:&lt;/strong> worker điều phối transcode: &lt;strong>Go&lt;/strong> (quản lý process, pipeline, tận CPU máy worker); control plane: &lt;strong>Go hoặc Node&lt;/strong> đều ổn (I/O-bound); analytics ingest số lớn: Go/Kafka.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> tự viết cái mà nginx/CDN/FFmpeg đã giải — chi phí cơ hội khổng lồ.&lt;/li>
+&lt;/ul>
+&lt;h2 id="10-blockchain-infrastructure">10. Blockchain Infrastructure&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Thực tế ngành:&lt;/strong> node/client blockchain lớn viết bằng Go (go-ethereum, Cosmos SDK, nhiều client Bitcoin alt) và Rust (Solana, Polkadot) — cần: crypto CPU-heavy, P2P networking hàng nghìn peer, kiểm soát binary. Node.js &lt;strong>không phù hợp cho tầng node/consensus&lt;/strong> (CPU + GC không kiểm soát đủ).&lt;/li>
+&lt;li>&lt;strong>Node.js đúng chỗ ở:&lt;/strong> tầng ứng dụng — indexer nhẹ, API đọc chain, bot, dApp backend (ecosystem ethers.js/web3.js mạnh nhất ở JS).&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> bug trong code chạm tiền là không thể vá hồi tố; audit + test property-based nặng hơn mọi domain khác.&lt;/li>
+&lt;/ul>
+&lt;h2 id="11-ai-platform">11. AI Platform&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Tách tầng:&lt;/strong> training/inference = Python/C++/CUDA (không bàn); &lt;strong>serving &amp;amp; orchestration&lt;/strong> mới là chỗ Go/Node cạnh tranh.&lt;/li>
+&lt;li>&lt;strong>Khuyến nghị:&lt;/strong> model gateway / inference router (batching, quota, streaming token, A/B model): &lt;strong>Go&lt;/strong> — throughput + streaming + đếm token CPU nhẹ nhưng RPS lớn. Application layer trên LLM (chatbot product, RAG glue, tool-calling): &lt;strong>Node/TS rất mạnh&lt;/strong> — vòng lặp sản phẩm nhanh, SDK AI hạng nhất, streaming SSE/WebSocket tự nhiên với async iterator.&lt;/li>
+&lt;li>&lt;strong>Đặc thù đáng chú ý:&lt;/strong> workload LLM là I/O-bound kiểu mới (chờ GPU service hàng giây, giữ hàng nghìn stream mở) — cả hai đều hợp; Go tiết kiệm connection overhead, Node ghép UX nhanh.&lt;/li>
+&lt;li>&lt;strong>Rủi ro chính:&lt;/strong> capacity planning theo token chứ không theo request — sai đơn vị đo là sai hết autoscale/cost model.&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="tổng-kết-mẫu-hình-pattern-of-patterns">Tổng kết mẫu hình (pattern of patterns)&lt;/h2>
+&lt;p>Nhìn lại 11 hệ thống, các quy luật lặp lại:&lt;/p></description></item><item><title>Bài 14 — So Sánh Golang vs Node.js</title><link>https://thanhhv.github.io/series/nodejs-golang/14-so-sanh-go-nodejs/</link><pubDate>Mon, 29 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/14-so-sanh-go-nodejs/</guid><description>&lt;h1 id="so-sánh-toàn-diện-golang-vs-nodejs">So sánh toàn diện Golang vs Node.js&lt;/h1>
+&lt;blockquote>
+&lt;p>Nguyên tắc của chương này: so sánh &lt;strong>cơ chế → hệ quả → điều kiện áp dụng&lt;/strong>, không tuyên bố kẻ thắng chung cuộc. Mọi con số là bậc độ lớn (order of magnitude) để định hướng — con số thật phụ thuộc workload, phải tự benchmark.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-bảng-tổng-hợp">1. Bảng tổng hợp&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Tiêu chí&lt;/th>
+&lt;th>Golang&lt;/th>
+&lt;th>Node.js&lt;/th>
+&lt;th>Ghi chú cơ chế&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Runtime Model&lt;/strong>&lt;/td>
+&lt;td>AOT compile → machine code; runtime (GC, scheduler) nhúng trong binary&lt;/td>
+&lt;td>JIT (V8) + event loop (libuv); cần Node runtime cài sẵn&lt;/td>
+&lt;td>AOT = hiệu năng ổn định từ giây đầu; JIT = cần warm-up, peak cao ở hot path ổn định&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Concurrency&lt;/strong>&lt;/td>
+&lt;td>Goroutine M:N, preemptive; hàng triệu task; blocking-style; race có thể xảy ra (có race detector)&lt;/td>
+&lt;td>Event loop đơn luồng + async/await; không data race trong JS; CPU đồng thời cần worker/cluster&lt;/td>
+&lt;td>Go: concurrency + parallelism hợp nhất. Node: concurrency dễ, parallelism là tiện ích gắn thêm&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Throughput&lt;/strong> (API I/O-bound)&lt;/td>
+&lt;td>Rất cao; 1 process ăn mọi core&lt;/td>
+&lt;td>Cao trên 1 core; cần N process cho N core&lt;/td>
+&lt;td>Cùng workload JSON API, Go thường gấp ~2-5x/instance; Fastify thu hẹp đáng kể so với Express&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Latency&lt;/strong>&lt;/td>
+&lt;td>p99 rất ổn (GC sub-ms, không JIT, preemption)&lt;/td>
+&lt;td>p50 tốt; p99 dễ nhiễu (GC pause, deopt, event loop block)&lt;/td>
+&lt;td>Khác biệt lộ rõ nhất ở tail latency dưới tải hỗn hợp&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Memory Usage&lt;/strong>&lt;/td>
+&lt;td>Baseline ~5-20MB/process; 1 heap cho mọi core&lt;/td>
+&lt;td>Baseline ~50-150MB/process; ×N process khi cluster&lt;/td>
+&lt;td>Chênh lệch 5-10x là bình thường — thành tiền thật khi chạy trăm instance&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>CPU-bound&lt;/strong>&lt;/td>
+&lt;td>Tốt (song song thật, gần C trong tầm 10-30%)&lt;/td>
+&lt;td>Yếu — điểm yếu cấu trúc; worker_threads là vá, không phải nền&lt;/td>
+&lt;td>Khác biệt lớn nhất giữa hai nền tảng&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>I/O-bound&lt;/strong>&lt;/td>
+&lt;td>Rất tốt (netpoller + goroutine)&lt;/td>
+&lt;td>Rất tốt (sở trường nguyên thủy)&lt;/td>
+&lt;td>Ở tiêu chí này hai bên gần nhau nhất — quyết định nên dựa tiêu chí khác&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Startup Time&lt;/strong>&lt;/td>
+&lt;td>~vài ms — chục ms&lt;/td>
+&lt;td>~50-500ms (tùy lượng require + JIT)&lt;/td>
+&lt;td>Quan trọng với serverless/cold start, CLI, autoscale gấp&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Scalability&lt;/strong>&lt;/td>
+&lt;td>Dọc tốt (thêm core là ăn) + ngang tốt&lt;/td>
+&lt;td>Chủ yếu ngang (nhiều process/pod)&lt;/td>
+&lt;td>Cùng đạt đích; Go cần ít instance hơn cho cùng tải&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Developer Productivity&lt;/strong>&lt;/td>
+&lt;td>Tốt cho backend thuần; ceremony ít nhưng verbose (err check)&lt;/td>
+&lt;td>Rất cao cho full-stack, prototype, API JSON&lt;/td>
+&lt;td>Node thắng ở tốc độ khởi đầu; khoảng cách hẹp dần theo tuổi codebase&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Learning Curve&lt;/strong>&lt;/td>
+&lt;td>Nông và ngắn (ngôn ngữ nhỏ, một cách làm)&lt;/td>
+&lt;td>Vào cửa dễ (JS phổ cập) nhưng master sâu khó (event loop, quirks JS, chọn lựa ecosystem)&lt;/td>
+&lt;td>Nghịch lý: Node dễ bắt đầu hơn, Go dễ &lt;em>giỏi&lt;/em> hơn&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Ecosystem&lt;/strong>&lt;/td>
+&lt;td>Chuẩn, chất lượng đều, stdlib mạnh; hẹp ở ngoài backend/infra&lt;/td>
+&lt;td>Lớn nhất thế giới, mọi thứ đều có; chất lượng thượng vàng hạ cám, supply-chain risk&lt;/td>
+&lt;td>Go: ít lựa chọn, dễ chọn. Node: nhiều lựa chọn, chọn là kỹ năng&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Deployment&lt;/strong>&lt;/td>
+&lt;td>1 static binary; image từ scratch ~10-20MB&lt;/td>
+&lt;td>Node + node_modules; image ~100-300MB; cần build step (TS)&lt;/td>
+&lt;td>Go đơn giản hơn rõ; Node đã cải thiện (multi-stage, standalone bundle)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Operational Complexity&lt;/strong>&lt;/td>
+&lt;td>Thấp: ít knob, metric runtime sẵn, ít bất ngờ&lt;/td>
+&lt;td>Trung bình: heap limit, thread pool size, event loop cần giám sát riêng, leak thường gặp hơn&lt;/td>
+&lt;td>Chi phí &amp;ldquo;trông trẻ&amp;rdquo; dài hạn của Node cao hơn&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2 id="2-phân-tích-sâu-các-trục-quan-trọng">2. Phân tích sâu các trục quan trọng&lt;/h2>
+&lt;h3 id="21-trục-quyết-định-nhất-bản-chất-workload">2.1. Trục quyết định nhất: bản chất workload&lt;/h3>
+&lt;pre tabindex="0">&lt;code>CPU-bound thuần ──────────────► Go (hoặc Rust), không bàn cãi
+CPU + I/O trộn ──────────────► Go thoải mái hơn hẳn (không sợ block)
 I/O-bound thuần ──────────────► Cả hai tốt → quyết định bằng con người &amp;amp; hệ sinh thái
 Realtime connection-heavy ────► Cả hai tốt (Go tiết kiệm RAM hơn ở scale rất lớn)
 Glue code / BFF / tích hợp ───► Node thường nhanh gọn hơn
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Nhầm lẫn phổ biến cần đính chính: &amp;ldquo;Node nhanh&amp;rdquo; và &amp;ldquo;Go nhanh&amp;rdquo; đều đúng — ở tiêu chí khác nhau. Node &lt;em&gt;đủ nhanh&lt;/em&gt; cho tuyệt đại đa số API I/O-bound; Go nhanh hơn &lt;em&gt;ở cùng chi phí hạ tầng&lt;/em&gt; và &lt;em&gt;ổn định hơn ở đuôi latency&lt;/em&gt;. Với dịch vụ 500 RPS, khác biệt này thường không đáng tiền so với chi phí con người; với 50.000 RPS, nó là hàng chục nghìn USD/tháng.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 13 — Production Engineering với Node</title>
-      <link>http://localhost:54040/series/nodejs-golang/13-node-production-engineering/</link>
-      <pubDate>Sat, 27 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/13-node-production-engineering/</guid>
-      <description>&lt;h1 id=&#34;production-engineering-với-nodejs--error-handling-graceful-shutdown-logging-scaling-architecture&#34;&gt;Production Engineering với Node.js — Error Handling, Graceful Shutdown, Logging, Scaling, Architecture&lt;/h1&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Các pattern chung nền tảng (retry/backoff, circuit breaker, rate limit, idempotency, distributed lock) đã phân tích sâu ở chương 6 — nguyên lý y hệt cho Node (thư viện tương ứng: &lt;code&gt;cockatiel&lt;/code&gt;, &lt;code&gt;opossum&lt;/code&gt;, &lt;code&gt;rate-limiter-flexible&lt;/code&gt;). Chương này tập trung vào phần &lt;strong&gt;đặc thù Node&lt;/strong&gt;.&lt;/p&gt;&lt;/blockquote&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-error-handling--nơi-node-khác-go-nhiều-nhất&#34;&gt;1. Error Handling — nơi Node khác Go nhiều nhất&lt;/h2&gt;
-&lt;h3 id=&#34;11-bản-đồ-các-loại-lỗi-và-đường-đi-của-chúng&#34;&gt;1.1. Bản đồ các loại lỗi và đường đi của chúng&lt;/h3&gt;
-&lt;table&gt;
-  &lt;thead&gt;
-      &lt;tr&gt;
-          &lt;th&gt;Loại&lt;/th&gt;
-          &lt;th&gt;Đường đi&lt;/th&gt;
-          &lt;th&gt;Chính sách đúng&lt;/th&gt;
-      &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-      &lt;tr&gt;
-          &lt;td&gt;Lỗi nghiệp vụ dự kiến (validate fail, not found)&lt;/td&gt;
-          &lt;td&gt;throw/reject → catch ở handler&lt;/td&gt;
-          &lt;td&gt;Bắt, map sang HTTP status, &lt;strong&gt;không&lt;/strong&gt; log như error&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;Lỗi vận hành (DB timeout, ECONNREFUSED)&lt;/td&gt;
-          &lt;td&gt;reject → catch&lt;/td&gt;
-          &lt;td&gt;Retry/breaker/fallback + log + metric&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Programmer error&lt;/strong&gt; (undefined.foo, assert fail)&lt;/td&gt;
-          &lt;td&gt;&lt;code&gt;uncaughtException&lt;/code&gt; / &lt;code&gt;unhandledRejection&lt;/code&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;strong&gt;Log rồi crash.&lt;/strong&gt; Không gượng sống&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;Lỗi trong callback event emitter&lt;/td&gt;
-          &lt;td&gt;event &lt;code&gt;&#39;error&#39;&lt;/code&gt;&lt;/td&gt;
-          &lt;td&gt;Emitter có thể lỗi PHẢI có listener &lt;code&gt;&#39;error&#39;&lt;/code&gt; — thiếu là crash&lt;/td&gt;
-      &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-&lt;p&gt;Vì sao &amp;ldquo;crash on programmer error&amp;rdquo; là chính sách đúng (chứ không phải khắt khe): sau một exception không bắt được, process ở &lt;strong&gt;trạng thái không xác định&lt;/strong&gt; — connection dở dang, lock chưa nhả, biến toàn cục hỏng. Gượng chạy tiếp là phục vụ các request sau bằng một process hỏng ngầm. Crash + restart bởi orchestrator = trở về trạng thái sạch trong vài giây. Đây là điểm Node giống Erlang &amp;ldquo;let it crash&amp;rdquo; — với điều kiện có &lt;strong&gt;process manager&lt;/strong&gt; và &lt;strong&gt;nhiều instance&lt;/strong&gt; (crash 1/10 pod là non-event; crash pod duy nhất là outage — đừng chạy Node production một instance).&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 12 — Performance Engineering trong Node</title>
-      <link>http://localhost:54040/series/nodejs-golang/12-node-performance/</link>
-      <pubDate>Thu, 25 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/12-node-performance/</guid>
-      <description>&lt;h1 id=&#34;performance-engineering-trong-nodejs&#34;&gt;Performance Engineering trong Node.js&lt;/h1&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-đặc-thù-của-bài-toán-hiệu-năng-node&#34;&gt;1. Đặc thù của bài toán hiệu năng Node&lt;/h2&gt;
-&lt;p&gt;Nguyên tắc số 0 giống Go (đo trước, tối ưu sau — xem chương 5), nhưng &lt;strong&gt;thứ tự nghi phạm khác hẳn&lt;/strong&gt;. Với Node, khi service chậm, xác suất theo kinh nghiệm:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;Event loop bị block&lt;/strong&gt; (CPU trên main thread) — nghi phạm số 1, đặc sản Node.&lt;/li&gt;
-&lt;li&gt;I/O không song song hóa (await tuần tự) hoặc N+1 query.&lt;/li&gt;
-&lt;li&gt;GC pressure / heap gần trần (GC chạy điên cuồng).&lt;/li&gt;
-&lt;li&gt;Thread pool libuv nghẹt (fs/DNS/crypto — chương 8).&lt;/li&gt;
-&lt;li&gt;Code JS thật sự chậm (deopt, megamorphic) — hiếm hơn nhiều so với 4 cái trên.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;Tối ưu Node hiệu quả = chẩn đoán đúng tầng trước khi sờ vào code.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 11 — Memory &amp; Garbage Collection trong Node</title>
-      <link>http://localhost:54040/series/nodejs-golang/11-node-memory/</link>
-      <pubDate>Tue, 23 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/11-node-memory/</guid>
-      <description>&lt;h1 id=&#34;memory-trong-nodejs--v8-heap-garbage-collection-memory-leak&#34;&gt;Memory trong Node.js — V8 Heap, Garbage Collection, Memory Leak&lt;/h1&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-cấu-trúc-bộ-nhớ-v8&#34;&gt;1. Cấu trúc bộ nhớ V8&lt;/h2&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Process Node
-├── V8 Heap  ← object JS sống ở đây, GC quản lý
-│   ├── New Space (1-16MB × 2 semispace)  ← object MỚI sinh
-│   ├── Old Space                          ← object sống sót 2 lần GC nhỏ
-│   ├── Large Object Space                 ← object &amp;gt; ~256KB
-│   └── Code Space                         ← machine code JIT
+&lt;/code>&lt;/pre>&lt;p>Nhầm lẫn phổ biến cần đính chính: &amp;ldquo;Node nhanh&amp;rdquo; và &amp;ldquo;Go nhanh&amp;rdquo; đều đúng — ở tiêu chí khác nhau. Node &lt;em>đủ nhanh&lt;/em> cho tuyệt đại đa số API I/O-bound; Go nhanh hơn &lt;em>ở cùng chi phí hạ tầng&lt;/em> và &lt;em>ổn định hơn ở đuôi latency&lt;/em>. Với dịch vụ 500 RPS, khác biệt này thường không đáng tiền so với chi phí con người; với 50.000 RPS, nó là hàng chục nghìn USD/tháng.&lt;/p></description></item><item><title>Bài 13 — Production Engineering với Node</title><link>https://thanhhv.github.io/series/nodejs-golang/13-node-production-engineering/</link><pubDate>Sat, 27 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/13-node-production-engineering/</guid><description>&lt;h1 id="production-engineering-với-nodejs--error-handling-graceful-shutdown-logging-scaling-architecture">Production Engineering với Node.js — Error Handling, Graceful Shutdown, Logging, Scaling, Architecture&lt;/h1>
+&lt;blockquote>
+&lt;p>Các pattern chung nền tảng (retry/backoff, circuit breaker, rate limit, idempotency, distributed lock) đã phân tích sâu ở chương 6 — nguyên lý y hệt cho Node (thư viện tương ứng: &lt;code>cockatiel&lt;/code>, &lt;code>opossum&lt;/code>, &lt;code>rate-limiter-flexible&lt;/code>). Chương này tập trung vào phần &lt;strong>đặc thù Node&lt;/strong>.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-error-handling--nơi-node-khác-go-nhiều-nhất">1. Error Handling — nơi Node khác Go nhiều nhất&lt;/h2>
+&lt;h3 id="11-bản-đồ-các-loại-lỗi-và-đường-đi-của-chúng">1.1. Bản đồ các loại lỗi và đường đi của chúng&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Loại&lt;/th>
+&lt;th>Đường đi&lt;/th>
+&lt;th>Chính sách đúng&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Lỗi nghiệp vụ dự kiến (validate fail, not found)&lt;/td>
+&lt;td>throw/reject → catch ở handler&lt;/td>
+&lt;td>Bắt, map sang HTTP status, &lt;strong>không&lt;/strong> log như error&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Lỗi vận hành (DB timeout, ECONNREFUSED)&lt;/td>
+&lt;td>reject → catch&lt;/td>
+&lt;td>Retry/breaker/fallback + log + metric&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Programmer error&lt;/strong> (undefined.foo, assert fail)&lt;/td>
+&lt;td>&lt;code>uncaughtException&lt;/code> / &lt;code>unhandledRejection&lt;/code>&lt;/td>
+&lt;td>&lt;strong>Log rồi crash.&lt;/strong> Không gượng sống&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Lỗi trong callback event emitter&lt;/td>
+&lt;td>event &lt;code>'error'&lt;/code>&lt;/td>
+&lt;td>Emitter có thể lỗi PHẢI có listener &lt;code>'error'&lt;/code> — thiếu là crash&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Vì sao &amp;ldquo;crash on programmer error&amp;rdquo; là chính sách đúng (chứ không phải khắt khe): sau một exception không bắt được, process ở &lt;strong>trạng thái không xác định&lt;/strong> — connection dở dang, lock chưa nhả, biến toàn cục hỏng. Gượng chạy tiếp là phục vụ các request sau bằng một process hỏng ngầm. Crash + restart bởi orchestrator = trở về trạng thái sạch trong vài giây. Đây là điểm Node giống Erlang &amp;ldquo;let it crash&amp;rdquo; — với điều kiện có &lt;strong>process manager&lt;/strong> và &lt;strong>nhiều instance&lt;/strong> (crash 1/10 pod là non-event; crash pod duy nhất là outage — đừng chạy Node production một instance).&lt;/p></description></item><item><title>Bài 12 — Performance Engineering trong Node</title><link>https://thanhhv.github.io/series/nodejs-golang/12-node-performance/</link><pubDate>Thu, 25 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/12-node-performance/</guid><description>&lt;h1 id="performance-engineering-trong-nodejs">Performance Engineering trong Node.js&lt;/h1>
+&lt;hr>
+&lt;h2 id="1-đặc-thù-của-bài-toán-hiệu-năng-node">1. Đặc thù của bài toán hiệu năng Node&lt;/h2>
+&lt;p>Nguyên tắc số 0 giống Go (đo trước, tối ưu sau — xem chương 5), nhưng &lt;strong>thứ tự nghi phạm khác hẳn&lt;/strong>. Với Node, khi service chậm, xác suất theo kinh nghiệm:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Event loop bị block&lt;/strong> (CPU trên main thread) — nghi phạm số 1, đặc sản Node.&lt;/li>
+&lt;li>I/O không song song hóa (await tuần tự) hoặc N+1 query.&lt;/li>
+&lt;li>GC pressure / heap gần trần (GC chạy điên cuồng).&lt;/li>
+&lt;li>Thread pool libuv nghẹt (fs/DNS/crypto — chương 8).&lt;/li>
+&lt;li>Code JS thật sự chậm (deopt, megamorphic) — hiếm hơn nhiều so với 4 cái trên.&lt;/li>
+&lt;/ol>
+&lt;p>Tối ưu Node hiệu quả = chẩn đoán đúng tầng trước khi sờ vào code.&lt;/p></description></item><item><title>Bài 11 — Memory &amp; Garbage Collection trong Node</title><link>https://thanhhv.github.io/series/nodejs-golang/11-node-memory/</link><pubDate>Tue, 23 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/11-node-memory/</guid><description>&lt;h1 id="memory-trong-nodejs--v8-heap-garbage-collection-memory-leak">Memory trong Node.js — V8 Heap, Garbage Collection, Memory Leak&lt;/h1>
+&lt;hr>
+&lt;h2 id="1-cấu-trúc-bộ-nhớ-v8">1. Cấu trúc bộ nhớ V8&lt;/h2>
+&lt;pre tabindex="0">&lt;code>Process Node
+├── V8 Heap ← object JS sống ở đây, GC quản lý
+│ ├── New Space (1-16MB × 2 semispace) ← object MỚI sinh
+│ ├── Old Space ← object sống sót 2 lần GC nhỏ
+│ ├── Large Object Space ← object &amp;gt; ~256KB
+│ └── Code Space ← machine code JIT
 ├── External / Off-heap
-│   └── Buffer!  ← Buffer của Node nằm NGOÀI V8 heap
+│ └── Buffer! ← Buffer của Node nằm NGOÀI V8 heap
 ├── Stack (call stack JS, ~1MB)
 └── libuv, C++ addon, V8 metadata
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Hai điều bất ngờ với người mới vận hành Node:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 10 — Concurrency &amp; Stream trong Node</title>
-      <link>http://localhost:54040/series/nodejs-golang/10-node-concurrency-stream/</link>
-      <pubDate>Sun, 21 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/10-node-concurrency-stream/</guid>
-      <description>&lt;h1 id=&#34;concurrency-trong-node--worker-threads-cluster-child-process-stream--backpressure&#34;&gt;Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream &amp;amp; Backpressure&lt;/h1&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Node đơn luồng JS → hai bài toán không tự giải được:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;Tận dụng nhiều core:&lt;/strong&gt; máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Việc CPU nặng không được chặn loop&lt;/strong&gt; (chương 9).&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;Node cung cấp ba công cụ với ba mục đích &lt;strong&gt;khác nhau&lt;/strong&gt; — chọn nhầm công cụ là mô típ sai lầm phổ biến:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 9 — Event Loop Internals</title>
-      <link>http://localhost:54040/series/nodejs-golang/09-node-event-loop/</link>
-      <pubDate>Fri, 19 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/09-node-event-loop/</guid>
-      <description>&lt;h1 id=&#34;event-loop-internals--phases-microtaskmacrotask-callback--promise--asyncawait&#34;&gt;Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await&lt;/h1&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Event loop là &lt;strong&gt;scheduler duy nhất&lt;/strong&gt; của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, &lt;strong&gt;không hiểu event loop thì không debug nổi&lt;/strong&gt; các sự cố dạng: &amp;ldquo;setTimeout(100) chạy sau 2 giây&amp;rdquo;, &amp;ldquo;một request chậm kéo mọi request chậm&amp;rdquo;, &amp;ldquo;process ăn 100% CPU mà không throughput&amp;rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có &lt;em&gt;nhả&lt;/em&gt; loop đúng lúc không.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 8 — Node.js Nền Tảng &amp; V8 Engine</title>
-      <link>http://localhost:54040/series/nodejs-golang/08-node-nen-tang-v8/</link>
-      <pubDate>Wed, 17 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/08-node-nen-tang-v8/</guid>
-      <description>&lt;h1 id=&#34;nodejs--tại-sao-tồn-tại-v8-engine-runtime-architecture&#34;&gt;Node.js — Tại sao tồn tại, V8 Engine, Runtime Architecture&lt;/h1&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;h3 id=&#34;bối-cảnh-2009-bài-toán-mà-thread-không-giải-nổi&#34;&gt;Bối cảnh 2009: bài toán mà thread không giải nổi&lt;/h3&gt;
-&lt;p&gt;Web server thời đó (Apache + PHP, Java servlet) dùng mô hình &lt;strong&gt;1 request = 1 thread/process&lt;/strong&gt;. Với ứng dụng web hiện đại, mỗi request phần lớn thời gian là &lt;strong&gt;chờ&lt;/strong&gt;: chờ DB (10ms), chờ API ngoài (100ms), chờ client mạng chậm nhả từng KB. Thread bị block khi chờ — nghĩa là:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bài 0 — Giới Thiệu</title>
-      <link>http://localhost:54040/series/nodejs-golang/00-introduciton/</link>
-      <pubDate>Mon, 01 Jun 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/series/nodejs-golang/00-introduciton/</guid>
-      <description>&lt;h1 id=&#34;golang--nodejs--tài-liệu-chuyên-sâu-cho-backend-engineer&#34;&gt;Golang &amp;amp; Node.js — Tài liệu chuyên sâu cho Backend Engineer&lt;/h1&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Bộ tài liệu 15 chương, viết theo tư duy &lt;strong&gt;Problem → Tại sao tồn tại → Cơ chế bên trong → Trade-off → Production → Anti-pattern → Khi nào không dùng&lt;/strong&gt;. Mục tiêu không phải dạy cú pháp — mà giúp bạn hiểu bản chất, phân tích bottleneck và tự đưa ra quyết định kỹ thuật có cơ sở.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Bloom filter là gì và trường hợp sử dụng</title>
-      <link>http://localhost:54040/posts/bloom-filter/</link>
-      <pubDate>Sat, 24 May 2025 20:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/posts/bloom-filter/</guid>
-      <description>&lt;p&gt;Chào mọi người, hôm nay trong lúc mình ôn tập kiến thức thì nhớ đến Bloom Filter, thế là mình lại phải viết thêm một bài nói về cái này nữa rồi =))&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Bloom Filter&lt;/strong&gt; là một cấu trúc dữ liệu xác suất được thiết kế để kiểm tra nhanh chóng xem một phần tử có thuộc tập hợp hay không.&lt;/p&gt;
-&lt;p&gt;Công dụng của nó là kiểm tra nhanh xem &lt;em&gt;&amp;ldquo;Cái này có chưa nhỉ?&amp;rdquo;&lt;/em&gt;&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>So sánh Node.js và Golang trong Backend</title>
-      <link>http://localhost:54040/posts/nodejs-vs-go/</link>
-      <pubDate>Sat, 17 May 2025 19:00:00 +0700</pubDate>
-      <guid>http://localhost:54040/posts/nodejs-vs-go/</guid>
-      <description>&lt;p&gt;Xin chào mọi người,&lt;/p&gt;
-&lt;p&gt;Trong quá trình làm việc ở vị trí Backend Engineer, mình đã trải qua nhiều ngôn ngữ lập trình, trong đó có &lt;strong&gt;Node.js&lt;/strong&gt; và &lt;strong&gt;Golang&lt;/strong&gt;. Vậy trường hợp nào nên dùng Node.js, trường hợp nào nên dùng Golang? Bài viết này chia sẻ kinh nghiệm thực chiến cá nhân và quan sát thực tế từ đồng nghiệp xung quanh. Let&amp;rsquo;s start!&lt;/p&gt;
-&lt;p&gt;&lt;img alt=&#34;Nodejs-vs-Golang&#34; loading=&#34;lazy&#34; src=&#34;http://localhost:54040/posts/nodejs-vs-go/nodejs-go.png&#34;&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h3 id=&#34;1-hiệu-năng-và-đa-luồng&#34;&gt;1. Hiệu năng và Đa luồng&lt;/h3&gt;
-&lt;p&gt;&lt;strong&gt;Golang&lt;/strong&gt; có hiệu năng tốt hơn nhờ là compiled language và mô hình &lt;strong&gt;goroutine&lt;/strong&gt; rất nhẹ (lightweight thread do Go runtime quản lý), dễ dàng xử lý hàng nghìn concurrent connections mà tốn rất ít tài nguyên.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Xác thực người dùng bằng ví crypto</title>
-      <link>http://localhost:54040/posts/verify-user-wallet/</link>
-      <pubDate>Sun, 11 May 2025 20:40:00 +0700</pubDate>
-      <guid>http://localhost:54040/posts/verify-user-wallet/</guid>
-      <description>&lt;p&gt;Hôm nay, trong một buổi đầu tuần sau chuyến đi du lịch giữa năm, tôi tranh thủ ôn lại kiến thức để chuẩn bị cho buổi phỏng vấn vị trí Backend Blockchain sắp tới. Nhân tiện, tôi viết lại bài này để ghi nhớ kỹ thuật xác thực người dùng không cần tài khoản và mật khẩu, mà sử dụng đăng nhập bằng ví Web3 (như Metamask, Coin98 Super Wallet, Trust Wallet,&amp;hellip;). Cùng bắt đầu nhé! Quá trình này gồm &lt;strong&gt;3 bước đơn giản&lt;/strong&gt;:&lt;/p&gt;</description>
-    </item>
-  </channel>
-</rss>
+&lt;/code>&lt;/pre>&lt;p>Hai điều bất ngờ với người mới vận hành Node:&lt;/p></description></item><item><title>Bài 10 — Concurrency &amp; Stream trong Node</title><link>https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/</link><pubDate>Sun, 21 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/</guid><description>&lt;h1 id="concurrency-trong-node--worker-threads-cluster-child-process-stream--backpressure">Concurrency trong Node — Worker Threads, Cluster, Child Process, Stream &amp;amp; Backpressure&lt;/h1>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Node đơn luồng JS → hai bài toán không tự giải được:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Tận dụng nhiều core:&lt;/strong> máy 16 core, một process Node dùng ~1 core cho JS. 15 core còn lại đứng nhìn.&lt;/li>
+&lt;li>&lt;strong>Việc CPU nặng không được chặn loop&lt;/strong> (chương 9).&lt;/li>
+&lt;/ol>
+&lt;p>Node cung cấp ba công cụ với ba mục đích &lt;strong>khác nhau&lt;/strong> — chọn nhầm công cụ là mô típ sai lầm phổ biến:&lt;/p></description></item><item><title>Bài 9 — Event Loop Internals</title><link>https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/</link><pubDate>Fri, 19 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/</guid><description>&lt;h1 id="event-loop-internals--phases-microtaskmacrotask-callback--promise--asyncawait">Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await&lt;/h1>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Event loop là &lt;strong>scheduler duy nhất&lt;/strong> của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, &lt;strong>không hiểu event loop thì không debug nổi&lt;/strong> các sự cố dạng: &amp;ldquo;setTimeout(100) chạy sau 2 giây&amp;rdquo;, &amp;ldquo;một request chậm kéo mọi request chậm&amp;rdquo;, &amp;ldquo;process ăn 100% CPU mà không throughput&amp;rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có &lt;em>nhả&lt;/em> loop đúng lúc không.&lt;/p></description></item><item><title>Bài 8 — Node.js Nền Tảng &amp; V8 Engine</title><link>https://thanhhv.github.io/series/nodejs-golang/08-node-nen-tang-v8/</link><pubDate>Wed, 17 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/08-node-nen-tang-v8/</guid><description>&lt;h1 id="nodejs--tại-sao-tồn-tại-v8-engine-runtime-architecture">Node.js — Tại sao tồn tại, V8 Engine, Runtime Architecture&lt;/h1>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;h3 id="bối-cảnh-2009-bài-toán-mà-thread-không-giải-nổi">Bối cảnh 2009: bài toán mà thread không giải nổi&lt;/h3>
+&lt;p>Web server thời đó (Apache + PHP, Java servlet) dùng mô hình &lt;strong>1 request = 1 thread/process&lt;/strong>. Với ứng dụng web hiện đại, mỗi request phần lớn thời gian là &lt;strong>chờ&lt;/strong>: chờ DB (10ms), chờ API ngoài (100ms), chờ client mạng chậm nhả từng KB. Thread bị block khi chờ — nghĩa là:&lt;/p></description></item><item><title>Bài 0 — Giới Thiệu</title><link>https://thanhhv.github.io/series/nodejs-golang/00-introduciton/</link><pubDate>Mon, 01 Jun 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/nodejs-golang/00-introduciton/</guid><description>&lt;h1 id="golang--nodejs--tài-liệu-chuyên-sâu-cho-backend-engineer">Golang &amp;amp; Node.js — Tài liệu chuyên sâu cho Backend Engineer&lt;/h1>
+&lt;blockquote>
+&lt;p>Bộ tài liệu 15 chương, viết theo tư duy &lt;strong>Problem → Tại sao tồn tại → Cơ chế bên trong → Trade-off → Production → Anti-pattern → Khi nào không dùng&lt;/strong>. Mục tiêu không phải dạy cú pháp — mà giúp bạn hiểu bản chất, phân tích bottleneck và tự đưa ra quyết định kỹ thuật có cơ sở.&lt;/p></description></item><item><title>Bloom filter là gì và trường hợp sử dụng</title><link>https://thanhhv.github.io/posts/bloom-filter/</link><pubDate>Sat, 24 May 2025 20:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/bloom-filter/</guid><description>&lt;p>Chào mọi người, hôm nay trong lúc mình ôn tập kiến thức thì nhớ đến Bloom Filter, thế là mình lại phải viết thêm một bài nói về cái này nữa rồi =))&lt;/p>
+&lt;p>&lt;strong>Bloom Filter&lt;/strong> là một cấu trúc dữ liệu xác suất được thiết kế để kiểm tra nhanh chóng xem một phần tử có thuộc tập hợp hay không.&lt;/p>
+&lt;p>Công dụng của nó là kiểm tra nhanh xem &lt;em>&amp;ldquo;Cái này có chưa nhỉ?&amp;rdquo;&lt;/em>&lt;/p></description></item><item><title>So sánh Node.js và Golang trong Backend</title><link>https://thanhhv.github.io/posts/nodejs-vs-go/</link><pubDate>Sat, 17 May 2025 19:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/nodejs-vs-go/</guid><description>&lt;p>Xin chào mọi người,&lt;/p>
+&lt;p>Trong quá trình làm việc ở vị trí Backend Engineer, mình đã trải qua nhiều ngôn ngữ lập trình, trong đó có &lt;strong>Node.js&lt;/strong> và &lt;strong>Golang&lt;/strong>. Vậy trường hợp nào nên dùng Node.js, trường hợp nào nên dùng Golang? Bài viết này chia sẻ kinh nghiệm thực chiến cá nhân và quan sát thực tế từ đồng nghiệp xung quanh. Let&amp;rsquo;s start!&lt;/p>
+&lt;p>&lt;img alt="Nodejs-vs-Golang" loading="lazy" src="https://thanhhv.github.io/posts/nodejs-vs-go/nodejs-go.png">&lt;/p>
+&lt;hr>
+&lt;h3 id="1-hiệu-năng-và-đa-luồng">1. Hiệu năng và Đa luồng&lt;/h3>
+&lt;p>&lt;strong>Golang&lt;/strong> có hiệu năng tốt hơn nhờ là compiled language và mô hình &lt;strong>goroutine&lt;/strong> rất nhẹ (lightweight thread do Go runtime quản lý), dễ dàng xử lý hàng nghìn concurrent connections mà tốn rất ít tài nguyên.&lt;/p></description></item><item><title>Xác thực người dùng bằng ví crypto</title><link>https://thanhhv.github.io/posts/verify-user-wallet/</link><pubDate>Sun, 11 May 2025 20:40:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/verify-user-wallet/</guid><description>&lt;p>Hôm nay, trong một buổi đầu tuần sau chuyến đi du lịch giữa năm, tôi tranh thủ ôn lại kiến thức để chuẩn bị cho buổi phỏng vấn vị trí Backend Blockchain sắp tới. Nhân tiện, tôi viết lại bài này để ghi nhớ kỹ thuật xác thực người dùng không cần tài khoản và mật khẩu, mà sử dụng đăng nhập bằng ví Web3 (như Metamask, Coin98 Super Wallet, Trust Wallet,&amp;hellip;). Cùng bắt đầu nhé! Quá trình này gồm &lt;strong>3 bước đơn giản&lt;/strong>:&lt;/p></description></item></channel></rss>

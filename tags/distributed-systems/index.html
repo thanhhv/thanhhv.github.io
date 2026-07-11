@@ -1,263 +1,29 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Distributed-Systems | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="">
-<meta name="description" content="">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:54040/tags/distributed-systems/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:54040/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="http://localhost:54040/tags/distributed-systems/index.xml">
-<link rel="alternate" hreflang="en" href="http://localhost:54040/tags/distributed-systems/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
-
-    </style>
-</noscript>
-</head>
-
-<body class="list" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:54040/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main"> 
-<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/tags/">Tags</a></div>
-  <h1>
-    Distributed-Systems
-  </h1>
-</header>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Chương 05 – Replication: Nhiều bản sao, một sự thật (hoặc không)
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>1. Problem Statement Replication = giữ cùng dữ liệu trên nhiều node. Ba lý do buộc phải làm: sống sót khi node chết (durability &#43; availability), scale read (dàn read ra nhiều replica), giảm latency theo địa lý (bản sao gần user). Nếu không replicate: node chết = mất dữ liệu &#43; downtime đến khi restore từ backup (RPO = từ lần backup cuối, RTO = hàng giờ). Backup không thay thế replication — backup cứu bạn khỏi mất vĩnh viễn, replication cứu bạn khỏi ngừng phục vụ.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-08 21:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;11 min</footer>
-  <a class="entry-link" aria-label="post link to Chương 05 – Replication: Nhiều bản sao, một sự thật (hoặc không)" href="http://localhost:54040/series/distributed-system/05-replication/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Chương 04 – CAP &amp; PACELC: Hiểu đúng, dùng đúng, và biết giới hạn
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>1. Problem Statement Khi thiết kế hệ thống có replication, sớm muộn bạn phải trả lời: khi mạng giữa các replica đứt (network partition), hệ thống làm gì? Từ chối phục vụ để giữ dữ liệu đúng, hay tiếp tục phục vụ và chấp nhận dữ liệu phân kỳ? CAP Theorem là công cụ tư duy chuẩn hóa cho câu hỏi đó — nhưng nó cũng là định lý bị hiểu sai nhiều nhất trong ngành, và hiểu sai dẫn đến quyết định kiến trúc sai (“chọn 2 trong 3” là cách đọc sai phổ biến nhất).
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-08 20:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;10 min</footer>
-  <a class="entry-link" aria-label="post link to Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn" href="http://localhost:54040/series/distributed-system/04-cap-pacelc/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Chương 03 – Consistency Models: &#34;Đọc thấy gì&#34; là một hợp đồng
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>1. Problem Statement Ngay khi dữ liệu tồn tại ở hơn một nơi (replica, cache), xuất hiện câu hỏi không có ở hệ một máy: đọc ở nơi này có thấy cái vừa ghi ở nơi kia không? Consistency model là hợp đồng giữa hệ thống lưu trữ và ứng dụng: hệ thống cam kết trả lời câu hỏi đó theo quy tắc nào.
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Distributed-Systems | Thanh HV's Blog</title>
+<meta name=keywords content><meta name=description content><meta name=author content><link rel=canonical href=https://thanhhv.github.io/tags/distributed-systems/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/tags/distributed-systems/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/tags/distributed-systems/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/tags/distributed-systems/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Distributed-Systems"><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Distributed-Systems"><meta name=twitter:description content></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/tags/>Tags</a></div><h1>Distributed-Systems</h1></header><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 14 – Case Studies: Ráp toàn bộ kiến thức vào hệ thống thật</h2></header><div class=entry-content><p>Mỗi case study dưới đây là một bài tập tổng hợp: kiến trúc → vì sao → trade-off → failure case → bottleneck → cách mở rộng. Số chương trong ngoặc trỏ về lý thuyết tương ứng. Các con số là ước lượng để tập tư duy định lượng — thói quen quan trọng nhất khi thiết kế hệ thống.
+1. URL Shortener — bài học vỡ lòng nhưng đủ cả trade-off Bài toán: 100M link mới/tháng (~40 write/s), redirect 10K/s — read:write = 250:1, latency redirect phải &lt;50ms.
+...</p></div><footer class=entry-footer><span title='2026-07-09 06:00:00 +0700 +07'>July 9, 2026</span>&nbsp;·&nbsp;17 min</footer><a class=entry-link aria-label="post link to Chương 14 – Case Studies: Ráp toàn bộ kiến thức vào hệ thống thật" href=https://thanhhv.github.io/series/distributed-system/14-case-studies/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 13 – Multi-region & Disaster Recovery: Bài toán Principal-level</h2></header><div class=entry-content><p>1. Problem Statement Ba lực đẩy một hệ thống ra nhiều region: (1) Latency — tốc độ ánh sáng: Singapore↔Frankfurt ~160ms RTT, không tiền nào mua nhanh hơn được, user xa DC là UX tệ; (2) Disaster Recovery — cả một region có thể chết (AWS us-east-1 đã nhiều lần chứng minh), và với một số nghiệp vụ/regulator, “chúng tôi phụ thuộc một region” là câu trả lời không được chấp nhận; (3) Data residency — luật (GDPR, nghị định địa phương hóa dữ liệu) buộc dữ liệu công dân nằm trong biên giới.
+...</p></div><footer class=entry-footer><span title='2026-07-09 05:00:00 +0700 +07'>July 9, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to Chương 13 – Multi-region & Disaster Recovery: Bài toán Principal-level" href=https://thanhhv.github.io/series/distributed-system/13-multi-region/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 12 – Time: "Bây giờ" là một khái niệm nguy hiểm</h2></header><div class=entry-content><p>1. Problem Statement Trên một máy, now() có một giá trị và các sự kiện có thứ tự hiển nhiên. Trong hệ phân tán, mỗi node có đồng hồ riêng, trôi khác nhau, và câu hỏi tưởng tầm thường — sự kiện A ở node 1 xảy ra trước hay sau sự kiện B ở node 2? — trở nên không trả lời được bằng timestamp. Trong khi đó, hàng loạt cơ chế lại đang ngầm dựa vào timestamp: Last-Write-Wins (chương 05), TTL/lease (chương 07), log ordering, cronjob phối hợp, phát hiện timeout, chứng từ giao dịch.
+...</p></div><footer class=entry-footer><span title='2026-07-09 04:00:00 +0700 +07'>July 9, 2026</span>&nbsp;·&nbsp;12 min</footer><a class=entry-link aria-label='post link to Chương 12 – Time: "Bây giờ" là một khái niệm nguy hiểm' href=https://thanhhv.github.io/series/distributed-system/12-time/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 11 – Reliability Patterns: Sống sót giữa những dependency đang hỏng</h2></header><div class=entry-content><p>1. Problem Statement Chương 01 đã chứng minh: ở quy mô đủ lớn, luôn có thứ gì đó đang hỏng. Chương này trả lời câu hỏi tiếp theo: làm sao để một thành phần hỏng không kéo sập cả hệ — vì trong hệ phân tán, failure mode nguy hiểm nhất không phải là hỏng, mà là hỏng lan truyền (cascading failure):
+DB chậm (từ 5ms → 500ms) → connection pool của Service B cạn (request giữ connection lâu 100x) → thread của Service A chờ B, cạn thread pool → A timeout → client RETRY → tải TĂNG GẤP ĐÔI đúng lúc yếu nhất → toàn hệ sập, dù thứ hỏng ban đầu chỉ là MỘT query thiếu index Chuỗi trên là kịch bản sự cố phổ biến nhất trong microservices — mọi pattern của chương này (timeout, retry có kỷ luật, circuit breaker, bulkhead, backpressure, rate limiting) tồn tại để cắt đứt từng mắt xích của nó. Điểm chung của cả chương: hệ thống phải được thiết kế để từ chối bớt việc một cách có chủ đích, thay vì nhận hết rồi chết cùng nhau.
+...</p></div><footer class=entry-footer><span title='2026-07-09 03:00:00 +0700 +07'>July 9, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to Chương 11 – Reliability Patterns: Sống sót giữa những dependency đang hỏng" href=https://thanhhv.github.io/series/distributed-system/11-reliability/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 10 – Distributed Cache: Nhanh hơn, và những cách nó phản bội bạn</h2></header><div class=entry-content><p>1. Problem Statement Database là thành phần đắt nhất và khó scale nhất (chương 05–06). Trong khi đó read:write điển hình là 100:1 và phần lớn read lặp lại trên một nhóm nhỏ key (power law). Cache khai thác sự lặp lại đó: trả lời từ RAM (~100µs qua mạng nội bộ, ~100ns local) thay vì disk + query planner (~1–50ms), chặn 90–99% read trước khi chạm DB.
+Nếu không có cache ở quy mô lớn: DB cần gấp 10–100 lần capacity — có khi bất khả thi về vật lý chứ không chỉ tiền. Nhưng cache về bản chất là một replica eventual-consistency tự chế, không có replication protocol tử tế — và vì thế toàn bộ chương 03/05 quay lại ám bạn dưới các cái tên mới: stale read, invalidation race, stampede, avalanche. Có câu đùa nghiêm túc: “Chỉ có hai bài toán khó trong khoa học máy tính: cache invalidation và đặt tên.”
+...</p></div><footer class=entry-footer><span title='2026-07-09 02:00:00 +0700 +07'>July 9, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to Chương 10 – Distributed Cache: Nhanh hơn, và những cách nó phản bội bạn" href=https://thanhhv.github.io/series/distributed-system/10-distributed-cache/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 09 – Event-driven Architecture: Sự kiện là hạng nhất</h2></header><div class=entry-content><p>1. Problem Statement Khi “đơn hàng được tạo” cần kích hoạt 8 việc (email, tồn kho, loyalty, analytics, fraud, shipping…), mô hình gọi-trực-tiếp buộc OrderService biết và gọi cả 8 — mỗi consumer mới là một lần sửa OrderService, availability của việc tạo đơn phụ thuộc cả 8 hệ phụ trợ, và latency cộng dồn. Nghiêm trọng hơn ở tầng tổ chức: team Order thành nút cổ chai của mọi team khác.
+...</p></div><footer class=entry-footer><span title='2026-07-09 01:00:00 +0700 +07'>July 9, 2026</span>&nbsp;·&nbsp;11 min</footer><a class=entry-link aria-label="post link to Chương 09 – Event-driven Architecture: Sự kiện là hạng nhất" href=https://thanhhv.github.io/series/distributed-system/09-event-driven/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 08 – Distributed Transactions: Nhiều node, một nghiệp vụ nguyên tử</h2></header><div class=entry-content><p>1. Problem Statement Nghiệp vụ “đặt hàng” chạm 3 hệ: trừ tồn kho (Inventory DB), tạo đơn (Order DB), trừ tiền (Payment service). Trên một database, BEGIN...COMMIT cho tất cả-hoặc-không. Khi dữ liệu đã tách (vì sharding — chương 06, vì microservices), không còn transaction chung — và mọi kịch bản dở dang trở nên khả thi: trừ tiền rồi mà không có đơn; giữ chỗ tồn kho rồi mà thanh toán fail và không ai nhả.
+...</p></div><footer class=entry-footer><span title='2026-07-09 00:00:00 +0700 +07'>July 9, 2026</span>&nbsp;·&nbsp;12 min</footer><a class=entry-link aria-label="post link to Chương 08 – Distributed Transactions: Nhiều node, một nghiệp vụ nguyên tử" href=https://thanhhv.github.io/series/distributed-system/08-distributed-transactions/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 07 – Consensus: Làm sao nhiều máy nhất trí một điều</h2></header><div class=entry-content><p>1. Problem Statement Nhiều bài toán ở các chương trước đều quy về một câu hỏi: làm sao một nhóm node, trên mạng không đáng tin cậy, nhất trí về MỘT giá trị — ai là leader (chương 05 failover), thứ tự các write trong log, bản đồ partition→node (chương 06), ai giữ lock.
+Nếu giải sai: split brain — hai node cùng tin mình là leader, cùng nhận write → hai nhánh sự thật phân kỳ, và không có cách nào hợp nhất tự động dữ liệu ledger đã phân kỳ. Đây là failure mode đắt nhất của hệ phân tán. Giải pháp cũ — “để con người quyết” — có MTTR hàng giờ; “node nào nhanh hơn thì thắng” — chính là split brain.
+...</p></div><footer class=entry-footer><span title='2026-07-08 23:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;12 min</footer><a class=entry-link aria-label="post link to Chương 07 – Consensus: Làm sao nhiều máy nhất trí một điều" href=https://thanhhv.github.io/series/distributed-system/07-consensus/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 06 – Partitioning / Sharding: Chia dữ liệu để scale write</h2></header><div class=entry-content><p>1. Problem Statement Replication (chương 05) nhân bản toàn bộ dữ liệu — giải quyết availability và scale read, nhưng mỗi node vẫn phải chứa hết dữ liệu và nhận hết write. Khi dataset vượt dung lượng một máy (chục TB) hoặc write throughput vượt khả năng một leader, con đường duy nhất: chia dữ liệu thành các partition (shard), mỗi node giữ một phần.
+Nếu không partition: disk đầy (hard stop), write throughput chạm trần leader, index không vừa RAM → mọi query chậm dần, backup/restore lâu đến vô dụng. Giải pháp cũ — mua máy to hơn — chạm trần và đắt phi tuyến (chương 01).
+...</p></div><footer class=entry-footer><span title='2026-07-08 22:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;11 min</footer><a class=entry-link aria-label="post link to Chương 06 – Partitioning / Sharding: Chia dữ liệu để scale write" href=https://thanhhv.github.io/series/distributed-system/06-partitioning/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 05 – Replication: Nhiều bản sao, một sự thật (hoặc không)</h2></header><div class=entry-content><p>1. Problem Statement Replication = giữ cùng dữ liệu trên nhiều node. Ba lý do buộc phải làm: sống sót khi node chết (durability + availability), scale read (dàn read ra nhiều replica), giảm latency theo địa lý (bản sao gần user). Nếu không replicate: node chết = mất dữ liệu + downtime đến khi restore từ backup (RPO = từ lần backup cuối, RTO = hàng giờ). Backup không thay thế replication — backup cứu bạn khỏi mất vĩnh viễn, replication cứu bạn khỏi ngừng phục vụ.
+...</p></div><footer class=entry-footer><span title='2026-07-08 21:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;11 min</footer><a class=entry-link aria-label="post link to Chương 05 – Replication: Nhiều bản sao, một sự thật (hoặc không)" href=https://thanhhv.github.io/series/distributed-system/05-replication/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn</h2></header><div class=entry-content><p>1. Problem Statement Khi thiết kế hệ thống có replication, sớm muộn bạn phải trả lời: khi mạng giữa các replica đứt (network partition), hệ thống làm gì? Từ chối phục vụ để giữ dữ liệu đúng, hay tiếp tục phục vụ và chấp nhận dữ liệu phân kỳ? CAP Theorem là công cụ tư duy chuẩn hóa cho câu hỏi đó — nhưng nó cũng là định lý bị hiểu sai nhiều nhất trong ngành, và hiểu sai dẫn đến quyết định kiến trúc sai (“chọn 2 trong 3” là cách đọc sai phổ biến nhất).
+...</p></div><footer class=entry-footer><span title='2026-07-08 20:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to Chương 04 – CAP & PACELC: Hiểu đúng, dùng đúng, và biết giới hạn" href=https://thanhhv.github.io/series/distributed-system/04-cap-pacelc/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 03 – Consistency Models: "Đọc thấy gì" là một hợp đồng</h2></header><div class=entry-content><p>1. Problem Statement Ngay khi dữ liệu tồn tại ở hơn một nơi (replica, cache), xuất hiện câu hỏi không có ở hệ một máy: đọc ở nơi này có thấy cái vừa ghi ở nơi kia không? Consistency model là hợp đồng giữa hệ thống lưu trữ và ứng dụng: hệ thống cam kết trả lời câu hỏi đó theo quy tắc nào.
 Nếu không định nghĩa hợp đồng rõ ràng: user đăng comment, refresh trang, comment biến mất (đọc trúng replica trễ) → user đăng lại → duplicate; hệ thống kiểm tra số dư trên replica trễ → cho rút quá tiền; hai người cùng đặt phòng cuối cùng → double booking. Đây không phải bug hiếm — đây là hành vi mặc định khi bạn dùng replication mà không nghĩ về consistency model.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-08 19:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;13 min</footer>
-  <a class="entry-link" aria-label="post link to Chương 03 – Consistency Models: &#34;Đọc thấy gì&#34; là một hợp đồng" href="http://localhost:54040/series/distributed-system/03-consistency/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Chương 02 – Communication: Các node nói chuyện với nhau như thế nào
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>1. Problem Statement Trên một máy, module A gọi module B bằng một function call: chi phí ~nanosecond, không bao giờ “mất”, không bao giờ trả về hai lần, và nếu B crash thì A cũng crash cùng (trạng thái nhất quán). Khi B chuyển sang máy khác, function call trở thành remote call: chậm hơn ~10⁶ lần, có thể mất, có thể timeout khi đã thành công, và B chết không kéo A chết theo — nghe như ưu điểm, nhưng nghĩa là A phải tự quyết định làm gì khi không biết B sống hay chết.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-08 18:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;13 min</footer>
-  <a class="entry-link" aria-label="post link to Chương 02 – Communication: Các node nói chuyện với nhau như thế nào" href="http://localhost:54040/series/distributed-system/02-communication/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Chương 01 – Foundations: Vì sao Distributed Systems tồn tại
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p>1. Problem Statement Không ai muốn xây hệ thống phân tán. Hệ phân tán khó debug hơn, đắt hơn, nhiều chế độ lỗi hơn, và đòi hỏi đội ngũ giỏi hơn. Chúng ta xây hệ phân tán vì bị ép buộc bởi ba lực:
+...</p></div><footer class=entry-footer><span title='2026-07-08 19:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label='post link to Chương 03 – Consistency Models: "Đọc thấy gì" là một hợp đồng' href=https://thanhhv.github.io/series/distributed-system/03-consistency/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 02 – Communication: Các node nói chuyện với nhau như thế nào</h2></header><div class=entry-content><p>1. Problem Statement Trên một máy, module A gọi module B bằng một function call: chi phí ~nanosecond, không bao giờ “mất”, không bao giờ trả về hai lần, và nếu B crash thì A cũng crash cùng (trạng thái nhất quán). Khi B chuyển sang máy khác, function call trở thành remote call: chậm hơn ~10⁶ lần, có thể mất, có thể timeout khi đã thành công, và B chết không kéo A chết theo — nghe như ưu điểm, nhưng nghĩa là A phải tự quyết định làm gì khi không biết B sống hay chết.
+...</p></div><footer class=entry-footer><span title='2026-07-08 18:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to Chương 02 – Communication: Các node nói chuyện với nhau như thế nào" href=https://thanhhv.github.io/series/distributed-system/02-communication/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 01 – Foundations: Vì sao Distributed Systems tồn tại</h2></header><div class=entry-content><p>1. Problem Statement Không ai muốn xây hệ thống phân tán. Hệ phân tán khó debug hơn, đắt hơn, nhiều chế độ lỗi hơn, và đòi hỏi đội ngũ giỏi hơn. Chúng ta xây hệ phân tán vì bị ép buộc bởi ba lực:
 Giới hạn vật lý của một máy — CPU, RAM, Disk IO, Network bandwidth đều có trần. Một máy 128 core, 4TB RAM vẫn là một máy. Single Point of Failure (SPOF) — một máy có xác suất hỏng khác 0. Khi nó hỏng, toàn bộ nghiệp vụ dừng. Không có cấu hình phần cứng nào loại bỏ được rủi ro này. Địa lý — người dùng ở Việt Nam gọi server ở Virginia chịu tối thiểu ~220ms round-trip. Tốc độ ánh sáng là giới hạn cứng, không mua được bằng tiền. Nếu không giải quyết: hệ thống sập khi traffic tăng, mất doanh thu khi máy hỏng, và trải nghiệm người dùng tệ ở xa datacenter. Giải pháp cũ (mua máy to hơn — Scale Up) chỉ trì hoãn vấn đề: giá tăng phi tuyến theo cấu hình, và SPOF vẫn nguyên vẹn.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-08 17:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;15 min</footer>
-  <a class="entry-link" aria-label="post link to Chương 01 – Foundations: Vì sao Distributed Systems tồn tại" href="http://localhost:54040/series/distributed-system/01-foundations/"></a>
-</article>
-
-<article class="post-entry tag-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Distributed Systems – Từ First Principles đến Production
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Bộ tài liệu chuyên sâu về Hệ thống Phân tán, viết cho Backend Engineer, Senior Engineer, Tech Lead và Architect. Triết lý xuyên suốt: Business Growth → Single Machine → Single Point of Failure → Scalability Problem → Distributed Systems → New Problems → Trade-off → Solutions → Production.
+...</p></div><footer class=entry-footer><span title='2026-07-08 17:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;15 min</footer><a class=entry-link aria-label="post link to Chương 01 – Foundations: Vì sao Distributed Systems tồn tại" href=https://thanhhv.github.io/series/distributed-system/01-foundations/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Distributed Systems – Từ First Principles đến Production</h2></header><div class=entry-content><p>Bộ tài liệu chuyên sâu về Hệ thống Phân tán, viết cho Backend Engineer, Senior Engineer, Tech Lead và Architect. Triết lý xuyên suốt: Business Growth → Single Machine → Single Point of Failure → Scalability Problem → Distributed Systems → New Problems → Trade-off → Solutions → Production.
 Cách đọc bộ tài liệu này Distributed Systems không phải là tập hợp các công nghệ như Kafka, Redis hay Kubernetes. Đó là một lĩnh vực nghiên cứu về cách nhiều máy tính phối hợp giải quyết một bài toán chung, trong khi luôn phải đối mặt với: độ trễ mạng không xác định, phần cứng hỏng bất kỳ lúc nào, phần mềm có bug, và sự thật khó chịu nhất — không node nào biết chắc trạng thái thật của node khác.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-08 16:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;4 min</footer>
-  <a class="entry-link" aria-label="post link to Distributed Systems – Từ First Principles đến Production" href="http://localhost:54040/series/distributed-system/00-introduction/"></a>
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-</body>
-
-</html>
+...</p></div><footer class=entry-footer><span title='2026-07-08 16:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Distributed Systems – Từ First Principles đến Production" href=https://thanhhv.github.io/series/distributed-system/00-introduction/></a></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>

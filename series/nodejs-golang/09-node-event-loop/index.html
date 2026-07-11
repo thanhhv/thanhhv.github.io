@@ -1,127 +1,11 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Bài 9 — Event Loop Internals | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, nodejs">
-<meta name="description" content="Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Bài 9 — Event Loop Internals | Thanh HV's Blog</title>
+<meta name=keywords content="backend,nodejs"><meta name=description content="Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await
 
 1. Problem Statement
-Event loop là scheduler duy nhất của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, không hiểu event loop thì không debug nổi các sự cố dạng: &ldquo;setTimeout(100) chạy sau 2 giây&rdquo;, &ldquo;một request chậm kéo mọi request chậm&rdquo;, &ldquo;process ăn 100% CPU mà không throughput&rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có nhả loop đúng lúc không.">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:54040/series/nodejs-golang/09-node-event-loop/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:54040/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:54040/series/nodejs-golang/09-node-event-loop/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
+Event loop là scheduler duy nhất của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, không hiểu event loop thì không debug nổi các sự cố dạng: &ldquo;setTimeout(100) chạy sau 2 giây&rdquo;, &ldquo;một request chậm kéo mọi request chậm&rdquo;, &ldquo;process ăn 100% CPU mà không throughput&rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có nhả loop đúng lúc không."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Bài 9 — Event Loop Internals"><meta property="og:description" content="Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await 1. Problem Statement Event loop là scheduler duy nhất của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, không hiểu event loop thì không debug nổi các sự cố dạng: “setTimeout(100) chạy sau 2 giây”, “một request chậm kéo mọi request chậm”, “process ăn 100% CPU mà không throughput”. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có nhả loop đúng lúc không."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-06-19T08:00:00+07:00"><meta property="article:modified_time" content="2026-06-19T08:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Nodejs"><meta name=twitter:card content="summary"><meta name=twitter:title content="Bài 9 — Event Loop Internals"><meta name=twitter:description content="Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await
 
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:54040/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/nodejs-golang/">NodeJS &amp; Golang</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Bài 9 — Event Loop Internals
-    </h1>
-    <div class="post-meta"><span title='2026-06-19 08:00:00 +0700 +07'>June 19, 2026</span>&nbsp;·&nbsp;8 min
-
-</div>
-  </header> 
-  <div class="post-content"><h1 id="event-loop-internals--phases-microtaskmacrotask-callback--promise--asyncawait">Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await<a hidden class="anchor" aria-hidden="true" href="#event-loop-internals--phases-microtaskmacrotask-callback--promise--asyncawait">#</a></h1>
-<hr>
-<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
-<p>Event loop là <strong>scheduler duy nhất</strong> của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, <strong>không hiểu event loop thì không debug nổi</strong> các sự cố dạng: &ldquo;setTimeout(100) chạy sau 2 giây&rdquo;, &ldquo;một request chậm kéo mọi request chậm&rdquo;, &ldquo;process ăn 100% CPU mà không throughput&rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có <em>nhả</em> loop đúng lúc không.</p>
-<hr>
-<h2 id="2-cấu-trúc-event-loop-libuv">2. Cấu trúc event loop (libuv)<a hidden class="anchor" aria-hidden="true" href="#2-cấu-trúc-event-loop-libuv">#</a></h2>
-<p>Mỗi vòng lặp (tick) đi qua các phase theo thứ tự:</p>
-<pre tabindex="0"><code>   ┌─►┌──────────────┐
+1. Problem Statement
+Event loop là scheduler duy nhất của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, không hiểu event loop thì không debug nổi các sự cố dạng: &ldquo;setTimeout(100) chạy sau 2 giây&rdquo;, &ldquo;một request chậm kéo mọi request chậm&rdquo;, &ldquo;process ăn 100% CPU mà không throughput&rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có nhả loop đúng lúc không."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"NodeJS \u0026 Golang","item":"https://thanhhv.github.io/series/nodejs-golang/"},{"@type":"ListItem","position":3,"name":"Bài 9 — Event Loop Internals","item":"https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Bài 9 — Event Loop Internals","name":"Bài 9 — Event Loop Internals","description":"Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await 1. Problem Statement Event loop là scheduler duy nhất của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, không hiểu event loop thì không debug nổi các sự cố dạng: \u0026ldquo;setTimeout(100) chạy sau 2 giây\u0026rdquo;, \u0026ldquo;một request chậm kéo mọi request chậm\u0026rdquo;, \u0026ldquo;process ăn 100% CPU mà không throughput\u0026rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có nhả loop đúng lúc không.\n","keywords":["backend","nodejs"],"articleBody":"Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await 1. Problem Statement Event loop là scheduler duy nhất của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, không hiểu event loop thì không debug nổi các sự cố dạng: “setTimeout(100) chạy sau 2 giây”, “một request chậm kéo mọi request chậm”, “process ăn 100% CPU mà không throughput”. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có nhả loop đúng lúc không.\n2. Cấu trúc event loop (libuv) Mỗi vòng lặp (tick) đi qua các phase theo thứ tự:\n┌─►┌──────────────┐ │ │ timers │ callback của setTimeout / setInterval đã đến hạn │ ├──────────────┤ │ │ pending │ vài callback I/O hệ thống bị hoãn │ ├──────────────┤ │ │ idle/prepare │ nội bộ │ ├──────────────┤ │ │ POLL │ ★ trái tim: lấy sự kiện I/O mới (epoll), │ │ │ chạy callback I/O; BLOCK CHỜ ở đây khi nhàn rỗi │ ├──────────────┤ │ │ check │ setImmediate │ ├──────────────┤ │ │ close │ callback 'close' (socket.destroy...) │ └──────┬───────┘ └─────────┘ ★ Giữa MỌI callback: chạy CẠN KIỆT hàng đợi microtask (1) process.nextTick queue (ưu tiên cao nhất, đặc sản Node) (2) Promise microtask queue Ba điều quan trọng hơn việc thuộc tên phase:\nTimer không chính xác. setTimeout(fn, 100) nghĩa là “không sớm hơn 100ms” — fn chỉ chạy khi loop quay lại phase timers. Nếu một callback nào đó chạy 2 giây, timer trễ 2 giây. Timer trễ chính là triệu chứng số một của event loop bị block — và là nguyên lý của metric event loop lag (đo mức trễ này để giám sát sức khỏe). Microtask chạy cạn kiệt giữa các callback. Promise callback không chờ tick sau — chúng chạy ngay sau callback hiện tại, trước mọi I/O. Hệ quả nguy hiểm: vòng lặp đệ quy microtask (process.nextTick gọi lại chính nó, hoặc promise chain vô hạn) bỏ đói toàn bộ I/O — loop không bao giờ tới phase poll. CPU 100%, không request nào được phục vụ, không lỗi nào được log. Phase poll là nơi Node “ngủ”. Khi không có việc, Node block trong epoll_wait — 0% CPU. Server 100K kết nối idle không tốn gì. Đây là điều mô hình thread không làm được với chi phí tương đương. setImmediate vs setTimeout(0) vs nextTick — chọn gì? setImmediate(fn): chạy ở phase check của tick hiện tại/kế — cách chuẩn để “nhường loop rồi làm tiếp” (chia nhỏ việc nặng). setTimeout(fn, 0): tương tự nhưng vòng qua phase timers, overhead nhỉnh hơn. process.nextTick(fn): chạy TRƯỚC cả I/O, không nhường gì cả — chỉ dùng để chuẩn hóa API thành async (tránh callback “zalgo” — lúc sync lúc async); dùng làm vòng lặp là tự bắn vào chân. 3. Tiến hóa: Callback → Promise → Async/Await 3.1. Callback và cái giá của nó getUser(id, (err, user) =\u003e { if (err) return handle(err); getOrders(user.id, (err, orders) =\u003e { if (err) return handle(err); // lặp lại xử lý lỗi mỗi tầng enrich(orders, (err, result) =\u003e { ... }); // \"pyramid of doom\" }); }); Ba vấn đề cấu trúc: kim tự tháp lồng nhau; lỗi phải xử lý thủ công mỗi tầng (quên một chỗ là lỗi rơi vào hư vô); không compose được (chạy 3 việc song song rồi gom kết quả = viết bộ đếm thủ công dễ sai).\n3.2. Promise — biến async thành GIÁ TRỊ Đột phá khái niệm: kết quả-tương-lai trở thành object truyền tay được, thay vì “hành động sẽ gọi anh sau”. Vì là giá trị nên compose được:\nconst [user, config] = await Promise.all([getUser(id), getConfig()]); Lỗi tự lan truyền theo chain đến .catch gần nhất — mô phỏng lại được ngữ nghĩa exception. Bốn combinator cần thuộc: all (fail-fast, đủ cả), allSettled (chờ hết bất kể thành bại), race (cái nào xong/fail trước — nền tảng làm timeout), any (cái thành công đầu tiên — hedge request). 3.3. Async/Await — cú pháp đồng bộ, bản chất bất đồng bộ async function handleOrder(req) { const user = await getUser(req.userId); // \"await\" = tạm dừng HÀM NÀY, const order = await createOrder(user); // trả quyền cho event loop return order; // KHÔNG chặn thread } Bản chất: compiler biến hàm async thành state machine; mỗi await là điểm cắt — hàm bị treo, đăng ký continuation vào microtask queue, event loop chạy việc khác. Cùng ý tưởng “viết tuần tự, chạy bất đồng bộ” như goroutine — khác ở chỗ Go giấu điểm cắt (mọi hàm đều có thể nhường), JS hiện điểm cắt tường minh bằng từ khóa await.\nTrade-off của tường minh: (+) đọc code biết chính xác chỗ nào có thể xen kẽ (interleaving) — dễ suy luận về race logic; (−) “function coloring”: hàm async gọi từ hàm sync phải async hóa cả chuỗi bên trên, chia ecosystem thành hai thế giới.\n3.4. Các lỗi async/await đắt giá nhất trong production // 1. TUẦN TỰ HÓA VÔ THỨC — lỗi hiệu năng phổ biến nhất của Node const a = await getA(); // 100ms const b = await getB(); // 100ms, KHÔNG phụ thuộc a → tổng 200ms vô lý // Đúng: const [a, b] = await Promise.all([getA(), getB()]); → 100ms // 2. QUÊN AWAIT — lỗi im lặng nguy hiểm nhất saveAudit(event); // không await: lỗi thành unhandledRejection, // hàm return trước khi ghi xong, thứ tự không bảo đảm // Bật ESLint @typescript-eslint/no-floating-promises — bắt buộc với codebase nghiêm túc // 3. await TRONG VÒNG LẶP khi có thể song song for (const id of ids) { await notify(id); } // N × latency await Promise.all(ids.map(id =\u003e notify(id))); // 1 × latency // NHƯNG: 10.000 id = 10.000 call đồng thời = tự DDoS downstream // → cần giới hạn concurrency (p-limit) — Node KHÔNG có sẵn semaphore như Go // 4. Promise.all fail-fast bỏ rơi promise khác // Một cái reject → all reject NGAY, nhưng các promise kia VẪN CHẠY // (JS không có cancellation tự nhiên!) → dùng AbortController truyền signal Điểm số 4 đáng dừng lại: JS không có cơ chế hủy promise chuẩn như context.Done() của Go. AbortController + signal là giải pháp chuẩn hiện nay (fetch, nhiều thư viện hỗ trợ), nhưng nó opt-in — hàm không nhận signal thì không hủy được. Thiết kế API nội bộ: mọi hàm async có I/O nên nhận { signal }, tương đương kỷ luật “ctx là tham số đầu” bên Go.\n3.5. unhandledRejection — chính sách bắt buộc Từ Node 15, promise rejection không ai bắt sẽ crash process (trước đó chỉ warning). Đúng đắn: crash-fast tốt hơn chạy tiếp với trạng thái không xác định. Production cần: handler process.on('unhandledRejection') để log đầy đủ rồi exit(1) (đừng nuốt để chạy tiếp!), process manager (K8s, PM2) restart, và alert khi tần suất tăng.\n4. Event Loop Blocking — kẻ giết người thầm lặng 4.1. Định lượng cho trực giác Server 1.000 RPS, một handler có đoạn tính toán 50ms CPU. Trong 50ms đó, ~50 request khác đến — tất cả xếp hàng. Request thứ 50 chờ gần 50ms chỉ để bắt đầu. Chỉ cần 2% request dính handler này, p99 của toàn bộ service sụp — kể cả các endpoint “không liên quan”. Đây là khác biệt bản chất với Go: một goroutine bận 50ms không ảnh hưởng goroutine khác (có P khác, có preemption); trong Node, mọi request chung một hàng đợi CPU.\n4.2. Thủ phạm phổ biến (xếp theo tần suất thực tế) JSON.parse/JSON.stringify payload lớn (1MB ≈ vài chục ms). Regex tai họa (catastrophic backtracking — ReDoS): một input hiểm chạy hàng giây. Đã có sự cố lớn trong ngành vì một regex như vậy. Vòng lặp xử lý mảng trăm nghìn phần tử (sort, map, filter chồng nhau). Crypto đồng bộ (pbkdf2Sync, bcrypt.hashSync), zlib.gzipSync, fs.*Sync — mọi hàm có đuôi Sync sau khi server đã nhận traffic là bug. Template render/serialize HTML lớn. 4.3. Phòng và chữa Đo: metric event loop lag/utilization (perf_hooks.monitorEventLoopDelay, performance.eventLoopUtilization()) — chỉ số sức khỏe số 1 của Node, alert khi p99 lag \u003e ~100ms. Chặn từ nguồn: giới hạn kích thước body (express.json({ limit })); validate/timeout regex (dùng RE2 cho input người dùng); phân trang dữ liệu. Chia nhỏ: việc dài chia batch, giữa các batch await setImmediate() để nhả loop (throughput giảm nhẹ, latency công bằng trở lại). Đẩy ra ngoài: việc nặng thường xuyên → worker_threads (chương 10) hoặc tách service (cân nhắc Go cho phần đó). 5. Best Practices tổng hợp Cấm *Sync API sau khi server khởi động xong (lúc boot thì được phép). Promise.all cho việc độc lập; p-limit/queue cho việc hàng loạt; ESLint no-floating-promises. Mọi hàm async nhận AbortSignal; đặt timeout ở mọi I/O ra ngoài (fetch có AbortSignal.timeout(ms)). Giám sát event loop lag như giám sát CPU. unhandledRejection → log + crash + restart, không nuốt. Đừng dùng process.nextTick trừ khi viết thư viện và hiểu rõ vì sao. Chương tiếp theo: 10 — Concurrency trong Node: Worker Threads, Cluster, Child Process, Stream \u0026 Backpressure\n","wordCount":"1523","inLanguage":"en","datePublished":"2026-06-19T08:00:00+07:00","dateModified":"2026-06-19T08:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/nodejs-golang/09-node-event-loop/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/nodejs-golang/>NodeJS & Golang</a></div><h1 class="post-title entry-hint-parent">Bài 9 — Event Loop Internals</h1><div class=post-meta><span title='2026-06-19 08:00:00 +0700 +07'>June 19, 2026</span>&nbsp;·&nbsp;8 min</div></header><div class=post-content><h1 id=event-loop-internals--phases-microtaskmacrotask-callback--promise--asyncawait>Event Loop Internals — Phases, Microtask/Macrotask, Callback → Promise → Async/Await<a hidden class=anchor aria-hidden=true href=#event-loop-internals--phases-microtaskmacrotask-callback--promise--asyncawait>#</a></h1><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Event loop là <strong>scheduler duy nhất</strong> của Node. Trong Go, không hiểu scheduler bạn vẫn sống ổn (runtime che chắn); trong Node, <strong>không hiểu event loop thì không debug nổi</strong> các sự cố dạng: &ldquo;setTimeout(100) chạy sau 2 giây&rdquo;, &ldquo;một request chậm kéo mọi request chậm&rdquo;, &ldquo;process ăn 100% CPU mà không throughput&rdquo;. Vì mọi thứ chạy trên một luồng, sự công bằng giữa các tác vụ hoàn toàn phụ thuộc việc code của bạn có <em>nhả</em> loop đúng lúc không.</p><hr><h2 id=2-cấu-trúc-event-loop-libuv>2. Cấu trúc event loop (libuv)<a hidden class=anchor aria-hidden=true href=#2-cấu-trúc-event-loop-libuv>#</a></h2><p>Mỗi vòng lặp (tick) đi qua các phase theo thứ tự:</p><pre tabindex=0><code>   ┌─►┌──────────────┐
    │  │ timers       │  callback của setTimeout / setInterval đã đến hạn
    │  ├──────────────┤
    │  │ pending      │  vài callback I/O hệ thống bị hoãn
@@ -140,317 +24,41 @@ Event loop là scheduler duy nhất của Node. Trong Go, không hiểu schedule
    ★ Giữa MỌI callback: chạy CẠN KIỆT hàng đợi microtask
      (1) process.nextTick queue  (ưu tiên cao nhất, đặc sản Node)
      (2) Promise microtask queue
-</code></pre><p>Ba điều quan trọng hơn việc thuộc tên phase:</p>
-<ol>
-<li><strong>Timer không chính xác.</strong> <code>setTimeout(fn, 100)</code> nghĩa là &ldquo;không sớm hơn 100ms&rdquo; — fn chỉ chạy khi loop <em>quay lại</em> phase timers. Nếu một callback nào đó chạy 2 giây, timer trễ 2 giây. <strong>Timer trễ chính là triệu chứng số một của event loop bị block</strong> — và là nguyên lý của metric event loop lag (đo mức trễ này để giám sát sức khỏe).</li>
-<li><strong>Microtask chạy cạn kiệt giữa các callback.</strong> Promise callback không chờ tick sau — chúng chạy ngay sau callback hiện tại, <em>trước</em> mọi I/O. Hệ quả nguy hiểm: vòng lặp đệ quy microtask (<code>process.nextTick</code> gọi lại chính nó, hoặc promise chain vô hạn) <strong>bỏ đói toàn bộ I/O</strong> — loop không bao giờ tới phase poll. CPU 100%, không request nào được phục vụ, không lỗi nào được log.</li>
-<li><strong>Phase poll là nơi Node &ldquo;ngủ&rdquo;.</strong> Khi không có việc, Node block trong epoll_wait — 0% CPU. Server 100K kết nối idle không tốn gì. Đây là điều mô hình thread không làm được với chi phí tương đương.</li>
-</ol>
-<h3 id="setimmediate-vs-settimeout0-vs-nexttick--chọn-gì">setImmediate vs setTimeout(0) vs nextTick — chọn gì?<a hidden class="anchor" aria-hidden="true" href="#setimmediate-vs-settimeout0-vs-nexttick--chọn-gì">#</a></h3>
-<ul>
-<li><code>setImmediate(fn)</code>: chạy ở phase check của tick hiện tại/kế — <strong>cách chuẩn để &ldquo;nhường loop rồi làm tiếp&rdquo;</strong> (chia nhỏ việc nặng).</li>
-<li><code>setTimeout(fn, 0)</code>: tương tự nhưng vòng qua phase timers, overhead nhỉnh hơn.</li>
-<li><code>process.nextTick(fn)</code>: chạy TRƯỚC cả I/O, không nhường gì cả — chỉ dùng để chuẩn hóa API thành async (tránh callback &ldquo;zalgo&rdquo; — lúc sync lúc async); dùng làm vòng lặp là tự bắn vào chân.</li>
-</ul>
-<hr>
-<h2 id="3-tiến-hóa-callback--promise--asyncawait">3. Tiến hóa: Callback → Promise → Async/Await<a hidden class="anchor" aria-hidden="true" href="#3-tiến-hóa-callback--promise--asyncawait">#</a></h2>
-<h3 id="31-callback-và-cái-giá-của-nó">3.1. Callback và cái giá của nó<a hidden class="anchor" aria-hidden="true" href="#31-callback-và-cái-giá-của-nó">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">getUser</span>(<span style="color:#a6e22e">id</span>, (<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">user</span>) =&gt; {
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">handle</span>(<span style="color:#a6e22e">err</span>);
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">getOrders</span>(<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">id</span>, (<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">orders</span>) =&gt; {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">handle</span>(<span style="color:#a6e22e">err</span>);            <span style="color:#75715e">// lặp lại xử lý lỗi mỗi tầng
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">enrich</span>(<span style="color:#a6e22e">orders</span>, (<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">result</span>) =&gt; { ... }); <span style="color:#75715e">// &#34;pyramid of doom&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  });
-</span></span><span style="display:flex;"><span>});
-</span></span></code></pre></div><p>Ba vấn đề cấu trúc: kim tự tháp lồng nhau; lỗi phải xử lý thủ công <strong>mỗi tầng</strong> (quên một chỗ là lỗi rơi vào hư vô); không compose được (chạy 3 việc song song rồi gom kết quả = viết bộ đếm thủ công dễ sai).</p>
-<h3 id="32-promise--biến-async-thành-giá-trị">3.2. Promise — biến async thành GIÁ TRỊ<a hidden class="anchor" aria-hidden="true" href="#32-promise--biến-async-thành-giá-trị">#</a></h3>
-<p>Đột phá khái niệm: kết quả-tương-lai trở thành <strong>object truyền tay được</strong>, thay vì &ldquo;hành động sẽ gọi anh sau&rdquo;. Vì là giá trị nên compose được:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">user</span>, <span style="color:#a6e22e">config</span>] <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> Promise.<span style="color:#a6e22e">all</span>([<span style="color:#a6e22e">getUser</span>(<span style="color:#a6e22e">id</span>), <span style="color:#a6e22e">getConfig</span>()]);
-</span></span></code></pre></div><ul>
-<li>Lỗi <strong>tự lan truyền</strong> theo chain đến <code>.catch</code> gần nhất — mô phỏng lại được ngữ nghĩa exception.</li>
-<li>Bốn combinator cần thuộc: <code>all</code> (fail-fast, đủ cả), <code>allSettled</code> (chờ hết bất kể thành bại), <code>race</code> (cái nào xong/fail trước — nền tảng làm timeout), <code>any</code> (cái thành công đầu tiên — hedge request).</li>
-</ul>
-<h3 id="33-asyncawait--cú-pháp-đồng-bộ-bản-chất-bất-đồng-bộ">3.3. Async/Await — cú pháp đồng bộ, bản chất bất đồng bộ<a hidden class="anchor" aria-hidden="true" href="#33-asyncawait--cú-pháp-đồng-bộ-bản-chất-bất-đồng-bộ">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleOrder</span>(<span style="color:#a6e22e">req</span>) {
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getUser</span>(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">userId</span>);   <span style="color:#75715e">// &#34;await&#34; = tạm dừng HÀM NÀY,
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">order</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">createOrder</span>(<span style="color:#a6e22e">user</span>);    <span style="color:#75715e">//  trả quyền cho event loop
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>;                              <span style="color:#75715e">//  KHÔNG chặn thread
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
-</span></span></code></pre></div><p>Bản chất: compiler biến hàm async thành <strong>state machine</strong>; mỗi <code>await</code> là điểm cắt — hàm bị treo, đăng ký continuation vào microtask queue, event loop chạy việc khác. Cùng ý tưởng &ldquo;viết tuần tự, chạy bất đồng bộ&rdquo; như goroutine — khác ở chỗ Go giấu điểm cắt (mọi hàm đều có thể nhường), JS <strong>hiện điểm cắt tường minh</strong> bằng từ khóa <code>await</code>.</p>
-<p>Trade-off của tường minh: (+) đọc code biết chính xác chỗ nào có thể xen kẽ (interleaving) — dễ suy luận về race logic; (−) &ldquo;function coloring&rdquo;: hàm async gọi từ hàm sync phải async hóa cả chuỗi bên trên, chia ecosystem thành hai thế giới.</p>
-<h3 id="34-các-lỗi-asyncawait-đắt-giá-nhất-trong-production">3.4. Các lỗi async/await đắt giá nhất trong production<a hidden class="anchor" aria-hidden="true" href="#34-các-lỗi-asyncawait-đắt-giá-nhất-trong-production">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// 1. TUẦN TỰ HÓA VÔ THỨC — lỗi hiệu năng phổ biến nhất của Node
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getA</span>();   <span style="color:#75715e">// 100ms
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">b</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getB</span>();   <span style="color:#75715e">// 100ms, KHÔNG phụ thuộc a → tổng 200ms vô lý
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Đúng: const [a, b] = await Promise.all([getA(), getB()]); → 100ms
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 2. QUÊN AWAIT — lỗi im lặng nguy hiểm nhất
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">saveAudit</span>(<span style="color:#a6e22e">event</span>);         <span style="color:#75715e">// không await: lỗi thành unhandledRejection,
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                          <span style="color:#75715e">// hàm return trước khi ghi xong, thứ tự không bảo đảm
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Bật ESLint @typescript-eslint/no-floating-promises — bắt buộc với codebase nghiêm túc
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 3. await TRONG VÒNG LẶP khi có thể song song
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">id</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">ids</span>) { <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">notify</span>(<span style="color:#a6e22e">id</span>); }         <span style="color:#75715e">// N × latency
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">await</span> Promise.<span style="color:#a6e22e">all</span>(<span style="color:#a6e22e">ids</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">id</span> =&gt; <span style="color:#a6e22e">notify</span>(<span style="color:#a6e22e">id</span>)));       <span style="color:#75715e">// 1 × latency
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// NHƯNG: 10.000 id = 10.000 call đồng thời = tự DDoS downstream
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// → cần giới hạn concurrency (p-limit) — Node KHÔNG có sẵn semaphore như Go
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 4. Promise.all fail-fast bỏ rơi promise khác
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Một cái reject → all reject NGAY, nhưng các promise kia VẪN CHẠY
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// (JS không có cancellation tự nhiên!) → dùng AbortController truyền signal
-</span></span></span></code></pre></div><p>Điểm số 4 đáng dừng lại: <strong>JS không có cơ chế hủy promise chuẩn</strong> như <code>context.Done()</code> của Go. <code>AbortController</code> + <code>signal</code> là giải pháp chuẩn hiện nay (fetch, nhiều thư viện hỗ trợ), nhưng nó opt-in — hàm không nhận signal thì không hủy được. Thiết kế API nội bộ: <strong>mọi hàm async có I/O nên nhận <code>{ signal }</code></strong>, tương đương kỷ luật &ldquo;ctx là tham số đầu&rdquo; bên Go.</p>
-<h3 id="35-unhandledrejection--chính-sách-bắt-buộc">3.5. unhandledRejection — chính sách bắt buộc<a hidden class="anchor" aria-hidden="true" href="#35-unhandledrejection--chính-sách-bắt-buộc">#</a></h3>
-<p>Từ Node 15, promise rejection không ai bắt sẽ <strong>crash process</strong> (trước đó chỉ warning). Đúng đắn: crash-fast tốt hơn chạy tiếp với trạng thái không xác định. Production cần: handler <code>process.on('unhandledRejection')</code> để <strong>log đầy đủ rồi exit(1)</strong> (đừng nuốt để chạy tiếp!), process manager (K8s, PM2) restart, và alert khi tần suất tăng.</p>
-<hr>
-<h2 id="4-event-loop-blocking--kẻ-giết-người-thầm-lặng">4. Event Loop Blocking — kẻ giết người thầm lặng<a hidden class="anchor" aria-hidden="true" href="#4-event-loop-blocking--kẻ-giết-người-thầm-lặng">#</a></h2>
-<h3 id="41-định-lượng-cho-trực-giác">4.1. Định lượng cho trực giác<a hidden class="anchor" aria-hidden="true" href="#41-định-lượng-cho-trực-giác">#</a></h3>
-<p>Server 1.000 RPS, một handler có đoạn tính toán 50ms CPU. Trong 50ms đó, ~50 request khác đến — <strong>tất cả xếp hàng</strong>. Request thứ 50 chờ gần 50ms <em>chỉ để bắt đầu</em>. Chỉ cần 2% request dính handler này, p99 của <strong>toàn bộ</strong> service sụp — kể cả các endpoint &ldquo;không liên quan&rdquo;. Đây là khác biệt bản chất với Go: một goroutine bận 50ms không ảnh hưởng goroutine khác (có P khác, có preemption); trong Node, <strong>mọi request chung một hàng đợi CPU</strong>.</p>
-<h3 id="42-thủ-phạm-phổ-biến-xếp-theo-tần-suất-thực-tế">4.2. Thủ phạm phổ biến (xếp theo tần suất thực tế)<a hidden class="anchor" aria-hidden="true" href="#42-thủ-phạm-phổ-biến-xếp-theo-tần-suất-thực-tế">#</a></h3>
-<ol>
-<li><code>JSON.parse</code>/<code>JSON.stringify</code> payload lớn (1MB ≈ vài chục ms).</li>
-<li>Regex tai họa (catastrophic backtracking — ReDoS): một input hiểm chạy hàng giây. Đã có sự cố lớn trong ngành vì một regex như vậy.</li>
-<li>Vòng lặp xử lý mảng trăm nghìn phần tử (sort, map, filter chồng nhau).</li>
-<li>Crypto đồng bộ (<code>pbkdf2Sync</code>, <code>bcrypt.hashSync</code>), <code>zlib.gzipSync</code>, <code>fs.*Sync</code> — mọi hàm có đuôi <code>Sync</code> sau khi server đã nhận traffic là bug.</li>
-<li>Template render/serialize HTML lớn.</li>
-</ol>
-<h3 id="43-phòng-và-chữa">4.3. Phòng và chữa<a hidden class="anchor" aria-hidden="true" href="#43-phòng-và-chữa">#</a></h3>
-<ul>
-<li><strong>Đo:</strong> metric event loop lag/utilization (<code>perf_hooks.monitorEventLoopDelay</code>, <code>performance.eventLoopUtilization()</code>) — chỉ số sức khỏe số 1 của Node, alert khi p99 lag &gt; ~100ms.</li>
-<li><strong>Chặn từ nguồn:</strong> giới hạn kích thước body (<code>express.json({ limit })</code>); validate/timeout regex (dùng RE2 cho input người dùng); phân trang dữ liệu.</li>
-<li><strong>Chia nhỏ:</strong> việc dài chia batch, giữa các batch <code>await setImmediate()</code> để nhả loop (throughput giảm nhẹ, latency công bằng trở lại).</li>
-<li><strong>Đẩy ra ngoài:</strong> việc nặng thường xuyên → worker_threads (chương 10) hoặc tách service (cân nhắc Go cho phần đó).</li>
-</ul>
-<hr>
-<h2 id="5-best-practices-tổng-hợp">5. Best Practices tổng hợp<a hidden class="anchor" aria-hidden="true" href="#5-best-practices-tổng-hợp">#</a></h2>
-<ol>
-<li>Cấm <code>*Sync</code> API sau khi server khởi động xong (lúc boot thì được phép).</li>
-<li><code>Promise.all</code> cho việc độc lập; <code>p-limit</code>/queue cho việc hàng loạt; ESLint no-floating-promises.</li>
-<li>Mọi hàm async nhận <code>AbortSignal</code>; đặt timeout ở mọi I/O ra ngoài (fetch có <code>AbortSignal.timeout(ms)</code>).</li>
-<li>Giám sát event loop lag như giám sát CPU.</li>
-<li><code>unhandledRejection</code> → log + crash + restart, không nuốt.</li>
-<li>Đừng dùng <code>process.nextTick</code> trừ khi viết thư viện và hiểu rõ vì sao.</li>
-</ol>
-<hr>
-<p><em>Chương tiếp theo: <a href="/series/nodejs-golang/10-node-concurrency-stream/">10 — Concurrency trong Node: Worker Threads, Cluster, Child Process, Stream &amp; Backpressure</a></em></p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:54040/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:54040/tags/nodejs/">Nodejs</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:54040/series/nodejs-golang/10-node-concurrency-stream/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Bài 10 — Concurrency &amp; Stream trong Node</span>
-  </a>
-  <a class="next" href="http://localhost:54040/series/nodejs-golang/08-node-nen-tang-v8/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Bài 8 — Node.js Nền Tảng &amp; V8 Engine</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on x"
-            href="https://x.com/intent/tweet/?text=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f&amp;hashtags=backend%2cnodejs">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f&amp;title=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;summary=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;source=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f&title=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on whatsapp"
-            href="https://api.whatsapp.com/send?text=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals%20-%20http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on telegram"
-            href="https://telegram.me/share/url?text=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;url=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&u=http%3a%2f%2flocalhost%3a54040%2fseries%2fnodejs-golang%2f09-node-event-loop%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+</code></pre><p>Ba điều quan trọng hơn việc thuộc tên phase:</p><ol><li><strong>Timer không chính xác.</strong> <code>setTimeout(fn, 100)</code> nghĩa là &ldquo;không sớm hơn 100ms&rdquo; — fn chỉ chạy khi loop <em>quay lại</em> phase timers. Nếu một callback nào đó chạy 2 giây, timer trễ 2 giây. <strong>Timer trễ chính là triệu chứng số một của event loop bị block</strong> — và là nguyên lý của metric event loop lag (đo mức trễ này để giám sát sức khỏe).</li><li><strong>Microtask chạy cạn kiệt giữa các callback.</strong> Promise callback không chờ tick sau — chúng chạy ngay sau callback hiện tại, <em>trước</em> mọi I/O. Hệ quả nguy hiểm: vòng lặp đệ quy microtask (<code>process.nextTick</code> gọi lại chính nó, hoặc promise chain vô hạn) <strong>bỏ đói toàn bộ I/O</strong> — loop không bao giờ tới phase poll. CPU 100%, không request nào được phục vụ, không lỗi nào được log.</li><li><strong>Phase poll là nơi Node &ldquo;ngủ&rdquo;.</strong> Khi không có việc, Node block trong epoll_wait — 0% CPU. Server 100K kết nối idle không tốn gì. Đây là điều mô hình thread không làm được với chi phí tương đương.</li></ol><h3 id=setimmediate-vs-settimeout0-vs-nexttick--chọn-gì>setImmediate vs setTimeout(0) vs nextTick — chọn gì?<a hidden class=anchor aria-hidden=true href=#setimmediate-vs-settimeout0-vs-nexttick--chọn-gì>#</a></h3><ul><li><code>setImmediate(fn)</code>: chạy ở phase check của tick hiện tại/kế — <strong>cách chuẩn để &ldquo;nhường loop rồi làm tiếp&rdquo;</strong> (chia nhỏ việc nặng).</li><li><code>setTimeout(fn, 0)</code>: tương tự nhưng vòng qua phase timers, overhead nhỉnh hơn.</li><li><code>process.nextTick(fn)</code>: chạy TRƯỚC cả I/O, không nhường gì cả — chỉ dùng để chuẩn hóa API thành async (tránh callback &ldquo;zalgo&rdquo; — lúc sync lúc async); dùng làm vòng lặp là tự bắn vào chân.</li></ul><hr><h2 id=3-tiến-hóa-callback--promise--asyncawait>3. Tiến hóa: Callback → Promise → Async/Await<a hidden class=anchor aria-hidden=true href=#3-tiến-hóa-callback--promise--asyncawait>#</a></h2><h3 id=31-callback-và-cái-giá-của-nó>3.1. Callback và cái giá của nó<a hidden class=anchor aria-hidden=true href=#31-callback-và-cái-giá-của-nó>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#a6e22e>getUser</span>(<span style=color:#a6e22e>id</span>, (<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>user</span>) =&gt; {
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>err</span>) <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>handle</span>(<span style=color:#a6e22e>err</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>getOrders</span>(<span style=color:#a6e22e>user</span>.<span style=color:#a6e22e>id</span>, (<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>orders</span>) =&gt; {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>err</span>) <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>handle</span>(<span style=color:#a6e22e>err</span>);            <span style=color:#75715e>// lặp lại xử lý lỗi mỗi tầng
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>enrich</span>(<span style=color:#a6e22e>orders</span>, (<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>result</span>) =&gt; { ... }); <span style=color:#75715e>// &#34;pyramid of doom&#34;
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  });
+</span></span><span style=display:flex><span>});
+</span></span></code></pre></div><p>Ba vấn đề cấu trúc: kim tự tháp lồng nhau; lỗi phải xử lý thủ công <strong>mỗi tầng</strong> (quên một chỗ là lỗi rơi vào hư vô); không compose được (chạy 3 việc song song rồi gom kết quả = viết bộ đếm thủ công dễ sai).</p><h3 id=32-promise--biến-async-thành-giá-trị>3.2. Promise — biến async thành GIÁ TRỊ<a hidden class=anchor aria-hidden=true href=#32-promise--biến-async-thành-giá-trị>#</a></h3><p>Đột phá khái niệm: kết quả-tương-lai trở thành <strong>object truyền tay được</strong>, thay vì &ldquo;hành động sẽ gọi anh sau&rdquo;. Vì là giá trị nên compose được:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#66d9ef>const</span> [<span style=color:#a6e22e>user</span>, <span style=color:#a6e22e>config</span>] <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> Promise.<span style=color:#a6e22e>all</span>([<span style=color:#a6e22e>getUser</span>(<span style=color:#a6e22e>id</span>), <span style=color:#a6e22e>getConfig</span>()]);
+</span></span></code></pre></div><ul><li>Lỗi <strong>tự lan truyền</strong> theo chain đến <code>.catch</code> gần nhất — mô phỏng lại được ngữ nghĩa exception.</li><li>Bốn combinator cần thuộc: <code>all</code> (fail-fast, đủ cả), <code>allSettled</code> (chờ hết bất kể thành bại), <code>race</code> (cái nào xong/fail trước — nền tảng làm timeout), <code>any</code> (cái thành công đầu tiên — hedge request).</li></ul><h3 id=33-asyncawait--cú-pháp-đồng-bộ-bản-chất-bất-đồng-bộ>3.3. Async/Await — cú pháp đồng bộ, bản chất bất đồng bộ<a hidden class=anchor aria-hidden=true href=#33-asyncawait--cú-pháp-đồng-bộ-bản-chất-bất-đồng-bộ>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#66d9ef>async</span> <span style=color:#66d9ef>function</span> <span style=color:#a6e22e>handleOrder</span>(<span style=color:#a6e22e>req</span>) {
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>user</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>getUser</span>(<span style=color:#a6e22e>req</span>.<span style=color:#a6e22e>userId</span>);   <span style=color:#75715e>// &#34;await&#34; = tạm dừng HÀM NÀY,
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>order</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>createOrder</span>(<span style=color:#a6e22e>user</span>);    <span style=color:#75715e>//  trả quyền cho event loop
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>order</span>;                              <span style=color:#75715e>//  KHÔNG chặn thread
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><p>Bản chất: compiler biến hàm async thành <strong>state machine</strong>; mỗi <code>await</code> là điểm cắt — hàm bị treo, đăng ký continuation vào microtask queue, event loop chạy việc khác. Cùng ý tưởng &ldquo;viết tuần tự, chạy bất đồng bộ&rdquo; như goroutine — khác ở chỗ Go giấu điểm cắt (mọi hàm đều có thể nhường), JS <strong>hiện điểm cắt tường minh</strong> bằng từ khóa <code>await</code>.</p><p>Trade-off của tường minh: (+) đọc code biết chính xác chỗ nào có thể xen kẽ (interleaving) — dễ suy luận về race logic; (−) &ldquo;function coloring&rdquo;: hàm async gọi từ hàm sync phải async hóa cả chuỗi bên trên, chia ecosystem thành hai thế giới.</p><h3 id=34-các-lỗi-asyncawait-đắt-giá-nhất-trong-production>3.4. Các lỗi async/await đắt giá nhất trong production<a hidden class=anchor aria-hidden=true href=#34-các-lỗi-asyncawait-đắt-giá-nhất-trong-production>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-js data-lang=js><span style=display:flex><span><span style=color:#75715e>// 1. TUẦN TỰ HÓA VÔ THỨC — lỗi hiệu năng phổ biến nhất của Node
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>a</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>getA</span>();   <span style=color:#75715e>// 100ms
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>b</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>getB</span>();   <span style=color:#75715e>// 100ms, KHÔNG phụ thuộc a → tổng 200ms vô lý
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// Đúng: const [a, b] = await Promise.all([getA(), getB()]); → 100ms
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 2. QUÊN AWAIT — lỗi im lặng nguy hiểm nhất
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>saveAudit</span>(<span style=color:#a6e22e>event</span>);         <span style=color:#75715e>// không await: lỗi thành unhandledRejection,
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>                          <span style=color:#75715e>// hàm return trước khi ghi xong, thứ tự không bảo đảm
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// Bật ESLint @typescript-eslint/no-floating-promises — bắt buộc với codebase nghiêm túc
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 3. await TRONG VÒNG LẶP khi có thể song song
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>id</span> <span style=color:#66d9ef>of</span> <span style=color:#a6e22e>ids</span>) { <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>notify</span>(<span style=color:#a6e22e>id</span>); }         <span style=color:#75715e>// N × latency
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>await</span> Promise.<span style=color:#a6e22e>all</span>(<span style=color:#a6e22e>ids</span>.<span style=color:#a6e22e>map</span>(<span style=color:#a6e22e>id</span> =&gt; <span style=color:#a6e22e>notify</span>(<span style=color:#a6e22e>id</span>)));       <span style=color:#75715e>// 1 × latency
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// NHƯNG: 10.000 id = 10.000 call đồng thời = tự DDoS downstream
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// → cần giới hạn concurrency (p-limit) — Node KHÔNG có sẵn semaphore như Go
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 4. Promise.all fail-fast bỏ rơi promise khác
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// Một cái reject → all reject NGAY, nhưng các promise kia VẪN CHẠY
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// (JS không có cancellation tự nhiên!) → dùng AbortController truyền signal
+</span></span></span></code></pre></div><p>Điểm số 4 đáng dừng lại: <strong>JS không có cơ chế hủy promise chuẩn</strong> như <code>context.Done()</code> của Go. <code>AbortController</code> + <code>signal</code> là giải pháp chuẩn hiện nay (fetch, nhiều thư viện hỗ trợ), nhưng nó opt-in — hàm không nhận signal thì không hủy được. Thiết kế API nội bộ: <strong>mọi hàm async có I/O nên nhận <code>{ signal }</code></strong>, tương đương kỷ luật &ldquo;ctx là tham số đầu&rdquo; bên Go.</p><h3 id=35-unhandledrejection--chính-sách-bắt-buộc>3.5. unhandledRejection — chính sách bắt buộc<a hidden class=anchor aria-hidden=true href=#35-unhandledrejection--chính-sách-bắt-buộc>#</a></h3><p>Từ Node 15, promise rejection không ai bắt sẽ <strong>crash process</strong> (trước đó chỉ warning). Đúng đắn: crash-fast tốt hơn chạy tiếp với trạng thái không xác định. Production cần: handler <code>process.on('unhandledRejection')</code> để <strong>log đầy đủ rồi exit(1)</strong> (đừng nuốt để chạy tiếp!), process manager (K8s, PM2) restart, và alert khi tần suất tăng.</p><hr><h2 id=4-event-loop-blocking--kẻ-giết-người-thầm-lặng>4. Event Loop Blocking — kẻ giết người thầm lặng<a hidden class=anchor aria-hidden=true href=#4-event-loop-blocking--kẻ-giết-người-thầm-lặng>#</a></h2><h3 id=41-định-lượng-cho-trực-giác>4.1. Định lượng cho trực giác<a hidden class=anchor aria-hidden=true href=#41-định-lượng-cho-trực-giác>#</a></h3><p>Server 1.000 RPS, một handler có đoạn tính toán 50ms CPU. Trong 50ms đó, ~50 request khác đến — <strong>tất cả xếp hàng</strong>. Request thứ 50 chờ gần 50ms <em>chỉ để bắt đầu</em>. Chỉ cần 2% request dính handler này, p99 của <strong>toàn bộ</strong> service sụp — kể cả các endpoint &ldquo;không liên quan&rdquo;. Đây là khác biệt bản chất với Go: một goroutine bận 50ms không ảnh hưởng goroutine khác (có P khác, có preemption); trong Node, <strong>mọi request chung một hàng đợi CPU</strong>.</p><h3 id=42-thủ-phạm-phổ-biến-xếp-theo-tần-suất-thực-tế>4.2. Thủ phạm phổ biến (xếp theo tần suất thực tế)<a hidden class=anchor aria-hidden=true href=#42-thủ-phạm-phổ-biến-xếp-theo-tần-suất-thực-tế>#</a></h3><ol><li><code>JSON.parse</code>/<code>JSON.stringify</code> payload lớn (1MB ≈ vài chục ms).</li><li>Regex tai họa (catastrophic backtracking — ReDoS): một input hiểm chạy hàng giây. Đã có sự cố lớn trong ngành vì một regex như vậy.</li><li>Vòng lặp xử lý mảng trăm nghìn phần tử (sort, map, filter chồng nhau).</li><li>Crypto đồng bộ (<code>pbkdf2Sync</code>, <code>bcrypt.hashSync</code>), <code>zlib.gzipSync</code>, <code>fs.*Sync</code> — mọi hàm có đuôi <code>Sync</code> sau khi server đã nhận traffic là bug.</li><li>Template render/serialize HTML lớn.</li></ol><h3 id=43-phòng-và-chữa>4.3. Phòng và chữa<a hidden class=anchor aria-hidden=true href=#43-phòng-và-chữa>#</a></h3><ul><li><strong>Đo:</strong> metric event loop lag/utilization (<code>perf_hooks.monitorEventLoopDelay</code>, <code>performance.eventLoopUtilization()</code>) — chỉ số sức khỏe số 1 của Node, alert khi p99 lag > ~100ms.</li><li><strong>Chặn từ nguồn:</strong> giới hạn kích thước body (<code>express.json({ limit })</code>); validate/timeout regex (dùng RE2 cho input người dùng); phân trang dữ liệu.</li><li><strong>Chia nhỏ:</strong> việc dài chia batch, giữa các batch <code>await setImmediate()</code> để nhả loop (throughput giảm nhẹ, latency công bằng trở lại).</li><li><strong>Đẩy ra ngoài:</strong> việc nặng thường xuyên → worker_threads (chương 10) hoặc tách service (cân nhắc Go cho phần đó).</li></ul><hr><h2 id=5-best-practices-tổng-hợp>5. Best Practices tổng hợp<a hidden class=anchor aria-hidden=true href=#5-best-practices-tổng-hợp>#</a></h2><ol><li>Cấm <code>*Sync</code> API sau khi server khởi động xong (lúc boot thì được phép).</li><li><code>Promise.all</code> cho việc độc lập; <code>p-limit</code>/queue cho việc hàng loạt; ESLint no-floating-promises.</li><li>Mọi hàm async nhận <code>AbortSignal</code>; đặt timeout ở mọi I/O ra ngoài (fetch có <code>AbortSignal.timeout(ms)</code>).</li><li>Giám sát event loop lag như giám sát CPU.</li><li><code>unhandledRejection</code> → log + crash + restart, không nuốt.</li><li>Đừng dùng <code>process.nextTick</code> trừ khi viết thư viện và hiểu rõ vì sao.</li></ol><hr><p><em>Chương tiếp theo: <a href=/series/nodejs-golang/10-node-concurrency-stream/>10 — Concurrency trong Node: Worker Threads, Cluster, Child Process, Stream & Backpressure</a></em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/nodejs/>Nodejs</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/nodejs-golang/10-node-concurrency-stream/><span class=title>« Prev</span><br><span>Bài 10 — Concurrency & Stream trong Node</span>
+</a><a class=next href=https://thanhhv.github.io/series/nodejs-golang/08-node-nen-tang-v8/><span class=title>Next »</span><br><span>Bài 8 — Node.js Nền Tảng & V8 Engine</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on x" href="https://x.com/intent/tweet/?text=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f&amp;hashtags=backend%2cnodejs"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f&amp;title=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;summary=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f&title=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on whatsapp" href="https://api.whatsapp.com/send?text=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on telegram" href="https://telegram.me/share/url?text=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 9 — Event Loop Internals on ycombinator" href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%209%20%e2%80%94%20Event%20Loop%20Internals&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f09-node-event-loop%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

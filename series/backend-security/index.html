@@ -1,355 +1,40 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=54040&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Backend Security | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="">
-<meta name="description" content="Bộ tài liệu Backend Security chuyên sâu — từ security foundations, authentication, password, transport, browser security đến OWASP Top 10 và kiến trúc bảo mật thực tế.">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:54040/series/backend-security/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:54040/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:54040/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:54040/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:54040/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:54040/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="http://localhost:54040/series/backend-security/index.xml">
-<link rel="alternate" hreflang="en" href="http://localhost:54040/series/backend-security/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
-
-    </style>
-</noscript>
-</head>
-
-<body class="list" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:54040/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:54040/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:54040/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main"> 
-<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:54040/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:54040/series/">Series</a></div>
-  <h1>
-    Backend Security
-  </h1>
-  <div class="post-description">
-    Bộ tài liệu Backend Security chuyên sâu — từ security foundations, authentication, password, transport, browser security đến OWASP Top 10 và kiến trúc bảo mật thực tế.
-  </div>
-</header>
-<div class="post-content"><p>Bộ tài liệu <strong>Backend Security</strong> chuyên sâu — hiểu bản chất từng cơ chế tấn công và phòng thủ, từ nền tảng đến kiến trúc bảo mật production.</p>
-
-
-</div>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 10: Kiến trúc Bảo mật Thực tế
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Backend Security | Thanh HV's Blog</title>
+<meta name=keywords content><meta name=description content="Bộ tài liệu Backend Security chuyên sâu — từ security foundations, authentication, password, transport, browser security đến OWASP Top 10 và kiến trúc bảo mật thực tế."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/backend-security/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/series/backend-security/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/backend-security/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/backend-security/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Backend Security"><meta property="og:description" content="Bộ tài liệu Backend Security chuyên sâu — từ security foundations, authentication, password, transport, browser security đến OWASP Top 10 và kiến trúc bảo mật thực tế."><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Backend Security"><meta name=twitter:description content="Bộ tài liệu Backend Security chuyên sâu — từ security foundations, authentication, password, transport, browser security đến OWASP Top 10 và kiến trúc bảo mật thực tế."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Backend Security","item":"https://thanhhv.github.io/series/backend-security/"}]}</script></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a></div><h1>Backend Security</h1><div class=post-description>Bộ tài liệu Backend Security chuyên sâu — từ security foundations, authentication, password, transport, browser security đến OWASP Top 10 và kiến trúc bảo mật thực tế.</div></header><div class=post-content><p>Bộ tài liệu <strong>Backend Security</strong> chuyên sâu — hiểu bản chất từng cơ chế tấn công và phòng thủ, từ nền tảng đến kiến trúc bảo mật production.</p></div><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 10: Kiến trúc Bảo mật Thực tế</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Chín tập trước xây dựng từ vựng và nguyên lý. Tập cuối này lắp ráp chúng vào các hệ thống thật. Với mỗi loại kiến trúc, ta hỏi: tài sản quan trọng nhất là gì, attacker nhắm vào đâu, và các nguyên lý (CIA, Least Privilege, Defense in Depth, Zero Trust, AuthN/AuthZ, token, TLS, secret) kết hợp thành luồng cụ thể ra sao. Trọng tâm là các luồng: Authentication, Authorization, Token Flow, Refresh Flow, API Gateway, Secret Management, Service-to-Service Authentication.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 17:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;17 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 10: Kiến trúc Bảo mật Thực tế" href="http://localhost:54040/series/backend-security/10-real-world-architectures/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 9: API Security Best Practices
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 17:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;17 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 10: Kiến trúc Bảo mật Thực tế" href=https://thanhhv.github.io/series/backend-security/10-real-world-architectures/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 9: API Security Best Practices</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Tập 6 giải thích cơ chế các phòng thủ API đặc thù. Tập này tổng hợp chúng thành một bộ nguyên tắc thực hành vận hành — thứ tự áp dụng, cách chúng khớp vào vòng đời một request, và những nguyên tắc thường bị bỏ sót. Đây là “sổ tay checklist có tư duy” trước khi bước sang các kiến trúc thực tế ở tập cuối.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 16:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;11 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 9: API Security Best Practices" href="http://localhost:54040/series/backend-security/09-api-security-best-practices/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 8: Server Security
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 16:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;11 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 9: API Security Best Practices" href=https://thanhhv.github.io/series/backend-security/09-api-security-best-practices/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 8: Server Security</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Các tập trước bảo vệ ứng dụng. Tập này bảo vệ nền tảng chạy ứng dụng: máy chủ, mạng, container, secret. Nó đào sâu A05 (Security Misconfiguration) của OWASP. Tư tưởng xuyên suốt: giảm bề mặt tấn công (attack surface) và giới hạn bán kính vụ nổ (blast radius) — mỗi cổng mở, mỗi secret hớ hênh, mỗi container quyền cao là một cánh cửa cho attacker.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 15:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;16 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 8: Server Security" href="http://localhost:54040/series/backend-security/08-server-security/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 7: OWASP Top 10
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 15:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;16 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 8: Server Security" href=https://thanhhv.github.io/series/backend-security/08-server-security/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 7: OWASP Top 10</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 OWASP Top 10 (phiên bản 2021) là danh sách các hạng mục rủi ro web phổ biến và nghiêm trọng nhất, do cộng đồng bảo mật ứng dụng tổng hợp từ dữ liệu thực tế. Đây không phải một checklist “làm xong là an toàn” — nó là bản đồ các lớp lỗ hổng mà mọi backend engineer phải nhận diện được. Với mỗi mục, ta đi theo bốn câu hỏi bạn yêu cầu: Cơ chế → Attack → Demo → Phòng tránh, kèm trade-off và case study.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 14:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 7: OWASP Top 10" href="http://localhost:54040/series/backend-security/07-owasp-top-10/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 6: API Security
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 14:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 7: OWASP Top 10" href=https://thanhhv.github.io/series/backend-security/07-owasp-top-10/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 6: API Security</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Tập này trả lời: API khác web app ở điểm nào về mô hình mối đe dọa, khi nào dùng API Key vs Token, vì sao Rate Limiting là bảo mật chứ không chỉ là quản lý tài nguyên, Replay Attack là gì và vì sao Idempotency vừa là tính đúng đắn vừa là phòng thủ, và khi nào cần Request Signing/HMAC thay vì token thường.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 13:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;17 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 6: API Security" href="http://localhost:54040/series/backend-security/06-api-security/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 5: Browser Security
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 13:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;17 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 6: API Security" href=https://thanhhv.github.io/series/backend-security/06-api-security/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 5: Browser Security</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 TLS (Tập 4) bảo vệ dữ liệu trên đường truyền. Nhưng khi dữ liệu đã tới trình duyệt, một mặt trận hoàn toàn khác mở ra. Tập này trả lời: vì sao trình duyệt cần Same-Origin Policy, CORS nới lỏng (chứ không siết chặt) bảo mật ra sao, XSS và CSRF khác nhau ở bản chất nào, và vì sao ba cờ cookie nhỏ bé (Secure, HttpOnly, SameSite) lại là tuyến phòng thủ quan trọng bậc nhất.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 12:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 5: Browser Security" href="http://localhost:54040/series/backend-security/05-browser-security/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 4: Transport Security
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 12:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 5: Browser Security" href=https://thanhhv.github.io/series/backend-security/05-browser-security/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 4: Transport Security</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Tập này trả lời: TLS thực sự bảo vệ điều gì (và điều gì nó không bảo vệ), vì sao “có ổ khóa xanh” không đồng nghĩa với “an toàn”, certificate và CA giải bài toán tin cậy ra sao, TLS handshake diễn ra thế nào bên trong, và khi nào cần Mutual TLS.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 11:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 4: Transport Security" href="http://localhost:54040/series/backend-security/04-transport-security/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 3: Password Security
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 11:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 4: Transport Security" href=https://thanhhv.github.io/series/backend-security/04-transport-security/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 3: Password Security</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Tập này trả lời những câu hỏi cốt lõi mà mọi backend engineer phải nắm: vì sao MD5 không còn an toàn, vì sao SHA — dù là hàm băm mật mã mạnh — lại không phù hợp để lưu password, vì sao bcrypt/scrypt/Argon2 được thiết kế khác hẳn SHA, và vì sao ta phải cố tình làm cho quá trình hash chậm lại.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 10:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;24 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 3: Password Security" href="http://localhost:54040/series/backend-security/03-password-security/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 2: Authentication
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 10:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;24 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 3: Password Security" href=https://thanhhv.github.io/series/backend-security/03-password-security/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 2: Authentication</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Mạch tư duy: Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Tập này đi từ First Principles. Chúng ta sẽ không bắt đầu bằng “JWT là một chuẩn token”. Thay vào đó, chúng ta bắt đầu từ câu hỏi gốc: nếu HTTP không nhớ bạn là ai, thì làm sao một hệ thống biết bạn đã đăng nhập? Từ đó, mỗi cơ chế xác thực sẽ hiện ra như một câu trả lời cho một điểm đau cụ thể của cơ chế trước nó.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 09:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;34 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 2: Authentication" href="http://localhost:54040/series/backend-security/02-authentication/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Tập 1: Security Foundations
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 09:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;34 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 2: Authentication" href=https://thanhhv.github.io/series/backend-security/02-authentication/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Tập 1: Security Foundations</h2></header><div class=entry-content><p>Đối tượng: Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Cách đọc tài liệu này: Đây không phải là một bảng tra cứu kỹ thuật. Mỗi chủ đề được trình bày theo một mạch tư duy cố định:
 Asset → Threat → Attack → Vulnerability → Defense → Trade-off → Production Best Practice.
 Bạn sẽ không thấy tài liệu bắt đầu bằng “X là…”. Thay vào đó, mỗi phần bắt đầu bằng câu hỏi: “Nếu không có cơ chế này thì chuyện gì xảy ra?” — vì đó chính là cách một attacker và một architect cùng nhìn vào hệ thống.
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 08:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;37 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Tập 1: Security Foundations" href="http://localhost:54040/series/backend-security/01-security-foundations/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2 class="entry-hint-parent">Backend Security — Bộ tài liệu chuyên sâu (Tiếng Việt)
-    </h2>
-  </header>
-  <div class="entry-content">
-    <p> Bộ tài liệu 10 tập về Backend Security, viết cho Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect và Software Architect.
+...</p></div><footer class=entry-footer><span title='2026-07-07 08:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;37 min</footer><a class=entry-link aria-label="post link to Backend Security — Tập 1: Security Foundations" href=https://thanhhv.github.io/series/backend-security/01-security-foundations/></a></article><article class=post-entry><header class=entry-header><h2 class=entry-hint-parent>Backend Security — Bộ tài liệu chuyên sâu (Tiếng Việt)</h2></header><div class=entry-content><p>Bộ tài liệu 10 tập về Backend Security, viết cho Backend Engineer, Senior Backend Engineer, Tech Lead, Solution Architect và Software Architect.
 Triết lý: không giải thích “cách dùng”, mà giúp người đọc hiểu bản chất — attacker suy nghĩ thế nào, vì sao cơ chế bảo mật tồn tại, nó bảo vệ điều gì, bị khai thác ra sao, và khi nào không nên dùng.
 Cách bộ tài liệu được xây dựng Mỗi chủ đề bám một mạch tư duy cố định, không bắt đầu bằng định nghĩa:
-...</p>
-  </div>
-  <footer class="entry-footer"><span title='2026-07-07 07:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;3 min</footer>
-  <a class="entry-link" aria-label="post link to Backend Security — Bộ tài liệu chuyên sâu (Tiếng Việt)" href="http://localhost:54040/series/backend-security/00-introduction/"></a>
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:54040/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-</body>
-
-</html>
+...</p></div><footer class=entry-footer><span title='2026-07-07 07:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Backend Security — Bộ tài liệu chuyên sâu (Tiếng Việt)" href=https://thanhhv.github.io/series/backend-security/00-introduction/></a></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
