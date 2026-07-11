@@ -1,3 +1,4 @@
+{{- if eq .Type "mermaid" -}}
 <pre class="mermaid">{{ .Inner | htmlEscape | safeHTML }}</pre>
 {{- if not (.Page.Store.Get "hasMermaid") -}}
 {{- .Page.Store.Set "hasMermaid" true -}}
@@ -17,4 +18,7 @@
     securityLevel: "loose",
   });
 </script>
+{{- end -}}
+{{- else -}}
+{{ highlight (trim .Inner "\n\r") .Type .Options }}
 {{- end -}}
