@@ -6,8 +6,6 @@ tags = ["backend", "career", "principal-engineer"]
 weight = 1
 +++
 
-# Roadmap: Từ Backend Engineer đến Principal Engineer
-
 *Viết bởi một Principal Engineer, dành cho những kỹ sư muốn đi xa hơn chức danh.*
 
 ---
