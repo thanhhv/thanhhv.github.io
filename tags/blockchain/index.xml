@@ -1,4 +1,183 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Blockchain on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/blockchain/</link><description>Recent content in Blockchain on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Sun, 18 May 2025 16:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/blockchain/index.xml" rel="self" type="application/rss+xml"/><item><title>Tổng quan về Hợp đồng Thông minh trong DEX và AMM</title><link>https://thanhhv.github.io/posts/dex/</link><pubDate>Sun, 18 May 2025 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/dex/</guid><description>&lt;h2 id="hợp-đồng-thông-minh-dex">Hợp đồng thông minh DEX&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Blockchain on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/blockchain/</link><description>Recent content in Blockchain on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Sun, 19 Jul 2026 09:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/blockchain/index.xml" rel="self" type="application/rss+xml"/><item><title>12 – So sánh tổng hợp</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/12-so-sanh-tong-hop/</link><pubDate>Sun, 19 Jul 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/12-so-sanh-tong-hop/</guid><description>&lt;blockquote>
+&lt;p>Các bảng so sánh khách quan, gom về một chỗ để tra cứu. Mỗi bảng đánh giá theo: hiệu năng, bảo mật, độ phức tạp, khả năng mở rộng, chi phí vận hành, use case phù hợp.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-bitcoin-vs-ethereum-vs-solana">1. Bitcoin vs Ethereum vs Solana&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Tiêu chí&lt;/th>
+&lt;th>Bitcoin&lt;/th>
+&lt;th>Ethereum&lt;/th>
+&lt;th>Solana&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Mục tiêu thiết kế&lt;/td>
+&lt;td>Tiền tệ phi tập trung, bất biến tối đa&lt;/td>
+&lt;td>Nền tảng smart contract tổng quát&lt;/td>
+&lt;td>Hiệu năng cao, chi phí thấp&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Model&lt;/td>
+&lt;td>UTXO&lt;/td>
+&lt;td>Account&lt;/td>
+&lt;td>Account (song song hóa)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Consensus&lt;/td>
+&lt;td>PoW Nakamoto&lt;/td>
+&lt;td>PoS Gasper&lt;/td>
+&lt;td>PoS + PoH + Tower BFT&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Block time / Finality&lt;/td>
+&lt;td>~10 phút / probabilistic (~60&amp;rsquo; quy ước)&lt;/td>
+&lt;td>12s / ~13 phút finalized&lt;/td>
+&lt;td>~400ms / ~13s rooted&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>TPS thực tế&lt;/td>
+&lt;td>~7&lt;/td>
+&lt;td>~15-30 (L1) + L2&lt;/td>
+&lt;td>~2.000-4.000 (thực tế, không tính vote)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Phí điển hình&lt;/td>
+&lt;td>$0.5-20+&lt;/td>
+&lt;td>$0.5-50 (L1), cent (L2)&lt;/td>
+&lt;td>~$0.001-0.05&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Smart contract&lt;/td>
+&lt;td>Script rất hạn chế&lt;/td>
+&lt;td>EVM/Solidity — hệ sinh thái lớn nhất&lt;/td>
+&lt;td>Rust/SVM — nhanh, học dốc hơn&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Yêu cầu node&lt;/td>
+&lt;td>Nhẹ (chạy được trên máy cá nhân)&lt;/td>
+&lt;td>Trung bình (2TB NVMe)&lt;/td>
+&lt;td>Rất nặng (256GB RAM, mạng lớn)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Độ ổn định lịch sử&lt;/td>
+&lt;td>Xuất sắc (15+ năm)&lt;/td>
+&lt;td>Rất tốt (finality stall ngắn 2023)&lt;/td>
+&lt;td>Nhiều lần outage toàn mạng 2021-22, cải thiện từ 2023&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Phi tập trung&lt;/td>
+&lt;td>Cao nhất&lt;/td>
+&lt;td>Cao (lo ngại: Lido, MEV builder)&lt;/td>
+&lt;td>Thấp hơn (rào cản phần cứng)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Use case hợp&lt;/td>
+&lt;td>Store of value, settlement lớn&lt;/td>
+&lt;td>DeFi, tài sản hóa, hạ tầng tổng quát&lt;/td>
+&lt;td>Thanh toán nhỏ, DEX tần suất cao, consumer app&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Cho backend engineer&lt;/td>
+&lt;td>Tích hợp đơn giản (ít tính năng)&lt;/td>
+&lt;td>Tài liệu/tooling tốt nhất, nhiều pattern chuẩn&lt;/td>
+&lt;td>Model khác biệt (không nonce tuần tự, blockhash hết hạn 60s, compute budget)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="2-account-model-vs-utxo">2. Account Model vs UTXO&lt;/h2>
+&lt;p>(Chi tiết Level 1 §5.4 — bảng đầy đủ tại đó.) Tóm tắt quyết định: cần smart contract/state chung → Account; cần song song + đơn giản + privacy tốt hơn cho thanh toán → UTXO. Chi phí backend: UTXO đắt hơn ở ví (coin selection, change), Account đắt hơn ở gửi tx (nonce management).&lt;/p></description></item><item><title>11 – Blockchain System Design</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/11-system-design/</link><pubDate>Sun, 19 Jul 2026 08:50:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/11-system-design/</guid><description>&lt;blockquote>
+&lt;p>Thiết kế 6 hệ thống thực tế, từ yêu cầu đến kiến trúc. Mỗi bài dùng lại các building block đã xây ở Level 5-8: RPC gateway, indexer, transaction service, signing service, outbox/Kafka. Đọc như tài liệu interview system design.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="sd-1-crypto-payment-gateway-nhận-thanh-toán-crypto-cho-merchant">SD-1. Crypto Payment Gateway (nhận thanh toán crypto cho merchant)&lt;/h2>
+&lt;p>&lt;strong>Yêu cầu:&lt;/strong> Merchant tạo hóa đơn → user trả bằng crypto → gateway xác nhận và báo merchant (webhook), hỗ trợ nhiều chain + stablecoin; sai sót ghi sổ = mất tiền thật.&lt;/p></description></item><item><title>10 – Production Failure Cases</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/10-production-failure-cases/</link><pubDate>Sun, 19 Jul 2026 08:40:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/10-production-failure-cases/</guid><description>&lt;blockquote>
+&lt;p>12 tình huống sự cố có thật trong vận hành hệ Web3. Mỗi tình huống: triệu chứng → root cause → thành phần ảnh hưởng → metric/alert → điều tra → khắc phục → phòng tránh.
+Định dạng gọn để dùng như runbook.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="fc-01-chain-reorganization-sâu">FC-01. Chain Reorganization sâu&lt;/h2>
+&lt;p>&lt;strong>Triệu chứng:&lt;/strong> Số dư user &amp;ldquo;tự giảm&amp;rdquo;; đơn nạp tiền đã credit biến mất khỏi explorer; indexer báo lỗi parentHash mismatch hoặc — tệ hơn — chạy tiếp êm ả với dữ liệu sai.&lt;/p></description></item><item><title>09 – Security cho Blockchain Backend</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/09-security/</link><pubDate>Sun, 19 Jul 2026 08:30:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/09-security/</guid><description>&lt;blockquote>
+&lt;p>Bổ sung cho phần security rải rác ở các level: gom thành bức tranh threat model đầy đủ, từ key đến giao thức đến con người.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-threat-model--nghĩ-như-kẻ-tấn-công">1. Threat model — nghĩ như kẻ tấn công&lt;/h2>
+&lt;p>Hệ Web3 khác backend thường ở một điểm định mệnh: &lt;strong>phần thưởng tấn công là tiền, thanh khoản ngay, không đảo ngược được, và thường ẩn danh được&lt;/strong>. Backend thường bị tấn công để lấy data (bán lại vòng vo); backend Web3 bị tấn công để &lt;strong>rút tiền trực tiếp&lt;/strong>. Mọi quyết định bảo mật phải xuất phát từ đây: bạn đang vận hành một cái két, không phải một cái CRM.&lt;/p></description></item><item><title>Level 8 – Production Operations</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/08-level-8-production-operations/</link><pubDate>Sun, 19 Jul 2026 08:20:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/08-level-8-production-operations/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Câu hỏi trung tâm:&lt;/strong> Vận hành hệ Web3 24/7: node, RPC, monitoring, DR — khác gì vận hành backend thường, và các con số cụ thể.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-node-deployment">1. Node Deployment&lt;/h2>
+&lt;h3 id="11-yêu-cầu-phần-cứng-ethereum-mainnet-2025-2026">1.1. Yêu cầu phần cứng (Ethereum mainnet, 2025-2026)&lt;/h3>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Thành phần&lt;/th>
+&lt;th>Full node&lt;/th>
+&lt;th>Archive node&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>CPU&lt;/td>
+&lt;td>8+ cores&lt;/td>
+&lt;td>16+ cores&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>RAM&lt;/td>
+&lt;td>32 GB&lt;/td>
+&lt;td>64+ GB&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Disk&lt;/td>
+&lt;td>&lt;strong>2 TB NVMe&lt;/strong> (TLC, không QLC/SATA — IOPS là nút cổ chai số 1)&lt;/td>
+&lt;td>16-20+ TB NVMe&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Mạng&lt;/td>
+&lt;td>25+ Mbps ổn định, chú ý băng thông ra (peer serving)&lt;/td>
+&lt;td>tương tự&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Sync ban đầu&lt;/td>
+&lt;td>~1-3 ngày (snap sync)&lt;/td>
+&lt;td>2-6 tuần (full/archive sync!)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Bài học vận hành đau nhất: &lt;strong>thời gian sync&lt;/strong>. Node chết mất data = chờ nhiều ngày để có lại. Vì vậy: snapshot disk định kỳ (vd. mỗi 6-12h, dừng node hoặc dùng filesystem snapshot nhất quán), giữ ≥ 2 node để một chết vẫn còn một, và coi &amp;ldquo;restore từ snapshot + sync phần còn thiếu&amp;rdquo; là quy trình DR được diễn tập.&lt;/p></description></item><item><title>Level 7 – Backend Integration Patterns</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/07-level-7-backend-integration/</link><pubDate>Sun, 19 Jul 2026 08:10:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/07-level-7-backend-integration/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Câu hỏi trung tâm:&lt;/strong> Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.&lt;/p>&lt;/blockquote>
+&lt;p>Đây là level &amp;ldquo;ứng dụng&amp;rdquo; — mỗi pattern dưới đây giải một failure mode có thật trong production.&lt;/p>
+&lt;hr>
+&lt;h2 id="1-wallet-authentication-sign-in-with-ethereum">1. Wallet Authentication (Sign-In with Ethereum)&lt;/h2>
+&lt;h3 id="problem-statement">Problem statement&lt;/h3>
+&lt;p>Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị &lt;strong>replay&lt;/strong> (kẻ trộm được chữ ký cũ đăng nhập mãi mãi).&lt;/p></description></item><item><title>Level 6 – Scaling: Layer 2, Rollup, Sharding</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/06-level-6-scaling/</link><pubDate>Sun, 19 Jul 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/06-level-6-scaling/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Câu hỏi trung tâm:&lt;/strong> Vì sao không thể scale blockchain như scale backend (thêm server, thêm shard), và các giải pháp thực tế đánh đổi điều gì?&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Backend truyền thống scale bằng cách &lt;strong>chia việc&lt;/strong>: thêm instance sau load balancer, shard database, mỗi node xử lý một phần. Blockchain L1 không làm vậy được, vì nguyên tắc nền tảng (Level 3): &lt;strong>mọi full node thực thi lại mọi transaction để tự verify&lt;/strong>. Thêm node không tăng throughput — chỉ tăng số bản sao của cùng một công việc.&lt;/p></description></item><item><title>Level 5 – Blockchain Infrastructure</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/05-level-5-blockchain-infrastructure/</link><pubDate>Sun, 19 Jul 2026 07:50:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/05-level-5-blockchain-infrastructure/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Câu hỏi trung tâm:&lt;/strong> Giữa chain và ứng dụng của bạn là cả một tầng hạ tầng. Tầng đó gồm những gì, và bạn nên tự vận hành hay đi thuê?&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Ứng dụng Web3 không nói chuyện trực tiếp với &amp;ldquo;blockchain&amp;rdquo; — nó nói chuyện với &lt;strong>một node cụ thể&lt;/strong> qua RPC. Node đó có thể chậm, lệch (out of sync), nói dối (nếu là node của người khác), hoặc chết. Toàn bộ Level 5 là về tầng hạ tầng này: node, RPC, indexer, wallet service — nơi 80% công việc backend engineer trong công ty Web3 thực sự diễn ra.&lt;/p></description></item><item><title>Level 4 – Virtual Machine &amp; Smart Contract</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/04-level-4-virtual-machine-smart-contract/</link><pubDate>Sun, 19 Jul 2026 07:40:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/04-level-4-virtual-machine-smart-contract/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Câu hỏi trung tâm:&lt;/strong> Làm sao hàng nghìn máy tính không tin nhau chạy cùng một đoạn code và ra cùng một kết quả — và điều đó thay đổi cách viết &amp;ldquo;business logic&amp;rdquo; như thế nào?&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Bitcoin chứng minh có thể đồng thuận về &lt;em>sổ cái chuyển tiền&lt;/em>. Nhưng logic nghiệp vụ thật (escrow, đấu giá, vay thế chấp) cần &lt;strong>code tùy ý&lt;/strong> chạy trên state chung. Vấn đề: code tùy ý từ người lạ là code không tin cậy — có thể lặp vô hạn, phá state, hoặc cho kết quả khác nhau trên các máy khác nhau.&lt;/p></description></item><item><title>Level 3 – Blockchain Runtime: Transaction Lifecycle</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/03-level-3-blockchain-runtime/</link><pubDate>Sun, 19 Jul 2026 07:30:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/03-level-3-blockchain-runtime/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Câu hỏi trung tâm:&lt;/strong> Từ lúc user bấm &amp;ldquo;Send&amp;rdquo; đến lúc backend dám ghi sổ, transaction đi qua những trạng thái nào — và có thể kẹt/chết ở đâu?&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Backend Engineer quen với vòng đời request: nhận → validate → xử lý → trả response, đồng bộ, trong vài chục ms, với kết quả nhị phân (thành công/lỗi).&lt;/p>
+&lt;p>Transaction blockchain hoàn toàn khác: &lt;strong>bất đồng bộ, nhiều trạng thái trung gian, có thể kẹt vô hạn, có thể thành công rồi bị hoàn tác, và thất bại vẫn mất phí&lt;/strong>. Không hiểu vòng đời này là nguồn gốc của phần lớn sự cố production trong hệ thống Web3 (tx stuck, double credit, nonce conflict — xem file Failure Cases).&lt;/p></description></item><item><title>Level 2 – Distributed Systems &amp; Consensus</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/02-level-2-distributed-systems-consensus/</link><pubDate>Sun, 19 Jul 2026 07:20:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/02-level-2-distributed-systems-consensus/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Câu hỏi trung tâm:&lt;/strong> Hàng nghìn node không tin nhau, kết nối qua mạng không đáng tin, làm sao đồng ý về MỘT lịch sử transaction duy nhất?&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Level 1 kết thúc với replicated state machine: mọi node áp dụng cùng dãy transaction sẽ có cùng state. Vấn đề duy nhất còn lại — và là vấn đề khó nhất — là &lt;strong>thứ tự (ordering)&lt;/strong>.&lt;/p>
+&lt;p>Trong hệ tập trung, ordering miễn phí: single writer quyết định. Trong Raft cluster, leader quyết định và các follower tin leader. Nhưng khi node có thể &lt;strong>nói dối&lt;/strong> (gửi block khác nhau cho các peer khác nhau, giả vờ chưa nhận message, tạo hàng nghìn identity giả), mọi giao thức consensus cổ điển sụp đổ.&lt;/p></description></item><item><title>Level 1 – Blockchain Fundamentals</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/01-level-1-blockchain-fundamentals/</link><pubDate>Sun, 19 Jul 2026 07:10:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/01-level-1-blockchain-fundamentals/</guid><description>&lt;blockquote>
+&lt;p>&lt;strong>Đối tượng:&lt;/strong> Backend Engineer chưa từng làm Blockchain.
+&lt;strong>Mục tiêu:&lt;/strong> Hiểu Blockchain là gì từ góc nhìn Distributed Systems, không phải từ góc nhìn Crypto.&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="1-problem-statement-bắt-đầu-từ-bài-toán-nghiệp-vụ">1. Problem Statement: Bắt đầu từ bài toán nghiệp vụ&lt;/h2>
+&lt;p>Hãy quên Blockchain đi. Bắt đầu từ một bài toán Backend quen thuộc.&lt;/p>
+&lt;p>Bạn xây dựng hệ thống chuyển tiền giữa hai ngân hàng A và B. Mỗi ngân hàng có database riêng (PostgreSQL chẳng hạn). Khi khách hàng của A chuyển 100$ cho khách hàng của B, cả hai database phải đồng thời:&lt;/p></description></item><item><title>Blockchain cho Backend Engineer</title><link>https://thanhhv.github.io/series/blockchain-for-backend-engineers/00-muc-luc/</link><pubDate>Sun, 19 Jul 2026 07:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/blockchain-for-backend-engineers/00-muc-luc/</guid><description>&lt;blockquote>
+&lt;p>Bộ tài liệu chuyên sâu về Blockchain dưới góc nhìn &lt;strong>Distributed Systems và Backend Architecture&lt;/strong> — dành cho Backend/Senior Backend Engineer, Blockchain Backend Developer và Software/Solution Architect.&lt;/p>
+&lt;p>&lt;strong>Không phải&lt;/strong> tài liệu đầu tư crypto, &lt;strong>không phải&lt;/strong> khóa học Solidity. Mục tiêu: hiểu blockchain là một hệ phân tán chuyên biệt — nơi cryptography, networking, consensus, economics và backend engineering kết hợp để quản lý state trong môi trường trustless — và &lt;strong>xây dựng, vận hành được&lt;/strong> các hệ thống tích hợp blockchain trong production.&lt;/p></description></item><item><title>Tổng quan về Hợp đồng Thông minh trong DEX và AMM</title><link>https://thanhhv.github.io/posts/dex/</link><pubDate>Sun, 18 May 2025 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/dex/</guid><description>&lt;h2 id="hợp-đồng-thông-minh-dex">Hợp đồng thông minh DEX&lt;/h2>
 &lt;p>Trong một sàn giao dịch phi tập trung (DEX) như Uniswap, nhiều hợp đồng thông minh làm việc cùng nhau để cho phép hoán đổi token. Các hợp đồng chính thường bao gồm: &lt;strong>Factory&lt;/strong>, &lt;strong>Router&lt;/strong>, và &lt;strong>Pair&lt;/strong>. Vai trò của từng hợp đồng như sau:&lt;/p>
 &lt;h3 id="-1-factory-contract">🔹 1. Factory Contract&lt;/h3>
 &lt;ul>
