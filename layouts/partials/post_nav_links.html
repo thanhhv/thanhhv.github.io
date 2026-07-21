@@ -1,0 +1,27 @@
+{{- /* Project override of PaperMod's post_nav_links.html.
+      1. Scope PREV/NEXT to the current page's top-level section (e.g. "series"
+         or "posts") instead of all mainSections, so series navigation never
+         jumps into standalone posts and vice-versa.
+      2. Fix direction: pages are sorted by date desc, and within a series the
+         chapter number increases with date. So the reading "previous chapter"
+         is the older page ($pages.Prev) and "next chapter" is the newer page
+         ($pages.Next). PaperMod's default wires these backwards. */ -}}
+{{- $pages := where site.RegularPages "Section" .Section }}
+{{- if and (gt (len $pages) 1) (in $pages . ) }}
+<nav class="paginav">
+  {{- with $pages.Prev . }}
+  <a class="prev" href="{{ .Permalink }}">
+    <span class="title">« {{ i18n "prev_page" }}</span>
+    <br>
+    <span>{{- .Name -}}</span>
+  </a>
+  {{- end }}
+  {{- with $pages.Next . }}
+  <a class="next" href="{{ .Permalink }}">
+    <span class="title">{{ i18n "next_page" }} »</span>
+    <br>
+    <span>{{- .Name -}}</span>
+  </a>
+  {{- end }}
+</nav>
+{{- end }}
