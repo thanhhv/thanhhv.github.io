@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 09 — Boolean Algebra: Đại số của bật và tắt | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 2 – Discrete Mathematics
+Yêu cầu trước: Chương 01 (Logic), Chương 02 (Set Theory)
+
+1. Problem Statement
+Một team analytics cần trả lời câu hỏi tưởng như tầm thường: &ldquo;hôm qua có bao nhiêu user active, và bao nhiêu user active cả 7 ngày liên tiếp?&rdquo; Hệ thống có 100 triệu user. Giải pháp đầu tiên: bảng daily_active(user_id, date), mỗi ngày ghi vài chục triệu dòng, câu hỏi &ldquo;active 7 ngày liên tiếp&rdquo; trở thành JOIN 7 bảng con — chạy hàng phút, tốn hàng chục GB.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-2-discrete-mathematics/09-boolean-algebra/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-2-discrete-mathematics/09-boolean-algebra/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 09 — Boolean Algebra: Đại số của bật và tắt
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 08:30:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;26 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 2 – Discrete Mathematics
+Yêu cầu trước: Chương 01 (Logic), Chương 02 (Set Theory)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Một team analytics cần trả lời câu hỏi tưởng như tầm thường: &ldquo;hôm qua có bao nhiêu user active, và bao nhiêu user active cả 7 ngày liên tiếp?&rdquo; Hệ thống có 100 triệu user. Giải pháp đầu tiên: bảng <code>daily_active(user_id, date)</code>, mỗi ngày ghi vài chục triệu dòng, câu hỏi &ldquo;active 7 ngày liên tiếp&rdquo; trở thành JOIN 7 bảng con — chạy hàng phút, tốn hàng chục GB.</p>
+<p>Giải pháp thứ hai gói gọn trong một cấu trúc bé đến khó tin: mỗi ngày một chuỗi <strong>100 triệu bit</strong> (12.5MB), bit thứ i bật nếu user i active. &ldquo;Active hôm qua&rdquo; = <code>BITCOUNT</code> — đếm bit 1. &ldquo;Active cả 7 ngày&rdquo; = AND 7 chuỗi bit rồi đếm. Redis làm việc này trong vài chục millisecond, và toàn bộ 7 ngày dữ liệu chiếm chưa đến 90MB.</p>
+<p>Điều gì khiến 12.5MB làm được việc của hàng chục GB? Không phải phép màu nén dữ liệu, mà là một sự trùng khớp toán học: <strong>phép giao tập hợp và phép AND trên bit là cùng một phép toán</strong>, và CPU thực hiện AND trên 64 bit song song trong một chu kỳ. Ta đang mượn sức của đại số.</p>
+<p>Đại số đó — Boolean algebra, do George Boole xây dựng năm 1854 để &ldquo;toán học hóa tư duy&rdquo; — hóa ra là nền móng theo nghĩa đen của máy tính: mọi mạch trong CPU là tổ hợp AND/OR/NOT, mọi phép cộng nhân là mạch logic, mọi <code>if</code> là biểu thức Boole, mọi bitmap index là đại số tập hợp chạy bằng phần cứng.</p>
+<p>Bài toán của chương này: <strong>hiểu hệ đại số hai phần tử {0, 1} như một hệ tiên đề hoàn chỉnh — và khai thác việc CPU thực thi hệ đó ở tốc độ phần cứng, 64 phần tử mỗi chu kỳ.</strong></p>
+<p>Nếu không có góc nhìn này, bit manipulation mãi là bộ sưu tập &ldquo;trick ma thuật&rdquo; chép từ Stack Overflow — dùng được nhưng không dám sửa, và không bao giờ tự nghĩ ra trick tiếp theo.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="đại-số-của-thế-giới-chỉ-có-hai-giá-trị">Đại số của thế giới chỉ có hai giá trị<a hidden class="anchor" aria-hidden="true" href="#đại-số-của-thế-giới-chỉ-có-hai-giá-trị">#</a></h3>
+<p>Đại số quen thuộc làm việc trên số: cộng, nhân, các luật giao hoán, kết hợp, phân phối. Boole đặt câu hỏi: nếu thế giới chỉ có hai giá trị — đúng/sai, bật/tắt, có dòng điện/không — thì &ldquo;cộng&rdquo; và &ldquo;nhân&rdquo; là gì, và các luật nào còn đúng?</p>
+<p>Câu trả lời: AND đóng vai phép nhân (1·1 = 1, mọi thứ khác ra 0 — giống hệt nhân số), OR đóng vai phép cộng (có ít nhất một số 1 thì ra 1), NOT là phép lật. Và điều bất ngờ: hệ này <em>giàu luật hơn</em> đại số số học — nó có những đẳng thức mà số học không có, như x·x = x (AND với chính mình không đổi) hay luật De Morgan.</p>
+<p>Điểm trực giác quan trọng nhất: <strong>cùng một đại số này xuất hiện ở ba lớp áo khác nhau</strong>, và bạn đã gặp cả ba:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Lớp áo</th>
+          <th>&ldquo;Nhân&rdquo; (AND)</th>
+          <th>&ldquo;Cộng&rdquo; (OR)</th>
+          <th>&ldquo;Phủ định&rdquo; (NOT)</th>
+          <th>Đã gặp ở</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Logic mệnh đề</td>
+          <td>p ∧ q</td>
+          <td>p ∨ q</td>
+          <td>¬p</td>
+          <td>Chương 01</td>
+      </tr>
+      <tr>
+          <td>Tập hợp</td>
+          <td>A ∩ B</td>
+          <td>A ∪ B</td>
+          <td>phần bù Aᶜ</td>
+          <td>Chương 02</td>
+      </tr>
+      <tr>
+          <td>Bit</td>
+          <td><code>a &amp; b</code></td>
+          <td><code>a | b</code></td>
+          <td><code>^a</code> (Go)</td>
+          <td>chương này</td>
+      </tr>
+  </tbody>
+</table>
+<p>Ba lớp áo, một cơ thể. Đây là lý do một identity chứng minh ở lớp logic tự động đúng ở lớp bit — và là lý do bitmap &ldquo;cài đặt&rdquo; được phép giao tập hợp: nó không <em>mô phỏng</em> phép giao, nó <em>là</em> phép giao, viết trong hệ ký hiệu khác.</p>
+<h3 id="vì-sao-bit-lại-nhanh-đến-thế">Vì sao bit lại nhanh đến thế?<a hidden class="anchor" aria-hidden="true" href="#vì-sao-bit-lại-nhanh-đến-thế">#</a></h3>
+<p>Một số <code>uint64</code> là 64 giá trị Boole xếp cạnh nhau, và lệnh <code>AND</code> của CPU xử lý cả 64 vị trí <strong>trong một chu kỳ, song song, không rẽ nhánh</strong>. So với vòng lặp 64 lần <code>if</code>: không có branch misprediction, không có bộ nhớ rải rác, chỉ một lệnh. Đây là hình thức song song rẻ nhất trong máy tính — có sẵn, miễn phí, trước cả khi nói đến SIMD hay goroutine. Bitmap của Redis trong bài toán mở đầu chạy nhanh chính vì nó biến &ldquo;100 triệu phép giao logic&rdquo; thành &ldquo;1.5 triệu lệnh AND 64-bit&rdquo; — và các lệnh này đọc bộ nhớ tuần tự, thứ prefetcher yêu thích (chương 10).</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="xây-từ-tiên-đề">Xây từ tiên đề<a hidden class="anchor" aria-hidden="true" href="#xây-từ-tiên-đề">#</a></h3>
+<p>Boolean algebra là một hệ tiên đề: tập {0, 1} với ba phép toán, và một nhóm luật cơ bản mà mọi đẳng thức khác suy ra được. Các luật đáng nhớ nhất — mỗi luật đều &ldquo;hiển nhiên&rdquo; khi đọc bằng lớp áo tập hợp hoặc logic:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Luật</th>
+          <th>Dạng AND</th>
+          <th>Dạng OR</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Identity</td>
+          <td>x ∧ 1 = x</td>
+          <td>x ∨ 0 = x</td>
+      </tr>
+      <tr>
+          <td>Annihilator</td>
+          <td>x ∧ 0 = 0</td>
+          <td>x ∨ 1 = 1</td>
+      </tr>
+      <tr>
+          <td>Idempotent</td>
+          <td>x ∧ x = x</td>
+          <td>x ∨ x = x</td>
+      </tr>
+      <tr>
+          <td>Complement</td>
+          <td>x ∧ ¬x = 0</td>
+          <td>x ∨ ¬x = 1</td>
+      </tr>
+      <tr>
+          <td>Commutative / Associative</td>
+          <td>như số học</td>
+          <td>như số học</td>
+      </tr>
+      <tr>
+          <td><strong>Distributive</strong></td>
+          <td>x ∧ (y ∨ z) = (x∧y) ∨ (x∧z)</td>
+          <td>x ∨ (y ∧ z) = (x∨y) ∧ (x∨z)</td>
+      </tr>
+      <tr>
+          <td><strong>De Morgan</strong></td>
+          <td>¬(x ∧ y) = ¬x ∨ ¬y</td>
+          <td>¬(x ∨ y) = ¬x ∧ ¬y</td>
+      </tr>
+  </tbody>
+</table>
+<p>Hai điều đáng dừng lại. Thứ nhất, luật phân phối đúng <strong>cả hai chiều</strong> — OR phân phối qua AND, điều <em>không có</em> trong số học (a + b·c ≠ (a+b)·(a+c)). Boolean algebra đối xứng một cách hoàn hảo: mọi định lý vẫn đúng nếu tráo AND↔OR và 0↔1 cùng lúc (nguyên lý duality). Thứ hai, De Morgan là luật &ldquo;đắt giá&rdquo; nhất trong thực hành: nó cho phép đẩy phủ định qua ngoặc, biến <code>!(a &amp;&amp; b)</code> thành <code>!a || !b</code> — nền tảng của việc refactor điều kiện, của query optimizer khi chuẩn hóa mệnh đề WHERE, và của việc xây mọi mạch chỉ từ cổng NAND (chương 01 đã chứng minh NAND là universal).</p>
+<p>Vì sao hệ tiên đề đáng quan tâm với engineer? Vì nó cho <strong>quyền biến đổi máy móc mà vẫn bảo toàn ngữ nghĩa</strong>. Khi bạn đơn giản hóa điều kiện <code>if</code> rối rắm, bạn đang làm đại số; nếu mỗi bước là một luật hợp lệ, kết quả <em>chắc chắn</em> tương đương — không cần test lại mọi tổ hợp. Compiler và query optimizer làm chính xác điều này, hàng triệu lần mỗi giây.</p>
+<h3 id="đơn-giản-hóa-từ-đại-số-đến-karnaugh-map">Đơn giản hóa: từ đại số đến Karnaugh map<a hidden class="anchor" aria-hidden="true" href="#đơn-giản-hóa-từ-đại-số-đến-karnaugh-map">#</a></h3>
+<p>Biểu thức Boole nào cũng có vô số dạng tương đương; dạng ngắn hơn nghĩa là ít cổng logic hơn (phần cứng), ít phép so sánh hơn (phần mềm). Đơn giản hóa bằng biến đổi đại số thuần túy đòi hỏi &ldquo;nhìn ra&rdquo; bước tiếp theo. <strong>Karnaugh map</strong> là công cụ trực quan hóa cho ≤ 4 biến: kẻ bảng chân trị thành lưới sao cho hai ô kề nhau chỉ khác đúng một biến, rồi khoanh các khối ô-1 kích thước lũy thừa 2 — mỗi khối là một tích đã rút gọn (biến nào đổi giá trị trong khối thì biến mất).</p>
+<pre tabindex="0"><code>        yz=00  01   11   10           f = x∧y ∨ x∧¬y  ?
+  x=0 │  0    0    0    0
+  x=1 │  1    1    1    1   ← khoanh cả hàng: y, z đều đổi → f = x</code></pre><p>Ví dụ trên: <code>(x∧y∧z) ∨ (x∧y∧¬z) ∨ (x∧¬y∧z) ∨ (x∧¬y∧¬z)</code> rút về đúng một chữ <code>x</code>. Với engineer phần mềm, Karnaugh map ít khi dùng trực tiếp (quá 4 biến thì bất trị — công cụ tự động như Quine-McCluskey và ESPRESSO thay thế), nhưng nó cho một trực giác đáng giữ: <strong>điều kiện <code>if</code> phức tạp thường là dạng chưa rút gọn của một điều kiện đơn giản</strong> — và luật đại số là con đường an toàn để tìm dạng gọn.</p>
+<h3 id="từ-đại-số-đến-cpu-half-adder">Từ đại số đến CPU: half adder<a hidden class="anchor" aria-hidden="true" href="#từ-đại-số-đến-cpu-half-adder">#</a></h3>
+<p>Tuyên bố &ldquo;mọi phép tính đều là mạch AND/OR/NOT&rdquo; nghe to tát, nhưng kiểm chứng được bằng ví dụ nhỏ nhất: cộng hai bit a + b cho kết quả 2 bit (sum, carry):</p>
+<pre tabindex="0"><code> a b │ carry sum          sum   = a XOR b   (khác nhau thì 1)
+ 0 0 │   0    0           carry = a AND b   (cả hai là 1 mới nhớ)
+ 0 1 │   0    1
+ 1 0 │   0    1           a ──┬──[XOR]── sum
+ 1 1 │   1    0           b ──┴──[AND]── carry</code></pre><p>Đây là <strong>half adder</strong> — hai cổng logic. Ghép hai half adder thành full adder (cộng cả bit nhớ từ hàng trước), xâu 64 full adder thành bộ cộng 64-bit, và từ cộng suy ra trừ (bù hai), nhân (cộng có dịch), so sánh (trừ rồi xét dấu). Mọi phép tính số học bạn từng chạy đều tan rã, ở đáy cùng, thành bảng chân trị của chương 01 nối dây với nhau. Boolean algebra không phải &ldquo;liên quan đến&rdquo; phần cứng — nó <em>là</em> phần cứng.</p>
+<p>Còn XOR — nhân vật sẽ chiếm sân khấu mục sau — không phải phép toán nguyên thủy mà định nghĩa được: a⊕b = (a∨b) ∧ ¬(a∧b), &ldquo;hoặc nhưng không phải cả hai&rdquo;. Nhìn từ half adder: XOR chính là <strong>phép cộng vứt bỏ bit nhớ</strong> — quan sát nhỏ này là chìa khóa hiểu mọi trick XOR.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="số-nguyên-như-vector-boole--và-các-phép-toán-trong-go">Số nguyên như vector Boole — và các phép toán trong Go<a hidden class="anchor" aria-hidden="true" href="#số-nguyên-như-vector-boole--và-các-phép-toán-trong-go">#</a></h3>
+<p>Mô hình trung tâm của nửa sau chương: <code>uint64</code> là vector 64 chiều trên {0,1}, các toán tử bitwise là phép toán Boole áp <strong>song song từng vị trí</strong> (component-wise):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">a</span> <span style="color:#f92672">&amp;</span> <span style="color:#a6e22e">b</span>   <span style="color:#75715e">// AND từng bit — giao tập hợp</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> | <span style="color:#a6e22e">b</span>   <span style="color:#75715e">// OR từng bit  — hợp tập hợp</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> ^ <span style="color:#a6e22e">b</span>   <span style="color:#75715e">// XOR từng bit — hiệu đối xứng (Go dùng ^ cho cả NOT một ngôi: ^a)</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> <span style="color:#f92672">&amp;^</span> <span style="color:#a6e22e">b</span>  <span style="color:#75715e">// AND NOT (&#34;bit clear&#34;) — hiệu tập hợp A ∖ B, toán tử riêng của Go</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#a6e22e">k</span>  <span style="color:#75715e">// dịch trái k vị trí — nhân 2ᵏ</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> <span style="color:#f92672">&gt;&gt;</span> <span style="color:#a6e22e">k</span>  <span style="color:#75715e">// dịch phải k vị trí — chia 2ᵏ (unsigned: điền 0; signed: điền bit dấu)</span>
+</span></span></code></pre></div><p>Lưu ý ngữ nghĩa Go: không có toán tử <code>~</code> như C — NOT viết là <code>^a</code>; và <code>&amp;^</code> là đặc sản giúp viết &ldquo;tắt các bit này đi&rdquo; không cần NOT rồi AND.</p>
+<h3 id="xor-nhóm-giao-hoán-trong-lòng-cpu">XOR: nhóm giao hoán trong lòng CPU<a hidden class="anchor" aria-hidden="true" href="#xor-nhóm-giao-hoán-trong-lòng-cpu">#</a></h3>
+<p>XOR đặc biệt vì nó cho {0,1}ⁿ cấu trúc <strong>nhóm giao hoán</strong> (abelian group) — một hệ với đầy đủ tính chất đại số đẹp:</p>
+<ol>
+<li><strong>Kết hợp &amp; giao hoán</strong>: (a⊕b)⊕c = a⊕(b⊕c), a⊕b = b⊕a — XOR một dãy số không phụ thuộc thứ tự và cách nhóm.</li>
+<li><strong>Phần tử trung hòa</strong>: a⊕0 = a.</li>
+<li><strong>Mọi phần tử là nghịch đảo của chính nó</strong>: a⊕a = 0.</li>
+</ol>
+<p>Ba tính chất này — không hơn — sinh ra toàn bộ họ &ldquo;trick XOR&rdquo;. Hệ quả tức thì: XOR của một dãy số sẽ <strong>tự triệt tiêu mọi phần tử xuất hiện chẵn lần</strong>. Nếu mảng có mọi số xuất hiện đúng 2 lần trừ một số xuất hiện 1 lần:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Tìm số xuất hiện lẻ lần — O(n) thời gian, O(1) bộ nhớ, không cần map.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">singleNumber</span>(<span style="color:#a6e22e">nums</span> []<span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">x</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">nums</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">x</span> ^= <span style="color:#a6e22e">v</span> <span style="color:#75715e">// các cặp giống nhau tự hủy: a⊕a = 0; còn lại a⊕0 = a</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">x</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Không có cấu trúc nhóm, bài này cần hash map O(n) bộ nhớ. Cũng từ ba tính chất đó: <strong>swap không cần biến phụ</strong> — <code>a ^= b; b ^= a; a ^= b</code> (kiểm chứng: bước 2 cho b = (a⊕b)⊕b = a; bước 3 cho a = (a⊕b)⊕a = b). Trick này đáng biết để <em>đọc hiểu</em> code cũ và để hiểu XOR, nhưng trong Go hãy viết <code>a, b = b, a</code> — rõ hơn và không chậm hơn. Cùng nguyên lý a⊕a = 0 chạy trong: RAID 5 (parity block = XOR các block dữ liệu — mất block nào, XOR phần còn lại với parity là khôi phục), stream cipher (ciphertext = plaintext ⊕ keystream, giải mã là XOR lần nữa — chương 26), và rsync/diff nhị phân dò khối khác nhau.</p>
+<h3 id="hai-đẳng-thức-nền-của-bit-manipulation">Hai đẳng thức nền của bit manipulation<a hidden class="anchor" aria-hidden="true" href="#hai-đẳng-thức-nền-của-bit-manipulation">#</a></h3>
+<p><strong><code>x &amp; (x-1)</code> xóa bit 1 thấp nhất.</strong> Vì sao đúng? Viết x theo dạng nhị phân quanh bit 1 thấp nhất của nó:</p>
+<blockquote>
+<p>x = (phần cao)<code>1</code>(toàn số 0) — tức x = p·2ᵏ⁺¹ + 2ᵏ với 2ᵏ là bit 1 thấp nhất.</p>
+<p>Trừ 1 mượn qua toàn bộ đuôi 0: x−1 = (phần cao)<code>0</code>(toàn số 1).</p>
+<p>AND hai dòng: phần cao giữ nguyên (giống nhau), vị trí k: 1∧0 = 0, đuôi: 0∧1 = 0.</p>
+<p>Kết quả: đúng x nhưng bit 1 thấp nhất đã tắt. ∎</p></blockquote>
+<p>Hệ quả lập tức: đếm số bit 1 bằng cách lặp <code>x &amp;= x-1</code> cho đến khi x = 0 — số vòng lặp đúng bằng số bit 1 (thuật toán Kernighan), và <strong>kiểm tra lũy thừa của 2</strong> trong một biểu thức: <code>x &gt; 0 &amp;&amp; x&amp;(x-1) == 0</code> (lũy thừa của 2 là số có đúng một bit 1 — xóa nó đi phải còn 0).</p>
+<p><strong><code>x &amp; -x</code> tách ra đúng bit 1 thấp nhất.</strong> Trong biểu diễn bù hai, −x = ¬x + 1. Lấy ¬x lật mọi bit: (phần cao lật)<code>0</code>(toàn số 1); cộng 1 làm đuôi số 1 tràn ngược lên: (phần cao lật)<code>1</code>(toàn số 0). AND với x: phần cao gặp bản lật của chính nó → 0; vị trí k: 1∧1 = 1. Kết quả: chỉ còn 2ᵏ. Đây là viên gạch của Fenwick tree (chương 24) — cấu trúc dùng <code>x &amp; -x</code> để nhảy giữa các khoảng tổng.</p>
+<p>Điểm cần rút ra không phải hai công thức, mà là <strong>phương pháp chứng minh</strong>: mọi trick bit đều kiểm chứng được bằng cách chia số thành ba vùng (trước bit đang xét — tại bit — sau bit) và theo dõi từng vùng qua phép toán. Nắm phương pháp, bạn tự suy ra trick mới thay vì tra cứu.</p>
+<h3 id="bitmask-làm-tập-hợp">Bitmask làm tập hợp<a hidden class="anchor" aria-hidden="true" href="#bitmask-làm-tập-hợp">#</a></h3>
+<p>Với tập nền ≤ 64 phần tử, một <code>uint64</code> biểu diễn trọn một tập con — và đại số tập hợp chương 02 trở thành các lệnh đơn:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Phép tập hợp</th>
+          <th>Bitmask</th>
+          <th>Phép tập hợp</th>
+          <th>Bitmask</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>thêm phần tử i</td>
+          <td><code>s | (1 &lt;&lt; i)</code></td>
+          <td>giao A ∩ B</td>
+          <td><code>a &amp; b</code></td>
+      </tr>
+      <tr>
+          <td>xóa phần tử i</td>
+          <td><code>s &amp;^ (1 &lt;&lt; i)</code></td>
+          <td>hợp A ∪ B</td>
+          <td><code>a | b</code></td>
+      </tr>
+      <tr>
+          <td>i có trong tập?</td>
+          <td><code>s &amp; (1 &lt;&lt; i) != 0</code></td>
+          <td>hiệu A ∖ B</td>
+          <td><code>a &amp;^ b</code></td>
+      </tr>
+      <tr>
+          <td>bật/tắt i</td>
+          <td><code>s ^ (1 &lt;&lt; i)</code></td>
+          <td>lực lượng |A|</td>
+          <td><code>bits.OnesCount64(s)</code></td>
+      </tr>
+  </tbody>
+</table>
+<p>Sức mạnh thật lộ ra khi cần <strong>duyệt mọi tập con</strong>: 2ⁿ tập con của tập n phần tử tương ứng 1-1 với các số 0 .. 2ⁿ−1 (chương 05 — đây chính là chứng minh |P(A)| = 2ⁿ bằng song ánh):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Duyệt toàn bộ 2^n tập con của {0..n-1}. Khả thi với n ≤ ~25 (bảng ngưỡng chương 10).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">mask</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">mask</span> &lt; <span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">mask</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">mask</span><span style="color:#f92672">&amp;</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#a6e22e">i</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// phần tử i thuộc tập con hiện tại</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Bitmask còn là chìa khóa của DP trên tập hợp (&ldquo;bitmask DP&rdquo; — trạng thái là tập các phần tử đã dùng, chương 14) và là lý do ràng buộc n ≤ 20 trong đề bài gần như hét lên &ldquo;duyệt tập con đi&rdquo;.</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<h3 id="đếm-bit--từ-vòng-lặp-đến-lệnh-phần-cứng">Đếm bit — từ vòng lặp đến lệnh phần cứng<a hidden class="anchor" aria-hidden="true" href="#đếm-bit--từ-vòng-lặp-đến-lệnh-phần-cứng">#</a></h3>
+<p>Bài toán nhỏ mà minh họa trọn con đường tối ưu: đếm số bit 1 trong một từ (population count).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;math/bits&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cách 1 — Kernighan: chạy đúng (số bit 1) vòng, dựa trên x&amp;(x-1).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">popcountLoop</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">uint64</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">x</span> <span style="color:#f92672">&amp;=</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e">// mỗi vòng tắt một bit 1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">n</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">n</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cách 2 — chuẩn production: biên dịch thẳng thành lệnh POPCNT của CPU.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">popcount</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">uint64</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">bits</span>.<span style="color:#a6e22e">OnesCount64</span>(<span style="color:#a6e22e">x</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>math/bits</code> là câu trả lời đúng trong Go cho gần như mọi thao tác bit mức từ: <code>OnesCount</code> (đếm bit), <code>TrailingZeros</code> (vị trí bit 1 thấp nhất — bản &ldquo;trả về chỉ số&rdquo; của <code>x &amp; -x</code>), <code>LeadingZeros</code> (suy ra ⌊log₂x⌋), <code>Len</code> (số bit cần để biểu diễn), <code>RotateLeft</code>, <code>Reverse</code>. Chúng được compiler nhận diện là intrinsic và thay bằng một lệnh phần cứng — vòng lặp tay không bao giờ đọ được, và ý định của code cũng rõ hơn.</p>
+<h3 id="flag-pattern-với-iota--boolean-algebra-trong-api-design">Flag pattern với iota — Boolean algebra trong API design<a hidden class="anchor" aria-hidden="true" href="#flag-pattern-với-iota--boolean-algebra-trong-api-design">#</a></h3>
+<p>Kiểu &ldquo;tập hợp cờ&rdquo; là ứng dụng bitmask phổ biến nhất trong code Go hằng ngày, với idiom <code>iota</code> dịch trái:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Perm</span> <span style="color:#66d9ef">uint8</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PermRead</span>  <span style="color:#a6e22e">Perm</span> = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#66d9ef">iota</span> <span style="color:#75715e">// 1 — bit 0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PermWrite</span>                  <span style="color:#75715e">// 2 — bit 1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PermExec</span>                   <span style="color:#75715e">// 4 — bit 2</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Perm</span>) <span style="color:#a6e22e">Has</span>(<span style="color:#a6e22e">flag</span> <span style="color:#a6e22e">Perm</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">p</span><span style="color:#f92672">&amp;</span><span style="color:#a6e22e">flag</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Dùng: gọn, type-safe, kiểm tra bằng một lệnh AND</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">PermRead</span> | <span style="color:#a6e22e">PermWrite</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">Has</span>(<span style="color:#a6e22e">PermWrite</span>) { <span style="color:#75715e">/* ... */</span> }
+</span></span></code></pre></div><p>Đây chính xác là mô hình quyền <code>rwx</code> của Unix: <code>chmod 754</code> là ba cụm bit <code>111 101 100</code> viết dưới dạng bát phân — owner đủ rwx (7), group đọc và chạy (5), others chỉ đọc (4). Chuẩn thư viện Go đầy pattern này: <code>os.O_RDWR|os.O_CREATE|os.O_TRUNC</code>, các cờ của <code>net/http</code>, <code>syscall</code>. Một <code>uint32</code> chở được 32 quyết định có/không — so với struct 32 trường bool: nhỏ hơn, so sánh cả cụm bằng một phép <code>==</code>, giao hai tập quyền bằng một phép <code>&amp;</code>.</p>
+<h3 id="bitmap-index--đại-số-boole-làm-database-engine">Bitmap index — đại số Boole làm database engine<a hidden class="anchor" aria-hidden="true" href="#bitmap-index--đại-số-boole-làm-database-engine">#</a></h3>
+<p>Mở rộng ý tưởng bitmap của bài toán mở đầu thành nguyên lý tổng quát: với cột có ít giá trị phân biệt (status, country, gender), mỗi giá trị giữ một bitmap dài n bit — bit i bật nếu dòng i mang giá trị đó. Khi đó mệnh đề WHERE <strong>là</strong> biểu thức Boole trên các bitmap:</p>
+<pre tabindex="0"><code>WHERE status=&#39;active&#39; AND country=&#39;VN&#39; AND NOT premium
+
+  bitmap(active):  10110101...
+&amp; bitmap(VN):      11010100...          → mỗi từ 64-bit là một lệnh AND
+&amp;^ bitmap(premium):00100000...          → kết quả: bitmap các dòng thỏa mãn</code></pre><p>Query planner không &ldquo;duyệt và kiểm tra từng dòng&rdquo; — nó thực hiện đại số tập hợp bằng phần cứng, 64 dòng mỗi lệnh, rồi mới chạm vào những dòng có bit bật. Toán nằm ở chỗ: tính đúng đắn của phép biến đổi &ldquo;WHERE → biểu thức bitmap&rdquo; được bảo lãnh bởi sự đẳng cấu giữa ba lớp áo ở mục 2 — logic mệnh đề trên dòng ↔ đại số tập hợp trên tập dòng ↔ phép bit trên bitmap.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Bitmap vs danh sách ID (dày vs thưa).</strong> Bitmap 100 triệu bit luôn tốn 12.5MB <em>bất kể</em> bao nhiêu bit bật. Tập 1.000 user active biểu diễn bằng danh sách ID chỉ tốn 8KB. Điểm hòa vốn thô: bitmap thắng khi mật độ bit bật vượt ~1/64 (một ID 64-bit đắt bằng 64 bit của bitmap). Thực tế không phải chọn nhị phân: <strong>Roaring Bitmap</strong> — dùng trong Elasticsearch, ClickHouse, Druid, Pilosa — chia không gian thành khối 2¹⁶ bit, khối dày lưu bitmap, khối thưa lưu danh sách, tự thích nghi theo mật độ từng vùng.</p>
+<p><strong>Bit-packing vs khả năng đọc.</strong> Nén 8 trường bool vào một byte tiết kiệm bộ nhớ và giúp so sánh/copy nguyên khối, nhưng mọi truy cập đều thành mask-shift, khó debug (giá trị hiển thị là số vô hồn) và dễ sai khi thêm trường. Quy tắc thực dụng: struct bool cho business logic thông thường; bit-packing khi có <em>hàng triệu</em> instance (mỗi byte nhân triệu lần mới đáng), khi giao thức/format quy định sẵn, hoặc khi cần phép toán trên cả tập cờ.</p>
+<p><strong>XOR trick vs code rõ nghĩa.</strong> Swap bằng XOR, kiểm tra dấu bằng bit — thông minh nhưng compiler hiện đại làm tốt hơn với code thẳng: <code>a, b = b, a</code> sinh mã tối ưu, còn XOR swap phá vỡ khả năng phân tích của compiler và <em>sai âm thầm</em> khi hai toán hạng là cùng một vị trí bộ nhớ (a⊕a = 0 — tự xóa mình). Trick đáng dùng là trick mang lại <strong>bậc phức tạp khác</strong> (Single Number: O(1) bộ nhớ thay vì O(n)) hoặc là intrinsic chuẩn (<code>math/bits</code>), không phải trick tiết kiệm một dòng.</p>
+<p><strong>Karnaugh/tối giản hóa vs điều kiện đọc được.</strong> Biểu thức <code>if</code> tối giản nhất về mặt đại số không phải lúc nào cũng dễ đọc nhất về mặt nghiệp vụ: <code>if user.IsAdmin || (user.IsOwner &amp;&amp; doc.Editable)</code> mang tên các khái niệm domain; dạng &ldquo;rút gọn&rdquo; trộn các mệnh đề có thể ngắn hơn nhưng xóa mất ngữ nghĩa. Tối giản hóa máy móc thuộc về compiler và optimizer; con người tối ưu cho người đọc.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>Redis bitmap — SETBIT/BITCOUNT/BITOP.</strong> Chính là lời giải bài toán mở đầu: <code>SETBIT active:2026-07-15 &lt;user_id&gt; 1</code> khi user hoạt động; <code>BITCOUNT</code> đếm DAU; <code>BITOP AND dest key1 ... key7</code> rồi <code>BITCOUNT dest</code> cho &ldquo;active 7 ngày liên tiếp&rdquo;; <code>BITOP OR</code> cho &ldquo;active ít nhất một ngày trong tuần&rdquo; (≈ MAU). 100 triệu user = 12.5MB/ngày. Toán nằm ở: đẳng cấu tập hợp ↔ bit biến câu hỏi phân tích thành phép AND/OR chạy tốc độ RAM tuần tự. Giới hạn cũng từ toán mà ra: user_id phải là số nguyên đặc (dense) — ID thưa/UUID làm bitmap phình vô ích (trade-off mật độ ở mục 6).</p>
+<p><strong>PostgreSQL bitmap index scan.</strong> Khi WHERE có nhiều điều kiện trên các index khác nhau (<code>a = 1 AND b &gt; 5</code>), planner không chọn một index rồi lọc tay phần còn lại: nó quét <em>từng</em> index, dựng một bitmap các trang dữ liệu thỏa từng điều kiện, <strong>AND/OR các bitmap</strong> (BitmapAnd/BitmapOr trong EXPLAIN), rồi mới đọc những trang có bit bật — theo thứ tự vật lý, biến random I/O thành sequential. Đây là Boolean algebra làm cầu nối cho phép <em>kết hợp nhiều index</em> — điều mà index scan đơn lẻ không làm được.</p>
+<p><strong>Bloom filter (chương 23).</strong> Cấu trúc &ldquo;có thể có / chắc chắn không&rdquo; đứng trước mọi lần truy cập đắt (SSTable của Cassandra/RocksDB, cache miss check) — ruột của nó là một bit array với k hàm hash: thêm phần tử = bật k bit (OR), kiểm tra = AND của k bit. Toàn bộ phần &ldquo;xác suất sai&rdquo; để dành chương 23; phần &ldquo;vì sao nhanh và nhỏ&rdquo; nằm trọn ở chương này.</p>
+<p><strong>Permission và flags xuyên suốt hệ thống.</strong> Unix <code>rwx</code>/octal như mục 5; ngoài ra: file descriptor flags (<code>O_NONBLOCK</code>), TCP flags trong header (SYN, ACK, FIN — mỗi cờ một bit, handshake là chuỗi tổ hợp bit), CPU feature flags (<code>/proc/cpuinfo</code>), Linux capabilities, IP subnet mask — <code>ip &amp; mask == network &amp; mask</code> quyết định gói tin đi đâu: routing table tra bằng một phép AND. Kubernetes label selector về bản chất cũng là mệnh đề Boole trên tập label.</p>
+<p><strong>Go runtime và compiler.</strong> Kích thước size class của allocator, hash bucket của map đều là lũy thừa 2 để thay chia lấy dư bằng <code>h &amp; (size-1)</code> (đúng khi size là 2ᵏ — vì modulo lũy thừa 2 chính là &ldquo;giữ k bit thấp&rdquo;); GC dùng bitmap đánh dấu con trỏ trên heap; compiler tự biến <code>x*8</code> thành <code>x&lt;&lt;3</code>, <code>x%16</code> thành <code>x&amp;15</code> (với unsigned). Bạn hưởng các phép biến đổi đại số này mỗi lần chạy chương trình mà không cần viết chúng.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p>Bit manipulation trong phỏng vấn là bài kiểm tra &ldquo;hiểu bản chất hay học vẹt&rdquo; rõ nhất: các trick đều một dòng, nên interviewer không hỏi <em>code gì</em> mà hỏi <em>vì sao đúng</em> — chính là các chứng minh ở mục 4.</p>
+<p><strong>Single Number (LeetCode 136).</strong> Mọi số xuất hiện 2 lần trừ một số — chính là ví dụ <code>singleNumber</code> ở mục 4, ăn trọn ba tiên đề nhóm của XOR. Follow-up kinh điển kiểm tra chiều sâu: <em>Single Number II</em> (mọi số xuất hiện 3 lần trừ một số) — XOR bó tay vì a⊕a⊕a = a ≠ 0; lời giải tổng quát là đếm bit theo từng vị trí modulo 3 — cho thấy trick XOR là trường hợp riêng (modulo 2) của kỹ thuật đếm theo cột tổng quát hơn.</p>
+<p><strong>Number of 1 Bits (LeetCode 191).</strong> Trả lời tốt là trình bày được <em>thang</em> lời giải: lặp kiểm tra từng bit O(số bit) → Kernighan <code>x &amp;= x-1</code> O(số bit 1, kèm chứng minh vì sao xóa đúng bit thấp nhất) → <code>bits.OnesCount</code> một lệnh phần cứng. Interviewer tìm người biết cả ba <em>và biết dùng cái cuối</em> trong production.</p>
+<p><strong>Subsets (LeetCode 78).</strong> Sinh mọi tập con — vòng lặp <code>mask</code> ở mục 4. Điểm cộng lớn trong phỏng vấn: nói rõ song ánh &ldquo;mỗi số 0..2ⁿ−1 ↔ một tập con, bit i = có mặt phần tử i&rdquo;, thay vì chỉ viết hai vòng lặp. So sánh được với lời giải backtracking (chương 05) và chỉ ra khi nào bitmask thắng: cần <em>lưu</em> tập con làm key của map/DP state — số nguyên làm key rẻ hơn slice.</p>
+<p><strong>Counting Bits (LeetCode 338).</strong> Đếm bit 1 của mọi số 0..n trong O(n) tổng — bài đẹp vì nối bit vào DP: <code>count[x] = count[x&gt;&gt;1] + x&amp;1</code> (bỏ bit cuối, cộng lại nếu nó là 1) hoặc <code>count[x] = count[x&amp;(x-1)] + 1</code> (đúng theo đẳng thức đã chứng minh: <code>x&amp;(x-1)</code> có ít hơn x đúng một bit 1). Người hiểu mục 4 <em>nhìn ra</em> công thức thứ hai thay vì nhớ nó.</p>
+<p><strong>Lỗi tư duy phổ biến:</strong></p>
+<ul>
+<li><strong>Quên độ ưu tiên toán tử.</strong> Trong C/Java, <code>x &amp; 1 == 0</code> bị parse thành <code>x &amp; (1 == 0)</code> — bug kinh điển. Go xử lý khác (<code>&amp;</code> có độ ưu tiên <em>cao hơn</em> <code>==</code> trong Go, và Go cấm trộn kiểu int/bool nên nhiều bug loại này thành lỗi biên dịch), nhưng bài học giữ nguyên: <strong>luôn đóng ngoặc biểu thức bit</strong> — <code>(x &amp; 1) == 0</code> — vì code của bạn sẽ được đọc bởi người mang phản xạ từ ngôn ngữ khác.</li>
+<li><strong>Nhầm logical với bitwise.</strong> <code>&amp;&amp;</code> làm việc trên bool và short-circuit (vế phải có thể không được thực thi — nếu nó có side effect thì ngữ nghĩa khác hẳn); <code>&amp;</code> làm việc trên số nguyên, luôn tính cả hai vế. Go tách bạch kiểu nên khó nhầm hơn C, nhưng câu hỏi &ldquo;khác nhau thế nào?&rdquo; vẫn là câu screening phổ biến.</li>
+<li><strong>Quên số âm và bù hai.</strong> <code>&gt;&gt;</code> trên số có dấu điền bit dấu (arithmetic shift): <code>-8 &gt;&gt; 1 == -4</code>, không phải số dương khổng lồ; <code>x &amp; -x</code> chỉ giải thích được qua bù hai. Nói được &ldquo;−x = ¬x + 1&rdquo; là tín hiệu hiểu biểu diễn số, chủ đề chương 19.</li>
+<li><strong>Dịch quá độ rộng kiểu.</strong> <code>1 &lt;&lt; 40</code> với <code>1</code> là int 32-bit (Java/C) là undefined/sai; Go: hằng untyped thì an toàn hơn nhưng <code>uint32(1) &lt;&lt; 40</code> vẫn cho 0. Luôn hỏi &ldquo;toán hạng của tôi rộng bao nhiêu bit?&rdquo;.</li>
+</ul>
+<p><strong>Cách phân tích thay vì học thuộc:</strong> gặp bài bit lạ, (1) viết vài ví dụ ra nhị phân bằng tay — 4 bit là đủ thấy pattern; (2) chia số thành ba vùng quanh bit đang quan tâm và theo dõi từng vùng (phương pháp mục 4); (3) tự hỏi phép toán nào có <em>tính chất đại số</em> khớp yêu cầu: cần &ldquo;tự triệt tiêu theo cặp&rdquo; → XOR; cần &ldquo;chặn/lọc&rdquo; → AND với mask; cần &ldquo;gom&rdquo; → OR; cần &ldquo;nhân chia 2ᵏ / truy cập bit k&rdquo; → shift.</p>
+<p><strong>Từ phỏng vấn sang production:</strong> Single Number là nguyên lý parity của RAID 5 thu nhỏ; Subsets bằng bitmask là cách feature flag service liệt kê tổ hợp experiment; Counting Bits là popcount trên bitmap index — <code>BITCOUNT</code> của Redis chạy chính lệnh mà LeetCode 191 mô phỏng.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Bit-packing mọi thứ vì &ldquo;tiết kiệm bộ nhớ&rdquo;.</strong> Nén 5 trường bool của một struct chỉ có vài nghìn instance vào một <code>uint8</code> — tiết kiệm được vài KB, trả giá bằng mask-shift ở mọi điểm truy cập, debugger hiển thị số vô nghĩa, và một field mới là một lần soát toàn bộ mask. Bit-packing là tối ưu có điều kiện kích hoạt (hàng triệu instance, format cố định, cần phép toán trên cả tập) — không phải style mặc định.</p>
+<p><strong>Magic number không tên.</strong> <code>if flags &amp; 0x2004 != 0</code> — sáu tháng sau không ai (kể cả tác giả) biết bit 2 và bit 13 là gì. Mọi bit phải có tên hằng (<code>const FlagRetry = 1 &lt;&lt; 2</code>), mọi tổ hợp hay dùng phải có tên riêng (<code>const FlagsDefault = FlagRetry | FlagLog</code>). Bit layout là API — không có tên thì không có contract.</p>
+<p><strong>Tự viết lại <code>math/bits</code>.</strong> Vòng lặp đếm bit tay, lookup table tự chế cho popcount, &ldquo;clever hack&rdquo; từ Hacker&rsquo;s Delight chép vào — chậm hơn intrinsic một lệnh phần cứng, dài hơn, và sai ở biên (kiểu có dấu, độ rộng). Trong Go, thao tác bit mức từ đã có người viết, kiểm thử và tối ưu hộ bạn.</p>
+<p><strong>Phủ định điều kiện phức tạp bằng cách&hellip; thêm dấu <code>!</code> bên ngoài.</strong> <code>if !(a &amp;&amp; (b || !c) &amp;&amp; !(d || e))</code> — mỗi lần cần nhánh ngược lại thêm một tầng phủ định, biểu thức thành hộp đen không ai dám sửa. De Morgan tồn tại để đẩy phủ định vào trong đến từng mệnh đề đơn; sau vài bước máy móc, biểu thức thành chuỗi điều kiện dương dễ đọc — hoặc lộ ra rằng nó rút gọn được (Karnaugh tư duy). Query trên DB cũng vậy: điều kiện chuẩn hóa tốt giúp optimizer dùng index; <code>NOT</code> bọc ngoài cả cụm thường làm mất khả năng đó.</p>
+<p><strong>Dùng bitmap cho không gian ID thưa.</strong> SETBIT với user_id là số ngẫu nhiên 64-bit hoặc hash của UUID: Redis cấp phát bitmap dài đến bit cao nhất từng bật — một ID lớn cấp phát hàng trăm MB cho toàn số 0. Bitmap chỉ đúng với ID đặc, tăng dần; ID thưa cần Roaring Bitmap hoặc set thường. Đây là bài toán mật độ ở mục 6 bị bỏ qua.</p>
+<p><strong>Tin rằng bool trong struct &ldquo;tốn 1 bit&rdquo;.</strong> <code>bool</code> trong Go tốn 1 byte, và alignment có thể độn thêm: struct <code>{bool; int64; bool}</code> tốn 24 byte trong khi <code>{int64; bool; bool}</code> tốn 16. Trước khi bit-packing, chỉ cần <em>sắp lại thứ tự field</em> đã thu hồi phần lớn bộ nhớ lãng phí — tối ưu rẻ hơn và không đổi cách đọc code.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Dùng <code>math/bits</code> cho mọi thao tác mức từ: <code>OnesCount</code>, <code>TrailingZeros</code>, <code>LeadingZeros</code>, <code>Len</code>, <code>RotateLeft</code> — nhanh (intrinsic), đúng, và tự tài liệu hóa ý định.</li>
+<li>Định nghĩa flag bằng <code>1 &lt;&lt; iota</code>, kèm method <code>Has/Set/Clear</code> — che mask-shift sau API có tên, người dùng flag không cần nghĩ về bit.</li>
+<li>Đóng ngoặc mọi biểu thức bit trong điều kiện: <code>(x &amp; mask) != 0</code>. Rẻ, và miễn dịch với khác biệt độ ưu tiên giữa các ngôn ngữ.</li>
+<li>Khi gặp trick bit lạ, kiểm chứng bằng phương pháp ba vùng (mục 4) trên ví dụ 4-bit trước khi tin và trước khi dùng — và ghi chứng minh một dòng vào comment.</li>
+<li>Cân nhắc bitmap/bitset khi: tập nền là số nguyên đặc, cần phép giao/hợp/đếm hàng loạt, kích thước hàng triệu phần tử. Cân nhắc Roaring khi mật độ không đều.</li>
+<li>Áp De Morgan chủ động khi refactor điều kiện: đẩy <code>!</code> vào trong, đặt tên cho mệnh đề con (<code>isEligible := ...</code>), để cấu trúc logic lộ ra ánh sáng.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không XOR-swap, không thay <code>x*2</code> bằng <code>x&lt;&lt;1</code> trong code thường — compiler làm rồi, bạn chỉ làm code khó đọc đi.</li>
+<li>Không bit-packing khi chưa đo được lợi ích bộ nhớ <em>và</em> chưa thử sắp lại field struct.</li>
+<li>Không dùng số có dấu cho bitmask (shift phải kéo bit dấu theo, so sánh và mở rộng kiểu đầy bẫy) — mask là <code>uint</code>, kích thước cố định (<code>uint32</code>/<code>uint64</code>).</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Chứng minh <code>x &amp; (x-1)</code> xóa đúng bit 1 thấp nhất — và dùng nó giải thích vì sao <code>x &gt; 0 &amp;&amp; x&amp;(x-1) == 0</code> kiểm tra được lũy thừa của 2.</li>
+<li>Ba tính chất nhóm nào của XOR làm nên lời giải Single Number, và vì sao chính lời giải đó thất bại khi các số xuất hiện 3 lần?</li>
+<li>PostgreSQL bitmap index scan kết hợp được nhiều index trong một query nhờ sự đẳng cấu giữa những cấu trúc nào? Bitmap thua danh sách ID khi nào?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/">10 — Complexity Analysis</a> — bước sang Level 3, nơi mọi thuật toán từ đầu tài liệu đến giờ được đặt lên bàn cân chung: Big-O, amortized analysis, và nghệ thuật dự đoán hành vi của code trên dữ liệu lớn mà không cần chạy nó.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-2-discrete-mathematics/08-graphs/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 08 — Graph Theory: Mô hình của mọi mối quan hệ</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 09 — Boolean Algebra: Đại số của bật và tắt on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2009%20%e2%80%94%20Boolean%20Algebra%3a%20%c4%90%e1%ba%a1i%20s%e1%bb%91%20c%e1%bb%a7a%20b%e1%ba%adt%20v%c3%a0%20t%e1%ba%aft&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 09 — Boolean Algebra: Đại số của bật và tắt on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f&amp;title=Ch%c6%b0%c6%a1ng%2009%20%e2%80%94%20Boolean%20Algebra%3a%20%c4%90%e1%ba%a1i%20s%e1%bb%91%20c%e1%bb%a7a%20b%e1%ba%adt%20v%c3%a0%20t%e1%ba%aft&amp;summary=Ch%c6%b0%c6%a1ng%2009%20%e2%80%94%20Boolean%20Algebra%3a%20%c4%90%e1%ba%a1i%20s%e1%bb%91%20c%e1%bb%a7a%20b%e1%ba%adt%20v%c3%a0%20t%e1%ba%aft&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 09 — Boolean Algebra: Đại số của bật và tắt on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f&title=Ch%c6%b0%c6%a1ng%2009%20%e2%80%94%20Boolean%20Algebra%3a%20%c4%90%e1%ba%a1i%20s%e1%bb%91%20c%e1%bb%a7a%20b%e1%ba%adt%20v%c3%a0%20t%e1%ba%aft">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 09 — Boolean Algebra: Đại số của bật và tắt on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 09 — Boolean Algebra: Đại số của bật và tắt on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2009%20%e2%80%94%20Boolean%20Algebra%3a%20%c4%90%e1%ba%a1i%20s%e1%bb%91%20c%e1%bb%a7a%20b%e1%ba%adt%20v%c3%a0%20t%e1%ba%aft%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 09 — Boolean Algebra: Đại số của bật và tắt on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2009%20%e2%80%94%20Boolean%20Algebra%3a%20%c4%90%e1%ba%a1i%20s%e1%bb%91%20c%e1%bb%a7a%20b%e1%ba%adt%20v%c3%a0%20t%e1%ba%aft&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 09 — Boolean Algebra: Đại số của bật và tắt on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2009%20%e2%80%94%20Boolean%20Algebra%3a%20%c4%90%e1%ba%a1i%20s%e1%bb%91%20c%e1%bb%a7a%20b%e1%ba%adt%20v%c3%a0%20t%e1%ba%aft&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f09-boolean-algebra%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

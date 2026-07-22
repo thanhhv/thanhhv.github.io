@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 22 — Computational Geometry: Toán của không gian vật lý | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 4 – Advanced Mathematics
+Yêu cầu trước: Chương 07 (Trees), Chương 13 (Divide &amp; Conquer), Chương 17 (Linear Algebra)
+
+1. Problem Statement
+Bạn nhận một ticket tưởng như đơn giản: &ldquo;API trả về 10 quán cà phê gần người dùng nhất, p99 dưới 50ms.&rdquo; Database có 5 triệu địa điểm, mỗi địa điểm là một cặp (latitude, longitude).
+Bản nháp đầu tiên ai cũng viết được: tính khoảng cách từ người dùng đến từng địa điểm, sort, lấy 10. Đó là 5 triệu phép tính khoảng cách (mỗi phép có sin/cos nếu tính đúng trên mặt cầu) cộng một lần sort — hàng trăm millisecond cho một request. Với 1.000 request/giây, bạn cần một cụm máy chỉ để trả lời câu hỏi &ldquo;gần đây có gì&rdquo;.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/22-computational-geometry/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/22-computational-geometry/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 22 — Computational Geometry: Toán của không gian vật lý
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 10:40:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;22 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 4 – Advanced Mathematics
+Yêu cầu trước: Chương 07 (Trees), Chương 13 (Divide &amp; Conquer), Chương 17 (Linear Algebra)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Bạn nhận một ticket tưởng như đơn giản: &ldquo;API trả về 10 quán cà phê gần người dùng nhất, p99 dưới 50ms.&rdquo; Database có 5 triệu địa điểm, mỗi địa điểm là một cặp (latitude, longitude).</p>
+<p>Bản nháp đầu tiên ai cũng viết được: tính khoảng cách từ người dùng đến <em>từng</em> địa điểm, sort, lấy 10. Đó là 5 triệu phép tính khoảng cách (mỗi phép có sin/cos nếu tính đúng trên mặt cầu) cộng một lần sort — hàng trăm millisecond cho <em>một</em> request. Với 1.000 request/giây, bạn cần một cụm máy chỉ để trả lời câu hỏi &ldquo;gần đây có gì&rdquo;.</p>
+<p>Vấn đề sâu hơn: index B-Tree quen thuộc không cứu được. B-Tree sắp thứ tự theo <strong>một chiều</strong>. Bạn có thể index theo latitude — nhưng hai điểm có latitude gần nhau có thể cách nhau nửa vòng Trái Đất theo longitude. Không gian 2D không có thứ tự toàn phần nào bảo toàn khái niệm &ldquo;gần nhau&rdquo;. Đây chính là bài toán mà computational geometry sinh ra để giải:</p>
+<p><strong>Làm sao tổ chức và truy vấn dữ liệu không gian sao cho câu hỏi &ldquo;gần đâu, nằm trong đâu, cắt cái gì&rdquo; được trả lời mà không phải nhìn toàn bộ dữ liệu?</strong></p>
+<p>Nếu không có công cụ này, mọi tính năng &ldquo;quanh đây&rdquo; — tìm tài xế, gợi ý nhà hàng, geofencing, collision detection trong game — đều là O(n) trên mỗi truy vấn, và không scale.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="con-người-tìm-quán-cà-phê-như-thế-nào">Con người tìm quán cà phê như thế nào?<a hidden class="anchor" aria-hidden="true" href="#con-người-tìm-quán-cà-phê-như-thế-nào">#</a></h3>
+<p>Khi bạn đứng ở quận 1 và muốn tìm cà phê, bạn không duyệt danh bạ toàn quốc rồi loại dần. Bạn làm ngược lại: <strong>thu hẹp không gian trước, nhìn dữ liệu sau</strong>. &ldquo;Tôi ở quận 1 → chỉ nhìn quận 1 → chỉ nhìn vài phường lân cận.&rdquo; Mọi cấu trúc dữ liệu không gian trong chương này đều là bản mã hóa của trực giác đó: chia không gian thành các vùng lồng nhau, và dùng vị trí truy vấn để <strong>loại bỏ cả vùng</strong> mà không cần nhìn từng điểm bên trong.</p>
+<p>So sánh với binary search: binary search loại một nửa <em>dãy số</em> mỗi bước nhờ thứ tự tuyến tính. Cấu trúc không gian loại một nửa (hoặc ba phần tư) <em>mặt phẳng</em> mỗi bước nhờ phép chia không gian. Cùng một tinh thần chia để trị (chương 13), khác nhau ở đối tượng bị chia.</p>
+<h3 id="trực-giác-thứ-hai-hình-học-không-cần-lượng-giác">Trực giác thứ hai: hình học không cần lượng giác<a hidden class="anchor" aria-hidden="true" href="#trực-giác-thứ-hai-hình-học-không-cần-lượng-giác">#</a></h3>
+<p>Phần lớn thuật toán hình học không hề gọi sin, cos hay atan2. Câu hỏi nền tảng của chúng thô sơ hơn nhiều: <strong>đi từ A đến B rồi nhìn về C — C nằm bên trái hay bên phải?</strong> Chỉ với câu hỏi trái/phải này (trả lời bằng vài phép nhân và trừ), ta xây được: kiểm tra hai đoạn thẳng cắt nhau, điểm nằm trong đa giác, convex hull, và hơn thế. Đó là lý do cross product 2D được gọi là &ldquo;công cụ vạn năng&rdquo; — và ta sẽ dẫn xuất nó từ determinant của chương 17.</p>
+<h3 id="nếu-không-có-khái-niệm-này-thì-sao">Nếu không có khái niệm này thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-khái-niệm-này-thì-sao">#</a></h3>
+<p>Không có orientation test, bạn sẽ dùng góc và lượng giác: chậm hơn, và tệ hơn — đầy lỗi làm tròn ở các trường hợp thẳng hàng. Không có spatial index, mọi truy vấn không gian là full scan. Không có distance metric đúng, app của bạn tự tin báo &ldquo;quán này cách bạn 300m&rdquo; trong khi thực tế là 3km — lỗi có thật khi ai đó dùng Euclid trên độ kinh/vĩ.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="khoảng-cách-là-gì-tùy-vào-việc-bạn-di-chuyển-thế-nào">Khoảng cách là gì? Tùy vào việc bạn di chuyển thế nào<a hidden class="anchor" aria-hidden="true" href="#khoảng-cách-là-gì-tùy-vào-việc-bạn-di-chuyển-thế-nào">#</a></h3>
+<p>&ldquo;Khoảng cách&rdquo; không phải một khái niệm duy nhất — nó là một <strong>họ hàm</strong> thỏa vài tính chất (không âm, đối xứng, bất đẳng thức tam giác). Chọn metric nào là chọn mô hình chuyển động:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Metric</th>
+          <th>Công thức</th>
+          <th>Mô hình</th>
+          <th>Dùng khi</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Euclidean</td>
+          <td>√((Δx)² + (Δy)²)</td>
+          <td>bay thẳng trên mặt phẳng</td>
+          <td>đồ họa, game, vector embedding</td>
+      </tr>
+      <tr>
+          <td>Manhattan</td>
+          <td>|Δx| + |Δy|</td>
+          <td>đi theo lưới ô vuông</td>
+          <td>grid pathfinding, chip routing, taxi trong phố bàn cờ</td>
+      </tr>
+      <tr>
+          <td>Haversine</td>
+          <td>công thức trên mặt cầu</td>
+          <td>đi trên bề mặt Trái Đất</td>
+          <td>mọi thứ dính đến GPS</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Vì sao Euclidean sai với tọa độ GPS?</strong> Hai lý do độc lập:</p>
+<ol>
+<li>(lat, lon) là <strong>góc</strong>, không phải khoảng cách. Một độ vĩ ≈ 111km ở mọi nơi, nhưng một độ kinh ≈ 111km × cos(vĩ độ): 111km ở xích đạo, ~55km ở Oslo, 0km ở cực. Cắm thẳng (Δlat, Δlon) vào Pythagoras là cộng táo với cam — sai số tăng theo vĩ độ.</li>
+<li>Trái Đất cong. Với khoảng cách ngắn (vài km) độ cong bỏ qua được, nhưng đường &ldquo;thẳng&rdquo; giữa Hà Nội và San Francisco là một cung tròn lớn, không phải đường thẳng trong hệ (lat, lon).</li>
+</ol>
+<p>Haversine giải quyết cả hai bằng cách làm việc trực tiếp với góc trên mặt cầu:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">earthRadiusM</span> = <span style="color:#ae81ff">6371000.0</span> <span style="color:#75715e">// bán kính trung bình Trái Đất (mét)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// haversine trả về khoảng cách theo mét giữa hai điểm GPS.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">haversine</span>(<span style="color:#a6e22e">lat1</span>, <span style="color:#a6e22e">lon1</span>, <span style="color:#a6e22e">lat2</span>, <span style="color:#a6e22e">lon2</span> <span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">float64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">toRad</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">deg</span> <span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">float64</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">deg</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Pi</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">180</span> }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">dLat</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">toRad</span>(<span style="color:#a6e22e">lat2</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">lat1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">dLon</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">toRad</span>(<span style="color:#a6e22e">lon2</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">lon1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Sin</span>(<span style="color:#a6e22e">dLat</span><span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Sin</span>(<span style="color:#a6e22e">dLat</span><span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Cos</span>(<span style="color:#a6e22e">toRad</span>(<span style="color:#a6e22e">lat1</span>))<span style="color:#f92672">*</span><span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Cos</span>(<span style="color:#a6e22e">toRad</span>(<span style="color:#a6e22e">lat2</span>))<span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Sin</span>(<span style="color:#a6e22e">dLon</span><span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Sin</span>(<span style="color:#a6e22e">dLon</span><span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">earthRadiusM</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Asin</span>(<span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Sqrt</span>(<span style="color:#a6e22e">a</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Mẹo production đáng nhớ: khi chỉ cần <strong>so sánh</strong> khoảng cách (tìm điểm gần nhất) chứ không cần giá trị tuyệt đối, bỏ căn bậc hai — so sánh bình phương khoảng cách cho cùng thứ tự và rẻ hơn. Với GPS trong bán kính nhỏ, xấp xỉ equirectangular (nhân Δlon với cos(lat)) đủ chính xác và nhanh gấp nhiều lần Haversine.</p>
+<h3 id="cross-product-2d-một-con-số-trả-lời-câu-hỏi-tráiphải">Cross product 2D: một con số trả lời câu hỏi trái/phải<a hidden class="anchor" aria-hidden="true" href="#cross-product-2d-một-con-số-trả-lời-câu-hỏi-tráiphải">#</a></h3>
+<p>Từ chương 17, determinant của ma trận 2×2 là <strong>diện tích có dấu</strong> của hình bình hành tạo bởi hai vector. Đặt ba điểm A, B, C và hai vector AB, AC:</p>
+<blockquote>
+<p>cross(A, B, C) = (Bx−Ax)(Cy−Ay) − (By−Ay)(Cx−Ax)</p></blockquote>
+<p>Đây chính là det [AB; AC] — gấp đôi diện tích có dấu của tam giác ABC. Dấu của nó là toàn bộ thông tin định hướng:</p>
+<pre tabindex="0"><code>cross &gt; 0: C bên TRÁI đường AB     cross &lt; 0: C bên PHẢI     cross = 0: thẳng hàng
+
+        C                                A───────B
+       ╱                                      ╲
+      ╱   (rẽ trái — ngược kim đồng hồ)        ╲  C  (rẽ phải — thuận kim đồng hồ)
+ A───────B</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Point</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">X</span>, <span style="color:#a6e22e">Y</span> <span style="color:#66d9ef">float64</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// cross trả về tích có hướng của (b-a) và (c-a):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// &gt; 0 nếu a→b→c rẽ trái, &lt; 0 nếu rẽ phải, = 0 nếu thẳng hàng.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">cross</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">c</span> <span style="color:#a6e22e">Point</span>) <span style="color:#66d9ef">float64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">X</span><span style="color:#f92672">-</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">X</span>)<span style="color:#f92672">*</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Y</span><span style="color:#f92672">-</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">Y</span>) <span style="color:#f92672">-</span> (<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">Y</span><span style="color:#f92672">-</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">Y</span>)<span style="color:#f92672">*</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">X</span><span style="color:#f92672">-</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">X</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Ba phép trừ, hai phép nhân, một phép trừ — không lượng giác, không chia, không căn. Với tọa độ nguyên, kết quả <strong>chính xác tuyệt đối</strong> (chỉ cần cẩn thận overflow). Đây là viên gạch của mọi thứ phía sau: convex hull hỏi &ldquo;có rẽ phải không?&rdquo;, segment intersection hỏi &ldquo;hai đầu đoạn này nằm hai phía không?&rdquo;, diện tích đa giác là tổng các cross. Nếu bạn thấy mình gọi <code>atan2</code> trong một thuật toán hình học, hãy dừng lại — 90% khả năng cross product làm được việc đó nhanh hơn và chính xác hơn.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="hai-đoạn-thẳng-cắt-nhau">Hai đoạn thẳng cắt nhau<a hidden class="anchor" aria-hidden="true" href="#hai-đoạn-thẳng-cắt-nhau">#</a></h3>
+<p>Đoạn AB và đoạn CD cắt nhau khi và chỉ khi <strong>C, D nằm hai phía của đường AB, và A, B nằm hai phía của đường CD</strong>. &ldquo;Hai phía&rdquo; dịch thẳng ra ngôn ngữ cross product:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// segmentsIntersect kiểm tra hai đoạn AB và CD có cắt nhau không</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// (bỏ qua các trường hợp suy biến thẳng hàng để giữ code gọn).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">segmentsIntersect</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">c</span>, <span style="color:#a6e22e">d</span> <span style="color:#a6e22e">Point</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">d1</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cross</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">c</span>) <span style="color:#75715e">// C ở phía nào của AB?</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">d2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cross</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">d</span>) <span style="color:#75715e">// D ở phía nào của AB?</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">d3</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cross</span>(<span style="color:#a6e22e">c</span>, <span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">a</span>) <span style="color:#75715e">// A ở phía nào của CD?</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">d4</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cross</span>(<span style="color:#a6e22e">c</span>, <span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) <span style="color:#75715e">// B ở phía nào của CD?</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">d1</span><span style="color:#f92672">*</span><span style="color:#a6e22e">d2</span> &lt; <span style="color:#ae81ff">0</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">d3</span><span style="color:#f92672">*</span><span style="color:#a6e22e">d4</span> &lt; <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Điều kiện <code>d1*d2 &lt; 0</code> nghĩa là hai dấu trái nhau — đúng bản chất &ldquo;hai phía&rdquo;. Trường hợp bằng 0 (đầu mút chạm nhau, đoạn thẳng hàng chồng lên nhau) cần xử lý riêng bằng kiểm tra bounding box; trong phỏng vấn hãy <em>nói ra</em> rằng bạn biết các trường hợp này tồn tại.</p>
+<h3 id="point-in-polygon-ray-casting-và-định-lý-jordan">Point in polygon: ray casting và định lý Jordan<a hidden class="anchor" aria-hidden="true" href="#point-in-polygon-ray-casting-và-định-lý-jordan">#</a></h3>
+<p>Điểm P có nằm trong đa giác không? Bắn một tia từ P sang phải đến vô cực và <strong>đếm số lần tia cắt cạnh đa giác</strong>: lẻ → trong, chẵn → ngoài.</p>
+<pre tabindex="0"><code>            ┌────────────┐
+            │            │
+      P ●───┼────────────┼───────→  (2 giao điểm: chẵn → P ngoài? Không —
+            │            │           P ở ngoài hình, đúng là chẵn)
+            │   Q ●──────┼───────→  (1 giao điểm: lẻ → Q trong)
+            └────────────┘</code></pre><p>Vì sao đúng? Định lý đường cong Jordan nói: một đường cong khép kín không tự cắt chia mặt phẳng thành đúng hai miền — trong và ngoài. Mỗi lần tia xuyên qua biên là một lần đổi miền. Xuất phát từ P và kết thúc ở vô cực (chắc chắn &ldquo;ngoài&rdquo;), số lần đổi miền lẻ nghĩa là P khởi đầu ở &ldquo;trong&rdquo;. Không cần chứng minh Jordan (chứng minh chặt khó bất ngờ) — trực giác &ldquo;mỗi lần xuyên tường là một lần đổi trong/ngoài&rdquo; là đủ để tin và để cài đặt.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// pointInPolygon dùng ray casting: đếm số cạnh cắt tia ngang từ p sang phải.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">pointInPolygon</span>(<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Point</span>, <span style="color:#a6e22e">poly</span> []<span style="color:#a6e22e">Point</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">inside</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> len(<span style="color:#a6e22e">poly</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">n</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">j</span>, <span style="color:#a6e22e">i</span> = <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">poly</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">poly</span>[<span style="color:#a6e22e">j</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Cạnh (a,b) có vắt qua đường ngang y = p.Y không?</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">Y</span> &gt; <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">Y</span>) <span style="color:#f92672">!=</span> (<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">Y</span> &gt; <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">Y</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// Hoành độ giao điểm của cạnh với đường ngang đó</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">xCross</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">X</span> <span style="color:#f92672">+</span> (<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">Y</span><span style="color:#f92672">-</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">Y</span>)<span style="color:#f92672">*</span>(<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">X</span><span style="color:#f92672">-</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">X</span>)<span style="color:#f92672">/</span>(<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">Y</span><span style="color:#f92672">-</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">Y</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">X</span> &lt; <span style="color:#a6e22e">xCross</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">inside</span> = !<span style="color:#a6e22e">inside</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">inside</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Điều kiện <code>(a.Y &gt; p.Y) != (b.Y &gt; p.Y)</code> dùng so sánh chặt/không chặt lệch nhau một cách cố ý — đó là mẹo chuẩn để đỉnh nằm đúng trên tia không bị đếm hai lần. O(n) mỗi truy vấn; geofencing production sẽ lọc trước bằng bounding box hoặc spatial index rồi mới chạy ray casting trên số ít đa giác ứng viên.</p>
+<h3 id="số-thực-và-tội-lỗi-của-dấu-bằng">Số thực và tội lỗi của dấu bằng<a hidden class="anchor" aria-hidden="true" href="#số-thực-và-tội-lỗi-của-dấu-bằng">#</a></h3>
+<p>Hình học tính toán là nơi lỗi float lộ mặt nhiều nhất, vì các quyết định <em>rời rạc</em> (trái/phải/thẳng hàng) được rút ra từ phép tính <em>liên tục</em>. Quy tắc sống còn: không bao giờ so sánh float bằng <code>==</code>; dùng epsilon cho dữ liệu thực (<code>math.Abs(v) &lt; 1e-9</code>), hoặc — tốt hơn khi có thể — dùng <strong>tọa độ nguyên</strong> để cross product chính xác tuyệt đối. Các thư viện nghiêm túc (CGAL) dùng exact arithmetic có chọn lọc; ở tầng ứng dụng, chọn epsilon theo thang đo dữ liệu (1e-9 độ GPS ≈ 0.1mm — quá nhỏ; 1e-6 hợp lý hơn).</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<h3 id="convex-hull-andrews-monotone-chain">Convex Hull: Andrew&rsquo;s monotone chain<a hidden class="anchor" aria-hidden="true" href="#convex-hull-andrews-monotone-chain">#</a></h3>
+<p>Convex hull là &ldquo;sợi dây chun bọc quanh tập điểm&rdquo; — đa giác lồi nhỏ nhất chứa mọi điểm. Andrew&rsquo;s monotone chain xây nó trong O(n log n), toàn bộ chi phí nằm ở bước sort:</p>
+<ol>
+<li>Sort điểm theo (x, y).</li>
+<li>Quét trái→phải xây <strong>nửa dưới</strong>: thêm từng điểm, chừng nào ba điểm cuối rẽ <em>trái</em> (cross ≥ 0) thì pop điểm giữa — vì điểm đó lõm vào trong.</li>
+<li>Quét phải→trái xây <strong>nửa trên</strong> tương tự. Ghép hai nửa.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// convexHull trả về bao lồi theo chiều ngược kim đồng hồ (monotone chain).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">convexHull</span>(<span style="color:#a6e22e">pts</span> []<span style="color:#a6e22e">Point</span>) []<span style="color:#a6e22e">Point</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">pts</span>) &lt; <span style="color:#ae81ff">3</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">pts</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Slice</span>(<span style="color:#a6e22e">pts</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">pts</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">X</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">pts</span>[<span style="color:#a6e22e">j</span>].<span style="color:#a6e22e">X</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">pts</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">X</span> &lt; <span style="color:#a6e22e">pts</span>[<span style="color:#a6e22e">j</span>].<span style="color:#a6e22e">X</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">pts</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">Y</span> &lt; <span style="color:#a6e22e">pts</span>[<span style="color:#a6e22e">j</span>].<span style="color:#a6e22e">Y</span>
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">build</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">order</span> []<span style="color:#a6e22e">Point</span>) []<span style="color:#a6e22e">Point</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">h</span> []<span style="color:#a6e22e">Point</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">order</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// Invariant: mọi bộ ba liên tiếp trong h đều rẽ phải (lồi).</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// Pop điểm giữa chừng nào việc thêm p phá vỡ invariant đó.</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> len(<span style="color:#a6e22e">h</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">cross</span>(<span style="color:#a6e22e">h</span>[len(<span style="color:#a6e22e">h</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>], <span style="color:#a6e22e">h</span>[len(<span style="color:#a6e22e">h</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>], <span style="color:#a6e22e">p</span>) <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">h</span> = <span style="color:#a6e22e">h</span>[:len(<span style="color:#a6e22e">h</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">h</span> = append(<span style="color:#a6e22e">h</span>, <span style="color:#a6e22e">p</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">h</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lower</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">build</span>(<span style="color:#a6e22e">pts</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reversed</span> <span style="color:#f92672">:=</span> make([]<span style="color:#a6e22e">Point</span>, len(<span style="color:#a6e22e">pts</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">pts</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reversed</span>[len(<span style="color:#a6e22e">pts</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">p</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">upper</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">build</span>(<span style="color:#a6e22e">reversed</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Bỏ điểm cuối mỗi nửa (trùng điểm đầu nửa kia)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> append(<span style="color:#a6e22e">lower</span>[:len(<span style="color:#a6e22e">lower</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>], <span style="color:#a6e22e">upper</span>[:len(<span style="color:#a6e22e">upper</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Invariant làm nên tính đúng: <strong>mọi bộ ba điểm liên tiếp trên chuỗi đang xây luôn rẽ cùng một hướng</strong> — vòng <code>for</code> bên trong khôi phục invariant mỗi khi thêm điểm phá vỡ nó, hệt như cách ta chứng minh vòng lặp đúng ở chương 03. Mỗi điểm được push một lần và pop tối đa một lần, nên phần quét là O(n) amortized; tổng O(n log n) do sort. Đổi <code>&lt;= 0</code> thành <code>&lt; 0</code> nếu muốn giữ các điểm thẳng hàng trên biên.</p>
+<p>Ứng dụng: bounding volume cho collision detection (kiểm tra hull trước, hình chi tiết sau), phát hiện outlier (điểm trên hull là ứng viên cực trị của mọi hướng chiếu), tính đường kính tập điểm (rotating calipers trên hull), vẽ vùng phủ sóng/vùng hoạt động của đội xe.</p>
+<h3 id="kd-tree-binary-search-cho-không-gian">KD-Tree: binary search cho không gian<a hidden class="anchor" aria-hidden="true" href="#kd-tree-binary-search-cho-không-gian">#</a></h3>
+<p>KD-Tree là BST (chương 07) mà mỗi tầng so sánh theo một trục <strong>xen kẽ</strong>: tầng 0 chia theo x, tầng 1 theo y, tầng 2 lại x&hellip; Mỗi node là một điểm kiêm một đường cắt chia không gian làm đôi:</p>
+<pre tabindex="0"><code>         chia theo x                      (5,4)          ← tầng 0: trục x
+      │                                  ╱     ╲
+   A  │   B          →           (2,6)         (8,1)     ← tầng 1: trục y
+      │                          ╱   ╲          ...
+   ───┼─── chia theo y       (1,3)  (4,7)                ← tầng 2: trục x
+      │</code></pre><p>Nearest neighbor search là phần đáng giá nhất — nó minh họa <strong>pruning</strong> (cắt tỉa) thuần khiết:</p>
+<ol>
+<li>Đi xuống như tìm kiếm BST, đến lá — có ứng viên đầu tiên, bán kính r = khoảng cách tốt nhất hiện tại.</li>
+<li>Quay ngược lên (backtrack). Ở mỗi node, hỏi: &ldquo;quả cầu bán kính r quanh điểm truy vấn có <strong>vắt qua mặt phẳng cắt</strong> không?&rdquo; Tức là |tọa độ truy vấn − tọa độ cắt| &lt; r?</li>
+<li>Không vắt qua → <strong>toàn bộ nửa kia của không gian không thể chứa điểm tốt hơn</strong> — bỏ cả nhánh. Vắt qua → phải thăm nhánh kia.</li>
+</ol>
+<p>Đây chính là trực giác &ldquo;loại cả quận thay vì từng quán&rdquo; được hình thức hóa. Average case O(log n) với điểm phân bố đều — vì bán kính r co lại nhanh và hầu hết nhánh bị cắt.</p>
+<p><strong>Nhưng KD-Tree suy biến ở chiều cao — curse of dimensionality.</strong> Trong không gian d chiều, thể tích tập trung ở &ldquo;vỏ&rdquo;: khoảng cách giữa điểm gần nhất và xa nhất co lại về nhau khi d tăng, nên bán kính r hầu như luôn vắt qua mọi mặt cắt → pruning thất bại → thuật toán thăm gần hết cây, tức O(n) với hằng số tệ hơn cả quét thẳng. Quy tắc thực dụng: KD-Tree tốt đến d ≈ 10–20; với embedding 768 chiều của ML, người ta bỏ tìm kiếm chính xác và dùng <strong>approximate</strong> nearest neighbor (HNSW, IVF — họ hàng tinh thần của chương 23: đổi độ chính xác lấy tốc độ).</p>
+<h3 id="quadtree-và-geohash-chia-tư-và-làm-phẳng">Quadtree và Geohash: chia tư và làm phẳng<a hidden class="anchor" aria-hidden="true" href="#quadtree-và-geohash-chia-tư-và-làm-phẳng">#</a></h3>
+<p><strong>Quadtree</strong> chia hình vuông thành 4 phần tư, đệ quy ở ô nào chứa nhiều hơn k điểm — mật độ dữ liệu quyết định độ sâu, vùng trống không tốn gì. Đây là cấu trúc quen thuộc của game engine và bản đồ tile.</p>
+<p><strong>Geohash</strong> đi một nước cờ khác thường: biến bài toán 2D về 1D để <strong>tái sử dụng index thường</strong>. Chia đôi dải kinh độ: nửa trái bit 0, nửa phải bit 1. Làm tương tự với vĩ độ. Đan xen bit kinh/vĩ, mã hóa base32 → chuỗi như <code>w3gvk1t</code>. Tính chất vàng: <strong>hai geohash chung prefix càng dài thì càng gần nhau</strong> — nên &ldquo;tìm quanh đây&rdquo; trở thành query prefix trên B-Tree hay Redis sorted set, những công cụ đã có sẵn.</p>
+<p>Nhưng chiều ngược lại <strong>không đúng</strong>: gần nhau không suy ra chung prefix. Hai điểm sát nhau nhưng nằm hai bên một ranh giới chia (kinh tuyến gốc là ví dụ cực đoan) có geohash khác nhau ngay từ ký tự đầu. Fix chuẩn: luôn query <strong>ô chứa điểm cộng 8 ô lân cận</strong>. Quên edge case này là bug kinh điển của mọi hệ thống geo tự chế — &ldquo;quán bên kia đường không hiện ra&rdquo;.</p>
+<p><strong>R-Tree</strong> (mức giới thiệu): thay vì chia không gian cố định, R-Tree gom các <strong>bounding rectangle của chính dữ liệu</strong> thành cây — các hình chữ nhật được phép chồng lấn. Vì lưu rectangle chứ không chỉ điểm, nó xử lý được đối tượng có kích thước (đường, vùng, polygon) — lý do nó là xương sống của index GiST trong PostGIS. <strong>Uber H3</strong> (mức nhắc): lưới lục giác toàn cầu — lục giác có khoảng cách đến 6 láng giềng đều nhau, không có &ldquo;láng giềng chéo&rdquo; mập mờ như ô vuông, hợp cho phân tích mật độ và pricing theo vùng.</p>
+<table>
+  <thead>
+      <tr>
+          <th>Cấu trúc</th>
+          <th>Ý tưởng chia</th>
+          <th>Mạnh</th>
+          <th>Yếu</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>KD-Tree</td>
+          <td>mặt phẳng cắt xen kẽ trục</td>
+          <td>k-NN chính xác, in-memory</td>
+          <td>chiều cao, dữ liệu động</td>
+      </tr>
+      <tr>
+          <td>Quadtree</td>
+          <td>chia tư đệ quy theo mật độ</td>
+          <td>game, tile map, cập nhật cục bộ</td>
+          <td>không cân bằng khi dữ liệu lệch</td>
+      </tr>
+      <tr>
+          <td>Geohash</td>
+          <td>2D → 1D string, prefix = gần</td>
+          <td>dùng lại index thường, dễ vận hành</td>
+          <td>edge case ranh giới, ô méo theo vĩ độ</td>
+      </tr>
+      <tr>
+          <td>R-Tree</td>
+          <td>gom bounding box của dữ liệu</td>
+          <td>đối tượng có kích thước, disk-based</td>
+          <td>chồng lấn làm chậm khi dữ liệu tệ</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Chính xác vs nhanh.</strong> Haversine đúng đến mô hình cầu (~0.5% sai số so với ellipsoid); equirectangular sai hơn chút nhưng đủ cho &ldquo;quán trong bán kính 5km&rdquo; và rẻ hơn nhiều; so sánh bình phương khoảng cách miễn phí nhất. Chọn theo yêu cầu: tính tiền cước taxi cần đúng, ranking kết quả chỉ cần đúng <em>thứ tự</em>.</p>
+<p><strong>Cấu trúc cây vs mã hóa 1D.</strong> KD-Tree/R-Tree cho truy vấn chính xác và k-NN thật sự, nhưng là code phức tạp phải tự vận hành (hoặc dựa vào database hỗ trợ). Geohash &ldquo;kém thông minh&rdquo; hơn — nhưng chạy trên Redis/B-Tree có sẵn, dễ shard, dễ debug bằng mắt. Trong hệ phân tán, cấu trúc <em>ngu mà phẳng</em> thường thắng cấu trúc <em>khôn mà cây</em>: cây khó cắt ngang qua nhiều máy, prefix string thì shard tự nhiên.</p>
+<p><strong>Build một lần vs cập nhật liên tục.</strong> KD-Tree cân bằng xây O(n log n) nhưng insert/delete làm nó lệch dần — hợp với dữ liệu tĩnh (POI, bản đồ), rebuild định kỳ. Tài xế di chuyển 4 giây/lần cập nhật thì hoặc dùng geohash (update = đổi key), hoặc quadtree với ô lỏng, chứ đừng KD-Tree.</p>
+<p><strong>Khi nào KHÔNG nên dùng gì cả?</strong> Dưới ~10.000 điểm, quét tuyến tính với bình phương khoảng cách chạy trong vài chục microsecond — cache locality của một slice phẳng đánh bại mọi cấu trúc cây (bài học hằng số của chương 10). Đừng dựng PostGIS cho bảng 2.000 cửa hàng; một lần full scan mỗi request là hoàn toàn ổn.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>PostGIS / PostgreSQL</strong> — <code>CREATE INDEX ON places USING GIST(geom)</code> dựng một R-Tree (trên nền GiST). Query <code>ORDER BY geom &lt;-&gt; :point LIMIT 10</code> chạy k-NN <strong>ngay trong khi duyệt index</strong>: toán nằm ở phép ước lượng &ldquo;khoảng cách nhỏ nhất khả dĩ từ điểm truy vấn đến bounding box&rdquo; — chính là điều kiện pruning của mục 5, thực thi trên trang disk thay vì node bộ nhớ. <code>ST_Contains</code> cho geofencing là point-in-polygon với bước lọc bounding box trước.</p>
+<p><strong>Elasticsearch geo query</strong> — <code>geo_distance</code> filter dùng BKD-tree (họ hàng KD-Tree tối ưu cho disk, ghi theo block) từ Lucene; trước đó nhiều năm là geohash prefix trên inverted index. Cùng một sản phẩm đã đi qua cả hai nhánh trade-off của mục 6.</p>
+<p><strong>Uber / Grab matching tài xế</strong> — bài toán &ldquo;tài xế gần nhất&rdquo; ở tần suất cập nhật cực cao. Uber công khai dùng H3: mỗi tài xế thuộc một cell, tìm quanh điểm đón = duyệt cell chứa nó + các vòng cell lân cận (k-ring). Toán nằm ở thiết kế lưới: lục giác cho khoảng cách láng giềng đồng đều, hierarchy cell cho phép zoom mức phân giải. Surge pricing tính trên cùng lưới đó.</p>
+<p><strong>Game collision detection</strong> — mỗi frame 16ms phải trả lời &ldquo;cặp vật thể nào chạm nhau&rdquo; giữa hàng nghìn vật thể; O(n²) cặp là bất khả thi. Broad phase: quadtree (hoặc spatial hash grid) gom vật thể theo vùng, chỉ các vật thể chung ô mới thành cặp ứng viên. Narrow phase: AABB overlap test — hai hình chữ nhật giao nhau khi và chỉ khi chúng chồng lấn trên <em>cả hai trục</em>, bốn phép so sánh. Cross product xuất hiện tiếp ở SAT (separating axis theorem) cho hình lồi xoay.</p>
+<p><strong>Bản đồ số &amp; logistics</strong> — snap GPS nhiễu vào đoạn đường gần nhất (map matching): chiếu điểm lên đoạn thẳng là bài toán tích vô hướng (chương 17); tìm đoạn ứng viên là truy vấn R-Tree trên các đoạn đường.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p><strong>K Closest Points to Origin (LeetCode 973)</strong> — bài geo phổ biến nhất. Ba lời giải tăng dần: sort toàn bộ O(n log n); <strong>max-heap kích thước k</strong> O(n log k) — giữ k điểm tốt nhất, điểm mới đánh bật đỉnh heap nếu gần hơn, hợp khi dữ liệu là stream; <strong>quickselect</strong> O(n) average — partition quanh pivot theo bình phương khoảng cách (chương 16). Điểm cộng lớn trong phỏng vấn: nói rõ <em>không cần</em> <code>math.Sqrt</code> vì so sánh bình phương bảo toàn thứ tự — người phỏng vấn nghe câu này biết ngay bạn từng làm việc thật với hình học.</p>
+<p><strong>Max Points on a Line (LeetCode 149)</strong> — với mỗi điểm gốc, gom các điểm khác theo slope. Bẫy float: slope 1/3 không biểu diễn chính xác được, hai slope &ldquo;bằng nhau&rdquo; có thể khác nhau ở bit cuối. Lời giải sạch: dùng cặp nguyên (dy/g, dx/g) với g = gcd (chương 19) làm key thay vì float — hoặc kiểm tra thẳng hàng bằng cross product = 0 với số nguyên, chính xác tuyệt đối.</p>
+<p><strong>Erect the Fence (LeetCode 587)</strong> — convex hull nguyên bản, yêu cầu giữ điểm thẳng hàng trên biên (đổi dấu so sánh cross như ghi chú ở mục 5). Ít gặp nhưng là bài kiểm tra &ldquo;bạn có cài được monotone chain không hay chỉ thuộc tên&rdquo;.</p>
+<p><strong>Valid Square (LeetCode 593)</strong> — tính 6 bình phương khoảng cách giữa 4 điểm; hình vuông ⟺ 4 giá trị nhỏ bằng nhau (cạnh), 2 giá trị lớn bằng nhau (chéo), và cạnh ≠ 0. Lỗi phổ biến: quên case 4 điểm trùng nhau, hoặc dùng khoảng cách có căn rồi so sánh float bằng <code>==</code>.</p>
+<p><strong>Lỗi tư duy hay gặp nhất:</strong></p>
+<ul>
+<li>So sánh float bằng <code>==</code> — trong hình học, mọi so sánh bằng phải là epsilon hoặc số nguyên.</li>
+<li>Dùng Euclidean trên (lat, lon) thô — sai lệch theo cos(vĩ độ), bug &ldquo;gần mà không thấy&rdquo; ở vĩ độ cao.</li>
+<li>Dùng <code>atan2</code> để sort theo góc hay so slope khi cross product làm được cùng việc không lỗi làm tròn.</li>
+<li>Quên trường hợp suy biến: điểm trùng, ba điểm thẳng hàng, đa giác có đỉnh nằm đúng trên tia ray casting.</li>
+</ul>
+<p><strong>Từ phỏng vấn sang production:</strong> K Closest Points chính là &ldquo;tìm 10 quán cà phê&rdquo; của mục 1 — thu nhỏ. Khác biệt duy nhất: production không được phép nhìn cả n điểm, nên heap/quickselect được thay bằng spatial index. Nhận ra ánh xạ đó là biết mình đang thiếu công cụ gì.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Tự chế công thức khoảng cách GPS.</strong> <code>sqrt(dlat² + dlon²) * 111000</code> xuất hiện trong nhiều codebase thật — chạy &ldquo;có vẻ đúng&rdquo; ở demo gần xích đạo, sai 30–50% khi mở thị trường ở vĩ độ cao. Dùng Haversine hoặc thư viện; nếu xấp xỉ, phải là xấp xỉ <em>có chủ đích</em> với sai số đã tính.</p>
+<p><strong>Geohash không query ô lân cận.</strong> Chỉ query prefix của ô chứa user → mất mọi kết quả bên kia ranh giới ô. Triệu chứng: kết quả &ldquo;nhấp nháy&rdquo; khi user di chuyển vài mét qua biên geohash. Luôn 8 láng giềng + ô trung tâm.</p>
+<p><strong>KD-Tree cho embedding trăm chiều.</strong> &ldquo;k-NN thì dùng KD-Tree&rdquo; là phản xạ đúng ở 2D và sai hoàn toàn ở 512D — pruning chết vì curse of dimensionality, chậm hơn brute force SIMD. Chiều cao → ANN (HNSW/IVF) hoặc chấp nhận quét có vector hóa.</p>
+<p><strong>Epsilon một-cỡ-cho-tất-cả.</strong> <code>1e-9</code> cho tọa độ mét là hợp lý, cho tọa độ độ GPS là quá chặt, cho tọa độ pixel game đã scale là quá lỏng. Epsilon phải chọn theo thang đo và sai số tích lũy của pipeline — nếu không, &ldquo;thẳng hàng&rdquo; thành ngẫu nhiên.</p>
+<p><strong>Dựng spatial database cho bài toán 5.000 điểm.</strong> Chi phí vận hành PostGIS/ES cluster để thay một vòng for chạy 50µs. Anti-pattern kinh điển của chương 10 mặc áo hình học: tối ưu bậc tăng trưởng khi n bé và không bao giờ lớn.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Chọn metric trước, cấu trúc sau: GPS → Haversine (hoặc equirectangular có chủ đích); so sánh thứ hạng → bình phương khoảng cách, không căn.</li>
+<li>Ưu tiên cross product cho mọi câu hỏi định hướng/thẳng hàng/diện tích; giữ tọa độ nguyên khi có thể để được số học chính xác.</li>
+<li>Với &ldquo;tìm quanh đây&rdquo; production: dùng index có sẵn của hệ đang vận hành (PostGIS GiST, ES geo, Redis GEO) trước khi nghĩ đến tự cài — spatial index tự chế là nguồn bug ranh giới vô tận.</li>
+<li>Lọc thô rồi mới tính tinh: bounding box / geohash cell trước, Haversine + point-in-polygon sau — kiến trúc hai pha broad/narrow của game engine đúng cho cả backend.</li>
+<li>Viết test cho trường hợp suy biến ngay từ đầu: điểm trùng, thẳng hàng, điểm trên biên, qua kinh tuyến 180°.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không so sánh float bằng <code>==</code>; không dùng float làm key map để gom theo slope/góc.</li>
+<li>Không dùng KD-Tree cho dữ liệu cập nhật liên tục hoặc chiều cao.</li>
+<li>Không tin kết quả demo ở một vĩ độ — dữ liệu geo phải test ở nhiều vùng địa lý.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Vì sao pruning của KD-Tree hiệu quả ở 2D nhưng vô dụng ở 500 chiều — cụ thể điều kiện cắt nhánh thất bại ở đâu?</li>
+<li>Geohash chung prefix suy ra gần nhau, nhưng gần nhau không suy ra chung prefix — hệ quả kỹ thuật của bất đối xứng này là gì và fix chuẩn ra sao?</li>
+<li>Trong monotone chain, invariant nào được duy trì trên stack, và vì sao mỗi điểm chỉ bị pop tối đa một lần lại cho O(n) sau khi sort?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-5-production/23-probabilistic-data-structures/">23 — Probabilistic Data Structures</a>, nơi ta đẩy trade-off &ldquo;đổi chính xác lấy tài nguyên&rdquo; đến cực hạn: đếm tỷ phần tử bằng 12KB và trả lời &ldquo;có thể có / chắc chắn không&rdquo;.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/21-optimization/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 21 — Optimization: Tìm cực trị trong không gian ràng buộc</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-5-production/23-probabilistic-data-structures/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 22 — Computational Geometry: Toán của không gian vật lý on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2022%20%e2%80%94%20Computational%20Geometry%3a%20To%c3%a1n%20c%e1%bb%a7a%20kh%c3%b4ng%20gian%20v%e1%ba%adt%20l%c3%bd&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 22 — Computational Geometry: Toán của không gian vật lý on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f&amp;title=Ch%c6%b0%c6%a1ng%2022%20%e2%80%94%20Computational%20Geometry%3a%20To%c3%a1n%20c%e1%bb%a7a%20kh%c3%b4ng%20gian%20v%e1%ba%adt%20l%c3%bd&amp;summary=Ch%c6%b0%c6%a1ng%2022%20%e2%80%94%20Computational%20Geometry%3a%20To%c3%a1n%20c%e1%bb%a7a%20kh%c3%b4ng%20gian%20v%e1%ba%adt%20l%c3%bd&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 22 — Computational Geometry: Toán của không gian vật lý on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f&title=Ch%c6%b0%c6%a1ng%2022%20%e2%80%94%20Computational%20Geometry%3a%20To%c3%a1n%20c%e1%bb%a7a%20kh%c3%b4ng%20gian%20v%e1%ba%adt%20l%c3%bd">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 22 — Computational Geometry: Toán của không gian vật lý on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 22 — Computational Geometry: Toán của không gian vật lý on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2022%20%e2%80%94%20Computational%20Geometry%3a%20To%c3%a1n%20c%e1%bb%a7a%20kh%c3%b4ng%20gian%20v%e1%ba%adt%20l%c3%bd%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 22 — Computational Geometry: Toán của không gian vật lý on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2022%20%e2%80%94%20Computational%20Geometry%3a%20To%c3%a1n%20c%e1%bb%a7a%20kh%c3%b4ng%20gian%20v%e1%ba%adt%20l%c3%bd&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 22 — Computational Geometry: Toán của không gian vật lý on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2022%20%e2%80%94%20Computational%20Geometry%3a%20To%c3%a1n%20c%e1%bb%a7a%20kh%c3%b4ng%20gian%20v%e1%ba%adt%20l%c3%bd&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f22-computational-geometry%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

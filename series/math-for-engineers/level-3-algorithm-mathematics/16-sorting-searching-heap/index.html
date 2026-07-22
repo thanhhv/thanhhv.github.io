@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 16 — Sorting, Searching &amp; Heap: Trật tự và cái giá của nó | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 05 (Counting &amp; Combinatorics), Chương 10 (Complexity Analysis), Chương 11 (Probability), Chương 13 (Divide and Conquer)
+
+1. Problem Statement
+Một team backend nhận yêu cầu tưởng như tầm thường: trang admin cần hiển thị &ldquo;100 đơn hàng giá trị cao nhất trong ngày&rdquo; từ một bảng 50 triệu dòng. Phiên bản đầu tiên: ORDER BY amount DESC LIMIT 100. Query mất 40 giây và đẩy database vào swap — PostgreSQL đang sort toàn bộ 50 triệu dòng chỉ để vứt đi 49.999.900 dòng đầu ra.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/16-sorting-searching-heap/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/16-sorting-searching-heap/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 16 — Sorting, Searching &amp; Heap: Trật tự và cái giá của nó
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 09:40:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;28 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 05 (Counting &amp; Combinatorics), Chương 10 (Complexity Analysis), Chương 11 (Probability), Chương 13 (Divide and Conquer)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Một team backend nhận yêu cầu tưởng như tầm thường: trang admin cần hiển thị &ldquo;100 đơn hàng giá trị cao nhất trong ngày&rdquo; từ một bảng 50 triệu dòng. Phiên bản đầu tiên: <code>ORDER BY amount DESC LIMIT 100</code>. Query mất 40 giây và đẩy database vào swap — PostgreSQL đang sort toàn bộ 50 triệu dòng chỉ để vứt đi 49.999.900 dòng đầu ra.</p>
+<p>Phiên bản thứ hai, một kỹ sư thêm index trên cột <code>amount</code>. Query xuống 3ms. Phiên bản thứ ba, một kỹ sư khác chỉ ra rằng ngay cả <em>không có index</em>, PostgreSQL từ 8.3 đã đủ thông minh để không sort toàn bộ: nó giữ một <strong>heap 100 phần tử</strong> và quét một lượt — bộ nhớ O(k), thời gian O(n log k), không bao giờ chạm swap.</p>
+<p>Ba phiên bản, ba cách trả lời cùng một câu hỏi, chênh nhau bốn bậc độ lớn. Điểm chung của cả ba: chúng đều xoay quanh một tài nguyên vô hình — <strong>trật tự</strong> (order). Có trật tự sẵn (index) thì tìm kiếm gần như miễn phí. Chưa có thì phải trả tiền tạo ra nó (sort), và câu hỏi trở thành: trả bao nhiêu, trả cho toàn bộ hay chỉ phần cần (heap)?</p>
+<p>Chương này trả lời ba câu hỏi nền tảng:</p>
+<ol>
+<li><strong>Tạo ra trật tự tốn tối thiểu bao nhiêu?</strong> — và đây là một trong số ít định lý &ldquo;bất khả thi&rdquo; mà mọi engineer phải biết: không tồn tại comparison sort nhanh hơn Ω(n log n), <em>bất kể bạn thông minh đến đâu</em>.</li>
+<li><strong>Khai thác trật tự như thế nào?</strong> — binary search, và dạng tổng quát hóa mạnh hơn nhiều so với &ldquo;tìm phần tử trong mảng&rdquo;.</li>
+<li><strong>Khi chỉ cần trật tự một phần thì sao?</strong> — heap, cấu trúc &ldquo;trật tự vừa đủ&rdquo; đứng sau priority queue, timer, top-k của gần như mọi hệ thống lớn.</li>
+</ol>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="sort-một-lần-search-mãi-mãi">Sort một lần, search mãi mãi<a hidden class="anchor" aria-hidden="true" href="#sort-một-lần-search-mãi-mãi">#</a></h3>
+<p>Vì sao sort là bài toán trung tâm của khoa học máy tính — đến mức Knuth dành nguyên một tập TAOCP cho nó? Không phải vì &ldquo;sắp xếp danh sách&rdquo; tự nó quan trọng, mà vì sort là dạng <strong>preprocessing</strong> thuần khiết nhất: đầu tư một lần Θ(n log n), đổi lấy vô số lần khai thác rẻ về sau.</p>
+<table>
+  <thead>
+      <tr>
+          <th>Bài toán</th>
+          <th>Trên dữ liệu thô</th>
+          <th>Sau khi sort</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Tìm một phần tử</td>
+          <td>O(n)</td>
+          <td>O(log n) — binary search</td>
+      </tr>
+      <tr>
+          <td>Tìm min/max</td>
+          <td>O(n)</td>
+          <td>O(1)</td>
+      </tr>
+      <tr>
+          <td>Tìm phần tử trùng</td>
+          <td>O(n²) hoặc O(n) + hash</td>
+          <td>O(n) — trùng thì đứng cạnh nhau</td>
+      </tr>
+      <tr>
+          <td>Range query [a, b]</td>
+          <td>O(n)</td>
+          <td>O(log n + k)</td>
+      </tr>
+      <tr>
+          <td>Median, percentile</td>
+          <td>O(n) (khó viết đúng)</td>
+          <td>O(1)</td>
+      </tr>
+      <tr>
+          <td>Merge với tập khác đã sort</td>
+          <td>O(n·m)</td>
+          <td>O(n + m)</td>
+      </tr>
+  </tbody>
+</table>
+<p>Trực giác kinh tế: nếu dữ liệu được đọc nhiều lần hơn được ghi (read-heavy — đặc trưng của đa số hệ thống), trả trước chi phí sort gần như luôn lãi. Database index, log đã sort theo offset của Kafka, SSTable của LSM-tree — tất cả là các biến thể của cùng một quyết định đầu tư này. Ngược lại, với dữ liệu ghi một lần đọc một lần (pipeline ETL streaming), sort toàn bộ thường là lãng phí — đây là câu &ldquo;khi nào KHÔNG nên dùng&rdquo; đầu tiên của chương.</p>
+<h3 id="trật-tự-là-thông-tin">Trật tự là thông tin<a hidden class="anchor" aria-hidden="true" href="#trật-tự-là-thông-tin">#</a></h3>
+<p>Trực giác thứ hai, sâu hơn: <strong>một mảng đã sort chứa nhiều thông tin hơn mảng chưa sort</strong>. Nghe lạ — cùng n con số cơ mà? Nhưng mảng đã sort cho bạn biết thêm một điều về <em>mọi cặp phần tử</em>: phần tử nào đứng trước phần tử nào. Sort chính là quá trình <em>sản xuất thông tin đó</em>, và thông tin không miễn phí. Mỗi phép so sánh <code>a &lt; b</code> chỉ thu về đúng <strong>một bit</strong> thông tin (kết quả đúng/sai). Lượng thông tin cần sản xuất chia cho tốc độ sản xuất tối đa cho ra chi phí tối thiểu — đó chính là ý tưởng của chứng minh lower bound ở mục 4, một trong những lập luận đẹp nhất mà một engineer có thể sở hữu.</p>
+<h3 id="heap-trật-tự-vừa-đủ">Heap: trật tự vừa đủ<a hidden class="anchor" aria-hidden="true" href="#heap-trật-tự-vừa-đủ">#</a></h3>
+<p>Giữa &ldquo;hỗn loạn hoàn toàn&rdquo; (mảng thô) và &ldquo;trật tự hoàn toàn&rdquo; (mảng đã sort) có một điểm giữa cực kỳ hữu dụng: cấu trúc chỉ đảm bảo <em>phần tử nhỏ nhất luôn đứng đầu</em>, còn phần còn lại lộn xộn tùy ý. Đó là heap. Vì hứa ít hơn nên nó trả ít hơn: thêm/xóa O(log n), xây từ đầu O(n) — rẻ hơn sort. Bài toán ORDER BY LIMIT ở mở đầu chính là chỗ heap tỏa sáng: bạn không cần trật tự của 50 triệu dòng, chỉ cần trật tự của 100 dòng.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="comparison-sort-là-gì-chính-xác">Comparison sort là gì, chính xác?<a hidden class="anchor" aria-hidden="true" href="#comparison-sort-là-gì-chính-xác">#</a></h3>
+<p>Trước khi chứng minh &ldquo;không thể nhanh hơn&rdquo;, phải định nghĩa rõ &ldquo;nhanh hơn cái gì, trong luật chơi nào&rdquo;. Một <strong>comparison sort</strong> là thuật toán chỉ được thu thập thông tin về input qua duy nhất một loại câu hỏi: &ldquo;aᵢ &lt; aⱼ không?&rdquo;. Nó không được nhìn vào giá trị, không được lấy digit, không được hash. Quicksort, mergesort, heapsort, insertion sort, Timsort — tất cả đều sống trong luật chơi này. Định nghĩa chặt luật chơi là bước quan trọng nhất: lower bound sắp chứng minh chỉ đúng <em>bên trong</em> luật này, và mục 5 sẽ cho thấy cách bước ra ngoài để phá nó.</p>
+<h3 id="sort-là-bài-toán-nhận-diện-hoán-vị">Sort là bài toán nhận diện hoán vị<a hidden class="anchor" aria-hidden="true" href="#sort-là-bài-toán-nhận-diện-hoán-vị">#</a></h3>
+<p>Nhìn từ First Principles, sort không phải là &ldquo;di chuyển phần tử&rdquo;. Với n phần tử phân biệt, input là một trong <strong>n! hoán vị</strong> có thể (chương 05). Nhiệm vụ thật sự của thuật toán là <strong>xác định input đang là hoán vị nào</strong> — vì biết hoán vị rồi thì việc đưa về đúng chỗ chỉ là chuyện cơ học. Mỗi hoán vị khác nhau đòi hỏi dãy hành động sửa chữa khác nhau, nên thuật toán <em>bắt buộc</em> phải phân biệt được cả n! trường hợp.</p>
+<p>Đến đây, hai mảnh ghép khớp vào nhau:</p>
+<ul>
+<li>Cần phân biệt <strong>n! khả năng</strong>.</li>
+<li>Mỗi phép so sánh cho tối đa <strong>1 bit</strong> — chia không gian khả năng làm hai phần.</li>
+</ul>
+<p>Sau k phép so sánh, thuật toán phân biệt được tối đa 2ᵏ trường hợp. Muốn 2ᵏ ≥ n! thì k ≥ log₂(n!). Toàn bộ chứng minh ở mục 4 chỉ là làm chặt chẽ lập luận ba dòng này.</p>
+<h3 id="nếu-không-có-khái-niệm-lower-bound-thì-sao">Nếu không có khái niệm lower bound thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-khái-niệm-lower-bound-thì-sao">#</a></h3>
+<p>Không có lower bound, mọi cuộc tối ưu đều là cuộc đua không có vạch đích: bạn không bao giờ biết mình nên dừng ở đâu, và sẽ có người đốt hàng tháng đi tìm thuật toán so sánh O(n) — thứ toán học chứng minh là không tồn tại, tương tự việc đi tìm động cơ vĩnh cửu. Lower bound biến &ldquo;chưa ai tìm ra&rdquo; thành &ldquo;không thể tồn tại&rdquo; — hai mệnh đề khác nhau về bản chất, và chỉ toán học phân biệt được (benchmark thì không, như chương 10 đã nói). Nó cũng chỉ đường tối ưu đúng hướng: muốn nhanh hơn n log n, đừng cải tiến phép so sánh — hãy <strong>đổi luật chơi</strong>.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="decision-tree-mọi-comparison-sort-là-một-cái-cây">Decision tree: mọi comparison sort là một cái cây<a hidden class="anchor" aria-hidden="true" href="#decision-tree-mọi-comparison-sort-là-một-cái-cây">#</a></h3>
+<p>Cố định n. Bất kỳ comparison sort <em>tất định</em> nào cũng có thể vẽ thành một <strong>cây quyết định nhị phân</strong>: mỗi node trong là một phép so sánh &ldquo;aᵢ &lt; aⱼ?&rdquo;, hai nhánh là hai kết quả, và mỗi lá là kết luận cuối cùng — một hoán vị cụ thể mà thuật toán tuyên bố là thứ tự đúng. Chạy thuật toán trên một input = đi một đường từ gốc xuống một lá.</p>
+<pre tabindex="0"><code>                 [a₁ &lt; a₂?]                 ← so sánh đầu tiên
+                 ╱        ╲
+              yes          no
+              ╱              ╲
+        [a₂ &lt; a₃?]        [a₁ &lt; a₃?]
+         ╱      ╲          ╱      ╲
+     (1,2,3)  [a₁&lt;a₃?] (2,1,3)  [a₂&lt;a₃?]
+              ╱     ╲            ╱     ╲
+         (1,3,2) (3,1,2)    (2,3,1) (3,2,1)
+
+   n = 3: cây phải có đủ 3! = 6 lá
+   → chiều cao tối thiểu ⌈log₂6⌉ = 3 phép so sánh worst case</code></pre><p>Ba quan sát, mỗi quan sát một dòng, ghép lại thành định lý:</p>
+<p><strong>Quan sát 1 — cây phải có ít nhất n! lá.</strong> Mỗi hoán vị input khác nhau phải đi đến kết luận khác nhau. Nếu hai hoán vị khác nhau cùng rơi vào một lá, thuật toán trả cùng một đáp án cho hai input cần đáp án khác nhau — sai với ít nhất một trong hai. (Đây là chứng minh bằng phản chứng, chương 03.)</p>
+<p><strong>Quan sát 2 — cây nhị phân cao h có tối đa 2ʰ lá.</strong> Quy nạp theo h: mỗi tầng đi xuống, số node tối đa nhân đôi.</p>
+<p><strong>Quan sát 3 — worst case của thuật toán = chiều cao cây.</strong> Đường dài nhất từ gốc xuống lá chính là input xui xẻo nhất.</p>
+<p>Ghép lại: 2ʰ ≥ (số lá) ≥ n!, suy ra:</p>
+<blockquote>
+<p><strong>h ≥ log₂(n!)</strong></p></blockquote>
+<h3 id="vì-sao-logn--θn-log-n--stirling-ở-mức-trực-giác">Vì sao log₂(n!) = Θ(n log n) — Stirling ở mức trực giác<a hidden class="anchor" aria-hidden="true" href="#vì-sao-logn--θn-log-n--stirling-ở-mức-trực-giác">#</a></h3>
+<p>Công thức Stirling nói n! ≈ (n/e)ⁿ·√(2πn), nhưng không cần nhớ nó. Chỉ cần một cặp chặn thô mà bạn tự dựng lại được trong 30 giây:</p>
+<ul>
+<li><strong>Chặn trên:</strong> n! = n·(n−1)···1 ≤ nⁿ → log₂(n!) ≤ n log₂ n.</li>
+<li><strong>Chặn dưới:</strong> trong n thừa số, một nửa đầu (từ n xuống n/2) đều ≥ n/2, nên n! ≥ (n/2)^(n/2) → log₂(n!) ≥ (n/2)·log₂(n/2).</li>
+</ul>
+<p>Cả hai vế đều là hằng số nhân với n log n, vậy <strong>log₂(n!) = Θ(n log n)</strong>. Định lý hoàn tất:</p>
+<blockquote>
+<p><strong>Mọi comparison sort cần Ω(n log n) phép so sánh trong worst case.</strong></p></blockquote>
+<p>(Với thuật toán ngẫu nhiên như quicksort, lập luận trung bình hóa trên các cây quyết định cho cùng kết luận với <em>expected</em> số so sánh — lower bound không có lỗ hổng &ldquo;dùng random để lách&rdquo;.)</p>
+<p>Con số cụ thể đáng cảm nhận: n = 10⁶ thì log₂(n!) ≈ 18,5 triệu phép so sánh tối thiểu. Mergesort thực hiện ~20 triệu. Nghĩa là mergesort chỉ cách trần lý thuyết vài phần trăm — nhân loại về cơ bản đã giải xong bài toán này <em>trong luật chơi so sánh</em>, từ những năm 1960. Mọi cải tiến sau đó (Timsort, pdqsort) là cải tiến hằng số, cache, và các trường hợp đặc biệt — không phải cải tiến bậc.</p>
+<h3 id="phá-lower-bound-ngừng-so-sánh">Phá lower bound: ngừng so sánh<a hidden class="anchor" aria-hidden="true" href="#phá-lower-bound-ngừng-so-sánh">#</a></h3>
+<p>Lower bound có một giả định duy nhất — và đó là cửa thoát. Nếu được <em>nhìn vào giá trị</em>, mỗi thao tác thu về nhiều hơn 1 bit:</p>
+<p><strong>Counting sort.</strong> Khi giá trị là số nguyên trong [0, k): đếm số lần xuất hiện của từng giá trị vào mảng phụ, rồi ghi lại theo thứ tự. Θ(n + k) — tuyến tính khi k = O(n). Một lần đọc <code>count[v]++</code> &ldquo;phân loại&rdquo; phần tử vào một trong k nhóm — thu log₂k bit thông tin, không phải 1 bit.</p>
+<p><strong>Radix sort.</strong> Sort số d chữ số bằng d lượt counting sort, từ chữ số thấp lên cao (bắt buộc dùng counting sort <em>stable</em> — thứ tự lượt trước phải được bảo toàn để làm tie-break cho lượt sau). Θ(d·(n + k)). Với 10⁷ số uint32, d = 4 lượt theo từng byte (k = 256) đánh bại mọi comparison sort.</p>
+<p><strong>Bucket sort.</strong> Khi input phân bố <em>đều</em> trên một khoảng: chia n bucket, mỗi bucket kỳ vọng O(1) phần tử, sort từng bucket. Expected Θ(n) — nhưng chữ &ldquo;expected&rdquo; gắn chặt vào giả định phân bố; input dồn cục vào một bucket thì thoái hóa về thuật toán con.</p>
+<p>Vậy vì sao chúng không thay thế quicksort làm sort mặc định? Vì mỗi cái mua tốc độ bằng một <strong>giả định về dữ liệu</strong>:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Thuật toán</th>
+          <th>Điều kiện áp dụng</th>
+          <th>Sụp đổ khi</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Counting sort</td>
+          <td>số nguyên, miền k nhỏ</td>
+          <td>k = 2⁶⁴, hoặc key là struct/string</td>
+      </tr>
+      <tr>
+          <td>Radix sort</td>
+          <td>key phân rã được thành digit</td>
+          <td>comparator tùy ý (<code>less func(a,b)</code>)</td>
+      </tr>
+      <tr>
+          <td>Bucket sort</td>
+          <td>biết phân bố, gần uniform</td>
+          <td>phân bố lệch, adversarial input</td>
+      </tr>
+  </tbody>
+</table>
+<p>Comparison sort chậm hơn nhưng <strong>phổ dụng</strong>: chỉ cần một hàm <code>less</code>, sort được mọi thứ — struct theo ba trường, string theo collation tiếng Việt, bất kỳ total order nào. Đây là trade-off giữa tốc độ và tính tổng quát của contract, giống hệt việc chọn interface hẹp hay rộng khi thiết kế API.</p>
+<h3 id="các-tính-chất-production-của-một-thuật-toán-sort">Các tính chất production của một thuật toán sort<a hidden class="anchor" aria-hidden="true" href="#các-tính-chất-production-của-một-thuật-toán-sort">#</a></h3>
+<p>Big-O không phải chiều duy nhất. Ba tính chất sau quyết định lựa chọn trong thực tế:</p>
+<p><strong>Stable</strong> — hai phần tử &ldquo;bằng nhau&rdquo; giữ nguyên thứ tự tương đối ban đầu. Nghe như chi tiết vặt cho đến khi bạn sort nhiều tiêu chí: sort danh sách đơn hàng theo <code>ngày</code>, rồi sort <em>stable</em> theo <code>khách hàng</code> → kết quả nhóm theo khách hàng, trong mỗi nhóm đúng thứ tự ngày. Với sort không stable, lượt sort sau <em>phá hủy</em> thành quả lượt trước. Go tách hẳn hai API: <code>sort.Slice</code> (pdqsort, không stable, nhanh hơn) và <code>sort.SliceStable</code> (chèn merge, stable, chậm hơn ~2 lần và tốn thêm bộ nhớ) — buộc bạn tuyên bố mình cần gì. Chọn nhầm <code>sort.Slice</code> khi cần stable là loại bug chỉ lộ ra khi có dữ liệu trùng key, tức là lộ ra ở production chứ không phải ở test.</p>
+<p><strong>In-place</strong> — chỉ dùng O(1) hoặc O(log n) bộ nhớ phụ. Quicksort và heapsort in-place; mergesort cần O(n) phụ. Trên dataset chiếm 60% RAM, đây là khác biệt giữa chạy được và OOM.</p>
+<p><strong>Adaptive</strong> — chạy nhanh hơn khi input <em>gần</em> sorted. Timsort (mặc định của Python, Java) phát hiện các &ldquo;run&rdquo; tăng dần sẵn có và chỉ merge chúng: input đã sort → O(n). Điều này quan trọng vì dữ liệu thực hiếm khi ngẫu nhiên đều — log gần như sorted theo thời gian, bảng được sort lại sau vài dòng chèn thêm.</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<h3 id="quicksort-đánh-bạc-có-tính-toán">Quicksort: đánh bạc có tính toán<a hidden class="anchor" aria-hidden="true" href="#quicksort-đánh-bạc-có-tính-toán">#</a></h3>
+<p>Quicksort chọn một pivot, partition mảng thành phần nhỏ hơn và lớn hơn pivot, đệ quy hai bên. Worst case O(n²): nếu pivot luôn là min/max, mỗi lượt chỉ bóc được một phần tử — và với pivot tất định (ví dụ &ldquo;luôn lấy phần tử đầu&rdquo;), kẻ xấu <em>dựng được</em> input độc, hoặc tệ hơn: input tự nhiên phổ biến nhất — mảng đã sort — chính là input độc.</p>
+<p>Giải pháp: <strong>chọn pivot ngẫu nhiên</strong>, biến worst case từ &ldquo;input nào đó&rdquo; thành &ldquo;vận rủi nào đó&rdquo; — không input nào là input độc nữa. Phân tích average case là một viên ngọc của linearity of expectation (chương 11). Gọi z₁ &lt; z₂ &lt; &hellip; &lt; zₙ là các phần tử theo thứ tự đúng. Đặt biến chỉ thị Xᵢⱼ = 1 nếu zᵢ và zⱼ từng được so sánh với nhau. Nhận xét then chốt: zᵢ và zⱼ được so sánh <strong>khi và chỉ khi</strong> một trong hai được chọn làm pivot <em>trước</em> mọi phần tử nằm giữa chúng — vì nếu pivot rơi vào giữa, hai phần tử bị tách về hai phía và vĩnh viễn không gặp nhau. Trong khối {zᵢ, &hellip;, zⱼ} gồm j−i+1 phần tử, mỗi phần tử đều bình đẳng về xác suất được làm pivot đầu tiên của khối:</p>
+<blockquote>
+<p>P(zᵢ so sánh với zⱼ) = 2/(j − i + 1)</p></blockquote>
+<p>Tổng kỳ vọng số phép so sánh:</p>
+<blockquote>
+<p>E[X] = Σᵢ&lt;ⱼ 2/(j−i+1) ≤ Σᵢ Σ_d 2/d ≈ 2n·ln n ≈ 1,39·n log₂ n</p></blockquote>
+<p>Không cần giải recurrence phức tạp nào — kỳ vọng của tổng bằng tổng kỳ vọng, kể cả khi các biến phụ thuộc chằng chịt lẫn nhau. Kết quả: expected Θ(n log n) với hằng số nhỏ và cache locality tuyệt vời (partition quét tuần tự), lý do quicksort thắng mergesort trong thực chiến dù &ldquo;yếu hơn&rdquo; trên giấy về worst case.</p>
+<p><strong>pdqsort — cách Go 1.19+ phòng thủ.</strong> <code>sort.Slice</code> dùng pattern-defeating quicksort: quicksort làm đường chính; insertion sort cho đoạn &lt; 12 phần tử; phát hiện pattern (đã sort, sort ngược) để chạy O(n); và quan trọng nhất — đếm số lần partition mất cân bằng, vượt ngưỡng thì <strong>chuyển sang heapsort</strong>, chốt chặn worst case O(n log n) tuyệt đối. Đây là kỹ thuật introsort: dùng thuật toán nhanh-trung-bình, nhưng cài &ldquo;cầu dao&rdquo; bằng thuật toán chắc-worst-case. Một bài học thiết kế hệ thống thu nhỏ: optimistic path + circuit breaker.</p>
+<h3 id="binary-search-viết-đúng-bằng-invariant">Binary search: viết đúng bằng invariant<a hidden class="anchor" aria-hidden="true" href="#binary-search-viết-đúng-bằng-invariant">#</a></h3>
+<p>Binary search nổi tiếng là thuật toán 5 dòng mà sách &ldquo;Programming Pearls&rdquo; ghi nhận ~90% lập trình viên chuyên nghiệp viết sai lần đầu. Ba lỗi kinh điển:</p>
+<ol>
+<li><strong>Overflow</strong>: <code>mid := (lo + hi) / 2</code> tràn số khi lo + hi vượt giới hạn int (bug nằm trong JDK gần 10 năm). Viết <code>mid := lo + (hi-lo)/2</code>.</li>
+<li><strong>Vòng lặp vô hạn</strong>: khi khoảng còn 2 phần tử mà cập nhật <code>lo = mid</code> (không +1), mid tính ra lại bằng lo — kẹt vĩnh viễn.</li>
+<li><strong>Lệch biên một đơn vị</strong>: <code>&lt;</code> hay <code>&lt;=</code>, <code>hi = mid</code> hay <code>mid - 1</code> — mỗi tổ hợp đúng với một biến thể và sai với biến thể khác.</li>
+</ol>
+<p>Thuốc chữa cả ba không phải là học thuộc code mẫu, mà là <strong>một invariant duy nhất</strong> (chương 03). Dạng tổng quát hóa đáng học: cho predicate đơn điệu p — sai, sai, &hellip;, sai, <strong>đúng</strong>, đúng, &hellip;, đúng — tìm vị trí <code>đúng</code> đầu tiên:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Tìm chỉ số nhỏ nhất trong [0, n) mà p(i) == true; trả về n nếu không có.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Đây chính là contract của sort.Search trong thư viện chuẩn Go.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">search</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">p</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lo</span>, <span style="color:#a6e22e">hi</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">n</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Invariant: p sai với mọi i &lt; lo; p đúng với mọi i &gt;= hi.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Đáp án luôn nằm trong [lo, hi].</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">lo</span> &lt; <span style="color:#a6e22e">hi</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mid</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">lo</span> <span style="color:#f92672">+</span> (<span style="color:#a6e22e">hi</span><span style="color:#f92672">-</span><span style="color:#a6e22e">lo</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span> <span style="color:#75715e">// mid &lt; hi nên không lặp vô hạn</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">p</span>(<span style="color:#a6e22e">mid</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">hi</span> = <span style="color:#a6e22e">mid</span> <span style="color:#75715e">// p(mid) đúng → đáp án ở [lo, mid]</span>
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">lo</span> = <span style="color:#a6e22e">mid</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e">// p(mid) sai → đáp án ở [mid+1, hi]</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">lo</span> <span style="color:#75715e">// lo == hi: điểm gãy sai→đúng</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Mỗi lần cập nhật đều <em>bảo toàn invariant</em>, khoảng [lo, hi) co lại ít nhất 1 mỗi vòng, và khi lo == hi thì invariant ép đáp án bằng lo. Đúng theo cấu trúc, không cần dò từng biên.</p>
+<p>Sức mạnh thật sự nằm ở chỗ <strong>p là hàm bất kỳ, miễn đơn điệu</strong> — không cần mảng nào cả. &ldquo;Tìm x trong mảng sorted&rdquo; chỉ là trường hợp p(i) = (a[i] ≥ x). Các trường hợp khác của cùng khuôn: tìm commit đầu tiên làm hỏng build (<code>git bisect</code> — p(commit) = &ldquo;build fail&rdquo;), tìm capacity nhỏ nhất mà hệ thống chịu tải (p(c) = &ldquo;load test pass&rdquo;), và cả họ bài &ldquo;binary search the answer&rdquo; ở mục 8. Không gian nào có trật tự đơn điệu, không gian đó search được trong log.</p>
+<h3 id="heap-cây-hoàn-hảo-sống-trong-mảng">Heap: cây hoàn hảo sống trong mảng<a hidden class="anchor" aria-hidden="true" href="#heap-cây-hoàn-hảo-sống-trong-mảng">#</a></h3>
+<p>Binary heap là <strong>complete binary tree</strong> (đầy mọi tầng trừ tầng cuối, tầng cuối dồn trái) thỏa heap property: parent ≤ con (min-heap). Vì cây complete không có &ldquo;lỗ hổng&rdquo;, nó nhúng được vào mảng phẳng theo thứ tự từng tầng, và quan hệ cha–con trở thành <strong>số học chỉ số</strong>:</p>
+<pre tabindex="0"><code>      chỉ số:   0   1   2   3   4   5   6
+      mảng:  [ 2 | 5 | 3 | 9 | 7 | 8 | 4 ]
+
+                    2(0)
+                  ╱      ╲
+               5(1)      3(2)        parent(i) = (i-1)/2
+              ╱    ╲    ╱    ╲       left(i)   = 2i+1
+            9(3)  7(4) 8(5) 4(6)     right(i)  = 2i+2</code></pre><p>Đây là lý do heap không cần con trỏ — và vì thế thắng lớn trên phần cứng thật: không allocation cho node, không pointer chasing, các phần tử nằm sát nhau trong cache. Cùng là &ldquo;cây&rdquo; nhưng chi phí hằng số khác BST một trời một vực.</p>
+<p>Hai thao tác nền tảng, cả hai O(log n) vì cây complete cao ⌊log₂n⌋:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// sift-up: phần tử mới chèn ở đáy nổi lên vị trí đúng</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">siftUp</span>(<span style="color:#a6e22e">h</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> &gt; <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> (<span style="color:#a6e22e">i</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">p</span>] <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">i</span>] { <span style="color:#66d9ef">break</span> } <span style="color:#75715e">// heap property đã thỏa</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">p</span>], <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">p</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">i</span> = <span style="color:#a6e22e">p</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// sift-down: phần tử ở gốc chìm xuống vị trí đúng</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">siftDown</span>(<span style="color:#a6e22e">h</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">min</span>, <span style="color:#a6e22e">l</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">i</span>, <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">l</span> &lt; <span style="color:#a6e22e">n</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">l</span>] &lt; <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">min</span>] { <span style="color:#a6e22e">min</span> = <span style="color:#a6e22e">l</span> }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">r</span> &lt; <span style="color:#a6e22e">n</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">r</span>] &lt; <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">min</span>] { <span style="color:#a6e22e">min</span> = <span style="color:#a6e22e">r</span> }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">min</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">i</span> { <span style="color:#66d9ef">return</span> }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">min</span>] = <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">min</span>], <span style="color:#a6e22e">h</span>[<span style="color:#a6e22e">i</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">i</span> = <span style="color:#a6e22e">min</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Build-heap O(n) — kết quả phản trực giác.</strong> Xây heap từ mảng thô bằng cách sift-down từ node giữa về gốc. Trực giác nói n node × O(log n) = O(n log n). Nhưng đếm kỹ hơn: sift-down tốn tỷ lệ với <em>chiều cao còn lại bên dưới</em>, và tuyệt đại đa số node nằm sát đáy nơi chiều cao gần 0 — một nửa số node có chiều cao 0, một phần tư có chiều cao 1&hellip; Tổng chi phí:</p>
+<blockquote>
+<p>Σₕ (số node cao h)·h ≤ Σₕ (n/2ʰ⁺¹)·h = n·Σₕ h/2ʰ⁺¹ = n·(1/2)·2 = <strong>O(n)</strong></p></blockquote>
+<p>trong đó Σ h/2ʰ = 2 là chuỗi hội tụ quen thuộc (đạo hàm của chuỗi hình học). Cùng một khuôn với chứng minh amortized append ở chương 10: chi phí lớn hiếm, chi phí nhỏ áp đảo, tổng lại tuyến tính. Hệ quả thực dụng: cần heap từ n phần tử có sẵn thì <code>heap.Init</code> một lần (O(n)), đừng Push n lần (O(n log n)).</p>
+<p>Từ heap suy ra <strong>heapsort</strong>: build-heap rồi n lần lấy gốc — O(n log n) worst case, in-place, không cần bộ nhớ phụ; nhược điểm là truy cập mảng nhảy cóc nên cache kém, thua quicksort về hằng số (vì thế chỉ làm &ldquo;cầu dao&rdquo; trong pdqsort). Và <strong>priority queue</strong> — heap với tên gọi theo interface: <code>container/heap</code> của Go yêu cầu bạn implement <code>sort.Interface</code> + <code>Push/Pop</code>, còn sift-up/sift-down do runtime lo. Ứng dụng gặp hằng ngày: <strong>k-way merge</strong> — trộn k dòng dữ liệu đã sort bằng heap k phần tử chứa đầu mỗi dòng, mỗi bước lấy min và nạp phần tử kế của dòng đó, O(N log k) tổng — xương sống của external sort và compaction trong LSM-tree.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Sort trước vs tìm trực tiếp.</strong> Tìm một lần trong dữ liệu chưa sort: O(n) — đừng sort. Tìm m lần: sort trước hòa vốn khi n log n &lt; m·n, tức m &gt; log n — con số nhỏ bất ngờ (n = 10⁶ → chỉ cần 20 lần tìm là sort đã lãi). Nhưng nếu chỉ cần <em>membership</em> chứ không cần range/order, hash map O(1) thắng cả hai — sort chỉ đáng giá khi bạn cần <strong>trật tự</strong>, không chỉ tồn tại.</p>
+<p><strong>Sort toàn bộ vs heap top-k.</strong> Cần k phần tử lớn nhất từ n: sort O(n log n); heap k phần tử O(n log k); quickselect O(n) average. Với k ≪ n khác biệt là nhiều bậc. Nhưng quickselect phá hủy mảng, không streaming được và không cho k phần tử <em>theo thứ tự</em>; heap streaming tự nhiên (mỗi phần tử đến, so với gốc, thay nếu tốt hơn) — vì thế hệ thống dòng chảy (log, metrics) chọn heap dù quickselect &ldquo;nhanh hơn trên giấy&rdquo;.</p>
+<p><strong>Stable vs tốc độ/bộ nhớ.</strong> Stability không miễn phí: mergesort stable nhưng O(n) bộ nhớ phụ; các stable sort in-place đều chậm hằng số lớn. Đó là lý do Go bắt bạn chọn <code>sort.Slice</code>/<code>sort.SliceStable</code> một cách tường minh thay vì mặc định stable như Python — hai triết lý API: an toàn mặc định vs chi phí tường minh.</p>
+<p><strong>Comparison vs non-comparison.</strong> Radix sort nhanh hơn nhưng đóng đinh vào kiểu key; đổi key từ uint32 sang string có collation là phải viết lại. Comparison sort đổi hành vi chỉ bằng đổi closure <code>less</code>. Tính tổng quát cũng là một tài nguyên kỹ thuật.</p>
+<p><strong>Heap vs sorted structure.</strong> Heap cho min O(1), insert O(log n) — nhưng <em>chỉ</em> min; tìm phần tử bất kỳ là O(n), duyệt theo thứ tự phải phá heap. Cần cả hai đầu, cần range query → skip list / B-tree, trả giá hằng số và bộ nhớ cao hơn. Chọn cấu trúc là chọn <em>tập câu hỏi</em> bạn sẽ hỏi dữ liệu.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>PostgreSQL — cả kho thuật toán của chương này.</strong> <code>ORDER BY</code> trên dữ liệu vượt <code>work_mem</code> chạy <strong>external merge sort</strong>: sort từng khối vừa bộ nhớ (quicksort), ghi ra đĩa thành các &ldquo;run&rdquo;, rồi <strong>k-way merge bằng heap</strong> — đúng nghịch cảnh mà mergesort sinh ra để giải từ thời băng từ, vì merge chỉ cần đọc/ghi <em>tuần tự</em>. Với <code>ORDER BY x LIMIT k</code>, planner chuyển sang node <code>top-N heapsort</code>: heap k phần tử, quét một lượt, O(n log k) và bộ nhớ O(k) — chính là lời giải phiên bản ba ở mở đầu chương. Còn khi có index B-tree trên <code>x</code> thì khỏi sort: index <em>là</em> trật tự trả trước, mỗi lần INSERT/UPDATE đóng góp O(log n) để duy trì — &ldquo;sort được trả góp theo từng lần ghi&rdquo;. <code>EXPLAIN</code> cho bạn thấy đúng ba chữ: <code>Sort</code>, <code>top-N heapsort</code>, <code>Index Scan</code> — ba điểm trên đường trade-off của chương này.</p>
+<p><strong>Index seek vs scan.</strong> Câu hỏi muôn thuở &ldquo;sao query có index vẫn seq scan?&rdquo; trả lời bằng toán của chương 10 + 16: index seek là O(log n + k) với random I/O đắt mỗi bước; seq scan là O(n) tuần tự với hằng số tí hon. k lớn (query lấy nhiều % bảng) → scan thắng. Trật tự chỉ đáng giá khi bạn khai thác được <em>tính chọn lọc</em> của nó.</p>
+<p><strong>Kafka</strong> — hệ thống được thiết kế để <strong>không bao giờ phải sort</strong>: log là append-only, message tự động sorted theo offset ngay lúc ghi. Consumer tìm vị trí đọc bằng binary search trên file index thưa (sparse index: mỗi ~4KB một entry offset→vị trí file), rồi scan tuần tự đoạn ngắn còn lại. Toàn bộ kiến trúc là câu trả lời cho câu hỏi &ldquo;làm sao có trật tự mà không trả n log n?&rdquo; — bằng cách chọn trật tự <em>trùng với thứ tự ghi tự nhiên</em>.</p>
+<p><strong>Elasticsearch</strong> trả về top-10 kết quả từ hàng triệu document khớp bằng đúng heap top-k ở mục 5 — mỗi shard giữ một priority queue kích thước k khi quét posting list, rồi coordinator k-way merge các top-k của từng shard. Không có chỗ nào trong đường đi đó sort toàn bộ kết quả.</p>
+<p><strong>Go runtime</strong> dùng heap ở nơi nhạy cảm nhất: <strong>timer</strong>. Mỗi P (processor) giữ các timer trong một <strong>heap bậc 4</strong> (4 con mỗi node thay vì 2) — cây nông hơn một nửa, mỗi node so sánh nhiều hơn nhưng 4 con nằm gọn trong cache line, ăn đứt heap nhị phân về hằng số. Mỗi <code>time.After</code>, mỗi context timeout trong hàng triệu goroutine của bạn là một phần tử trong heap đó; scheduler chỉ cần nhìn gốc heap để biết &ldquo;bao giờ phải dậy&rdquo;. Kubernetes cũng vậy: priority queue của scheduler quyết định pod nào được xếp node trước.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p>Sorting/searching/heap phủ có lẽ 1/3 số câu phỏng vấn thuật toán. Các dạng trọng tâm:</p>
+<p><strong>Binary search các biến thể</strong> — Find First and Last Position (LeetCode 34), Search Insert Position (35), Search in Rotated Sorted Array (33). Tất cả quy về <em>một</em> khuôn <code>search(n, p)</code> ở mục 5 với predicate khác nhau: first position là p(i) = a[i] ≥ x, last position là (chỉ số đầu mà a[i] &gt; x) − 1. Người học thuộc bốn template <code>lo&lt;=hi / lo&lt;hi / hi=mid / hi=mid-1</code> sẽ lẫn lộn dưới áp lực; người nắm invariant chỉ cần trả lời &ldquo;predicate của tôi là gì, nó đơn điệu không&rdquo;.</p>
+<p><strong>Binary search the answer</strong> — Koko Eating Bananas (875): Koko ăn chuối tốc độ k, đống i tốn ⌈pile[i]/k⌉ giờ, tìm k nhỏ nhất để ăn hết trong h giờ. Nhận diện: hàm p(k) = &ldquo;tốc độ k đủ để kịp&rdquo; là <strong>đơn điệu</strong> (ăn nhanh hơn không bao giờ trễ hơn) → binary search trên <em>không gian đáp án</em> [1, max(pile)], mỗi lần thử tốn O(n). Cùng họ: Split Array Largest Sum (410), Capacity to Ship Packages (1011). Đây là kỹ thuật đáng giá nhất mục này vì nó đảo ngược tư duy: không xây đáp án — <strong>đoán đáp án và kiểm tra</strong>, miễn kiểm tra rẻ và không gian đáp án đơn điệu. Trong production nó là mọi bài toán capacity planning: &ldquo;số replica tối thiểu chịu được tải X&rdquo;.</p>
+<p><strong>Kth Largest Element (215)</strong> — bài kiểm tra trade-off kinh điển: heap k phần tử O(n log k), streaming được, worst case chắc chắn; quickselect O(n) average nhưng O(n²) worst nếu không random pivot, và cần cả mảng trong tay. Người phỏng vấn muốn nghe bạn <em>so sánh</em>, không phải chọn một. Nói thêm &ldquo;nếu dữ liệu là stream thì bắt buộc heap&rdquo; là điểm cộng lớn.</p>
+<p><strong>Merge Intervals (56)</strong> — minh họa &ldquo;sort làm bài toán khó thành dễ&rdquo;: intervals lộn xộn thì kiểm tra chồng lấn là O(n²); sort theo điểm bắt đầu xong, chỉ interval <em>liền kề</em> mới có thể merge — một lượt quét O(n). Rất nhiều bài dạng &ldquo;cặp phần tử tương tác nhau&rdquo; tan biến sau một lần sort đúng tiêu chí.</p>
+<p><strong>Top K Frequent Elements (347)</strong> — hash map đếm tần suất + heap k phần tử trên (phần tử, tần suất): O(n log k). Follow-up hay gặp: làm được O(n) không? — bucket sort theo tần suất, vì tần suất bị chặn bởi n: một ví dụ non-comparison sort sống trong bài phỏng vấn.</p>
+<p><strong>Lỗi tư duy thường gặp:</strong> viết binary search bằng trí nhớ rồi sửa biên theo test case — thay vì phát biểu invariant trước; trả lời &ldquo;sort là O(n log n)&rdquo; như tiên đề mà không biết đó là lower bound có chứng minh (câu hỏi &ldquo;vì sao không nhanh hơn được?&rdquo; tách ứng viên đọc hiểu khỏi ứng viên học vẹt); dùng quickselect cho bài streaming; quên rằng <code>heap.Init</code> là O(n) khi bị hỏi tối ưu build.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Sort trong vòng lặp.</strong> <code>for</code> mỗi request lại <code>sort.Slice</code> cùng một slice cấu hình/route table — O(n log n) nhân với QPS. Trật tự là tài sản đầu tư: tạo một lần lúc load config, tái sử dụng; sort lại chỉ khi dữ liệu đổi.</p>
+<p><strong>Sort toàn bộ để lấy top-k.</strong> <code>ORDER BY ... LIMIT 10</code> tự viết bằng cách kéo hết về service rồi sort là phiên bản một của câu chuyện mở đầu — trả n log n cho thứ đáng giá n log k, và tệ hơn: trả cả network + memory cho n dòng. Đẩy LIMIT xuống database, hoặc dùng heap.</p>
+<p><strong>Tin rằng &ldquo;tôi sẽ tìm được cách sort so sánh O(n)&rdquo;.</strong> Tương đương chế động cơ vĩnh cửu. Khi ai đó khoe sort &ldquo;tuyến tính&rdquo;, câu hỏi đúng là: <em>giả định gì về dữ liệu?</em> — luôn có một giả định (miền giá trị, phân bố, độ dài key), và giả định đó chính là chỗ hệ thống sẽ gãy khi dữ liệu đổi tính chất.</p>
+<p><strong>Dùng sort không stable cho sort nhiều tiêu chí nối tiếp.</strong> <code>sort.Slice</code> theo tiêu chí phụ rồi <code>sort.Slice</code> theo tiêu chí chính — lượt hai xáo trộn tự do các phần tử bằng nhau, phá thành quả lượt một. Hoặc dùng <code>sort.SliceStable</code> cho lượt sau, hoặc gộp mọi tiêu chí vào một comparator (thường tốt hơn: một lượt sort, ý định tường minh).</p>
+<p><strong>Poll thay vì priority queue.</strong> Scheduler quét toàn bộ danh sách task mỗi giây tìm task đến hạn: O(n) mỗi tick, và độ trễ bằng chu kỳ tick. Heap theo deadline: O(log n) mỗi thao tác, gốc heap cho biết <em>chính xác</em> thời điểm cần dậy. Go runtime timer làm mẫu sẵn cho bạn.</p>
+<p><strong>Binary search trên dữ liệu không đảm bảo sorted.</strong> Hàm nhận slice và binary search, nhưng không nơi nào trong contract nói slice phải sorted — code chạy đúng nhiều tháng vì tình cờ upstream sort sẵn, rồi một refactor upstream đổi thứ tự và bug xuất hiện <em>lặng lẽ</em> (kết quả sai, không panic). Trật tự là precondition — hoặc kiểm tra (<code>sort.SliceIsSorted</code> trong test/debug build), hoặc ghi vào tên và doc của hàm.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Trả lời câu hỏi &ldquo;trật tự này được dùng mấy lần?&rdquo; trước khi sort. Một lần → tìm trực tiếp; nhiều lần → sort/index; chỉ cần k phần tử biên → heap.</li>
+<li>Viết mọi binary search bằng khuôn predicate + invariant (<code>sort.Search</code> của Go chính là khuôn đó — dùng nó thay vì tự viết khi được).</li>
+<li>Tuyên bố tường minh nhu cầu stability: <code>sort.SliceStable</code> khi có multi-key hoặc thứ tự ban đầu mang nghĩa; comment lý do để người sau không &ldquo;tối ưu&rdquo; ngược về <code>sort.Slice</code>.</li>
+<li>Cần heap trong Go, dùng <code>container/heap</code> và nhớ <code>heap.Init</code> O(n) cho dữ liệu có sẵn; cần top-k streaming, giữ heap kích thước k và so sánh với gốc trước khi push.</li>
+<li>Khi n có miền giá trị nhỏ và là số nguyên (đếm tần suất, histogram, sort theo byte), nhớ đến counting/radix sort — nhưng viết rõ giả định vào comment.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không tự cài quicksort/heapsort cho production khi thư viện chuẩn có sẵn phiên bản đã phòng thủ (pdqsort chống input độc, đã fuzz nhiều năm) — tự cài chỉ để học.</li>
+<li>Không dùng average case của quickselect cho đường đi nhạy latency mà không có phương án chặn worst case.</li>
+<li>Không so sánh hai float bằng <code>&lt;</code> trong comparator mà quên NaN — NaN phá tính total order, <code>sort.Slice</code> với comparator không nhất quán cho kết quả không xác định.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Chứng minh lower bound Ω(n log n) dựa trên những giả định nào, và counting sort &ldquo;lách&rdquo; qua giả định nào trong số đó?</li>
+<li>Vì sao build-heap là O(n) trong khi n lần push là O(n log n) — trực giác &ldquo;phần lớn node nằm gần đáy&rdquo; áp dụng ra sao vào tổng chuỗi?</li>
+<li>Bạn cần k = 50 giá trị lớn nhất từ stream 10⁹ event/ngày. Vì sao heap là lựa chọn đúng thay vì quickselect, dù quickselect O(n) &ldquo;nhanh hơn&rdquo;?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-4-advanced-mathematics/17-linear-algebra/">17 — Linear Algebra</a>, rời thế giới rời rạc của hoán vị và so sánh để bước vào không gian liên tục nhiều chiều — nơi &ldquo;giống nhau về ngữ nghĩa&rdquo; trở thành &ldquo;gần nhau về góc&rdquo;, và AI hiện đại hóa ra là chuỗi phép nhân ma trận.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/15-greedy/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 15 — Greedy Algorithms: Khi nào tham lam là đúng</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/17-linear-algebra/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Sorting, Searching & Heap: Trật tự và cái giá của nó on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Sorting%2c%20Searching%20%26%20Heap%3a%20Tr%e1%ba%adt%20t%e1%bb%b1%20v%c3%a0%20c%c3%a1i%20gi%c3%a1%20c%e1%bb%a7a%20n%c3%b3&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Sorting, Searching & Heap: Trật tự và cái giá của nó on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f&amp;title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Sorting%2c%20Searching%20%26%20Heap%3a%20Tr%e1%ba%adt%20t%e1%bb%b1%20v%c3%a0%20c%c3%a1i%20gi%c3%a1%20c%e1%bb%a7a%20n%c3%b3&amp;summary=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Sorting%2c%20Searching%20%26%20Heap%3a%20Tr%e1%ba%adt%20t%e1%bb%b1%20v%c3%a0%20c%c3%a1i%20gi%c3%a1%20c%e1%bb%a7a%20n%c3%b3&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Sorting, Searching & Heap: Trật tự và cái giá của nó on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f&title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Sorting%2c%20Searching%20%26%20Heap%3a%20Tr%e1%ba%adt%20t%e1%bb%b1%20v%c3%a0%20c%c3%a1i%20gi%c3%a1%20c%e1%bb%a7a%20n%c3%b3">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Sorting, Searching & Heap: Trật tự và cái giá của nó on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Sorting, Searching & Heap: Trật tự và cái giá của nó on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Sorting%2c%20Searching%20%26%20Heap%3a%20Tr%e1%ba%adt%20t%e1%bb%b1%20v%c3%a0%20c%c3%a1i%20gi%c3%a1%20c%e1%bb%a7a%20n%c3%b3%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Sorting, Searching & Heap: Trật tự và cái giá của nó on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Sorting%2c%20Searching%20%26%20Heap%3a%20Tr%e1%ba%adt%20t%e1%bb%b1%20v%c3%a0%20c%c3%a1i%20gi%c3%a1%20c%e1%bb%a7a%20n%c3%b3&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Sorting, Searching & Heap: Trật tự và cái giá của nó on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Sorting%2c%20Searching%20%26%20Heap%3a%20Tr%e1%ba%adt%20t%e1%bb%b1%20v%c3%a0%20c%c3%a1i%20gi%c3%a1%20c%e1%bb%a7a%20n%c3%b3&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f16-sorting-searching-heap%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 5 – Production
+Yêu cầu trước: Chương 10 (Complexity), Chương 11 (Probability), Chương 12 (Hashing)
+
+1. Problem Statement
+Bạn đang xây dựng một web crawler quy mô lớn. Trước khi tải một URL, crawler phải trả lời câu hỏi tưởng như tầm thường: &ldquo;URL này đã crawl chưa?&rdquo;
+Cách hiển nhiên: một hash set chứa mọi URL đã thấy. Làm phép tính với 10 tỷ URL, mỗi URL trung bình 80 byte, cộng overhead của hash table (con trỏ, bucket, hệ số load factor):">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-5-production/23-probabilistic-data-structures/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-5-production/23-probabilistic-data-structures/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 10:50:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;27 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 5 – Production
+Yêu cầu trước: Chương 10 (Complexity), Chương 11 (Probability), Chương 12 (Hashing)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Bạn đang xây dựng một web crawler quy mô lớn. Trước khi tải một URL, crawler phải trả lời câu hỏi tưởng như tầm thường: <strong>&ldquo;URL này đã crawl chưa?&rdquo;</strong></p>
+<p>Cách hiển nhiên: một hash set chứa mọi URL đã thấy. Làm phép tính với 10 tỷ URL, mỗi URL trung bình 80 byte, cộng overhead của hash table (con trỏ, bucket, hệ số load factor):</p>
+<blockquote>
+<p>10⁹ × 10 × (80 + ~40) byte ≈ <strong>hơn 1TB RAM</strong> — kể cả khi chỉ lưu hash 64-bit của URL thay vì chuỗi gốc, vẫn cần ~800GB khi tính đủ overhead.</p></blockquote>
+<p>Không máy nào chứa nổi. Sharding ra 100 máy thì được — nhưng giờ mỗi lần kiểm tra một URL là một network round-trip, và bạn kiểm tra hàng triệu lần mỗi giây.</p>
+<p>Bây giờ đổi góc nhìn. Điều gì xảy ra nếu câu trả lời <em>thỉnh thoảng</em> sai? Nếu cấu trúc nói &ldquo;đã crawl rồi&rdquo; trong khi thực ra chưa, ta bỏ qua một URL — mất một trang trong 10 tỷ trang. Nếu tỷ lệ sai đó là 1%, và ta <strong>chứng minh được bằng toán</strong> rằng nó không bao giờ vượt 1%, thì cái giá đó hoàn toàn chấp nhận được. Đổi lại: bộ nhớ giảm từ 800GB xuống <strong>~12GB</strong> — chưa tới 10 bit mỗi URL.</p>
+<p>Đây là triết lý chung của cả chương:</p>
+<p><strong>Chấp nhận sai số CÓ KIỂM SOÁT TOÁN HỌC để đổi lấy mức giảm bộ nhớ hàng trăm đến hàng nghìn lần.</strong></p>
+<p>Chữ quan trọng nhất là &ldquo;có kiểm soát&rdquo;. Đây không phải heuristic &ldquo;chắc là đúng&rdquo; — mỗi cấu trúc trong chương này đi kèm một công thức cho phép bạn <em>chọn trước</em> sai số, và toán học đảm bảo sai số thực không vượt quá. Không có xác suất (chương 11) và hashing (chương 12), cả họ cấu trúc này không tồn tại.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="sai-số-nào-bán-được-sai-số-nào-không">Sai số nào bán được, sai số nào không?<a hidden class="anchor" aria-hidden="true" href="#sai-số-nào-bán-được-sai-số-nào-không">#</a></h3>
+<p>Không phải câu hỏi nào cũng cần câu trả lời chính xác. Hãy phân loại:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Câu hỏi</th>
+          <th>Cần chính xác tuyệt đối?</th>
+          <th>Vì sao</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>&ldquo;Số dư tài khoản của user?&rdquo;</td>
+          <td>Có</td>
+          <td>Tiền bạc — sai 1 đồng cũng là bug</td>
+      </tr>
+      <tr>
+          <td>&ldquo;URL này crawl chưa?&rdquo;</td>
+          <td>Không</td>
+          <td>Sai 1% → crawl thừa/thiếu 1% — vô hại</td>
+      </tr>
+      <tr>
+          <td>&ldquo;Hôm nay có bao nhiêu unique visitor?&rdquo;</td>
+          <td>Không</td>
+          <td>998 triệu hay 1.003 tỷ — quyết định kinh doanh y hệt nhau</td>
+      </tr>
+      <tr>
+          <td>&ldquo;Key này có trong SSTable trên disk không?&rdquo;</td>
+          <td>Không, nếu sai theo một chiều</td>
+          <td>Sai → đọc disk thừa một lần, vẫn đúng kết quả cuối</td>
+      </tr>
+  </tbody>
+</table>
+<p>Hàng thứ tư hé lộ một ý tinh tế: có những sai số <strong>một phía</strong> (one-sided error). Nếu cấu trúc chỉ sai theo chiều &ldquo;báo có trong khi không có&rdquo; (false positive) mà <em>không bao giờ</em> sai chiều ngược lại (false negative), ta có thể dùng nó làm <strong>bộ lọc đứng trước nguồn sự thật đắt đỏ</strong>: câu trả lời &ldquo;không có&rdquo; được tin ngay lập tức, câu trả lời &ldquo;có&rdquo; mới cần kiểm chứng. Đó chính là kiến trúc của Bloom filter trước SSTable, và là lý do chữ &ldquo;filter&rdquo; nằm trong tên.</p>
+<h3 id="vì-sao-ngẫu-nhiên-lại-tiết-kiệm-được-bộ-nhớ">Vì sao ngẫu nhiên lại tiết kiệm được bộ nhớ?<a hidden class="anchor" aria-hidden="true" href="#vì-sao-ngẫu-nhiên-lại-tiết-kiệm-được-bộ-nhớ">#</a></h3>
+<p>Trực giác nền tảng: một câu trả lời chính xác buộc phải <em>phân biệt được mọi tập input có thể</em> — về lý thuyết thông tin (chương 20), điều đó đòi hỏi số bit tỷ lệ với lượng thông tin của tập. Nhưng một câu trả lời <strong>xấp xỉ</strong> chỉ cần phân biệt các tập &ldquo;khác nhau đủ nhiều&rdquo;. Số trạng thái cần phân biệt sụt giảm khủng khiếp, kéo theo số bit cần lưu.</p>
+<p>Ví dụ cực đoan nhất chương này: để đếm <em>chính xác</em> 1 tỷ phần tử distinct, bạn buộc phải nhớ đủ thông tin phân biệt &ldquo;đã thấy x&rdquo; với &ldquo;chưa thấy x&rdquo; cho mọi x — hàng GB. Để đếm <em>xấp xỉ sai số dưới 1%</em>, HyperLogLog cần <strong>12KB</strong>. Không phải 12GB. Mười hai kilobyte — nhỏ hơn file ảnh favicon.</p>
+<h3 id="nếu-không-có-các-cấu-trúc-này-thì-sao">Nếu không có các cấu trúc này thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-các-cấu-trúc-này-thì-sao">#</a></h3>
+<p>Mọi bài toán membership/counting/frequency trên dữ liệu lớn đều quy về: thuê thêm RAM (đắt gấp trăm lần), chấp nhận đọc disk (chậm gấp vạn lần), hoặc shard ra nhiều máy (phức tạp gấp mười lần). Probabilistic data structure là lựa chọn thứ tư: trả bằng một loại tiền tệ khác — độ chính xác — vốn đang thừa trong rất nhiều bài toán.</p>
+<p><strong>Khi nào KHÔNG nên dùng?</strong> Khi sai số không bán được: tiền, quyền truy cập (authorization), dedup thanh toán, bất cứ chỗ nào một false positive gây hậu quả không thể sửa. Và khi n nhỏ: một triệu phần tử trong hash set chỉ tốn vài chục MB — đừng đổi sự chính xác lấy thứ bạn không thiếu.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<p>Cả bốn cấu trúc trong chương xây trên đúng hai viên gạch:</p>
+<p><strong>Viên gạch 1 — Hash function như nguồn ngẫu nhiên đồng nhất (chương 12).</strong> Một hash function tốt biến input bất kỳ thành một số &ldquo;như thể&rdquo; được rút ngẫu nhiên đều từ [0, 2⁶⁴). Điều này cho phép ta áp toàn bộ máy móc xác suất của chương 11 lên dữ liệu <em>thật</em> — dữ liệu không hề ngẫu nhiên, nhưng ảnh của nó qua hash thì có.</p>
+<p><strong>Viên gạch 2 — Quan sát một &ldquo;dấu vết&rdquo; thay vì lưu toàn bộ.</strong> Thay vì nhớ từng phần tử, ta chỉ nhớ một dấu vết nén cực mạnh mà phần tử để lại: vài bit bật lên (Bloom), số lượng số 0 dẫn đầu của hash (HyperLogLog), vài counter tăng lên (Count-Min). Dấu vết mất thông tin — nhiều tập input khác nhau để lại cùng dấu vết — và <em>chính đó</em> là nguồn gốc của sai số. Nhưng vì hash là ngẫu nhiên đồng nhất, ta tính được <strong>xác suất</strong> hai tập khác nhau va vào cùng dấu vết, tức là định lượng được sai số.</p>
+<p>Chuỗi suy luận chung, đáng ghi nhớ vì nó lặp lại bốn lần trong chương:</p>
+<pre tabindex="0"><code>dữ liệu thật ──hash──► ngẫu nhiên đều ──ghi dấu vết nén──► mất thông tin
+                                                              │
+                            sai số  ◄──tính được bằng xác suất┘</code></pre><p>Sai số ở đây không phải &ldquo;hy vọng là nhỏ&rdquo; — nó là một biến ngẫu nhiên có kỳ vọng và phương sai tính được, nghĩa là ta điều khiển được nó bằng cách chỉnh tham số (m, k, số register&hellip;). Đó là ranh giới giữa kỹ thuật và cầu may.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="41-bloom-filter">4.1 Bloom Filter<a hidden class="anchor" aria-hidden="true" href="#41-bloom-filter">#</a></h3>
+<p><strong>Cấu trúc:</strong> một mảng m bit (khởi tạo toàn 0) và k hash function độc lập h₁&hellip;h_k.</p>
+<ul>
+<li><strong>Add(x):</strong> bật k bit tại vị trí h₁(x), &hellip;, h_k(x).</li>
+<li><strong>Contains(x):</strong> trả về true nếu <strong>cả k</strong> bit đó đều đang bật.</li>
+</ul>
+<pre tabindex="0"><code>        h₁(x)=2      h₂(x)=5           h₃(x)=11
+          │            │                  │
+          ▼            ▼                  ▼
+bit:  0  0  1  0  0  1  0  0  1  0  0  1  0  0
+idx:  0  1  2  3  4  5  6  7  8  9 10 11 12 13
+                          ▲
+                 bit 8 do phần tử khác bật</code></pre><p><strong>Vì sao không bao giờ có false negative — chứng minh.</strong> Nếu x đã được Add, cả k bit của x đã bật. Bit trong Bloom filter chỉ có một chiều chuyển trạng thái 0 → 1, không bao giờ bị tắt (không có thao tác delete). Vậy tại thời điểm query, cả k bit vẫn bật, Contains(x) chắc chắn trả về true. Đây là một <strong>invariant</strong> kiểu chương 03: &ldquo;mọi bit của mọi phần tử đã add đều bật&rdquo; được bảo toàn qua mọi thao tác. ∎</p>
+<p><strong>Vì sao có false positive.</strong> Contains(y) với y chưa từng add có thể true nếu cả k bit của y <em>tình cờ</em> đã bị các phần tử khác bật. Câu hỏi định lượng: xác suất đó bao nhiêu?</p>
+<p><strong>Dẫn xuất từng bước — chỉ dùng xác suất cơ bản của chương 11:</strong></p>
+<p>Bước 1. Một hash ghi vào một vị trí ngẫu nhiên đều trong m vị trí. Xác suất một bit <em>cụ thể</em> KHÔNG bị ghi bởi một lần hash:</p>
+<blockquote>
+<p>1 − 1/m</p></blockquote>
+<p>Bước 2. Add n phần tử với k hash mỗi phần tử = kn lần ghi độc lập. Xác suất bit đó vẫn là 0 sau tất cả:</p>
+<blockquote>
+<p>(1 − 1/m)^(kn)</p></blockquote>
+<p>Bước 3. Dùng giới hạn quen thuộc (1 − 1/m)^m → e⁻¹ khi m lớn:</p>
+<blockquote>
+<p>(1 − 1/m)^(kn) ≈ e^(−kn/m)</p></blockquote>
+<p>Bước 4. Vậy xác suất một bit cụ thể đang <strong>bật</strong> là 1 − e^(−kn/m). False positive xảy ra khi cả k bit mà y trỏ tới đều bật:</p>
+<blockquote>
+<p><strong>p ≈ (1 − e^(−kn/m))^k</strong></p></blockquote>
+<p>(Bước 4 giả định k bit độc lập — không chính xác tuyệt đối nhưng sai lệch không đáng kể trong thực tế; bản phân tích chặt cho cùng công thức tiệm cận.)</p>
+<p><strong>Tối ưu k.</strong> Với m, n cố định, p là hàm của k: k nhỏ → mỗi query ít bit phải trùng (dễ FP), k lớn → filter đầy nhanh (cũng dễ FP). Lấy đạo hàm theo k và giải, cực tiểu tại:</p>
+<blockquote>
+<p><em><em>k</em> = (m/n) · ln 2 ≈ 0.693 · m/n</em>*</p></blockquote>
+<p>Tại k*, mỗi bit bật với xác suất đúng ½ (filter &ldquo;nửa đầy&rdquo; — trạng thái entropy tối đa, chương 20 sẽ thấy đây không phải trùng hợp), và:</p>
+<blockquote>
+<p>p = (1/2)^k* ⟺ <strong>m/n = −log₂(p) / ln 2 ≈ 1.44 · log₂(1/p)</strong></p></blockquote>
+<p><strong>Bảng tra thực dụng</strong> (số bit mỗi phần tử, không phụ thuộc kích thước phần tử — URL 80 byte hay object 8KB đều tốn như nhau):</p>
+<table>
+  <thead>
+      <tr>
+          <th>FP mong muốn</th>
+          <th>bit/phần tử (m/n)</th>
+          <th>k tối ưu</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>10%</td>
+          <td>4.8</td>
+          <td>3</td>
+      </tr>
+      <tr>
+          <td>1%</td>
+          <td><strong>9.6</strong></td>
+          <td>7</td>
+      </tr>
+      <tr>
+          <td>0.1%</td>
+          <td>14.4</td>
+          <td>10</td>
+      </tr>
+      <tr>
+          <td>0.01%</td>
+          <td>19.2</td>
+          <td>13</td>
+      </tr>
+  </tbody>
+</table>
+<p>So sánh với hash set: chỉ riêng lưu hash 64-bit mỗi phần tử đã tốn 64 bit, cộng con trỏ + bucket overhead thực tế là 100–150 bit. Bloom filter 1% FP: <strong>9.6 bit</strong> — giảm hơn 10 lần so với phiên bản &ldquo;chỉ lưu hash&rdquo;, và hàng trăm lần so với lưu chuỗi gốc. Bài toán 10 tỷ URL mở đầu chương: 10¹⁰ × 9.6 bit = 12GB, chạy vừa một máy.</p>
+<p>Chú ý điều công thức <em>nói thầm</em>: p phụ thuộc n. Filter được cấp phát cho n phần tử mà bạn nhét 2n vào thì FP rate không tăng gấp đôi — nó tăng <strong>theo cấp lũy thừa</strong> (với cấu hình 1%, nhét gấp đôi đẩy FP lên ~9%). Bloom filter không bao giờ từ chối Add; nó chỉ âm thầm trở nên vô dụng. Phải biết n trước, hoặc dùng scalable bloom filter (chuỗi filter lớn dần).</p>
+<h3 id="42-hyperloglog--đếm-distinct-bằng-cách-quan-sát-điều-hiếm">4.2 HyperLogLog — đếm distinct bằng cách quan sát điều hiếm<a hidden class="anchor" aria-hidden="true" href="#42-hyperloglog--đếm-distinct-bằng-cách-quan-sát-điều-hiếm">#</a></h3>
+<p>Bài toán: đếm số phần tử <strong>khác nhau</strong> trong stream (unique visitors, distinct IP&hellip;). Đếm chính xác cần nhớ mọi phần tử đã gặp. HyperLogLog dựa trên một trực giác thiên tài:</p>
+<p><strong>Sự kiện càng hiếm, việc nó đã xảy ra càng nói lên bạn đã thử nhiều lần.</strong></p>
+<p>Hash mỗi phần tử thành chuỗi bit ngẫu nhiên đều. Xác suất một hash bắt đầu bằng đúng 20 bit 0 là 2⁻²⁰ ≈ 1 phần triệu. Vậy nếu trong stream bạn <em>đã thấy</em> một hash có 20 số 0 dẫn đầu, khả năng cao bạn đã gặp cỡ <strong>2²⁰ ≈ 1 triệu</strong> phần tử distinct. (Phần tử lặp lại không đổi được gì — cùng input cho cùng hash, không cho thêm &ldquo;lượt thử&rdquo; mới. Đó chính là lý do cấu trúc này đếm <em>distinct</em> một cách tự nhiên.)</p>
+<p>Quan sát duy nhất cần nhớ: <strong>R = số 0 dẫn đầu dài nhất từng thấy</strong>. Ước lượng: n ≈ 2^R. Bộ nhớ: một số nguyên. Vấn đề: quá nhiễu. Chỉ cần <em>một</em> phần tử xui xẻo hash ra 30 số 0, ước lượng lập tức thành 2³⁰ — một outlier phá hỏng tất cả, và phương sai của 2^R là khổng lồ (chương 11: kỳ vọng đúng không cứu được phương sai lớn).</p>
+<p><strong>Giải pháp: chia để lấy trung bình.</strong> Dùng b bit đầu của hash để chia stream thành m = 2^b substream, mỗi substream có register riêng ghi max số 0 dẫn đầu (của phần bit còn lại). Giờ ta có m quan sát gần độc lập thay vì một.</p>
+<p>Trung bình kiểu gì? Không phải trung bình cộng. Các ước lượng 2^Rⱼ có phân phối lệch nặng về phía trên — một register outlier lớn sẽ thống trị trung bình cộng y như trước. HyperLogLog dùng <strong>harmonic mean</strong>:</p>
+<blockquote>
+<p>E = α_m · m² / Σⱼ 2^(−Rⱼ)</p></blockquote>
+<p>Harmonic mean có tính chất then chốt: nó bị chi phối bởi các giá trị <em>nhỏ</em> và gần như miễn nhiễm với outlier <em>lớn</em> — đúng chiều nhiễu của bài toán này. (α_m ≈ 0.7213/(1 + 1.079/m) là hằng số sửa bias, dẫn xuất trong paper Flajolet 2007; hiểu vai trò của nó là đủ.)</p>
+<p><strong>Sai số chuẩn:</strong></p>
+<blockquote>
+<p><strong>σ/n ≈ 1.04 / √m</strong></p></blockquote>
+<p>Con số phải nhớ: m = 2¹⁴ = 16384 register, mỗi register 6 bit (đủ đếm tới 2⁶⁴ số 0) → <strong>12KB bộ nhớ, sai số 1.04/√16384 ≈ 0.81%</strong> — bất kể stream có một nghìn hay một trăm tỷ phần tử. Đây chính xác là cấu hình của Redis <code>PFCOUNT</code>. Chi phí không phụ thuộc n: đó là điều không cấu trúc chính xác nào làm được, vì nó vi phạm lý thuyết thông tin — trừ khi bạn trả bằng sai số.</p>
+<p>Một tính chất production quý giá: hai HLL <strong>merge được</strong> bằng cách lấy max từng register — cho phép đếm distinct phân tán trên nhiều máy rồi gộp, không cần chuyển dữ liệu thô.</p>
+<h3 id="43-count-min-sketch--tần-suất-trên-stream">4.3 Count-Min Sketch — tần suất trên stream<a hidden class="anchor" aria-hidden="true" href="#43-count-min-sketch--tần-suất-trên-stream">#</a></h3>
+<p>Bloom trả lời &ldquo;có/không&rdquo;, HLL trả lời &ldquo;bao nhiêu distinct&rdquo;. Câu hỏi thứ ba: &ldquo;phần tử x xuất hiện <strong>bao nhiêu lần</strong>?&rdquo; — trên stream quá lớn để giữ một map[item]count.</p>
+<p>Cấu trúc: ma trận d hàng × w cột counter, mỗi hàng một hash function.</p>
+<ul>
+<li><strong>Add(x):</strong> với mỗi hàng i, tăng counter[i][hᵢ(x)].</li>
+<li><strong>Count(x):</strong> trả về <strong>min</strong> trên d hàng của counter[i][hᵢ(x)].</li>
+</ul>
+<p>Vì sao min? Mỗi counter mà x trỏ tới chứa số đếm thật của x <strong>cộng</strong> rác từ các phần tử khác va chạm vào cùng ô — collision chỉ <em>cộng thêm</em>, không bao giờ trừ đi. Vậy mọi counter đều ≥ giá trị thật: sai số <strong>một phía, chỉ đếm dư</strong>. Min của d ước lượng-đều-dư là ước lượng tốt nhất, và chỉ cần <em>một</em> hàng may mắn không va chạm là ta có giá trị gần đúng.</p>
+<p>Định lượng: với w = ⌈e/ε⌉ và d = ⌈ln(1/δ)⌉, sai số dư ≤ ε·N (N = tổng số phần tử đã add) với xác suất ≥ 1−δ. Ví dụ ε = 0.1%, δ = 1%: w ≈ 2719, d = 5 → ~54KB đếm tần suất trên stream vô hạn. Hệ quả thực dụng: Count-Min ước lượng tốt các phần tử <strong>nặng</strong> (heavy hitters — sai số ε·N là nhỏ so với count của chúng) và tệ với phần tử hiếm — may mắn thay, production hầu như chỉ quan tâm heavy hitters (hot key, top-K).</p>
+<h3 id="44-skip-list--cấu-trúc-có-thứ-tự-bằng-đồng-xu">4.4 Skip List — cấu trúc có thứ tự bằng đồng xu<a hidden class="anchor" aria-hidden="true" href="#44-skip-list--cấu-trúc-có-thứ-tự-bằng-đồng-xu">#</a></h3>
+<p>Ba cấu trúc trên đánh đổi <em>độ chính xác của câu trả lời</em>. Skip list đánh đổi thứ khác: dùng ngẫu nhiên để đổi lấy <em>sự đơn giản của cấu trúc</em> — câu trả lời vẫn chính xác 100%, chỉ có <strong>thời gian chạy</strong> là biến ngẫu nhiên.</p>
+<p>Sorted linked list tìm kiếm O(n). Ý tưởng: xây &ldquo;tầng cao tốc&rdquo; — tầng 1 chứa mỗi phần tử với xác suất ½, tầng 2 là ½ của tầng 1&hellip; Tìm kiếm đi từ tầng cao nhất, lướt xa rồi hạ dần xuống:</p>
+<pre tabindex="0"><code>L3:  1 ───────────────────────────────► 42
+L2:  1 ───────────► 17 ───────────────► 42
+L1:  1 ────► 9 ───► 17 ───► 25 ───────► 42 ───► 60
+L0:  1 → 5 → 9 → 12 → 17 → 20 → 25 → 31 → 42 → 55 → 60
+                 tìm 20: L3 hạ, L2 tới 17, L1 tới 17, L0 tới 20</code></pre><p>Điểm khác biệt với balanced tree: tầng của mỗi node do <strong>tung đồng xu</strong> quyết định lúc insert (liên hệ chương 11: số lần tung đến khi ra mặt sấp ~ phân phối hình học, kỳ vọng 2 → chi phí bộ nhớ kỳ vọng chỉ 2 con trỏ/node), không do bất kỳ logic cân bằng nào. Phân tích trực giác vì sao expected O(log n): kỳ vọng số node ở tầng ℓ là n/2^ℓ, nên có ~log₂n tầng hữu dụng; đi ngược đường tìm kiếm từ đích lên đỉnh, tại mỗi node xác suất &ldquo;leo lên tầng trên&rdquo; là ½, nên kỳ vọng chỉ đi ngang ~2 bước mỗi tầng trước khi được leo — tổng kỳ vọng ~2log₂n bước. Worst case O(n) tồn tại nhưng với xác suất nhỏ theo cấp mũ.</p>
+<p>So với red-black tree: không cần rotation, không cần case analysis 5 nhánh, insert/delete chỉ chạm vào các con trỏ lân cận (thân thiện với lock-free/fine-grained locking — lý do <code>java.util.concurrent.ConcurrentSkipListMap</code> tồn tại), và duyệt range tự nhiên vì tầng 0 là linked list có thứ tự sẵn.</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<h3 id="bloom-filter--go-đầy-đủ">Bloom Filter — Go đầy đủ<a hidden class="anchor" aria-hidden="true" href="#bloom-filter--go-đầy-đủ">#</a></h3>
+<p>Trick production quan trọng: không cần k hash function thật. Kirsch–Mitzenmacher chứng minh gᵢ(x) = h₁(x) + i·h₂(x) mod m giữ nguyên tiệm cận FP — chỉ tốn 2 lần hash.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">bloom</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;hash/fnv&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">BloomFilter</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">bits</span> []<span style="color:#66d9ef">uint64</span> <span style="color:#75715e">// mảng bit, đóng gói 64 bit/word</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">m</span>    <span style="color:#66d9ef">uint64</span>   <span style="color:#75715e">// tổng số bit</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">k</span>    <span style="color:#66d9ef">uint64</span>   <span style="color:#75715e">// số hash</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// New cấp phát filter cho n phần tử với tỷ lệ false positive p.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// m = -n·ln(p)/ln²2, k = (m/n)·ln2 — công thức mục 4.1.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">uint64</span>, <span style="color:#a6e22e">p</span> <span style="color:#66d9ef">float64</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">BloomFilter</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">m</span> <span style="color:#f92672">:=</span> uint64(<span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Ceil</span>(<span style="color:#f92672">-</span>float64(<span style="color:#a6e22e">n</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Log</span>(<span style="color:#a6e22e">p</span>) <span style="color:#f92672">/</span> (<span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Ln2</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Ln2</span>)))
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">k</span> <span style="color:#f92672">:=</span> uint64(<span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Round</span>(float64(<span style="color:#a6e22e">m</span>) <span style="color:#f92672">/</span> float64(<span style="color:#a6e22e">n</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Ln2</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">BloomFilter</span>{<span style="color:#a6e22e">bits</span>: make([]<span style="color:#66d9ef">uint64</span>, (<span style="color:#a6e22e">m</span><span style="color:#f92672">+</span><span style="color:#ae81ff">63</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">64</span>), <span style="color:#a6e22e">m</span>: <span style="color:#a6e22e">m</span>, <span style="color:#a6e22e">k</span>: <span style="color:#a6e22e">k</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// hashPair sinh 2 hash độc lập từ một lần chạy FNV-64</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// (double hashing: g_i = h1 + i*h2 thay cho k hash thật).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">BloomFilter</span>) <span style="color:#a6e22e">hashPair</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#66d9ef">uint64</span>, <span style="color:#66d9ef">uint64</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">h</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fnv</span>.<span style="color:#a6e22e">New64a</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">h1</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">Sum64</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">h2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h1</span><span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">33</span> | <span style="color:#a6e22e">h1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">31</span> <span style="color:#75715e">// trộn lại làm hash thứ hai</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">h2</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">h2</span> = <span style="color:#ae81ff">0x9e3779b97f4a7c15</span> <span style="color:#75715e">// h2 = 0 sẽ làm k probe trùng nhau</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">h1</span>, <span style="color:#a6e22e">h2</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">BloomFilter</span>) <span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">h1</span>, <span style="color:#a6e22e">h2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">hashPair</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> uint64(<span style="color:#ae81ff">0</span>); <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">k</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">pos</span> <span style="color:#f92672">:=</span> (<span style="color:#a6e22e">h1</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">i</span><span style="color:#f92672">*</span><span style="color:#a6e22e">h2</span>) <span style="color:#f92672">%</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">m</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">bits</span>[<span style="color:#a6e22e">pos</span><span style="color:#f92672">/</span><span style="color:#ae81ff">64</span>] <span style="color:#f92672">|=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> (<span style="color:#a6e22e">pos</span> <span style="color:#f92672">%</span> <span style="color:#ae81ff">64</span>) <span style="color:#75715e">// bật bit — không bao giờ tắt</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Contains: false = CHẮC CHẮN chưa add; true = có thể đã add (xác suất sai ≤ p).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">BloomFilter</span>) <span style="color:#a6e22e">Contains</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">h1</span>, <span style="color:#a6e22e">h2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">hashPair</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> uint64(<span style="color:#ae81ff">0</span>); <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">k</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">pos</span> <span style="color:#f92672">:=</span> (<span style="color:#a6e22e">h1</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">i</span><span style="color:#f92672">*</span><span style="color:#a6e22e">h2</span>) <span style="color:#f92672">%</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">m</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">bits</span>[<span style="color:#a6e22e">pos</span><span style="color:#f92672">/</span><span style="color:#ae81ff">64</span>]<span style="color:#f92672">&amp;</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span>(<span style="color:#a6e22e">pos</span><span style="color:#f92672">%</span><span style="color:#ae81ff">64</span>)) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span> <span style="color:#75715e">// một bit tắt là đủ kết luận tuyệt đối</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Biến thể — Counting Bloom Filter:</strong> thay mỗi bit bằng counter 4 bit; Add tăng, Delete giảm, Contains kiểm tra &gt; 0. Có delete, trả giá gấp 4 lần bộ nhớ và một rủi ro mới: delete phần tử <em>chưa từng add</em> (hoặc bị FP) sẽ giảm counter của phần tử khác → <strong>tạo ra false negative</strong>, phá vỡ lời hứa quan trọng nhất. Chỉ delete những gì chắc chắn đã add.</p>
+<p><strong>Biến thể — Cuckoo Filter (mức giới thiệu):</strong> lưu fingerprint ngắn (~8–12 bit) của phần tử trong bảng cuckoo hashing 2 vị trí ứng viên. Hỗ trợ delete an toàn hơn counting bloom, FP thấp hơn Bloom ở cùng bộ nhớ khi filter đầy &gt; 95%, lookup đúng 2 lần truy cập bộ nhớ (Bloom cần k lần rải rác — tệ cho cache). Giá: insert có thể thất bại khi bảng quá đầy. Đáng cân nhắc khi cần delete hoặc khi cache locality là bottleneck.</p>
+<h3 id="hyperloglog--go-rút-gọn">HyperLogLog — Go rút gọn<a hidden class="anchor" aria-hidden="true" href="#hyperloglog--go-rút-gọn">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">hll</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;math/bits&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">b</span> = <span style="color:#ae81ff">14</span>           <span style="color:#75715e">// 14 bit chọn register</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">m</span> = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#a6e22e">b</span>       <span style="color:#75715e">// 16384 register — sai số 1.04/√m ≈ 0.81%</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">HLL</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reg</span> [<span style="color:#a6e22e">m</span>]<span style="color:#66d9ef">uint8</span> <span style="color:#75715e">// mỗi register: max(số 0 dẫn đầu + 1) từng thấy</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">HLL</span>) <span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">hash</span> <span style="color:#66d9ef">uint64</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">hash</span> <span style="color:#f92672">&gt;&gt;</span> (<span style="color:#ae81ff">64</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">b</span>)                       <span style="color:#75715e">// b bit đầu → chọn register</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rest</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">hash</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#a6e22e">b</span>                           <span style="color:#75715e">// phần còn lại</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rho</span> <span style="color:#f92672">:=</span> uint8(<span style="color:#a6e22e">bits</span>.<span style="color:#a6e22e">LeadingZeros64</span>(<span style="color:#a6e22e">rest</span>)) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e">// vị trí bit 1 đầu tiên</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rho</span> &gt; <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">reg</span>[<span style="color:#a6e22e">j</span>] {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">reg</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">rho</span> <span style="color:#75715e">// chỉ nhớ kỷ lục — add trùng không đổi gì</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">HLL</span>) <span style="color:#a6e22e">Count</span>() <span style="color:#66d9ef">float64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sum</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">reg</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sum</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">/</span> float64(uint64(<span style="color:#ae81ff">1</span>)<span style="color:#f92672">&lt;&lt;</span><span style="color:#a6e22e">r</span>) <span style="color:#75715e">// Σ 2^(-R_j)</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">alpha</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0.7213</span> <span style="color:#f92672">/</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1.079</span><span style="color:#f92672">/</span>float64(<span style="color:#a6e22e">m</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">alpha</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">m</span> <span style="color:#f92672">/</span> <span style="color:#a6e22e">sum</span> <span style="color:#75715e">// harmonic mean — mục 4.2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Bản production cần thêm sửa bias khi n nhỏ (dùng linear counting)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// và khi n gần 2^64 — xem paper HyperLogLog++ của Google.</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Merge: union hai HLL = max từng register — nền tảng cho đếm phân tán.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">HLL</span>) <span style="color:#a6e22e">Merge</span>(<span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">HLL</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">reg</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">reg</span>[<span style="color:#a6e22e">i</span>] &gt; <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">reg</span>[<span style="color:#a6e22e">i</span>] {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">reg</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">reg</span>[<span style="color:#a6e22e">i</span>]
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Count-Min Sketch cài đặt tương tự bloom về kỹ thuật (d hàng hash + counter), skip list đầy đủ nằm ở mục Interview (LeetCode 1206) — khung code chính là ba vòng: hạ tầng khi node kế lớn hơn target, đi ngang khi nhỏ hơn, tung xu chọn tầng khi insert.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Cấu trúc</th>
+          <th>Trả lời</th>
+          <th>Sai theo chiều nào</th>
+          <th>Bộ nhớ</th>
+          <th>Cái giá thật sự</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Bloom filter</td>
+          <td>x ∈ S?</td>
+          <td>Chỉ false positive</td>
+          <td>~10 bit/phần tử (1%)</td>
+          <td>Không delete, không đếm, phải biết n trước</td>
+      </tr>
+      <tr>
+          <td>Counting bloom</td>
+          <td>x ∈ S? (có delete)</td>
+          <td>FP, và FN nếu delete ẩu</td>
+          <td>~40 bit/phần tử</td>
+          <td>Gấp 4 bloom</td>
+      </tr>
+      <tr>
+          <td>HyperLogLog</td>
+          <td>|S| ≈ ?</td>
+          <td>Hai phía, ±0.81%</td>
+          <td>12KB cố định</td>
+          <td>Chỉ đếm, không liệt kê, không hỏi membership</td>
+      </tr>
+      <tr>
+          <td>Count-Min</td>
+          <td>count(x) ≈ ?</td>
+          <td>Chỉ đếm dư</td>
+          <td>vài chục KB</td>
+          <td>Tệ với phần tử hiếm</td>
+      </tr>
+      <tr>
+          <td>Skip list</td>
+          <td>sorted map</td>
+          <td>Không sai — chỉ thời gian là ngẫu nhiên</td>
+          <td>~2 con trỏ/node (kỳ vọng)</td>
+          <td>Cache locality kém hơn B-tree</td>
+      </tr>
+  </tbody>
+</table>
+<p>Ba trục đánh đổi cần cân nhắc trước khi chọn:</p>
+<p><strong>Chính xác vs bộ nhớ — trục chính.</strong> Toàn bộ chương nằm trên trục này, nhưng lưu ý đường cong không tuyến tính: từ 1% xuống 0.1% FP chỉ tốn thêm 50% bit (9.6 → 14.4). Sai số rẻ nhất ở vùng &ldquo;vừa phải&rdquo; — đòi 0.0001% là bắt đầu trả đắt, và đến một điểm thì hash set chính xác lại rẻ hơn.</p>
+<p><strong>Một phía vs hai phía.</strong> Sai số một phía (Bloom, Count-Min) <em>ghép nối được</em> với nguồn sự thật: filter đứng trước, nguồn thật đứng sau, kết quả cuối vẫn chính xác tuyệt đối — sai số chỉ còn là chi phí hiệu năng. Sai số hai phía (HLL) thì kết quả cuối là xấp xỉ thật sự. Hệ thống của bạn nuốt được loại nào?</p>
+<p><strong>Ngẫu nhiên trong dữ liệu vs trong thuật toán.</strong> Bloom/HLL/CMS đặt cược vào hash của <em>dữ liệu</em> — nghĩa là kẻ tấn công biết hash function có thể chế tạo input toàn collision (adversarial input, bài học chương 10). Dùng seed ngẫu nhiên hoặc keyed hash khi bề mặt tiếp xúc công khai. Skip list đặt cược vào random generator <em>của chính nó</em> — miễn nhiễm với input, chỉ cần RNG không dự đoán được.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>Redis</strong> là bảo tàng sống của chương này. <code>PFADD</code>/<code>PFCOUNT</code> là HyperLogLog nguyên bản: 12KB/key, sai số 0.81%, dùng dense encoding 16384 register × 6 bit (và sparse encoding khi ít phần tử). Sorted set (<code>ZADD</code>/<code>ZRANGEBYSCORE</code>) là <strong>skip list</strong> — Antirez giải thích lựa chọn thay vì red-black tree bằng đúng hai lý do của mục 4.4: (1) cài đặt và debug đơn giản hơn hẳn, (2) <code>ZRANGEBYSCORE</code> là duyệt linked list tầng 0 sau một lần tìm O(log n) — range query tự nhiên hơn tree traversal. Bloom filter có qua module RedisBloom (<code>BF.ADD</code>/<code>BF.EXISTS</code>), hoặc tự chế bằng <code>SETBIT</code>/<code>GETBIT</code> trên string key.</p>
+<p><strong>Cassandra / RocksDB / LevelDB</strong> — bloom filter ở đúng vị trí kinh điển: <strong>trước mỗi SSTable trên disk</strong>. Một read có thể phải hỏi hàng chục SSTable; mỗi SSTable giữ một bloom filter trong RAM (~10 bit/key), câu trả lời &ldquo;không có&rdquo; (chắc chắn đúng — không có false negative!) tiết kiệm một lần disk seek. Với FP 1%, chỉ 1% lần đọc phải chạm disk oan. Toán ở đây: chọn <code>bloom_filter_fp_chance</code> chính là chọn điểm trên đường cong m/n = 1.44·log₂(1/p).</p>
+<p><strong>Chrome Safe Browsing</strong>: kiểm tra URL độc hại. Danh sách đầy đủ nằm trên server Google; client giữ một cấu trúc xác suất nén (lịch sử là bloom filter, nay là prefix set cùng họ). URL &ldquo;sạch&rdquo; (đa số tuyệt đối) được xác nhận cục bộ tức thì; chỉ khi cấu trúc báo &ldquo;có thể độc&rdquo; mới hỏi server — false positive chỉ tốn một network call, false negative thì không được phép có, và toán đảm bảo điều đó.</p>
+<p><strong>Kafka / stream dedup</strong>: exactly-once tự chế thường dựa trên &ldquo;đã xử lý message ID này chưa?&rdquo; — bloom filter theo cửa sổ thời gian (mỗi giờ một filter, xoay vòng) chặn phần lớn duplicate mà không cần state store khổng lồ; phần lọt qua đi vào kiểm tra chính xác. Lại là kiến trúc filter-trước-nguồn-thật.</p>
+<p><strong>CDN / API gateway — hot key detection</strong>: Count-Min sketch đếm tần suất mọi key trong cửa sổ trượt với vài chục KB; key nào vượt ngưỡng ε·N nổi lên là heavy hitter → kích hoạt cache riêng hoặc rate limit. Sai số một phía đúng chiều cần: thà báo nhầm một key nguội thành nóng còn hơn bỏ sót key nóng.</p>
+<p><strong>PostgreSQL</strong> — extension <code>postgresql-hll</code> cho phép cột kiểu <code>hll</code>: <code>SELECT date, #hll_union_agg(visitors) FROM daily_stats GROUP BY date</code> đếm distinct hàng tỷ dòng trong mili giây, và nhờ tính chất merge của HLL, pre-aggregate theo ngày rồi union theo tháng <strong>vẫn đúng</strong> — điều <code>COUNT(DISTINCT)</code> không bao giờ cho phép (distinct không cộng được qua partition).</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p>Chương này xuất hiện ở hai cửa: câu hỏi system design (thường xuyên) và implement trực tiếp (thỉnh thoảng).</p>
+<p><strong>Dạng 1 — &ldquo;Design a web crawler / URL shortener&rdquo; (system design kinh điển):</strong> điểm chấm nằm ở câu &ldquo;làm sao biết URL đã crawl / short code đã cấp?&rdquo;. Trả lời hash set là trả lời đúng-nhưng-junior. Trả lời đủ: ước lượng bộ nhớ hash set (làm phép nhân ra GB/TB ngay trước mặt interviewer), đề xuất bloom filter, <strong>nêu rõ hệ quả của FP</strong> (URL shortener: FP khi kiểm tra code đã cấp → bỏ phí một code, vô hại; nhưng FP trong &ldquo;URL này đã crawl&rdquo; → mất trang — nêu được chiều sai số nào rơi vào đâu là điểm senior), chốt bằng con số 9.6 bit/phần tử cho 1%.</p>
+<p><strong>Dạng 2 — &ldquo;Đếm unique visitor của 1 tỷ event/ngày&rdquo;:</strong> đáp án mong đợi là HyperLogLog. Chuỗi trình bày ghi điểm: vì sao count distinct chính xác không scale (memory tỷ lệ n, không merge được qua shard) → trực giác leading zeros → 12KB/0.81% → merge được nên đếm phân tán và đếm theo nhiều chiều (mỗi country một HLL, union ra global) gần như miễn phí.</p>
+<p><strong>Dạng 3 — Design Skiplist (LeetCode 1206):</strong> một trong số ít bài LeetCode yêu cầu cài cấu trúc ngẫu nhiên. Khung: node có mảng forward con trỏ; search đi từ tầng cao, <code>for level--</code> hạ dần; insert tung xu (<code>rand.Intn(2)</code>) quyết định số tầng, nối lại forward tại mỗi tầng đi qua. Bẫy phổ biến: quên giới hạn max level (~log₂ của n dự kiến), và cài delete quên nối lại <em>tất cả</em> các tầng của node.</p>
+<p><strong>Lỗi tư duy thường gặp:</strong></p>
+<ul>
+<li><strong>Dùng bloom filter khi workload cần delete.</strong> &ldquo;User unsubscribe thì xóa khỏi filter&rdquo; — không xóa được; bit chung với phần tử khác. Cần delete → counting bloom/cuckoo filter, hoặc nghĩ lại thiết kế (filter theo thế hệ, rebuild định kỳ).</li>
+<li><strong>Quên FP rate tăng khi filter đầy.</strong> Filter cấp cho 10M phần tử là hợp đồng 10M phần tử; hệ thống lớn gấp ba sau hai năm thì FP không còn 1% mà có thể lên hàng chục phần trăm — quả bom hẹn giờ đúng kiểu chương 10, phát nổ khi công ty thành công.</li>
+<li><strong>Trả lời &ldquo;dùng HLL&rdquo; cho bài cần danh sách phần tử.</strong> HLL đếm được nhưng không liệt kê được, không hỏi membership được — chọn cấu trúc theo <em>truy vấn</em>, không theo độ nổi tiếng.</li>
+<li><strong>Không nêu được chuyện gì xảy ra khi sai.</strong> Câu hỏi follow-up chắc chắn có: &ldquo;FP thì hệ thống của bạn làm gì?&rdquo; Không có kịch bản cho câu này nghĩa là chưa hiểu mình vừa đánh đổi cái gì.</li>
+</ul>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Dùng cấu trúc xác suất cho dữ liệu không được phép sai.</strong> Bloom filter chặn &ldquo;email đã gửi chưa&rdquo; cho email marketing: ổn. Cùng filter đó cho &ldquo;giao dịch đã thanh toán chưa&rdquo;: thảm họa — FP nghĩa là <em>từ chối thanh toán hợp lệ</em> hoặc tệ hơn. Câu hỏi bắt buộc trước khi dùng: &ldquo;false positive ở đây dịch ra hành vi gì của hệ thống, và hành vi đó có sửa được không?&rdquo;</p>
+<p><strong>Delete trên bloom filter thường.</strong> Tắt bit của phần tử này là tắt bit của phần tử khác → false negative → mất luôn tính chất duy nhất khiến bloom filter đáng dùng. Đây là lỗi triển khai thật, khó phát hiện vì hệ thống vẫn chạy — chỉ có điều thỉnh thoảng nói dối theo chiều không ai kiểm tra.</p>
+<p><strong>Cấp phát theo n hôm nay.</strong> Đã nói ở Interview nhưng đáng nhắc như anti-pattern vận hành: bloom filter không có cảnh báo &ldquo;sắp đầy&rdquo;. Hãy export metric tỷ lệ bit đã bật (đo được bằng popcount); vượt 50% (điểm tối ưu k = m/n·ln2) là lúc rebuild với m lớn hơn.</p>
+<p><strong>Tin HLL ở vùng n nhỏ mà không sửa bias.</strong> Công thức harmonic mean lệch đáng kể khi n &lt; ~2.5m; bản production (Redis, HLL++ của Google) chuyển sang linear counting ở vùng này. Tự cài bản &ldquo;rút gọn&rdquo; của mục 5 rồi dùng đếm những tập vài nghìn phần tử sẽ cho số lệch có hệ thống — dùng thư viện đã sửa bias, hoặc biết mình đang ở vùng nào của đường cong.</p>
+<p><strong>Skip list với RNG dự đoán được ở bề mặt công khai.</strong> Expected O(log n) đứng trên giả định đồng xu công bằng và <em>không dự đoán được</em>. Seed cố định + kẻ xấu điều khiển thứ tự insert = mọi node đều tầng 0 = O(n) — phiên bản skip list của hash flooding (chương 10, 12).</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Bắt đầu từ truy vấn, không từ cấu trúc: membership → Bloom/Cuckoo; đếm distinct → HLL; tần suất/top-K → Count-Min; sorted map concurrent → skip list. Mỗi cấu trúc trả lời đúng một câu hỏi — bảng ở mục 6 là bản đồ chọn.</li>
+<li>Viết rõ <strong>error budget</strong> vào design doc như một con số: &ldquo;FP ≤ 1%, hệ quả: ≤1% request đọc disk thừa&rdquo; — sai số có kiểm soát chỉ có nghĩa khi được kiểm soát <em>thành văn</em>.</li>
+<li>Dùng thư viện đã kiểm chứng (RedisBloom, <code>axiomhq/hyperloglog</code>, <code>bits-and-blooms/bloom</code> cho Go) — code mục 5 để hiểu bản chất; bản production cần sửa bias, sparse encoding, và test thống kê.</li>
+<li>Monitor các đại lượng toán học nói cho bạn biết: tỷ lệ bit bật của bloom filter, n hiện tại so với n thiết kế.</li>
+<li>Nhớ ba con số neo: <strong>9.6 bit</strong> (bloom 1%), <strong>12KB / 0.81%</strong> (HLL chuẩn), <strong>1.04/√m</strong> (đường cong sai số HLL).</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không dùng cho tiền, quyền, và mọi thứ có chữ &ldquo;audit&rdquo; — chính xác tuyệt đối hoặc không gì cả.</li>
+<li>Không dùng khi n nhỏ: dưới vài triệu phần tử, hash set vài chục MB đơn giản hơn, chính xác hơn, và không ai phải hiểu công thức nào lúc 3 giờ sáng.</li>
+<li>Không ghép nhiều cấu trúc xác suất nối tiếp mà quên sai số <strong>tích lũy</strong>: bloom 1% đứng trước count-min ε·N không cho hệ thống &ldquo;1%&rdquo; — cộng/nhân sai số như chương 11 dạy trước khi hứa SLA.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Chứng minh trong ba câu: vì sao Bloom filter không bao giờ false negative, và thao tác nào (nếu thêm vào) sẽ phá vỡ tính chất đó?</li>
+<li>HyperLogLog dùng harmonic mean thay vì arithmetic mean của các ước lượng 2^Rⱼ — điều gì sẽ hỏng nếu đổi sang arithmetic mean, và nó liên quan gì đến phương sai của chương 11?</li>
+<li>Hệ thống của bạn cần &ldquo;kiểm tra sản phẩm đã index chưa&rdquo; và thỉnh thoảng phải xóa sản phẩm khỏi index. Những lựa chọn nào khả dĩ, và bạn hỏi thêm điều gì về workload trước khi chọn?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-5-production/24-advanced-data-structures/">24 — Advanced Data Structures</a> — khi câu trả lời phải chính xác tuyệt đối, mỗi loại truy vấn chuyên dụng có một cấu trúc chuyên dụng: Trie, Segment Tree, Union-Find, và bài học thiết kế đẹp nhất mọi thời — LRU Cache.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/22-computational-geometry/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 22 — Computational Geometry: Toán của không gian vật lý</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-5-production/24-advanced-data-structures/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 24 — Advanced Data Structures: Công cụ chuyên dụng cho truy vấn chuyên dụng</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2023%20%e2%80%94%20Probabilistic%20Data%20Structures%3a%20%c4%90%e1%bb%95i%20%c4%91%e1%bb%99%20ch%c3%adnh%20x%c3%a1c%20l%e1%ba%a5y%20b%e1%bb%99%20nh%e1%bb%9b&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f&amp;title=Ch%c6%b0%c6%a1ng%2023%20%e2%80%94%20Probabilistic%20Data%20Structures%3a%20%c4%90%e1%bb%95i%20%c4%91%e1%bb%99%20ch%c3%adnh%20x%c3%a1c%20l%e1%ba%a5y%20b%e1%bb%99%20nh%e1%bb%9b&amp;summary=Ch%c6%b0%c6%a1ng%2023%20%e2%80%94%20Probabilistic%20Data%20Structures%3a%20%c4%90%e1%bb%95i%20%c4%91%e1%bb%99%20ch%c3%adnh%20x%c3%a1c%20l%e1%ba%a5y%20b%e1%bb%99%20nh%e1%bb%9b&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f&title=Ch%c6%b0%c6%a1ng%2023%20%e2%80%94%20Probabilistic%20Data%20Structures%3a%20%c4%90%e1%bb%95i%20%c4%91%e1%bb%99%20ch%c3%adnh%20x%c3%a1c%20l%e1%ba%a5y%20b%e1%bb%99%20nh%e1%bb%9b">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2023%20%e2%80%94%20Probabilistic%20Data%20Structures%3a%20%c4%90%e1%bb%95i%20%c4%91%e1%bb%99%20ch%c3%adnh%20x%c3%a1c%20l%e1%ba%a5y%20b%e1%bb%99%20nh%e1%bb%9b%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2023%20%e2%80%94%20Probabilistic%20Data%20Structures%3a%20%c4%90%e1%bb%95i%20%c4%91%e1%bb%99%20ch%c3%adnh%20x%c3%a1c%20l%e1%ba%a5y%20b%e1%bb%99%20nh%e1%bb%9b&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 23 — Probabilistic Data Structures: Đổi độ chính xác lấy bộ nhớ on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2023%20%e2%80%94%20Probabilistic%20Data%20Structures%3a%20%c4%90%e1%bb%95i%20%c4%91%e1%bb%99%20ch%c3%adnh%20x%c3%a1c%20l%e1%ba%a5y%20b%e1%bb%99%20nh%e1%bb%9b&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-5-production%2f23-probabilistic-data-structures%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

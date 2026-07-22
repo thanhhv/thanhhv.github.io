@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 13 — Divide and Conquer: Sức mạnh của chia đôi | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 06 (Recurrence), Chương 10 (Complexity Analysis)
+
+1. Problem Statement
+Năm 2004, Jeffrey Dean và Sanjay Ghemawat công bố paper MapReduce, mô tả cách Google đánh index toàn bộ web — hàng chục tỷ trang — bằng những cụm máy rẻ tiền, hỏng liên tục. Cộng đồng kỹ thuật lúc đó xem đây là một cuộc cách mạng về hệ thống phân tán. Nhưng nếu đọc kỹ paper, ý tưởng cốt lõi không mới: chia bài toán khổng lồ thành các mảnh độc lập, giải từng mảnh, rồi ghép kết quả lại. Đó chính là Divide and Conquer — kỹ thuật mà John von Neumann đã dùng để thiết kế merge sort từ năm 1945, gần 60 năm trước.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/13-divide-and-conquer/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/13-divide-and-conquer/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 13 — Divide and Conquer: Sức mạnh của chia đôi
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 09:10:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;24 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 06 (Recurrence), Chương 10 (Complexity Analysis)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Năm 2004, Jeffrey Dean và Sanjay Ghemawat công bố paper MapReduce, mô tả cách Google đánh index toàn bộ web — hàng chục tỷ trang — bằng những cụm máy rẻ tiền, hỏng liên tục. Cộng đồng kỹ thuật lúc đó xem đây là một cuộc cách mạng về hệ thống phân tán. Nhưng nếu đọc kỹ paper, ý tưởng cốt lõi không mới: <strong>chia bài toán khổng lồ thành các mảnh độc lập, giải từng mảnh, rồi ghép kết quả lại</strong>. Đó chính là Divide and Conquer — kỹ thuật mà John von Neumann đã dùng để thiết kế merge sort từ năm 1945, gần 60 năm trước.</p>
+<p>Cùng một ý tưởng đó xuất hiện ở quy mô nhỏ hơn hằng ngày: PostgreSQL sort 50GB dữ liệu với chỉ vài MB <code>work_mem</code>; Go runtime chia việc cho hàng nghìn goroutine rồi gom kết quả; binary search tìm một dòng trong log 10 tỷ record bằng 34 lần so sánh.</p>
+<p>Câu hỏi mà chương này trả lời:</p>
+<p><strong>Điều gì làm cho &ldquo;chia nhỏ rồi ghép lại&rdquo; mạnh đến vậy — và khi nào nó KHÔNG hoạt động?</strong></p>
+<p>Nếu không có khung tư duy này, bạn chỉ thấy một tập hợp các thuật toán rời rạc phải học thuộc: merge sort, binary search, quickselect, Karatsuba&hellip; Có nó, bạn thấy tất cả là <strong>một mẫu hình duy nhất với một công cụ phân tích duy nhất</strong> — recurrence và Master Theorem của chương 06 — và quan trọng hơn, bạn biết cách tự thiết kế thuật toán mới theo mẫu hình đó.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="vì-sao-chia-đôi-mạnh-số-tầng-là-log-n">Vì sao &ldquo;chia đôi&rdquo; mạnh: số tầng là log n<a hidden class="anchor" aria-hidden="true" href="#vì-sao-chia-đôi-mạnh-số-tầng-là-log-n">#</a></h3>
+<p>Hãy làm một phép tính nhỏ. Bạn có bài toán kích thước n = 1.000.000. Mỗi lần chia đôi, kích thước giảm một nửa:</p>
+<pre tabindex="0"><code>1.000.000 → 500.000 → 250.000 → ... → 2 → 1</code></pre><p>Bao nhiêu lần chia? Chỉ <strong>20 lần</strong> — vì 2²⁰ ≈ 10⁶. Với n = 1 tỷ: 30 lần. Đây là mặt trái của câu chuyện tờ giấy gấp đôi ở chương 10: tăng trưởng nhân đôi bùng nổ nhanh bao nhiêu, thì <strong>thu nhỏ chia đôi sụp đổ nhanh bấy nhiêu</strong>. Bất kỳ quá trình nào giảm kích thước theo <em>tỷ lệ</em> (một nửa, một phần ba&hellip;) đều chạm đáy sau O(log n) bước.</p>
+<p>Điều này cho D&amp;C cấu trúc đặc trưng: một cây đệ quy có <strong>log n tầng</strong>. Nếu tổng chi phí mỗi tầng bị chặn bởi O(n), toàn bộ thuật toán là O(n log n). Toàn bộ &ldquo;phép màu&rdquo; của merge sort nằm gọn trong một câu đó.</p>
+<pre tabindex="0"><code>Tầng 0:        [■■■■■■■■]              tổng công việc: n
+Tầng 1:      [■■■■]  [■■■■]            tổng công việc: n
+Tầng 2:    [■■] [■■] [■■] [■■]         tổng công việc: n
+Tầng 3:   [■][■][■][■][■][■][■][■]     tổng công việc: n
+          └────── log n tầng ──────┘   → tổng: n·log n</code></pre><h3 id="nhưng-chia-nhỏ-không-tự-động-thắng">Nhưng chia nhỏ không tự động thắng<a hidden class="anchor" aria-hidden="true" href="#nhưng-chia-nhỏ-không-tự-động-thắng">#</a></h3>
+<p>Trực giác &ldquo;chia nhỏ thì dễ hơn&rdquo; là đúng nhưng chưa đủ. Thử chia bài toán &ldquo;tìm phần tử lớn nhất&rdquo; thành hai nửa: tìm max mỗi nửa rồi so sánh — được, nhưng vẫn O(n), không nhanh hơn duyệt thẳng. Thử chia bài toán &ldquo;tính Fibonacci(n)&rdquo; thành F(n−1) và F(n−2) — thảm họa O(2ⁿ), vì hai &ldquo;nửa&rdquo; gần như to bằng bài toán gốc và <strong>trùng lặp nhau</strong>.</p>
+<p>D&amp;C chỉ tạo ra lợi thế khi hội đủ <strong>hai điều kiện</strong>:</p>
+<ol>
+<li><strong>Các bài toán con độc lập</strong> — không chia sẻ công việc với nhau, không cần kết quả của nhau. (Nếu trùng lặp → đó là địa hạt của Dynamic Programming, chương 14.)</li>
+<li><strong>Bước kết hợp (combine) rẻ</strong> — ghép hai lời giải con thành lời giải lớn phải tốn ít hơn nhiều so với giải từ đầu. Merge hai mảng đã sort chỉ tốn O(n); đó là điểm tựa của merge sort. Nếu combine tốn O(n²), chia đôi vô nghĩa.</li>
+</ol>
+<p>Hãy khắc hai điều kiện này vào trí nhớ, vì phần lớn nghệ thuật thiết kế D&amp;C — và phần lớn cái khó của các bài phỏng vấn ở mục 8 — nằm ở việc tìm ra <strong>bước combine rẻ</strong>.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="nhìn-thuật-toán-như-một-cái-cây">Nhìn thuật toán như một cái cây<a hidden class="anchor" aria-hidden="true" href="#nhìn-thuật-toán-như-một-cái-cây">#</a></h3>
+<p>Mọi thuật toán D&amp;C đều có cùng bộ xương:</p>
+<pre tabindex="0"><code>solve(bài toán P):
+    nếu P đủ nhỏ: giải trực tiếp          (base case)
+    chia P thành P₁, P₂, ..., Pₐ           (divide)
+    giải đệ quy từng Pᵢ                    (conquer)
+    ghép các lời giải con thành lời giải P  (combine)</code></pre><p>Chi phí của nó được quyết định bởi đúng ba tham số: <strong>a</strong> — số bài toán con, <strong>b</strong> — hệ số thu nhỏ (mỗi bài toán con có kích thước n/b), và <strong>f(n)</strong> — chi phí divide + combine tại mỗi nút. Ba con số đó cho ta recurrence quen thuộc từ chương 06:</p>
+<blockquote>
+<p>T(n) = a·T(n/b) + f(n)</p></blockquote>
+<p>Đây là bước trừu tượng hóa quan trọng: ta không cần biết thuật toán <em>làm gì</em> để biết nó <em>tốn bao nhiêu</em>. Chỉ cần đếm a, b, f.</p>
+<h3 id="cuộc-kéo-co-giữa-hai-lực">Cuộc kéo co giữa hai lực<a hidden class="anchor" aria-hidden="true" href="#cuộc-kéo-co-giữa-hai-lực">#</a></h3>
+<p>Cây đệ quy có log_b(n) tầng. Ở tầng thứ i có aⁱ nút, mỗi nút xử lý bài toán cỡ n/bⁱ. Tổng chi phí tầng i là aⁱ·f(n/bⁱ). Câu hỏi quyết định tất cả: <strong>khi đi xuống sâu, tổng chi phí mỗi tầng tăng hay giảm?</strong></p>
+<ul>
+<li>Nếu số nút nhân lên (×a) nhanh hơn chi phí mỗi nút giảm đi — <strong>lá thống trị</strong>, tổng chi phí là số lá: Θ(n^log_b(a)).</li>
+<li>Nếu chi phí mỗi nút giảm nhanh hơn số nút tăng — <strong>gốc thống trị</strong>, tổng chi phí là f(n).</li>
+<li>Nếu hai lực cân bằng — mỗi tầng tốn như nhau, tổng là f(n) × số tầng: thêm một nhân tử log n.</li>
+</ul>
+<p>Master Theorem (chương 06) chỉ là cách phát biểu hình thức của cuộc kéo co này. Con số n^log_b(a) — chi phí của riêng phần lá — là <strong>trọng tâm hấp dẫn</strong> của mọi thuật toán D&amp;C, và như ta sẽ thấy ở Karatsuba, giảm <strong>a</strong> (số bài toán con) có sức công phá lớn hơn nhiều so với giảm f(n).</p>
+<h3 id="nếu-không-có-khung-tư-duy-này-thì-sao">Nếu không có khung tư duy này thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-khung-tư-duy-này-thì-sao">#</a></h3>
+<p>Không có D&amp;C như một <em>nguyên lý</em>, mỗi thuật toán là một sáng chế riêng lẻ, và việc phân tích chi phí đệ quy là chuỗi lý luận ad-hoc dễ sai. Có nó, thiết kế thuật toán trở thành việc điền vào ba ô: chia thế nào (b), thành mấy phần (a), ghép ra sao (f) — rồi Master Theorem trả lời ngay &ldquo;có đáng làm không&rdquo;. Và ở quy mô hệ thống, không có tư duy D&amp;C thì không có MapReduce, không có external sort, không có parallel processing có cấu trúc — vì tất cả đều là câu trả lời cho cùng một câu hỏi: <em>làm sao biến một bài toán quá lớn cho một đơn vị xử lý thành nhiều bài toán vừa sức, mà bước ghép không nuốt hết lợi ích?</em></p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="merge-sort--ví-dụ-chuẩn-mực">Merge sort — ví dụ chuẩn mực<a hidden class="anchor" aria-hidden="true" href="#merge-sort--ví-dụ-chuẩn-mực">#</a></h3>
+<p>Merge sort là D&amp;C ở dạng tinh khiết nhất: chia đôi (a = 2, b = 2), combine bằng merge tuyến tính (f(n) = Θ(n)).</p>
+<p><strong>Chi phí.</strong> T(n) = 2T(n/2) + Θ(n). Theo Master Theorem: n^log₂2 = n, cùng bậc với f(n) = n → trường hợp cân bằng → <strong>T(n) = Θ(n log n)</strong>. Có thể thấy trực tiếp từ hình vẽ ở mục 2: mỗi tầng merge tổng cộng đúng n phần tử, có log n tầng.</p>
+<p><strong>Tính đúng — chứng minh bằng strong induction (chương 03).</strong> Mệnh đề P(n): &ldquo;merge sort sắp xếp đúng mọi mảng n phần tử.&rdquo;</p>
+<ul>
+<li><em>Base case:</em> n ≤ 1 — mảng rỗng hoặc một phần tử đã có thứ tự. P(0), P(1) đúng.</li>
+<li><em>Bước quy nạp:</em> giả sử P(k) đúng với mọi k &lt; n. Với mảng n phần tử, thuật toán chia thành hai nửa kích thước ⌊n/2⌋ và ⌈n/2⌉, đều nhỏ hơn n, nên theo giả thiết quy nạp cả hai nửa được sort đúng. Còn lại phải chứng minh <strong>merge đúng</strong>: merge duy trì invariant <em>&ldquo;mảng kết quả luôn chứa, theo thứ tự tăng, toàn bộ các phần tử nhỏ hơn hoặc bằng mọi phần tử chưa lấy&rdquo;</em> — mỗi bước nó lấy phần tử nhỏ nhất trong hai đầu còn lại, và vì hai nửa đã sort, đầu của mỗi nửa chính là min của nửa đó. Invariant giữ vững đến khi cả hai nửa cạn → kết quả là hoán vị có thứ tự của input. ∎</li>
+</ul>
+<p>Cấu trúc chứng minh này đáng chú ý hơn nội dung của nó: <strong>tính đúng của mọi thuật toán D&amp;C đều quy về tính đúng của riêng bước combine</strong>, phần đệ quy được induction &ldquo;trả tiền&rdquo; tự động. Khi review code D&amp;C, hãy dồn sự nghi ngờ vào hàm combine và base case — đó là hai nơi duy nhất bug có thể trốn.</p>
+<h3 id="binary-search--dc-suy-biến">Binary search — D&amp;C suy biến<a hidden class="anchor" aria-hidden="true" href="#binary-search--dc-suy-biến">#</a></h3>
+<p>Binary search là trường hợp a = 1: chia đôi nhưng chỉ <strong>giải một nửa</strong>, nửa kia bị loại bỏ bằng một phép so sánh. Combine là không-làm-gì: f(n) = Θ(1).</p>
+<blockquote>
+<p>T(n) = T(n/2) + Θ(1) → n^log₂1 = n⁰ = 1, cân bằng với f(n) → T(n) = Θ(log n)</p></blockquote>
+<p>Gọi nó là &ldquo;suy biến&rdquo; không phải để hạ thấp — mà để thấy phổ của D&amp;C: từ a = 1 (loại bỏ, chỉ còn log n) đến a = 2 (giải cả hai, n log n) đến a &gt; b (số bài toán con phình nhanh hơn tốc độ thu nhỏ — chi phí đa thức bậc cao). Nhiều bài phỏng vấn khó (Search in Rotated Sorted Array, tìm peak element) thực chất chỉ hỏi một điều: <em>bạn có tìm được phép so sánh O(1) nào cho phép vứt bỏ một nửa không?</em></p>
+<h3 id="karatsuba--giảm-a-quan-trọng-hơn-giảm-f">Karatsuba — giảm a quan trọng hơn giảm f<a hidden class="anchor" aria-hidden="true" href="#karatsuba--giảm-a-quan-trọng-hơn-giảm-f">#</a></h3>
+<p>Nhân hai số n chữ số theo cách học ở tiểu học tốn Θ(n²). Năm 1960, Kolmogorov phỏng đoán trong seminar rằng n² là tối ưu; sinh viên 23 tuổi Anatoly Karatsuba bác bỏ ông trong một tuần.</p>
+<p>Chia mỗi số làm đôi: x = x₁·10^m + x₀, y = y₁·10^m + y₀ (m = n/2). Khi đó:</p>
+<blockquote>
+<p>x·y = x₁y₁·10^2m + (x₁y₀ + x₀y₁)·10^m + x₀y₀</p></blockquote>
+<p>Cách chia &ldquo;ngây thơ&rdquo; cần <strong>4</strong> phép nhân của số n/2 chữ số: T(n) = 4T(n/2) + Θ(n) → n^log₂4 = <strong>n²</strong>. Chia đôi xong vẫn n² — vì lá thống trị, và số lá không giảm. Đây là bài học đầu tiên: <em>chia nhỏ mà không giảm tổng khối lượng ở lá thì vô ích</em>.</p>
+<p>Nhận xét của Karatsuba: số hạng giữa có thể lấy từ ba phép nhân thay vì bốn, vì:</p>
+<blockquote>
+<p>x₁y₀ + x₀y₁ = (x₁ + x₀)(y₁ + y₀) − x₁y₁ − x₀y₀</p></blockquote>
+<p>Ba phép nhân: x₁y₁, x₀y₀, và (x₁+x₀)(y₁+y₀) — đổi lại vài phép cộng/trừ Θ(n) rẻ tiền. Recurrence mới:</p>
+<blockquote>
+<p>T(n) = <strong>3</strong>T(n/2) + Θ(n) → T(n) = Θ(n^log₂3) ≈ <strong>Θ(n^1.585)</strong></p></blockquote>
+<p>Với n = 10⁶ chữ số: n² là 10¹² phép toán, n^1.585 khoảng 10^9.5 — nhanh hơn <strong>hàng trăm lần</strong>, và khoảng cách nới rộng vô hạn khi n tăng.</p>
+<p>Bài học tổng quát, đáng giá hơn bản thân thuật toán: trong T(n) = aT(n/b) + f(n), khi lá thống trị, <strong>a nằm trong số mũ</strong> (n^log_b a) còn f(n) chỉ là số hạng cộng thêm. Giảm a từ 4 xuống 3 đổi cả <em>hình dạng</em> của hàm chi phí; tối ưu f(n) chỉ gọt hằng số. Cùng nguyên lý này, Strassen nhân ma trận với 7 phép nhân con thay vì 8 → O(n^2.807); và các thuật toán nhân số nguyên hiện đại (Toom-Cook, FFT — dùng trong thư viện <code>math/big</code> khi số đủ lớn) tiếp tục đẩy số mũ xuống sát 1.</p>
+<h3 id="closest-pair-of-points--combine-tinh-xảo">Closest pair of points — combine tinh xảo<a hidden class="anchor" aria-hidden="true" href="#closest-pair-of-points--combine-tinh-xảo">#</a></h3>
+<p>Cho n điểm trên mặt phẳng, tìm cặp gần nhau nhất. Brute force: Θ(n²). D&amp;C: chia đôi theo trục x, tìm khoảng cách nhỏ nhất δ trong mỗi nửa — nhưng cặp gần nhất có thể <strong>vắt qua đường chia</strong>. Bước combine tưởng như lại phải xét n/2 × n/2 cặp&hellip; cho đến khi hình học cứu ta: chỉ các điểm cách đường chia dưới δ mới đáng xét, và trong dải đó, mỗi điểm chỉ cần so với <strong>tối đa 7 điểm</strong> kế tiếp theo trục y (vì hai điểm cùng nửa không thể gần hơn δ, số điểm nhét vừa vào hình chữ nhật δ×2δ bị chặn bởi hằng số). Combine tuyến tính → T(n) = 2T(n/2) + Θ(n) = Θ(n log n).</p>
+<p>Không cần nhớ chi tiết — cần nhớ mẫu hình: <strong>khi combine tưởng chừng đắt, hãy tìm một tính chất cấu trúc (thứ tự, hình học, invariant) chặn số lượng tương tác giữa hai nửa xuống hằng số hoặc tuyến tính.</strong> Đó chính xác là kỹ năng mà Count of Smaller Numbers After Self (mục 8) kiểm tra.</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<h3 id="merge-sort-trong-go">Merge sort trong Go<a hidden class="anchor" aria-hidden="true" href="#merge-sort-trong-go">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// MergeSort sắp xếp tăng dần, trả về slice mới.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// T(n) = 2T(n/2) + Θ(n) = Θ(n log n); tốn Θ(n) bộ nhớ phụ.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">MergeSort</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int</span>) []<span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">a</span>) <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">1</span> { <span style="color:#75715e">// base case: đã có thứ tự</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mid</span> <span style="color:#f92672">:=</span> len(<span style="color:#a6e22e">a</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">left</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">MergeSort</span>(<span style="color:#a6e22e">a</span>[:<span style="color:#a6e22e">mid</span>])   <span style="color:#75715e">// conquer nửa trái</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">right</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">MergeSort</span>(<span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">mid</span>:])  <span style="color:#75715e">// conquer nửa phải</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">merge</span>(<span style="color:#a6e22e">left</span>, <span style="color:#a6e22e">right</span>)    <span style="color:#75715e">// combine — nơi duy nhất cần chứng minh</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">merge</span>(<span style="color:#a6e22e">left</span>, <span style="color:#a6e22e">right</span> []<span style="color:#66d9ef">int</span>) []<span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">out</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">0</span>, len(<span style="color:#a6e22e">left</span>)<span style="color:#f92672">+</span>len(<span style="color:#a6e22e">right</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Invariant: out chứa (có thứ tự) đúng các phần tử ≤ mọi phần tử chưa lấy</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> &lt; len(<span style="color:#a6e22e">left</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">j</span> &lt; len(<span style="color:#a6e22e">right</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">left</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">right</span>[<span style="color:#a6e22e">j</span>] { <span style="color:#75715e">// &lt;= giữ tính stable</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">out</span> = append(<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">left</span>[<span style="color:#a6e22e">i</span>])
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">out</span> = append(<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">right</span>[<span style="color:#a6e22e">j</span>])
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">j</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">out</span> = append(<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">left</span>[<span style="color:#a6e22e">i</span>:]<span style="color:#f92672">...</span>)  <span style="color:#75715e">// phần còn thừa đã có thứ tự</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> append(<span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">right</span>[<span style="color:#a6e22e">j</span>:]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="quickselect--tìm-phần-tử-thứ-k-trong-on">Quickselect — tìm phần tử thứ k trong O(n)<a hidden class="anchor" aria-hidden="true" href="#quickselect--tìm-phần-tử-thứ-k-trong-on">#</a></h3>
+<p>Muốn tìm median (hoặc phần tử thứ k) không cần sort cả mảng. Quickselect mượn bước partition của quicksort nhưng — như binary search — <strong>chỉ đệ quy vào một phía</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Quickselect trả về phần tử nhỏ thứ k (k tính từ 0). Làm thay đổi a.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Kỳ vọng O(n); worst case O(n²) nếu pivot xui liên tục.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Quickselect</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">k</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lo</span>, <span style="color:#a6e22e">hi</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>, len(<span style="color:#a6e22e">a</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">lo</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">hi</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">lo</span>]
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// pivot ngẫu nhiên: biến worst case thành biến cố xác suất ~0 (chương 11)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">partition</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">lo</span>, <span style="color:#a6e22e">hi</span>, <span style="color:#a6e22e">lo</span><span style="color:#f92672">+</span><span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Intn</span>(<span style="color:#a6e22e">hi</span><span style="color:#f92672">-</span><span style="color:#a6e22e">lo</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">switch</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">k</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">p</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">k</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">k</span> &lt; <span style="color:#a6e22e">p</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">hi</span> = <span style="color:#a6e22e">p</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e">// vứt bỏ toàn bộ phía phải</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">lo</span> = <span style="color:#a6e22e">p</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e">// vứt bỏ toàn bộ phía trái</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// partition dồn các phần tử &lt; pivot về trái, trả về vị trí cuối của pivot.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">partition</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">lo</span>, <span style="color:#a6e22e">hi</span>, <span style="color:#a6e22e">pivotIdx</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pivot</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">pivotIdx</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">pivotIdx</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">hi</span>] = <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">hi</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">pivotIdx</span>] <span style="color:#75715e">// cất pivot ra cuối</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">store</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">lo</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">lo</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">hi</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>] &lt; <span style="color:#a6e22e">pivot</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">store</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">store</span>]
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">store</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">store</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">hi</span>] = <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">hi</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">store</span>] <span style="color:#75715e">// đưa pivot về đúng chỗ</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">store</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Vì sao kỳ vọng O(n)? Với pivot ngẫu nhiên, mỗi vòng kỳ vọng loại bỏ một tỷ lệ hằng số của mảng, nên chi phí là chuỗi hình học n + cn + c²n + &hellip; &lt; n/(1−c) = O(n) — đúng kỹ thuật tổng hình học đã dùng cho slice append ở chương 10.</p>
+<p>Còn nếu cần <strong>đảm bảo</strong> O(n) worst case? Thuật toán <em>median of medians</em> (Blum–Floyd–Pratt–Rivest–Tarjan, 1973) chọn pivot một cách tất định: chia mảng thành các nhóm 5 phần tử, lấy median mỗi nhóm, rồi đệ quy lấy median của các median đó làm pivot. Trực giác vì sao nó hoạt động: pivot này được đảm bảo lớn hơn ít nhất ~30% và nhỏ hơn ít nhất ~30% mảng — nên mỗi vòng <em>chắc chắn</em> vứt được ≥30%, cho recurrence T(n) ≤ T(n/5) + T(7n/10) + O(n). Vì 1/5 + 7/10 = 9/10 &lt; 1 — tổng kích thước bài toán con <em>co lại</em> — chuỗi hình học hội tụ và T(n) = O(n). Trong thực tế hằng số của nó lớn nên production (kể cả <code>nth_element</code> của C++) dùng quickselect ngẫu nhiên kèm fallback; nhưng đây là một trong những kết quả đẹp nhất của lý thuyết: <strong>tìm median không cần sort, và điều đó chứng minh được</strong>.</p>
+<h3 id="fork-join-song-song-trong-go">Fork-join song song trong Go<a hidden class="anchor" aria-hidden="true" href="#fork-join-song-song-trong-go">#</a></h3>
+<p>D&amp;C có một món quà kèm theo: vì các bài toán con <strong>độc lập</strong> (điều kiện số 1), chúng chạy song song được mà không cần lock. Đây là mẫu fork-join:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ParallelSum tính tổng bằng cách chia đôi và fork goroutine.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// cutoff tránh trả phí goroutine cho bài toán quá nhỏ — xem mục 6.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ParallelSum</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int64</span>) <span style="color:#66d9ef">int64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cutoff</span> = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">14</span> <span style="color:#75715e">// ~16k phần tử: dưới ngưỡng này chạy tuần tự</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">a</span>) <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">cutoff</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s</span> <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">a</span> { <span style="color:#75715e">// base case tuần tự: cache-friendly</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">s</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">v</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mid</span> <span style="color:#f92672">:=</span> len(<span style="color:#a6e22e">a</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ch</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int64</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() { <span style="color:#a6e22e">ch</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">ParallelSum</span>(<span style="color:#a6e22e">a</span>[:<span style="color:#a6e22e">mid</span>]) }() <span style="color:#75715e">// fork nửa trái</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">right</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ParallelSum</span>(<span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">mid</span>:])              <span style="color:#75715e">// nửa phải chạy tại chỗ</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">right</span> <span style="color:#f92672">+</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ch</span>                        <span style="color:#75715e">// join = combine</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Với p core, span (đường găng) của cây là O(log n) tầng, nên speedup lý tưởng tiệm cận p. Điều kiện độc lập của D&amp;C chính là điều kiện để <strong>không có shared mutable state</strong> — lý do các framework từ <code>sync.WaitGroup</code> pattern đến MapReduce đều đứng trên nền D&amp;C.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Đệ quy không miễn phí.</strong> Mỗi lời gọi tốn stack frame, mỗi goroutine tốn ~vài KB stack và chi phí scheduler. Vì cây D&amp;C có <em>rất nhiều</em> nút nhỏ ở đáy (một nửa số nút là lá!), mọi implementation nghiêm túc đều đặt <strong>cutoff</strong>: dưới ngưỡng nào đó, chuyển sang thuật toán tuần tự đơn giản. <code>sort.Slice</code> của Go rơi về insertion sort khi đoạn &lt; 12 phần tử — đúng bài học &ldquo;hằng số thắng bậc khi n nhỏ&rdquo; của chương 10.</p>
+<p><strong>Cache locality hai mặt.</strong> Merge sort đọc/ghi tuần tự — tuyệt vời cho cache và cho đĩa (lý do nó thống trị external sort). Nhưng nó cần Θ(n) bộ nhớ phụ, còn quicksort partition tại chỗ. Đây là lý do quicksort thắng trên RAM còn merge sort thắng trên đĩa và trong yêu cầu stable sort.</p>
+<p><strong>Chia đều quan trọng đến mức nào?</strong> Master Theorem giả định chia đều n/b. Nếu chia lệch theo <em>tỷ lệ</em> cố định (ví dụ 1/10 và 9/10), số tầng vẫn là O(log n) — chỉ đổi cơ số log, tức đổi hằng số. Nhưng nếu chia lệch <em>tuyệt đối</em> (1 và n−1, như quicksort gặp pivot tệ nhất trên mảng đã sort), cây cao n tầng và O(n log n) sụp thành O(n²). Ranh giới giữa &ldquo;lệch tỷ lệ&rdquo; và &ldquo;lệch tuyệt đối&rdquo; là ranh giới giữa log n và n tầng — một trong những phân biệt tinh tế đáng nhớ nhất của chương này.</p>
+<p><strong>Song song hóa vs chi phí điều phối.</strong> Fork-join cho speedup gần tuyến tính khi công việc mỗi nhánh đủ lớn; với nhánh nhỏ, chi phí tạo goroutine/channel nuốt sạch lợi ích. Quy tắc thực dụng: fork đến khi số task ≈ vài lần số core hoặc kích thước chạm cutoff, không fork đến tận lá.</p>
+<p><strong>Khi nào KHÔNG dùng D&amp;C?</strong> Ba dấu hiệu: (1) bài toán con <strong>trùng lặp</strong> — Fibonacci ngây thơ gọi F(n−2) hai lần, F(n−3) ba lần&hellip; cây đệ quy phình thành 2ⁿ nút trong khi chỉ có n bài toán <em>phân biệt</em>: dấu hiệu chuyển sang DP (chương 14); (2) <strong>combine đắt ngang giải lại</strong> — chia bài toán shortest path theo kiểu cắt đôi đồ thị thì ghép hai nửa khó chẳng kém bài gốc; (3) dữ liệu quá nhỏ hoặc thuật toán tuyến tính đơn giản đã tồn tại — tìm max bằng D&amp;C đúng nhưng vô nghĩa.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>MapReduce / Spark — D&amp;C phân tán.</strong> Ánh xạ trực tiếp: <em>divide</em> = split input thành các chunk độc lập; <em>conquer</em> = hàm map chạy song song trên mỗi chunk, không chia sẻ state; <em>combine</em> = shuffle + reduce gom kết quả theo key. Hai điều kiện của D&amp;C hiện nguyên hình thành hai ràng buộc thiết kế nổi tiếng: map phải <strong>stateless/độc lập</strong> (để retry và chạy song song tùy ý — chính là &ldquo;bài toán con độc lập&rdquo;), và reduce phải <strong>kết hợp được, lý tưởng là associative + commutative</strong> (để combine theo cây, tầng nào cũng rẻ). Khi bạn viết một job Spark bị &ldquo;shuffle explosion&rdquo;, đó là lỗi cổ điển của D&amp;C: bước combine đắt hơn bước conquer.</p>
+<p><strong>External merge sort — khi ORDER BY tràn RAM.</strong> PostgreSQL sort bảng 50GB với <code>work_mem = 64MB</code> như sau: đọc từng khúc vừa RAM, sort nội bộ (quicksort), ghi ra đĩa thành các <em>run</em> đã sort; sau đó k-way merge các run — chỉ cần giữ một trang của mỗi run trong RAM. Đây là merge sort với base case là &ldquo;khúc vừa work_mem&rdquo;. Vì merge đọc ghi <strong>tuần tự</strong>, nó tận dụng tối đa băng thông đĩa. <code>EXPLAIN ANALYZE</code> hiện <code>Sort Method: external merge Disk: ...</code> chính là dấu vết của chương này trong production; tăng <code>work_mem</code> đủ lớn sẽ thấy nó đổi thành <code>quicksort</code> in-memory.</p>
+<p><strong>Go runtime và thư viện chuẩn.</strong> <code>sort.Sort</code> dùng pdqsort (pattern-defeating quicksort) từ Go 1.19 — một hybrid D&amp;C: quicksort làm khung, heapsort làm lưới an toàn khi phát hiện phân hoạch lệch liên tục (bảo hiểm O(n log n) worst case), insertion sort ở đáy. <code>math/big</code> chuyển từ nhân trường học sang Karatsuba khi số vượt ngưỡng vài chục word. Timsort (Python, Java) cũng là hybrid merge sort khai thác các run có sẵn trong dữ liệu thực. Mẫu chung: <strong>sản phẩm production không bao giờ là một thuật toán D&amp;C thuần — luôn là D&amp;C ở tầng cao + thuật toán hằng-số-nhỏ ở đáy + cơ chế phòng thủ worst case.</strong></p>
+<p><strong>Parallel processing trong Go.</strong> Mẫu fork-join ở mục 5 chính là cách các thư viện như <code>errgroup</code> và các pipeline xử lý ảnh/log chia việc: chia slice theo số core, mỗi goroutine xử lý một khúc độc lập, channel/WaitGroup làm bước join. Nhìn qua lăng kính D&amp;C giúp trả lời câu hỏi thiết kế thường gặp: <em>chia mấy phần?</em> — đủ để bão hòa core nhưng mỗi phần trên cutoff; <em>combine ở đâu?</em> — nếu combine cần lock chung, hãy tổ chức lại cho mỗi nhánh trả kết quả riêng rồi gộp theo cây.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p>D&amp;C xuất hiện trong phỏng vấn dưới hai dạng: bài trực tiếp (&ldquo;hãy chia đôi&rdquo;) và — khó hơn — bài mà D&amp;C là lời giải <em>ẩn</em> sau một đề bài trông như đếm hoặc tìm kiếm.</p>
+<p><strong>Merge K Sorted Lists (LeetCode 23).</strong> Cách ngây thơ: merge lần lượt list 1 với 2, kết quả với 3&hellip; — list đầu bị copy k lần, tổng O(nk). Nhìn theo D&amp;C: merge <strong>theo cặp, theo tầng</strong> như cây merge sort — mỗi tầng tổng chi phí O(n), có log k tầng → O(n log k). Cùng đáp số với cách dùng heap, nhưng lời giải D&amp;C cho thấy bạn hiểu <em>vì sao</em> log k xuất hiện: đó là chiều cao cây.</p>
+<p><strong>Kth Largest Element (LeetCode 215).</strong> Chính là quickselect. Bẫy phổ biến: trả lời &ldquo;sort rồi lấy&rdquo; O(n log n) và dừng ở đó. Người phỏng vấn muốn nghe: kỳ vọng O(n) với pivot ngẫu nhiên, và <em>biết về sự tồn tại</em> của median of medians cho O(n) tất định. Điểm cộng lớn: nói được vì sao k trong heap-solution O(n log k) thắng khi k nhỏ và dữ liệu streaming.</p>
+<p><strong>Search in Rotated Sorted Array (LeetCode 33).</strong> Binary search biến thể — bài kiểm tra xem bạn hiểu <em>nguyên lý</em> hay chỉ thuộc code. Mảng xoay không sort toàn cục, nhưng invariant sống sót: <strong>ít nhất một trong hai nửa quanh mid luôn sort hoàn chỉnh</strong> — so sánh a[lo] với a[mid] biết ngay nửa nào, rồi kiểm tra target có nằm trong nửa sort đó không để quyết định vứt nửa nào. Kỹ năng tổng quát: khi đề cho cấu trúc &ldquo;gần như có thứ tự&rdquo;, hãy đi tìm <em>câu hỏi O(1) cho phép loại bỏ một nửa</em> — đó là định nghĩa vận hành của binary search.</p>
+<p><strong>Count of Smaller Numbers After Self (LeetCode 315).</strong> Bài &ldquo;nhìn ra combine step&rdquo; điển hình. Đề trông như bài đếm O(n²). Chìa khóa: trong lúc merge sort, khi một phần tử của nửa <strong>phải</strong> được lấy trước phần tử của nửa trái, nó nhỏ hơn <em>toàn bộ phần còn lại</em> của nửa trái — đếm được cả loạt nghịch thế trong O(1). Toàn bộ thông tin &ldquo;bao nhiêu phần tử sau nhỏ hơn&rdquo; được thu hoạch <strong>miễn phí trong bước combine</strong>. Đây là mẫu tư duy đáng học nhất chương: <em>bài toán tương tác giữa các cặp (i, j) với i &lt; j có thể tính được trong lúc merge, vì merge là khoảnh khắc duy nhất hai nửa gặp nhau.</em> Cùng mẫu: Count Inversions, Reverse Pairs (LeetCode 493).</p>
+<p><strong>Lỗi tư duy thường gặp:</strong></p>
+<ul>
+<li>Viết đệ quy nhưng quên base case cho mảng rỗng/một phần tử — 90% bug D&amp;C nằm ở biên.</li>
+<li>Mặc định &ldquo;chia đôi là O(n log n)&rdquo; mà không nhìn chi phí combine: T(n) = 2T(n/2) + O(n²) là O(n²), không phải n² log n cũng không phải n log n — dùng Master Theorem, đừng đoán.</li>
+<li>Không nhận ra bài toán con trùng lặp, viết D&amp;C thuần cho bài DP và nhận TLE với độ phức tạp mũ.</li>
+</ul>
+<p><strong>Cách phân tích thay vì học thuộc:</strong> hỏi tuần tự — (1) nếu tôi có lời giải của hai nửa, tôi cần thêm thông tin gì để trả lời cho toàn mảng? (2) thông tin đó tính được trong O(n) hay O(log n) không? (3) recurrence là gì, Master Theorem nói gì? Nếu câu (1) bế tắc vì hai nửa &ldquo;dính&rdquo; nhau — nghĩ DP hoặc đổi cách chia.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>D&amp;C trên bài toán con trùng lặp.</strong> Fibonacci đệ quy thuần là ví dụ giáo khoa, nhưng phiên bản production có thật: hàm tính giá đệ quy trên cây danh mục mà các nhánh chia sẻ node con (thực chất là DAG), gọi lặp lại hàng nghìn lần vào cùng node. Triệu chứng: thời gian chạy tăng theo cấp số nhân với độ sâu. Chẩn đoán bằng một câu hỏi: <em>số bài toán con <strong>phân biệt</strong> là bao nhiêu so với số nút của cây đệ quy?</em> Chênh lệch lớn → memoization (chương 14).</p>
+<p><strong>Đệ quy đến tận lá.</strong> Fork goroutine cho mảng 8 phần tử; gọi hàm đệ quy cho đoạn 3 phần tử. Cây nhị phân có n lá thì có n−1 nút trong — chi phí điều phối tỷ lệ với số nút, và số nút bùng nổ ở đáy. Luôn có cutoff.</p>
+<p><strong>Combine giấu chi phí bậc cao.</strong> Nối hai kết quả bằng <code>append</code> copy toàn bộ, hoặc combine bằng cách sort lại kết quả gộp — T(n) = 2T(n/2) + O(n log n) vẫn ổn (Θ(n log² n)) nhưng T(n) = 2T(n/2) + O(n²) thì mất trắng lợi ích chia. Nhìn kỹ hàm combine như đã nhìn <code>s += w</code> ở chương 10.</p>
+<p><strong>Chia theo giá trị pivot xấu trên dữ liệu adversarial.</strong> Quicksort/quickselect với pivot tất định (phần tử đầu/giữa) trên input do người dùng kiểm soát là lỗ hổng DoS thật — cùng họ với hash flooding ở chương 10. Luôn random hóa pivot, hoặc dùng thư viện chuẩn vốn đã có lưới an toàn.</p>
+<p><strong>MapReduce hóa mọi thứ.</strong> Chạy job phân tán cho dữ liệu 2GB — chi phí điều phối cluster, serialize, shuffle vượt xa việc xử lý trên một máy bằng một vòng for. &ldquo;Big data&rdquo; bắt đầu ở nơi dữ liệu không vừa một máy, không sớm hơn. D&amp;C phân tán cũng phải tôn trọng cutoff.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Thiết kế bằng cách trả lời đúng ba câu hỏi theo thứ tự: <em>chia thế nào để các phần độc lập? combine cần thông tin gì và tốn bao nhiêu? recurrence cho ra gì?</em> — viết recurrence <strong>trước khi</strong> viết code.</li>
+<li>Dồn effort kiểm thử vào base case và hàm combine — induction đảm bảo phần còn lại. Test biên: mảng rỗng, 1 phần tử, 2 phần tử, toàn phần tử bằng nhau.</li>
+<li>Đặt cutoff và benchmark để chọn ngưỡng (thường 10–50 cho đệ quy thuần, 10³–10⁵ phần tử cho goroutine).</li>
+<li>Khi cần tìm thứ hạng/median/top-k: nghĩ quickselect O(n) trước khi sort O(n log n); khi k nhỏ và dữ liệu streaming: heap.</li>
+<li>Trong hệ phân tán, thiết kế hàm reduce associative + commutative để combine được theo cây và chịu được retry.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không dùng D&amp;C khi bài toán con trùng lặp (→ DP) hoặc khi lời giải tuyến tính một vòng lặp đã tồn tại.</li>
+<li>Không tin &ldquo;chia đôi = nhanh&rdquo; mà bỏ qua chi phí combine — Master Theorem tồn tại để thay thế niềm tin.</li>
+<li>Không viết lại sort/select — <code>sort.Slice</code>, <code>slices.Sort</code> đã là hybrid được tinh chỉnh hơn mọi bản tự viết.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Karatsuba đổi 4 phép nhân lấy 3 phép nhân cộng thêm vài phép cộng O(n). Vì sao thương vụ này lãi lớn đến vậy, còn việc tối ưu bước cộng thì gần như vô nghĩa?</li>
+<li>Quicksort chia lệch 1/10 – 9/10 vẫn là O(n log n), nhưng chia lệch 1 – (n−1) là O(n²). Ranh giới bản chất giữa hai kiểu &ldquo;lệch&rdquo; này là gì?</li>
+<li>Trong Count of Smaller Numbers After Self, vì sao thông tin đếm phải được thu hoạch đúng tại bước merge mà không thể lấy sau khi sort xong?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-3-algorithm-mathematics/14-dynamic-programming/">14 — Dynamic Programming</a>, nơi ta xử lý chính cái bẫy mà D&amp;C bất lực: khi các bài toán con trùng lặp nhau, đừng chia để trị — hãy nhớ để khỏi tính lại.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/12-hashing/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 12 — Hashing: Nén vô hạn vào hữu hạn</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/14-dynamic-programming/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 13 — Divide and Conquer: Sức mạnh của chia đôi on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2013%20%e2%80%94%20Divide%20and%20Conquer%3a%20S%e1%bb%a9c%20m%e1%ba%a1nh%20c%e1%bb%a7a%20chia%20%c4%91%c3%b4i&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 13 — Divide and Conquer: Sức mạnh của chia đôi on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f&amp;title=Ch%c6%b0%c6%a1ng%2013%20%e2%80%94%20Divide%20and%20Conquer%3a%20S%e1%bb%a9c%20m%e1%ba%a1nh%20c%e1%bb%a7a%20chia%20%c4%91%c3%b4i&amp;summary=Ch%c6%b0%c6%a1ng%2013%20%e2%80%94%20Divide%20and%20Conquer%3a%20S%e1%bb%a9c%20m%e1%ba%a1nh%20c%e1%bb%a7a%20chia%20%c4%91%c3%b4i&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 13 — Divide and Conquer: Sức mạnh của chia đôi on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f&title=Ch%c6%b0%c6%a1ng%2013%20%e2%80%94%20Divide%20and%20Conquer%3a%20S%e1%bb%a9c%20m%e1%ba%a1nh%20c%e1%bb%a7a%20chia%20%c4%91%c3%b4i">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 13 — Divide and Conquer: Sức mạnh của chia đôi on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 13 — Divide and Conquer: Sức mạnh của chia đôi on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2013%20%e2%80%94%20Divide%20and%20Conquer%3a%20S%e1%bb%a9c%20m%e1%ba%a1nh%20c%e1%bb%a7a%20chia%20%c4%91%c3%b4i%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 13 — Divide and Conquer: Sức mạnh của chia đôi on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2013%20%e2%80%94%20Divide%20and%20Conquer%3a%20S%e1%bb%a9c%20m%e1%ba%a1nh%20c%e1%bb%a7a%20chia%20%c4%91%c3%b4i&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 13 — Divide and Conquer: Sức mạnh của chia đôi on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2013%20%e2%80%94%20Divide%20and%20Conquer%3a%20S%e1%bb%a9c%20m%e1%ba%a1nh%20c%e1%bb%a7a%20chia%20%c4%91%c3%b4i&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f13-divide-and-conquer%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

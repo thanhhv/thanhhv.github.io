@@ -1,19 +1,131 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Level 7 – Backend Integration Patterns | Thanh HV's Blog</title>
-<meta name=keywords content="backend,blockchain,web3"><meta name=description content="
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Level 7 – Backend Integration Patterns | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, blockchain, web3">
+<meta name="description" content="
 Câu hỏi trung tâm: Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.
 Đây là level &ldquo;ứng dụng&rdquo; — mỗi pattern dưới đây giải một failure mode có thật trong production.
 
 1. Wallet Authentication (Sign-In with Ethereum)
 Problem statement
-Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị replay (kẻ trộm được chữ ký cũ đăng nhập mãi mãi)."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/blockchain-for-backend-engineers/07-level-7-backend-integration/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/blockchain-for-backend-engineers/07-level-7-backend-integration/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/blockchain-for-backend-engineers/07-level-7-backend-integration/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Level 7 – Backend Integration Patterns"><meta property="og:description" content=" Câu hỏi trung tâm: Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.
-Đây là level “ứng dụng” — mỗi pattern dưới đây giải một failure mode có thật trong production.
-1. Wallet Authentication (Sign-In with Ethereum) Problem statement Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị replay (kẻ trộm được chữ ký cũ đăng nhập mãi mãi)."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-19T08:10:00+07:00"><meta property="article:modified_time" content="2026-07-19T08:10:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Blockchain"><meta property="article:tag" content="Web3"><meta name=twitter:card content="summary"><meta name=twitter:title content="Level 7 – Backend Integration Patterns"><meta name=twitter:description content="
-Câu hỏi trung tâm: Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.
-Đây là level &ldquo;ứng dụng&rdquo; — mỗi pattern dưới đây giải một failure mode có thật trong production.
+Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị replay (kẻ trộm được chữ ký cũ đăng nhập mãi mãi).">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/blockchain-for-backend-engineers/07-level-7-backend-integration/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/blockchain-for-backend-engineers/07-level-7-backend-integration/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Wallet Authentication (Sign-In with Ethereum)
-Problem statement
-Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị replay (kẻ trộm được chữ ký cũ đăng nhập mãi mãi)."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Blockchain cho Backend Engineer","item":"https://thanhhv.github.io/series/blockchain-for-backend-engineers/"},{"@type":"ListItem","position":3,"name":"Level 7 – Backend Integration Patterns","item":"https://thanhhv.github.io/series/blockchain-for-backend-engineers/07-level-7-backend-integration/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Level 7 – Backend Integration Patterns","name":"Level 7 – Backend Integration Patterns","description":" Câu hỏi trung tâm: Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.\nĐây là level \u0026ldquo;ứng dụng\u0026rdquo; — mỗi pattern dưới đây giải một failure mode có thật trong production.\n1. Wallet Authentication (Sign-In with Ethereum) Problem statement Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị replay (kẻ trộm được chữ ký cũ đăng nhập mãi mãi).\n","keywords":["backend","blockchain","web3"],"articleBody":" Câu hỏi trung tâm: Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.\nĐây là level “ứng dụng” — mỗi pattern dưới đây giải một failure mode có thật trong production.\n1. Wallet Authentication (Sign-In with Ethereum) Problem statement Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị replay (kẻ trộm được chữ ký cũ đăng nhập mãi mãi).\nThiết kế đúng: challenge-response + nonce một lần sequenceDiagram participant W as Wallet (frontend) participant B as Backend participant R as Redis W-\u003e\u003eB: GET /auth/challenge?address=0xAlice B-\u003e\u003eR: SETEX nonce:0xAlice 300 B--\u003e\u003eW: message = \"domain.com wants you to sign in...Nonce: 8f3a... Issued At: ...\" (chuẩn EIP-4361) W-\u003e\u003eW: personal_sign(message) — KHÔNG tốn gas, không lên chain W-\u003e\u003eB: POST /auth/verify {address, signature} B-\u003e\u003eR: GETDEL nonce:0xAlice (dùng MỘT lần) B-\u003e\u003eB: recovered = ecrecover(message, signature)assert recovered == address B--\u003e\u003eW: JWT session (phiên còn lại như auth thường) // Golang: verify chữ ký EIP-191 (personal_sign) func VerifySig(address, message string, sig []byte) bool { if len(sig) != 65 { return false } if sig[64] \u003e= 27 { sig[64] -= 27 } // chuẩn hóa v prefixed := fmt.Sprintf(\"\\x19Ethereum Signed Message:\\n%d%s\", len(message), message) hash := crypto.Keccak256([]byte(prefixed)) pub, err := crypto.SigToPub(hash, sig) if err != nil { return false } return strings.EqualFold(crypto.PubkeyToAddress(*pub).Hex(), address) } Checklist production: message theo chuẩn EIP-4361 (chứa domain — chống phishing site lấy chữ ký dùng chéo, nonce, expiry, chainId); nonce một lần có TTL; hỗ trợ EIP-1271 nếu user là smart contract wallet (gọi isValidSignature trên contract thay vì ecrecover); auth xong dùng session thường — đừng bắt ký mỗi request.\n2. Transaction Service: gửi tx từ backend một cách tin cậy Đây là service khó nhất trong mọi hệ Web3. Gom 4 bài toán: idempotency, nonce, retry/stuck, confirmation — thiết kế như một state machine bền vững (persistent).\n2.1. Kiến trúc tổng flowchart LR API[\"API / Kafka consumer(yêu cầu nghiệp vụ:'trả 100 USDC cho X')\"] --\u003e DB[(\"PostgreSQLbảng tx_intents(source of truth)\")] DB --\u003e W[\"Worker (single-writerper hot wallet)\"] W --\u003e S[\"Signing Service\"] W --\u003e RPC[\"RPC pool\"] M[\"Monitor loop(receipt, stuck, reorg)\"] --\u003e DB RPC --\u003e MNguyên tắc số 1: ý định giao dịch (intent) ghi vào DB trước, mọi thứ sau đó là state machine chuyển trạng thái từng bước, mỗi bước idempotent, phục hồi được sau crash ở bất kỳ điểm nào.\nCREATE TABLE tx_intents ( id UUID PRIMARY KEY, idempotency_key TEXT UNIQUE NOT NULL, -- từ nghiệp vụ: \"payout:invoice-123\" chain_id BIGINT NOT NULL, from_wallet TEXT NOT NULL, payload JSONB NOT NULL, -- to, value, data status TEXT NOT NULL, -- created→signed→broadcast→mined→confirmed | replaced|failed nonce BIGINT, -- gán khi ký signed_raw BYTEA, -- tx đã ký — để re-broadcast AN TOÀN tx_hash TEXT, block_number BIGINT, block_hash TEXT, broadcast_at TIMESTAMPTZ, updated_at TIMESTAMPTZ ); 2.2. Idempotency — hai tầng Tầng nghiệp vụ: idempotency_key UNIQUE — request “trả tiền invoice-123” đến 2 lần chỉ tạo 1 intent. Đây là chốt chặn quan trọng nhất chống double-payout. Tầng chain: retry luôn re-broadcast signed_raw cũ (cùng hash — chain tự dedupe), không bao giờ ký lại tx mới cho cùng intent khi chưa xác định số phận tx cũ. Ký lại với nonce mới trong khi tx cũ còn sống = trả tiền 2 lần. 2.3. Nonce Management Sai lầm phổ biến: mỗi worker tự hỏi eth_getTransactionCount → race. Thiết kế đúng — single allocator per (chain, wallet):\n// Golang: nonce allocator dùng Postgres làm nguồn sự thật // Bảng: wallet_nonces(chain_id, address, next_nonce) — 1 row/ví func (a *Allocator) Next(ctx context.Context, chain int64, addr string) (uint64, error) { tx, err := a.db.BeginTx(ctx, nil) if err != nil { return 0, err } defer tx.Rollback() var n uint64 // row lock đảm bảo tuần tự tuyệt đối kể cả nhiều instance err = tx.QueryRowContext(ctx, `SELECT next_nonce FROM wallet_nonces WHERE chain_id=$1 AND address=$2 FOR UPDATE`, chain, addr).Scan(\u0026n) if err != nil { return 0, err } _, err = tx.ExecContext(ctx, `UPDATE wallet_nonces SET next_nonce=$1 WHERE chain_id=$2 AND address=$3`, n+1, chain, addr) if err != nil { return 0, err } return n, tx.Commit() } Quy tắc vận hành đi kèm:\nĐồng bộ định kỳ với chain: so next_nonce với eth_getTransactionCount(addr, \"pending\"); lệch → alert (có tx ngoài hệ thống? DB sai?). Tuyệt đối không cho người/hệ khác gửi tx từ hot wallet. Nonce gap là sự cố P1: tx nonce N chết (bị drop) → toàn bộ N+1, N+2… kẹt. Xử lý: gửi lại tx nonce N (từ signed_raw), hoặc phát tx “filler” (self-transfer 0 ETH, nonce N, gas cao) để thông cống. Nhiều hot wallet song song thay vì một ví nonce cao — nonce là tuần tự per-account, ví là đơn vị scale ngang tự nhiên. 2.4. Stuck transaction và Replacement Monitor loop mỗi 30s, với mỗi tx ở trạng thái broadcast: receipt != null → mined; ghi block_number/hash pending quá T (vd 3 phút) → SPEED-UP: ký lại CÙNG nonce, cùng payload, gas × 1.15+ → broadcast (2 tx cùng nonce, chain chỉ nhận 1 — track cả 2 hash!) cần hủy → CANCEL: cùng nonce, self-transfer 0, gas cao hơn không còn trong mempool và không mined (đã drop) → re-broadcast signed_rawChú ý sự tinh tế: sau speed-up, intent có nhiều candidate hash — receipt có thể về ở bất kỳ hash nào. Bảng phụ tx_attempts(intent_id, tx_hash, gas_price, created_at) và monitor check tất cả.\n2.5. Confirmation tracking + Reorg handling Trạng thái mined chưa phải kết thúc (Level 2). Monitor tiếp:\nmined → mỗi block mới: depth = head - block_number block_hash tại block_number còn khớp? ← phát hiện reorg khớp \u0026\u0026 depth ≥ policy(chain, giá trị) → confirmed (chốt sổ, phát event nghiệp vụ) không khớp → reorged: quay về broadcast, re-broadcast signed_rawChỉ ở confirmed mới được phát side-effect nghiệp vụ (ghi ledger, gửi email “đã thanh toán”, cho rút). Đây là điểm phân biệt hệ làm đúng với hệ sẽ gặp sự cố.\n3. Event-driven pipeline: từ chain vào Kafka 3.1. Kiến trúc chuẩn flowchart LR C[\"Chain (RPC/WS)\"] --\u003e IX[\"Indexer(Level 5: decode + reorg handler)\"] IX --\u003e PG[(\"PostgreSQLevents + outbox\")] PG --\u003e RL[\"Outbox Relay(poll/CDC Debezium)\"] RL --\u003e K[\"Kafkatopic: chain.events.v1key = (contract,chainId)\"] K --\u003e C1[\"Ledger service\"] K --\u003e C2[\"Notification\"] K --\u003e C3[\"Analytics\"] C1 --\u003e WH[\"Webhook ra đối tác(ký HMAC, retry + DLQ)\"]3.2. Outbox pattern — vì sao bắt buộc ở đây Indexer ghi event vào PostgreSQL và publish Kafka = ghi 2 hệ thống = dual-write problem (crash giữa 2 thao tác → mất hoặc lặp event). Outbox giải quyết: trong cùng một DB transaction với dữ liệu event, ghi thêm row vào bảng outbox; relay riêng đọc outbox và publish Kafka (at-least-once), consumer idempotent theo event_id = (chain_id, tx_hash, log_index).\nĐiểm hay: kỷ luật idempotency mà blockchain ép bạn có (event id tự nhiên, duy nhất toàn cầu) làm outbox ở đây dễ hơn hệ thường.\n3.3. Chiến lược phát event trước/sau finality Hai nhu cầu mâu thuẫn: UX muốn biết ngay (pending/1-conf), sổ sách cần chắc chắn (finalized). Giải pháp chuẩn — phát 2 loại event tách bạch:\nchain.events.observed.v1 — ngay khi thấy (có thể bị thu hồi!) kèm field: depth, finalized=false chain.events.finalized.v1 — chỉ khi đủ policy; KHÔNG BAO GIỜ thu hồi chain.events.reverted.v1 — thu hồi một observed event (do reorg)Consumer loại nào nghe topic nấy: notification nghe observed (kèm chữ “đang xác nhận”), ledger chỉ nghe finalized. Đừng bắt mọi consumer tự hiểu reorg — tập trung độ phức tạp vào indexer.\n3.4. Webhook ra bên ngoài Chuẩn ngành (giống Stripe): ký payload bằng HMAC + timestamp (chống replay), retry exponential backoff có jitter tối đa N lần → DLQ, endpoint đối tác phải idempotent theo event_id, kèm API “list events” để đối tác đối soát khi miss webhook. Đừng phát webhook từ dữ liệu chưa finalized nếu đối tác dùng nó để ghi sổ.\n4. Multi-chain support Config-driven: mỗi chain một object cấu hình (rpc pool, chainId, confirmation policy, gas strategy, địa chỉ contract, decimals của native token). Thêm chain mới = thêm config + test, không sửa logic. Chuẩn hóa đơn vị sớm: mọi amount trong hệ nội bộ là integer string của đơn vị nhỏ nhất (wei, lamports) + decimals. Không bao giờ float. Bug làm tròn số tiền là bug không được phép tồn tại. Địa chỉ: checksum (EIP-55) khi hiển thị, lowercase khi làm key DB; các chain non-EVM (Solana base58, Cosmos bech32) cần validator riêng — đừng regex Ethereum cho tất cả. Non-EVM khác biệt sâu (Solana: không nonce tuần tự mà là recent blockhash hết hạn ~60s; UTXO: chọn coin) → tách adapter per-chain-family sau một interface chung ChainClient. 5. Anti-patterns tổng hợp của level này Ghi sổ khi thấy tx hash / khi mined chưa confirmed. Ký tx mới khi retry thay vì re-broadcast signed tx cũ. Nhiều worker tự lấy nonce từ RPC (race) hoặc một hot wallet duy nhất cho mọi payout (nonce = nút cổ chai + khi kẹt là kẹt tất). Message ký login tĩnh, không domain, không nonce, không expiry. Publish Kafka và ghi DB không qua outbox (dual-write). Webhook không chữ ký, không retry, không cách đối soát. Float cho số tiền; lẫn lộn đơn vị (1 USDC = 10^6, 1 ETH = 10^18 — hard-code 18 cho mọi token là bug kinh điển). 6. Tóm tắt Level 7 Wallet auth = challenge-response + EIP-4361 + nonce một lần + EIP-1271 cho contract wallet. Transaction service = persistent state machine: intent → signed → broadcast → mined → confirmed, idempotent hai tầng (business key + re-broadcast signed_raw). Nonce: cấp phát tập trung có lock, đồng bộ định kỳ với chain, nonce gap là P1, scale bằng nhiều ví. Sự thật nghiệp vụ chỉ sinh ra ở confirmed (theo policy per-chain); reorg đưa tx quay lại vòng đời. Pipeline: indexer → outbox → Kafka; tách topic observed/finalized/reverted; consumer idempotent theo (chainId, txHash, logIndex). Tiếp theo — Level 8: vận hành tất cả những thứ trên: deployment, HA, monitoring, DR và tối ưu chi phí.\n","wordCount":"1685","inLanguage":"en","datePublished":"2026-07-19T08:10:00+07:00","dateModified":"2026-07-19T08:10:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/blockchain-for-backend-engineers/07-level-7-backend-integration/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/blockchain-for-backend-engineers/>Blockchain cho Backend Engineer</a></div><h1 class="post-title entry-hint-parent">Level 7 – Backend Integration Patterns</h1><div class=post-meta><span title='2026-07-19 08:10:00 +0700 +07'>July 19, 2026</span>&nbsp;·&nbsp;8 min</div></header><div class=post-content><blockquote><p><strong>Câu hỏi trung tâm:</strong> Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.</p></blockquote><p>Đây là level &ldquo;ứng dụng&rdquo; — mỗi pattern dưới đây giải một failure mode có thật trong production.</p><hr><h2 id=1-wallet-authentication-sign-in-with-ethereum>1. Wallet Authentication (Sign-In with Ethereum)<a hidden class=anchor aria-hidden=true href=#1-wallet-authentication-sign-in-with-ethereum>#</a></h2><h3 id=problem-statement>Problem statement<a hidden class=anchor aria-hidden=true href=#problem-statement>#</a></h3><p>Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị <strong>replay</strong> (kẻ trộm được chữ ký cũ đăng nhập mãi mãi).</p><h3 id=thiết-kế-đúng-challenge-response--nonce-một-lần>Thiết kế đúng: challenge-response + nonce một lần<a hidden class=anchor aria-hidden=true href=#thiết-kế-đúng-challenge-response--nonce-một-lần>#</a></h3><pre class=mermaid>sequenceDiagram
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/blockchain-for-backend-engineers/">Blockchain cho Backend Engineer</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Level 7 – Backend Integration Patterns
+    </h1>
+    <div class="post-meta"><span title='2026-07-19 08:10:00 +0700 +07'>July 19, 2026</span>&nbsp;·&nbsp;8 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p><strong>Câu hỏi trung tâm:</strong> Ghép mọi kiến thức trước đó thành các pattern code cụ thể: auth bằng ví, gửi tx tin cậy từ backend, và pipeline event-driven chống reorg.</p></blockquote>
+<p>Đây là level &ldquo;ứng dụng&rdquo; — mỗi pattern dưới đây giải một failure mode có thật trong production.</p>
+<hr>
+<h2 id="1-wallet-authentication-sign-in-with-ethereum">1. Wallet Authentication (Sign-In with Ethereum)<a hidden class="anchor" aria-hidden="true" href="#1-wallet-authentication-sign-in-with-ethereum">#</a></h2>
+<h3 id="problem-statement">Problem statement<a hidden class="anchor" aria-hidden="true" href="#problem-statement">#</a></h3>
+<p>Đăng nhập không cần password: user chứng minh sở hữu address bằng chữ ký. Sai lầm chết người của cách làm ngây thơ: cho user ký một message cố định → chữ ký bị <strong>replay</strong> (kẻ trộm được chữ ký cũ đăng nhập mãi mãi).</p>
+<h3 id="thiết-kế-đúng-challenge-response--nonce-một-lần">Thiết kế đúng: challenge-response + nonce một lần<a hidden class="anchor" aria-hidden="true" href="#thiết-kế-đúng-challenge-response--nonce-một-lần">#</a></h3>
+<pre class="mermaid">sequenceDiagram
     participant W as Wallet (frontend)
     participant B as Backend
     participant R as Redis
@@ -25,71 +137,106 @@ Problem statement
     W-&gt;&gt;B: POST /auth/verify {address, signature}
     B-&gt;&gt;R: GETDEL nonce:0xAlice  (dùng MỘT lần)
     B-&gt;&gt;B: recovered = ecrecover(message, signature)&lt;br/&gt;assert recovered == address
-    B--&gt;&gt;W: JWT session (phiên còn lại như auth thường)</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
+    B--&gt;&gt;W: JWT session (phiên còn lại như auth thường)</pre><style>
+  pre.mermaid {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+  }
+</style>
+<script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({
     startOnLoad: true,
     theme: document.body.classList.contains("dark") ? "dark" : "default",
     securityLevel: "loose",
   });
-</script><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Golang: verify chữ ký EIP-191 (personal_sign)</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>VerifySig</span>(<span style=color:#a6e22e>address</span>, <span style=color:#a6e22e>message</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>sig</span> []<span style=color:#66d9ef>byte</span>) <span style=color:#66d9ef>bool</span> {
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>sig</span>) <span style=color:#f92672>!=</span> <span style=color:#ae81ff>65</span> { <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span> }
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>sig</span>[<span style=color:#ae81ff>64</span>] <span style=color:#f92672>&gt;=</span> <span style=color:#ae81ff>27</span> { <span style=color:#a6e22e>sig</span>[<span style=color:#ae81ff>64</span>] <span style=color:#f92672>-=</span> <span style=color:#ae81ff>27</span> } <span style=color:#75715e>// chuẩn hóa v</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>prefixed</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Sprintf</span>(<span style=color:#e6db74>&#34;\x19Ethereum Signed Message:\n%d%s&#34;</span>, len(<span style=color:#a6e22e>message</span>), <span style=color:#a6e22e>message</span>)
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>hash</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>crypto</span>.<span style=color:#a6e22e>Keccak256</span>([]byte(<span style=color:#a6e22e>prefixed</span>))
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pub</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>crypto</span>.<span style=color:#a6e22e>SigToPub</span>(<span style=color:#a6e22e>hash</span>, <span style=color:#a6e22e>sig</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span> }
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>strings</span>.<span style=color:#a6e22e>EqualFold</span>(<span style=color:#a6e22e>crypto</span>.<span style=color:#a6e22e>PubkeyToAddress</span>(<span style=color:#f92672>*</span><span style=color:#a6e22e>pub</span>).<span style=color:#a6e22e>Hex</span>(), <span style=color:#a6e22e>address</span>)
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Checklist production: message theo chuẩn <strong>EIP-4361</strong> (chứa domain — chống phishing site lấy chữ ký dùng chéo, nonce, expiry, chainId); nonce một lần có TTL; hỗ trợ <strong>EIP-1271</strong> nếu user là smart contract wallet (gọi <code>isValidSignature</code> trên contract thay vì ecrecover); auth xong dùng session thường — đừng bắt ký mỗi request.</p><hr><h2 id=2-transaction-service-gửi-tx-từ-backend-một-cách-tin-cậy>2. Transaction Service: gửi tx từ backend một cách tin cậy<a hidden class=anchor aria-hidden=true href=#2-transaction-service-gửi-tx-từ-backend-một-cách-tin-cậy>#</a></h2><p>Đây là service khó nhất trong mọi hệ Web3. Gom 4 bài toán: <strong>idempotency, nonce, retry/stuck, confirmation</strong> — thiết kế như một state machine bền vững (persistent).</p><h3 id=21-kiến-trúc-tổng>2.1. Kiến trúc tổng<a hidden class=anchor aria-hidden=true href=#21-kiến-trúc-tổng>#</a></h3><pre class=mermaid>flowchart LR
+</script><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Golang: verify chữ ký EIP-191 (personal_sign)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">VerifySig</span>(<span style="color:#a6e22e">address</span>, <span style="color:#a6e22e">message</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">sig</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">sig</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">65</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span> }
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">sig</span>[<span style="color:#ae81ff">64</span>] <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">27</span> { <span style="color:#a6e22e">sig</span>[<span style="color:#ae81ff">64</span>] <span style="color:#f92672">-=</span> <span style="color:#ae81ff">27</span> } <span style="color:#75715e">// chuẩn hóa v</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">prefixed</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;\x19Ethereum Signed Message:\n%d%s&#34;</span>, len(<span style="color:#a6e22e">message</span>), <span style="color:#a6e22e">message</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hash</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">crypto</span>.<span style="color:#a6e22e">Keccak256</span>([]byte(<span style="color:#a6e22e">prefixed</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pub</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">crypto</span>.<span style="color:#a6e22e">SigToPub</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#a6e22e">sig</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span> }
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">EqualFold</span>(<span style="color:#a6e22e">crypto</span>.<span style="color:#a6e22e">PubkeyToAddress</span>(<span style="color:#f92672">*</span><span style="color:#a6e22e">pub</span>).<span style="color:#a6e22e">Hex</span>(), <span style="color:#a6e22e">address</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Checklist production: message theo chuẩn <strong>EIP-4361</strong> (chứa domain — chống phishing site lấy chữ ký dùng chéo, nonce, expiry, chainId); nonce một lần có TTL; hỗ trợ <strong>EIP-1271</strong> nếu user là smart contract wallet (gọi <code>isValidSignature</code> trên contract thay vì ecrecover); auth xong dùng session thường — đừng bắt ký mỗi request.</p>
+<hr>
+<h2 id="2-transaction-service-gửi-tx-từ-backend-một-cách-tin-cậy">2. Transaction Service: gửi tx từ backend một cách tin cậy<a hidden class="anchor" aria-hidden="true" href="#2-transaction-service-gửi-tx-từ-backend-một-cách-tin-cậy">#</a></h2>
+<p>Đây là service khó nhất trong mọi hệ Web3. Gom 4 bài toán: <strong>idempotency, nonce, retry/stuck, confirmation</strong> — thiết kế như một state machine bền vững (persistent).</p>
+<h3 id="21-kiến-trúc-tổng">2.1. Kiến trúc tổng<a hidden class="anchor" aria-hidden="true" href="#21-kiến-trúc-tổng">#</a></h3>
+<pre class="mermaid">flowchart LR
     API[&#34;API / Kafka consumer&lt;br/&gt;(yêu cầu nghiệp vụ:&lt;br/&gt;&#39;trả 100 USDC cho X&#39;)&#34;] --&gt; DB[(&#34;PostgreSQL&lt;br/&gt;bảng tx_intents&lt;br/&gt;(source of truth)&#34;)]
     DB --&gt; W[&#34;Worker (single-writer&lt;br/&gt;per hot wallet)&#34;]
     W --&gt; S[&#34;Signing Service&#34;]
     W --&gt; RPC[&#34;RPC pool&#34;]
     M[&#34;Monitor loop&lt;br/&gt;(receipt, stuck, reorg)&#34;] --&gt; DB
-    RPC --&gt; M</pre><p>Nguyên tắc số 1: <strong>ý định giao dịch (intent) ghi vào DB trước, mọi thứ sau đó là state machine chuyển trạng thái từng bước, mỗi bước idempotent, phục hồi được sau crash ở bất kỳ điểm nào.</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sql data-lang=sql><span style=display:flex><span><span style=color:#66d9ef>CREATE</span> <span style=color:#66d9ef>TABLE</span> tx_intents (
-</span></span><span style=display:flex><span>  id            UUID <span style=color:#66d9ef>PRIMARY</span> <span style=color:#66d9ef>KEY</span>,
-</span></span><span style=display:flex><span>  idempotency_key TEXT <span style=color:#66d9ef>UNIQUE</span> <span style=color:#66d9ef>NOT</span> <span style=color:#66d9ef>NULL</span>,  <span style=color:#75715e>-- từ nghiệp vụ: &#34;payout:invoice-123&#34;
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  chain_id      BIGINT <span style=color:#66d9ef>NOT</span> <span style=color:#66d9ef>NULL</span>,
-</span></span><span style=display:flex><span>  from_wallet   TEXT <span style=color:#66d9ef>NOT</span> <span style=color:#66d9ef>NULL</span>,
-</span></span><span style=display:flex><span>  payload       JSONB <span style=color:#66d9ef>NOT</span> <span style=color:#66d9ef>NULL</span>,          <span style=color:#75715e>-- to, value, data
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  status        TEXT <span style=color:#66d9ef>NOT</span> <span style=color:#66d9ef>NULL</span>,           <span style=color:#75715e>-- created→signed→broadcast→mined→confirmed | replaced|failed
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  nonce         BIGINT,                  <span style=color:#75715e>-- gán khi ký
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  signed_raw    BYTEA,                   <span style=color:#75715e>-- tx đã ký — để re-broadcast AN TOÀN
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  tx_hash       TEXT,
-</span></span><span style=display:flex><span>  block_number  BIGINT, block_hash TEXT,
-</span></span><span style=display:flex><span>  broadcast_at  TIMESTAMPTZ, updated_at TIMESTAMPTZ
-</span></span><span style=display:flex><span>);
-</span></span></code></pre></div><h3 id=22-idempotency--hai-tầng>2.2. Idempotency — hai tầng<a hidden class=anchor aria-hidden=true href=#22-idempotency--hai-tầng>#</a></h3><ol><li><strong>Tầng nghiệp vụ:</strong> <code>idempotency_key</code> UNIQUE — request &ldquo;trả tiền invoice-123&rdquo; đến 2 lần chỉ tạo 1 intent. Đây là chốt chặn quan trọng nhất chống double-payout.</li><li><strong>Tầng chain:</strong> retry luôn <strong>re-broadcast <code>signed_raw</code> cũ</strong> (cùng hash — chain tự dedupe), <em>không bao giờ</em> ký lại tx mới cho cùng intent khi chưa xác định số phận tx cũ. Ký lại với nonce mới trong khi tx cũ còn sống = trả tiền 2 lần.</li></ol><h3 id=23-nonce-management>2.3. Nonce Management<a hidden class=anchor aria-hidden=true href=#23-nonce-management>#</a></h3><p>Sai lầm phổ biến: mỗi worker tự hỏi <code>eth_getTransactionCount</code> → race. Thiết kế đúng — <strong>single allocator per (chain, wallet)</strong>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Golang: nonce allocator dùng Postgres làm nguồn sự thật</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// Bảng: wallet_nonces(chain_id, address, next_nonce) — 1 row/ví</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>a</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Allocator</span>) <span style=color:#a6e22e>Next</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>chain</span> <span style=color:#66d9ef>int64</span>, <span style=color:#a6e22e>addr</span> <span style=color:#66d9ef>string</span>) (<span style=color:#66d9ef>uint64</span>, <span style=color:#66d9ef>error</span>) {
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>tx</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>db</span>.<span style=color:#a6e22e>BeginTx</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#66d9ef>nil</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>err</span> }
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>tx</span>.<span style=color:#a6e22e>Rollback</span>()
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>n</span> <span style=color:#66d9ef>uint64</span>
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// row lock đảm bảo tuần tự tuyệt đối kể cả nhiều instance</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>tx</span>.<span style=color:#a6e22e>QueryRowContext</span>(<span style=color:#a6e22e>ctx</span>,
-</span></span><span style=display:flex><span>		<span style=color:#e6db74>`SELECT next_nonce FROM wallet_nonces
-</span></span></span><span style=display:flex><span><span style=color:#e6db74>		 WHERE chain_id=$1 AND address=$2 FOR UPDATE`</span>, <span style=color:#a6e22e>chain</span>, <span style=color:#a6e22e>addr</span>).<span style=color:#a6e22e>Scan</span>(<span style=color:#f92672>&amp;</span><span style=color:#a6e22e>n</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>err</span> }
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>tx</span>.<span style=color:#a6e22e>ExecContext</span>(<span style=color:#a6e22e>ctx</span>,
-</span></span><span style=display:flex><span>		<span style=color:#e6db74>`UPDATE wallet_nonces SET next_nonce=$1
-</span></span></span><span style=display:flex><span><span style=color:#e6db74>		 WHERE chain_id=$2 AND address=$3`</span>, <span style=color:#a6e22e>n</span><span style=color:#f92672>+</span><span style=color:#ae81ff>1</span>, <span style=color:#a6e22e>chain</span>, <span style=color:#a6e22e>addr</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>err</span> }
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>n</span>, <span style=color:#a6e22e>tx</span>.<span style=color:#a6e22e>Commit</span>()
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Quy tắc vận hành đi kèm:</p><ul><li><strong>Đồng bộ định kỳ với chain:</strong> so <code>next_nonce</code> với <code>eth_getTransactionCount(addr, "pending")</code>; lệch → alert (có tx ngoài hệ thống? DB sai?). Tuyệt đối không cho người/hệ khác gửi tx từ hot wallet.</li><li><strong>Nonce gap là sự cố P1:</strong> tx nonce N chết (bị drop) → toàn bộ N+1, N+2&mldr; kẹt. Xử lý: gửi lại tx nonce N (từ <code>signed_raw</code>), hoặc phát tx &ldquo;filler&rdquo; (self-transfer 0 ETH, nonce N, gas cao) để thông cống.</li><li><strong>Nhiều hot wallet song song</strong> thay vì một ví nonce cao — nonce là tuần tự per-account, ví là đơn vị scale ngang tự nhiên.</li></ul><h3 id=24-stuck-transaction-và-replacement>2.4. Stuck transaction và Replacement<a hidden class=anchor aria-hidden=true href=#24-stuck-transaction-và-replacement>#</a></h3><pre tabindex=0><code>Monitor loop mỗi 30s, với mỗi tx ở trạng thái broadcast:
+    RPC --&gt; M</pre><p>Nguyên tắc số 1: <strong>ý định giao dịch (intent) ghi vào DB trước, mọi thứ sau đó là state machine chuyển trạng thái từng bước, mỗi bước idempotent, phục hồi được sau crash ở bất kỳ điểm nào.</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> tx_intents (
+</span></span><span style="display:flex;"><span>  id            UUID <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span>,
+</span></span><span style="display:flex;"><span>  idempotency_key TEXT <span style="color:#66d9ef">UNIQUE</span> <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,  <span style="color:#75715e">-- từ nghiệp vụ: &#34;payout:invoice-123&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  chain_id      BIGINT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>  from_wallet   TEXT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>  payload       JSONB <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,          <span style="color:#75715e">-- to, value, data
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  status        TEXT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,           <span style="color:#75715e">-- created→signed→broadcast→mined→confirmed | replaced|failed
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  nonce         BIGINT,                  <span style="color:#75715e">-- gán khi ký
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  signed_raw    BYTEA,                   <span style="color:#75715e">-- tx đã ký — để re-broadcast AN TOÀN
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  tx_hash       TEXT,
+</span></span><span style="display:flex;"><span>  block_number  BIGINT, block_hash TEXT,
+</span></span><span style="display:flex;"><span>  broadcast_at  TIMESTAMPTZ, updated_at TIMESTAMPTZ
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><h3 id="22-idempotency--hai-tầng">2.2. Idempotency — hai tầng<a hidden class="anchor" aria-hidden="true" href="#22-idempotency--hai-tầng">#</a></h3>
+<ol>
+<li><strong>Tầng nghiệp vụ:</strong> <code>idempotency_key</code> UNIQUE — request &ldquo;trả tiền invoice-123&rdquo; đến 2 lần chỉ tạo 1 intent. Đây là chốt chặn quan trọng nhất chống double-payout.</li>
+<li><strong>Tầng chain:</strong> retry luôn <strong>re-broadcast <code>signed_raw</code> cũ</strong> (cùng hash — chain tự dedupe), <em>không bao giờ</em> ký lại tx mới cho cùng intent khi chưa xác định số phận tx cũ. Ký lại với nonce mới trong khi tx cũ còn sống = trả tiền 2 lần.</li>
+</ol>
+<h3 id="23-nonce-management">2.3. Nonce Management<a hidden class="anchor" aria-hidden="true" href="#23-nonce-management">#</a></h3>
+<p>Sai lầm phổ biến: mỗi worker tự hỏi <code>eth_getTransactionCount</code> → race. Thiết kế đúng — <strong>single allocator per (chain, wallet)</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Golang: nonce allocator dùng Postgres làm nguồn sự thật</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Bảng: wallet_nonces(chain_id, address, next_nonce) — 1 row/ví</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Allocator</span>) <span style="color:#a6e22e">Next</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">chain</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">addr</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">uint64</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">tx</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">BeginTx</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#66d9ef">nil</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">tx</span>.<span style="color:#a6e22e">Rollback</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">n</span> <span style="color:#66d9ef">uint64</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// row lock đảm bảo tuần tự tuyệt đối kể cả nhiều instance</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">tx</span>.<span style="color:#a6e22e">QueryRowContext</span>(<span style="color:#a6e22e">ctx</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">`SELECT next_nonce FROM wallet_nonces
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		 WHERE chain_id=$1 AND address=$2 FOR UPDATE`</span>, <span style="color:#a6e22e">chain</span>, <span style="color:#a6e22e">addr</span>).<span style="color:#a6e22e">Scan</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">n</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">tx</span>.<span style="color:#a6e22e">ExecContext</span>(<span style="color:#a6e22e">ctx</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">`UPDATE wallet_nonces SET next_nonce=$1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		 WHERE chain_id=$2 AND address=$3`</span>, <span style="color:#a6e22e">n</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">chain</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">err</span> }
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">tx</span>.<span style="color:#a6e22e">Commit</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Quy tắc vận hành đi kèm:</p>
+<ul>
+<li><strong>Đồng bộ định kỳ với chain:</strong> so <code>next_nonce</code> với <code>eth_getTransactionCount(addr, &quot;pending&quot;)</code>; lệch → alert (có tx ngoài hệ thống? DB sai?). Tuyệt đối không cho người/hệ khác gửi tx từ hot wallet.</li>
+<li><strong>Nonce gap là sự cố P1:</strong> tx nonce N chết (bị drop) → toàn bộ N+1, N+2&hellip; kẹt. Xử lý: gửi lại tx nonce N (từ <code>signed_raw</code>), hoặc phát tx &ldquo;filler&rdquo; (self-transfer 0 ETH, nonce N, gas cao) để thông cống.</li>
+<li><strong>Nhiều hot wallet song song</strong> thay vì một ví nonce cao — nonce là tuần tự per-account, ví là đơn vị scale ngang tự nhiên.</li>
+</ul>
+<h3 id="24-stuck-transaction-và-replacement">2.4. Stuck transaction và Replacement<a hidden class="anchor" aria-hidden="true" href="#24-stuck-transaction-và-replacement">#</a></h3>
+<pre tabindex="0"><code>Monitor loop mỗi 30s, với mỗi tx ở trạng thái broadcast:
   receipt != null            → mined; ghi block_number/hash
   pending quá T (vd 3 phút)  → SPEED-UP: ký lại CÙNG nonce, cùng payload,
                                gas × 1.15+ → broadcast (2 tx cùng nonce,
                                chain chỉ nhận 1 — track cả 2 hash!)
   cần hủy                    → CANCEL: cùng nonce, self-transfer 0, gas cao hơn
-  không còn trong mempool và không mined (đã drop) → re-broadcast signed_raw</code></pre><p>Chú ý sự tinh tế: sau speed-up, intent có <strong>nhiều candidate hash</strong> — receipt có thể về ở bất kỳ hash nào. Bảng phụ <code>tx_attempts(intent_id, tx_hash, gas_price, created_at)</code> và monitor check tất cả.</p><h3 id=25-confirmation-tracking--reorg-handling>2.5. Confirmation tracking + Reorg handling<a hidden class=anchor aria-hidden=true href=#25-confirmation-tracking--reorg-handling>#</a></h3><p>Trạng thái <code>mined</code> chưa phải kết thúc (Level 2). Monitor tiếp:</p><pre tabindex=0><code>mined → mỗi block mới:
+  không còn trong mempool và không mined (đã drop) → re-broadcast signed_raw</code></pre><p>Chú ý sự tinh tế: sau speed-up, intent có <strong>nhiều candidate hash</strong> — receipt có thể về ở bất kỳ hash nào. Bảng phụ <code>tx_attempts(intent_id, tx_hash, gas_price, created_at)</code> và monitor check tất cả.</p>
+<h3 id="25-confirmation-tracking--reorg-handling">2.5. Confirmation tracking + Reorg handling<a hidden class="anchor" aria-hidden="true" href="#25-confirmation-tracking--reorg-handling">#</a></h3>
+<p>Trạng thái <code>mined</code> chưa phải kết thúc (Level 2). Monitor tiếp:</p>
+<pre tabindex="0"><code>mined → mỗi block mới:
   depth = head - block_number
   block_hash tại block_number còn khớp?   ← phát hiện reorg
     khớp &amp;&amp; depth ≥ policy(chain, giá trị) → confirmed (chốt sổ, phát event nghiệp vụ)
-    không khớp → reorged: quay về broadcast, re-broadcast signed_raw</code></pre><p><strong>Chỉ ở <code>confirmed</code> mới được phát side-effect nghiệp vụ</strong> (ghi ledger, gửi email &ldquo;đã thanh toán&rdquo;, cho rút). Đây là điểm phân biệt hệ làm đúng với hệ sẽ gặp sự cố.</p><hr><h2 id=3-event-driven-pipeline-từ-chain-vào-kafka>3. Event-driven pipeline: từ chain vào Kafka<a hidden class=anchor aria-hidden=true href=#3-event-driven-pipeline-từ-chain-vào-kafka>#</a></h2><h3 id=31-kiến-trúc-chuẩn>3.1. Kiến trúc chuẩn<a hidden class=anchor aria-hidden=true href=#31-kiến-trúc-chuẩn>#</a></h3><pre class=mermaid>flowchart LR
+    không khớp → reorged: quay về broadcast, re-broadcast signed_raw</code></pre><p><strong>Chỉ ở <code>confirmed</code> mới được phát side-effect nghiệp vụ</strong> (ghi ledger, gửi email &ldquo;đã thanh toán&rdquo;, cho rút). Đây là điểm phân biệt hệ làm đúng với hệ sẽ gặp sự cố.</p>
+<hr>
+<h2 id="3-event-driven-pipeline-từ-chain-vào-kafka">3. Event-driven pipeline: từ chain vào Kafka<a hidden class="anchor" aria-hidden="true" href="#3-event-driven-pipeline-từ-chain-vào-kafka">#</a></h2>
+<h3 id="31-kiến-trúc-chuẩn">3.1. Kiến trúc chuẩn<a hidden class="anchor" aria-hidden="true" href="#31-kiến-trúc-chuẩn">#</a></h3>
+<pre class="mermaid">flowchart LR
     C[&#34;Chain (RPC/WS)&#34;] --&gt; IX[&#34;Indexer&lt;br/&gt;(Level 5: decode + reorg handler)&#34;]
     IX --&gt; PG[(&#34;PostgreSQL&lt;br/&gt;events + outbox&#34;)]
     PG --&gt; RL[&#34;Outbox Relay&lt;br/&gt;(poll/CDC Debezium)&#34;]
@@ -97,12 +244,264 @@ Problem statement
     K --&gt; C1[&#34;Ledger service&#34;]
     K --&gt; C2[&#34;Notification&#34;]
     K --&gt; C3[&#34;Analytics&#34;]
-    C1 --&gt; WH[&#34;Webhook ra đối tác&lt;br/&gt;(ký HMAC, retry + DLQ)&#34;]</pre><h3 id=32-outbox-pattern--vì-sao-bắt-buộc-ở-đây>3.2. Outbox pattern — vì sao bắt buộc ở đây<a hidden class=anchor aria-hidden=true href=#32-outbox-pattern--vì-sao-bắt-buộc-ở-đây>#</a></h3><p>Indexer ghi event vào PostgreSQL <strong>và</strong> publish Kafka = ghi 2 hệ thống = dual-write problem (crash giữa 2 thao tác → mất hoặc lặp event). Outbox giải quyết: trong <strong>cùng một DB transaction</strong> với dữ liệu event, ghi thêm row vào bảng <code>outbox</code>; relay riêng đọc outbox và publish Kafka (at-least-once), consumer idempotent theo <code>event_id = (chain_id, tx_hash, log_index)</code>.</p><p>Điểm hay: kỷ luật idempotency mà blockchain ép bạn có (event id tự nhiên, duy nhất toàn cầu) làm outbox ở đây <em>dễ hơn</em> hệ thường.</p><h3 id=33-chiến-lược-phát-event-trướcsau-finality>3.3. Chiến lược phát event trước/sau finality<a hidden class=anchor aria-hidden=true href=#33-chiến-lược-phát-event-trướcsau-finality>#</a></h3><p>Hai nhu cầu mâu thuẫn: UX muốn biết ngay (pending/1-conf), sổ sách cần chắc chắn (finalized). Giải pháp chuẩn — <strong>phát 2 loại event tách bạch</strong>:</p><pre tabindex=0><code>chain.events.observed.v1   — ngay khi thấy (có thể bị thu hồi!)
+    C1 --&gt; WH[&#34;Webhook ra đối tác&lt;br/&gt;(ký HMAC, retry + DLQ)&#34;]</pre><h3 id="32-outbox-pattern--vì-sao-bắt-buộc-ở-đây">3.2. Outbox pattern — vì sao bắt buộc ở đây<a hidden class="anchor" aria-hidden="true" href="#32-outbox-pattern--vì-sao-bắt-buộc-ở-đây">#</a></h3>
+<p>Indexer ghi event vào PostgreSQL <strong>và</strong> publish Kafka = ghi 2 hệ thống = dual-write problem (crash giữa 2 thao tác → mất hoặc lặp event). Outbox giải quyết: trong <strong>cùng một DB transaction</strong> với dữ liệu event, ghi thêm row vào bảng <code>outbox</code>; relay riêng đọc outbox và publish Kafka (at-least-once), consumer idempotent theo <code>event_id = (chain_id, tx_hash, log_index)</code>.</p>
+<p>Điểm hay: kỷ luật idempotency mà blockchain ép bạn có (event id tự nhiên, duy nhất toàn cầu) làm outbox ở đây <em>dễ hơn</em> hệ thường.</p>
+<h3 id="33-chiến-lược-phát-event-trướcsau-finality">3.3. Chiến lược phát event trước/sau finality<a hidden class="anchor" aria-hidden="true" href="#33-chiến-lược-phát-event-trướcsau-finality">#</a></h3>
+<p>Hai nhu cầu mâu thuẫn: UX muốn biết ngay (pending/1-conf), sổ sách cần chắc chắn (finalized). Giải pháp chuẩn — <strong>phát 2 loại event tách bạch</strong>:</p>
+<pre tabindex="0"><code>chain.events.observed.v1   — ngay khi thấy (có thể bị thu hồi!)
                              kèm field: depth, finalized=false
 chain.events.finalized.v1  — chỉ khi đủ policy; KHÔNG BAO GIỜ thu hồi
-chain.events.reverted.v1   — thu hồi một observed event (do reorg)</code></pre><p>Consumer loại nào nghe topic nấy: notification nghe observed (kèm chữ &ldquo;đang xác nhận&rdquo;), ledger <strong>chỉ</strong> nghe finalized. Đừng bắt mọi consumer tự hiểu reorg — tập trung độ phức tạp vào indexer.</p><h3 id=34-webhook-ra-bên-ngoài>3.4. Webhook ra bên ngoài<a hidden class=anchor aria-hidden=true href=#34-webhook-ra-bên-ngoài>#</a></h3><p>Chuẩn ngành (giống Stripe): ký payload bằng HMAC + timestamp (chống replay), retry exponential backoff có jitter tối đa N lần → DLQ, endpoint đối tác phải idempotent theo <code>event_id</code>, kèm API &ldquo;list events&rdquo; để đối tác đối soát khi miss webhook. <strong>Đừng phát webhook từ dữ liệu chưa finalized nếu đối tác dùng nó để ghi sổ.</strong></p><hr><h2 id=4-multi-chain-support>4. Multi-chain support<a hidden class=anchor aria-hidden=true href=#4-multi-chain-support>#</a></h2><ul><li><strong>Config-driven:</strong> mỗi chain một object cấu hình (rpc pool, chainId, confirmation policy, gas strategy, địa chỉ contract, decimals của native token). Thêm chain mới = thêm config + test, không sửa logic.</li><li><strong>Chuẩn hóa đơn vị sớm:</strong> mọi amount trong hệ nội bộ là <strong>integer string của đơn vị nhỏ nhất</strong> (wei, lamports) + decimals. Không bao giờ float. Bug làm tròn số tiền là bug không được phép tồn tại.</li><li><strong>Địa chỉ:</strong> checksum (EIP-55) khi hiển thị, lowercase khi làm key DB; các chain non-EVM (Solana base58, Cosmos bech32) cần validator riêng — đừng regex Ethereum cho tất cả.</li><li>Non-EVM khác biệt sâu (Solana: không nonce tuần tự mà là recent blockhash hết hạn ~60s; UTXO: chọn coin) → tách adapter per-chain-family sau một interface chung <code>ChainClient</code>.</li></ul><h2 id=5-anti-patterns-tổng-hợp-của-level-này>5. Anti-patterns tổng hợp của level này<a hidden class=anchor aria-hidden=true href=#5-anti-patterns-tổng-hợp-của-level-này>#</a></h2><ul><li>Ghi sổ khi thấy tx hash / khi <code>mined</code> chưa <code>confirmed</code>.</li><li>Ký tx mới khi retry thay vì re-broadcast signed tx cũ.</li><li>Nhiều worker tự lấy nonce từ RPC (race) hoặc một hot wallet duy nhất cho mọi payout (nonce = nút cổ chai + khi kẹt là kẹt tất).</li><li>Message ký login tĩnh, không domain, không nonce, không expiry.</li><li>Publish Kafka và ghi DB không qua outbox (dual-write).</li><li>Webhook không chữ ký, không retry, không cách đối soát.</li><li>Float cho số tiền; lẫn lộn đơn vị (1 USDC = 10^6, 1 ETH = 10^18 — hard-code 18 cho mọi token là bug kinh điển).</li></ul><h2 id=6-tóm-tắt-level-7>6. Tóm tắt Level 7<a hidden class=anchor aria-hidden=true href=#6-tóm-tắt-level-7>#</a></h2><ul><li>Wallet auth = challenge-response + EIP-4361 + nonce một lần + EIP-1271 cho contract wallet.</li><li>Transaction service = persistent state machine: intent → signed → broadcast → mined → confirmed, idempotent hai tầng (business key + re-broadcast signed_raw).</li><li>Nonce: cấp phát tập trung có lock, đồng bộ định kỳ với chain, nonce gap là P1, scale bằng nhiều ví.</li><li>Sự thật nghiệp vụ chỉ sinh ra ở <code>confirmed</code> (theo policy per-chain); reorg đưa tx quay lại vòng đời.</li><li>Pipeline: indexer → outbox → Kafka; tách topic observed/finalized/reverted; consumer idempotent theo (chainId, txHash, logIndex).</li></ul><p><strong>Tiếp theo — Level 8:</strong> vận hành tất cả những thứ trên: deployment, HA, monitoring, DR và tối ưu chi phí.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/blockchain/>Blockchain</a></li><li><a href=https://thanhhv.github.io/tags/web3/>Web3</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/blockchain-for-backend-engineers/06-level-6-scaling/><span class=title>« Prev</span><br><span>Level 6 – Scaling: Layer 2, Rollup, Sharding</span>
-</a><a class=next href=https://thanhhv.github.io/series/blockchain-for-backend-engineers/08-level-8-production-operations/><span class=title>Next »</span><br><span>Level 8 – Production Operations</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on x" href="https://x.com/intent/tweet/?text=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f&amp;hashtags=backend%2cblockchain%2cweb3"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f&amp;title=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;summary=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f&title=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on whatsapp" href="https://api.whatsapp.com/send?text=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on telegram" href="https://telegram.me/share/url?text=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on ycombinator" href="https://news.ycombinator.com/submitlink?t=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+chain.events.reverted.v1   — thu hồi một observed event (do reorg)</code></pre><p>Consumer loại nào nghe topic nấy: notification nghe observed (kèm chữ &ldquo;đang xác nhận&rdquo;), ledger <strong>chỉ</strong> nghe finalized. Đừng bắt mọi consumer tự hiểu reorg — tập trung độ phức tạp vào indexer.</p>
+<h3 id="34-webhook-ra-bên-ngoài">3.4. Webhook ra bên ngoài<a hidden class="anchor" aria-hidden="true" href="#34-webhook-ra-bên-ngoài">#</a></h3>
+<p>Chuẩn ngành (giống Stripe): ký payload bằng HMAC + timestamp (chống replay), retry exponential backoff có jitter tối đa N lần → DLQ, endpoint đối tác phải idempotent theo <code>event_id</code>, kèm API &ldquo;list events&rdquo; để đối tác đối soát khi miss webhook. <strong>Đừng phát webhook từ dữ liệu chưa finalized nếu đối tác dùng nó để ghi sổ.</strong></p>
+<hr>
+<h2 id="4-multi-chain-support">4. Multi-chain support<a hidden class="anchor" aria-hidden="true" href="#4-multi-chain-support">#</a></h2>
+<ul>
+<li><strong>Config-driven:</strong> mỗi chain một object cấu hình (rpc pool, chainId, confirmation policy, gas strategy, địa chỉ contract, decimals của native token). Thêm chain mới = thêm config + test, không sửa logic.</li>
+<li><strong>Chuẩn hóa đơn vị sớm:</strong> mọi amount trong hệ nội bộ là <strong>integer string của đơn vị nhỏ nhất</strong> (wei, lamports) + decimals. Không bao giờ float. Bug làm tròn số tiền là bug không được phép tồn tại.</li>
+<li><strong>Địa chỉ:</strong> checksum (EIP-55) khi hiển thị, lowercase khi làm key DB; các chain non-EVM (Solana base58, Cosmos bech32) cần validator riêng — đừng regex Ethereum cho tất cả.</li>
+<li>Non-EVM khác biệt sâu (Solana: không nonce tuần tự mà là recent blockhash hết hạn ~60s; UTXO: chọn coin) → tách adapter per-chain-family sau một interface chung <code>ChainClient</code>.</li>
+</ul>
+<h2 id="5-anti-patterns-tổng-hợp-của-level-này">5. Anti-patterns tổng hợp của level này<a hidden class="anchor" aria-hidden="true" href="#5-anti-patterns-tổng-hợp-của-level-này">#</a></h2>
+<ul>
+<li>Ghi sổ khi thấy tx hash / khi <code>mined</code> chưa <code>confirmed</code>.</li>
+<li>Ký tx mới khi retry thay vì re-broadcast signed tx cũ.</li>
+<li>Nhiều worker tự lấy nonce từ RPC (race) hoặc một hot wallet duy nhất cho mọi payout (nonce = nút cổ chai + khi kẹt là kẹt tất).</li>
+<li>Message ký login tĩnh, không domain, không nonce, không expiry.</li>
+<li>Publish Kafka và ghi DB không qua outbox (dual-write).</li>
+<li>Webhook không chữ ký, không retry, không cách đối soát.</li>
+<li>Float cho số tiền; lẫn lộn đơn vị (1 USDC = 10^6, 1 ETH = 10^18 — hard-code 18 cho mọi token là bug kinh điển).</li>
+</ul>
+<h2 id="6-tóm-tắt-level-7">6. Tóm tắt Level 7<a hidden class="anchor" aria-hidden="true" href="#6-tóm-tắt-level-7">#</a></h2>
+<ul>
+<li>Wallet auth = challenge-response + EIP-4361 + nonce một lần + EIP-1271 cho contract wallet.</li>
+<li>Transaction service = persistent state machine: intent → signed → broadcast → mined → confirmed, idempotent hai tầng (business key + re-broadcast signed_raw).</li>
+<li>Nonce: cấp phát tập trung có lock, đồng bộ định kỳ với chain, nonce gap là P1, scale bằng nhiều ví.</li>
+<li>Sự thật nghiệp vụ chỉ sinh ra ở <code>confirmed</code> (theo policy per-chain); reorg đưa tx quay lại vòng đời.</li>
+<li>Pipeline: indexer → outbox → Kafka; tách topic observed/finalized/reverted; consumer idempotent theo (chainId, txHash, logIndex).</li>
+</ul>
+<p><strong>Tiếp theo — Level 8:</strong> vận hành tất cả những thứ trên: deployment, HA, monitoring, DR và tối ưu chi phí.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/blockchain/">Blockchain</a></li>
+      <li><a href="http://localhost:1313/tags/web3/">Web3</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/blockchain-for-backend-engineers/06-level-6-scaling/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Level 6 – Scaling: Layer 2, Rollup, Sharding</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/blockchain-for-backend-engineers/08-level-8-production-operations/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Level 8 – Production Operations</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on x"
+            href="https://x.com/intent/tweet/?text=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f&amp;hashtags=backend%2cblockchain%2cweb3">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f&amp;title=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;summary=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f&title=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on whatsapp"
+            href="https://api.whatsapp.com/send?text=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on telegram"
+            href="https://telegram.me/share/url?text=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Level 7 – Backend Integration Patterns on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Level%207%20%e2%80%93%20Backend%20Integration%20Patterns&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fblockchain-for-backend-engineers%2f07-level-7-backend-integration%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

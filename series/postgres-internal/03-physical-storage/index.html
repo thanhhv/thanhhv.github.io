@@ -1,5 +1,13 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map | Thanh HV's Blog</title>
-<meta name=keywords content="backend,database,postgresql"><meta name=description content="
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, database, postgresql">
+<meta name="description" content="
 Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page
 là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.
 
@@ -12,23 +20,126 @@ Nhiều version của một row (MVCC) cùng tồn tại được.
 Crash giữa chừng không phá cấu trúc.
 Cột note dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh.
 
-Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/postgres-internal/03-physical-storage/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/postgres-internal/03-physical-storage/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/postgres-internal/03-physical-storage/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map"><meta property="og:description" content=" Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.
-1. Problem Statement Bảng orders 200GB phải nằm trên disk sao cho:
-Tìm một order theo con trỏ mất đúng 1 lần đọc disk. Thêm order mới không phải dịch chuyển dữ liệu cũ. Nhiều version của một row (MVCC) cùng tồn tại được. Crash giữa chừng không phá cấu trúc. Cột note dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh. Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-11T10:00:00+07:00"><meta property="article:modified_time" content="2026-07-11T10:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Database"><meta property="article:tag" content="Postgresql"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map"><meta name=twitter:description content="
-Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page
-là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.
+Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/postgres-internal/03-physical-storage/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/postgres-internal/03-physical-storage/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Problem Statement
-Bảng orders 200GB phải nằm trên disk sao cho:
+    </style>
+</noscript>
+</head>
 
-Tìm một order theo con trỏ mất đúng 1 lần đọc disk.
-Thêm order mới không phải dịch chuyển dữ liệu cũ.
-Nhiều version của một row (MVCC) cùng tồn tại được.
-Crash giữa chừng không phá cấu trúc.
-Cột note dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh.
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
 
-Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"PostgreSQL Internals","item":"https://thanhhv.github.io/series/postgres-internal/"},{"@type":"ListItem","position":3,"name":"Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map","item":"https://thanhhv.github.io/series/postgres-internal/03-physical-storage/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map","name":"Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map","description":" Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.\n1. Problem Statement Bảng orders 200GB phải nằm trên disk sao cho:\nTìm một order theo con trỏ mất đúng 1 lần đọc disk. Thêm order mới không phải dịch chuyển dữ liệu cũ. Nhiều version của một row (MVCC) cùng tồn tại được. Crash giữa chừng không phá cấu trúc. Cột note dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh. Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.\n","keywords":["backend","database","postgresql"],"articleBody":" Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.\n1. Problem Statement Bảng orders 200GB phải nằm trên disk sao cho:\nTìm một order theo con trỏ mất đúng 1 lần đọc disk. Thêm order mới không phải dịch chuyển dữ liệu cũ. Nhiều version của một row (MVCC) cùng tồn tại được. Crash giữa chừng không phá cấu trúc. Cột note dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh. Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.\n2. Từ Relation đến Block — chuỗi ánh xạ Relation (bảng/index) \"orders\" │ ánh xạ qua catalog: pg_class.relfilenode = 16385 ▼ File vật lý base/16384/16385, 16385.1, 16385.2 ... │ mỗi SEGMENT tối đa 1GB ▼ Block / Page mỗi file = dãy page 8KB đánh số 0,1,2,... │ BlockNumber (uint32) → tối đa 2^32 × 8KB = 32TB / relation ▼ Tuple mỗi page chứa nhiều tuple (row version) │ định danh bằng ItemPointer = (BlockNumber, OffsetNumber) ▼ ← chính là ctid mà bạn thấy trong SQL Byte trên diskTại sao segment 1GB? Di sản từ thời filesystem không hỗ trợ file \u003e2GB, giữ lại vì: copy/backup từng phần dễ, và một số filesystem vẫn xử lý file khổng lồ kém. Trade-off: bảng 1TB = 1000 file descriptor tiềm năng — PostgreSQL phải có LRU cache cho fd (max_files_per_process).\nTại sao page 8KB? Cân bằng giữa: (a) đơn vị I/O đủ lớn để amortize chi phí syscall; (b) đủ nhỏ để không phí RAM khi chỉ cần 1 tuple; (c) khớp bội số của block filesystem 4KB. Đổi được lúc compile (--with-blocksize) nhưng gần như không ai đổi — toàn bộ tuning ecosystem giả định 8KB. Lưu ý quan trọng: 8KB \u003e 4KB atomic của disk → một page có thể bị ghi rách đôi (torn page) → sinh ra cơ chế full page write ở Chương 5.\nFork — một relation, nhiều file Mỗi relation có tới 4 “fork” (dòng file song song):\nFork File Nội dung Nếu bỏ đi thì sao? main 16385 Dữ liệu thật (heap/index page) — FSM 16385_fsm Free Space Map: page nào còn bao nhiêu chỗ trống INSERT phải quét tuần tự tìm chỗ trống → O(n) mỗi lần chèn VM 16385_vm Visibility Map: 2 bit/page — all-visible, all-frozen Index-only scan bất khả thi; VACUUM phải đọc lại toàn bộ bảng mỗi lần init 16385_init Cho UNLOGGED table: ảnh trạng thái rỗng để reset sau crash Unlogged table sau crash chứa rác thay vì rỗng sạch FSM là cây max-heap 3 tầng lưu lượng chỗ trống (độ phân giải 1/256 page) — tìm “page nào chứa vừa tuple X byte” trong O(log n) mà không cần lock toàn bảng. Nó chỉ là gợi ý (hint): không được WAL-log đầy đủ, sau crash có thể lạc hậu, tự sửa dần khi dùng.\nVM quan trọng vượt cỡ của nó (2 bit/page — bảng 1TB chỉ cần VM 32MB): bit all-visible cho phép Index-Only Scan bỏ qua bước đọc heap (Chương 9), và cho VACUUM bỏ qua page không có gì để dọn (Chương 10). Bit all-frozen (PG9.6+) cho phép anti-wraparound vacuum bỏ qua page đã đóng băng — trước đó, vacuum freeze bảng 1TB phải đọc đủ 1TB.\n3. Heap Page — giải phẫu 8192 byte PostgreSQL dùng bố cục “slotted page” kinh điển, dữ liệu mọc từ hai đầu vào giữa:\n0 8192 ┌──────────┬────┬────┬────┬─────▶ ◀─────┬───────────┐ │PageHeader│ lp1│ lp2│ lp3│ ...trống (hole)... │ tuple3 │ │ (24 byte)│(4B)│(4B)│(4B)│ ├───────────┤ └──────────┴────┴────┴────┘ │ tuple2 │ │ │ ├───────────┤ │ └── line pointer: (offset,flags,len) │ tuple1 │ │ trỏ tới tuple ở cuối page └───────────┘ │ ▲ (special space ▼ — chỉ index page) PageHeaderData: pd_lsn (8B) ← LSN của WAL record cuối sửa page này ★WAL rule pd_checksum (2B) ← checksum (nếu bật khi initdb) pd_flags (2B) pd_lower (2B) ← ranh giới cuối mảng line pointer pd_upper (2B) ← ranh giới đầu vùng tuple pd_special (2B) ← đầu vùng special (B-tree dùng cho sibling links) pd_pagesize_version (2B) pd_prune_xid (4B) ← gợi ý: XID cũ nhất có thể prune đượcBa câu hỏi thiết kế:\nTại sao cần line pointer (gián tiếp), không trỏ thẳng vào tuple? Vì tuple di chuyển trong page khi defragment (prune/vacuum gom hố trống), và tuple bị thay thế trong HOT update. Line pointer là địa chỉ ổn định: index bên ngoài trỏ vào (block, lp số 3) — tuple thật nằm đâu trong page là chuyện nội bộ. Bỏ nó đi → mỗi lần dọn page phải cập nhật mọi index trỏ vào page đó. Đây là quyết định mua sự tự do dọn dẹp nội-page với giá 4 byte/tuple.\nTại sao pd_lsn nằm ngay đầu page? Đây là chốt của quy tắc WAL (Chương 5): page chỉ được ghi xuống disk khi WAL record có LSN ≤ pd_lsn đã được flush. Buffer manager kiểm tra field này trước mỗi lần ghi page.\npd_checksum: phát hiện hư hỏng do disk/RAM (bit rot). Tính khi ghi page ra disk, kiểm khi đọc lên. Chi phí ~vài % CPU. Không bật mặc định trước PG18 (initdb --data-checksums); production nên luôn bật — phát hiện corruption sớm rẻ hơn vô hạn lần so với phát hiện muộn.\n4. Tuple — giải phẫu một row version Đây là cấu trúc quan trọng nhất PostgreSQL. Mỗi tuple = header 23 byte (+ padding + null bitmap) + dữ liệu:\n┌─────────────────────────── HeapTupleHeaderData ──────────────────────────┐ │ t_xmin (4B) XID của transaction TẠO tuple này │ │ t_xmax (4B) XID của transaction XÓA/UPDATE tuple này (0 = còn sống)│ │ t_cid (4B) CommandId trong transaction (INSERT thứ mấy) │ │ (dùng chung chỗ với t_xvac — vacuum full cũ) │ │ t_ctid (6B) ItemPointer: trỏ tới CHÍNH NÓ, hoặc version MỚI HƠN │ │ → tạo thành \"update chain\" │ │ t_infomask2 (2B) số cột + cờ HOT (HEAP_HOT_UPDATED, HEAP_ONLY_TUPLE) │ │ t_infomask (2B) ★HINT BITS: XMIN_COMMITTED/ABORTED, │ │ XMAX_COMMITTED/ABORTED, HAS_NULL, ... │ │ t_hoff (1B) offset tới dữ liệu thật (sau null bitmap + pad) │ │ [null bitmap] 1 bit/cột, chỉ có mặt nếu có NULL │ │ [padding tới bội số MAXALIGN 8B] │ ├───────────────────────────── user data ──────────────────────────────────┤ │ cột 1 │ cột 2 │ ... (mỗi cột align theo typalign của kiểu) │ └───────────────────────────────────────────────────────────────────────────┘Những hệ quả trực tiếp lên đời engineer 23 byte overhead mỗi row version. Bảng 1 tỷ row “chỉ có 2 cột int” (8 byte data) thực tế tốn ≥ (23 header + 1 pad + 8 data + 4 line pointer) ≈ 36 byte/row ≈ 36GB chưa kể page overhead. So sánh: cùng dữ liệu trong file nhị phân phẳng: 8GB. Khoảng chênh đó mua: MVCC, crash safety, khả năng truy vấn.\nAlignment (padding) là tiền thật. Cột được xếp đúng thứ tự khai báo, mỗi kiểu có yêu cầu align (int8/timestamp: 8B; int4: 4B; int2: 2B; text/varlena: 1B nhưng thường 4B):\n-- Bảng A: (id int4, created timestamptz, flag bool, amount int8) -- int4(4) + PAD(4) + ts(8) + bool(1) + PAD(7) + int8(8) = 32 byte -- Bảng B: (created timestamptz, amount int8, id int4, flag bool) -- ts(8) + int8(8) + int4(4) + bool(1) + PAD(3) = 24 byte -- → Cùng dữ liệu, tiết kiệm 25% chỉ bằng thứ tự cột. Quy tắc thực dụng: khai báo cột từ kiểu to align xuống nhỏ (int8/timestamptz → int4 → int2 → bool → text/varlena).\nt_ctid và update chain. Khi UPDATE, version cũ có t_ctid trỏ tới version mới:\nUPDATE orders SET status='paid' WHERE id=7; page 42 page 42 (sau update, còn chỗ) ┌──────────────────────────┐ ┌──────────────────────────────┐ │ lp1 → tuple v1 │ │ lp1 → tuple v1 │ │ xmin=100 xmax=0 │ ──▶ │ xmin=100 xmax=205 ← bị \"xóa\"│ │ ctid=(42,1) │ │ ctid=(42,2) ───┐ bởi XID 205│ │ │ │ lp2 → tuple v2 ◀─┘ │ │ │ │ xmin=205 xmax=0 │ └──────────────────────────┘ └──────────────────────────────┘Cả hai version cùng tồn tại. Ai nhìn thấy version nào do MVCC quyết (Chương 6). Version cũ trở thành dead tuple khi không snapshot nào cần → mồi cho VACUUM (Chương 10). Đây chính là nguồn gốc vật lý của table bloat.\nHint bits (t_infomask). Để biết XID 100 đã commit chưa, phải tra CLOG — một lần đọc SLRU có thể miss cache. Làm cho mỗi tuple, mỗi lần đọc thì quá đắt. Giải pháp: lần đầu tra xong, ghi kết quả vào chính tuple (bit XMIN_COMMITTED). Lần sau đọc bit là xong.\nHệ quả kinh điển làm sửng sốt người mới: SELECT có thể tạo ra write I/O. Đọc một bảng vừa bulk-insert xong → backend set hint bit hàng loạt → page dirty hàng loạt → SELECT đầu tiên sau import chậm và gây bão ghi. Xử lý: chạy VACUUM (không FULL) sau bulk load để set hint bit + freeze chủ động.\n5. TOAST — The Oversized-Attribute Storage Technique Problem: tuple không được vượt ~2KB (để một page 8KB chứa được ≥4 tuple — con số chọn để B-tree index hoạt động tốt). Nhưng user cần lưu text/jsonb/bytea hàng MB.\nGiải pháp: giá trị lớn bị (theo thứ tự ưu tiên):\nNén tại chỗ (pglz, hoặc lz4 từ PG14 — nhanh hơn đáng kể, nên dùng). Cắt lát đưa sang bảng phụ pg_toast.pg_toast_, mỗi lát ~2000 byte; tuple gốc chỉ giữ con trỏ 18 byte (varatt_external: toast oid + value oid + size). heap tuple: │ id │ status │ [TOAST pointer 18B] │ │ ▼ pg_toast_16385 (bảng heap thường + index riêng): (chunk_id=9001, seq=0, data[~2000B]) (chunk_id=9001, seq=1, data[~2000B]) ...4 chiến lược mỗi cột: PLAIN (không toast — kiểu fixed), EXTENDED (nén + external, mặc định), EXTERNAL (external không nén — tốt cho dữ liệu đã nén như ảnh), MAIN (ưu tiên nén, hạn chế external).\nĐiểm hay bị bỏ qua trong production:\nĐọc cột TOAST = thêm index scan + N lần đọc bảng toast → SELECT * trên bảng có jsonb to đắt hơn SELECT id, status hàng chục lần. UPDATE một cột thường trên row có TOAST không rewrite phần toast (con trỏ được copy) — nhưng UPDATE chính cột toast thì ghi lại toàn bộ giá trị (không có sửa-một-phần). Bảng toast cũng bloat, cũng cần vacuum, và ẩn: pg_total_relation_size mới thấy nó. Failure case #17 Chương 12. 6. Cách hoạt động: INSERT một row, từng bước, tới từng byte INSERT INTO orders(id, amount) VALUES (7, 100); 1. Executor tạo tuple trong memory (palloc trong TupleTableSlot). 2. heap_insert() (src/backend/access/heap/heapam.c): a. Gán t_xmin = XID hiện tại, t_xmax = 0, t_cid = command id. b. Hỏi FSM: page nào còn ≥ len(tuple) byte trống? → page 42 c. Buffer Manager: pin + đọc page 42 vào shared buffers (Chương 4). d. LWLock exclusive lên buffer. e. PageAddItem(): - cấp line pointer mới (pd_lower += 4) - copy tuple vào cuối vùng trống (pd_upper -= len) f. Ghi WAL record XLOG_HEAP_INSERT vào WAL buffer, nhận LSN, set pd_lsn của page = LSN đó. g. Đánh dấu buffer dirty, nhả LWLock, unpin. 3. COMMIT: flush WAL ≤ LSN đó + fsync; ghi bit \"committed\" vào CLOG. 4. (sau này) checkpointer/bgwriter ghi page 42 xuống disk. 5. (sau này) SELECT đầu tiên đọc tuple → tra CLOG thấy committed → set hint bit XMIN_COMMITTED → page dirty lần nữa.Pseudo code Go cho bước 2e — nhìn rõ tính đơn giản của slotted page:\nfunc PageAddItem(p *Page, tuple []byte) (OffsetNumber, error) { need := align8(len(tuple)) if int(p.pdUpper)-int(p.pdLower) \u003c need+4 { return 0, ErrNoSpace // caller sẽ hỏi FSM page khác } p.pdUpper -= uint16(need) copy(p.data[p.pdUpper:], tuple) lp := LinePointer{Off: p.pdUpper, Len: uint16(len(tuple)), Flags: LP_NORMAL} p.writeLinePointerAt(p.pdLower, lp) p.pdLower += 4 return p.lineCount(), nil } 7. Trade-off: Heap vs Clustered Storage Đây là khác biệt kiến trúc lớn nhất giữa PostgreSQL và MySQL/InnoDB:\nPostgreSQL (Heap) InnoDB (Clustered B-tree theo PK) Bảng là gì Đống page không thứ tự Chính là B-tree, leaf chứa full row Secondary index trỏ vào ctid (vị trí vật lý) Giá trị PK (phải đi 2 B-tree khi tra) Đọc range theo PK Cần index scan + heap fetch tứ tán Tuyệt vời — dữ liệu liền kề vật lý UPDATE non-key Version mới có thể cùng page (HOT) — index không cần sửa Sửa in-place trong B-tree + undo log UPDATE làm row di chuyển ctid đổi → nếu không HOT, MỌI index phải thêm entry Secondary index không đổi (trỏ PK) Page split của bảng Không tồn tại (heap không split) Có — insert giữa chừng gây split Bloat Ở heap, index — cần VACUUM Undo log dài do transaction dài Không bên nào thắng tuyệt đối. PostgreSQL trả giá “index phải update khi row đổi chỗ” và giảm nhẹ nó bằng HOT update (Chương 10). InnoDB trả giá “mọi secondary index lookup đi qua 2 cây”.\n“Nếu muốn clustered trong PostgreSQL?” Lệnh CLUSTER sắp xếp lại bảng theo một index một lần (không duy trì), khóa bảng khi chạy. Đủ dùng cho bảng gần-như-chỉ-đọc; không phải clustered storage thật.\n8. Production Đo kích thước đúng cách: pg_relation_size (main fork) \u003c pg_table_size (+toast, fsm, vm) \u003c pg_total_relation_size (+indexes). Bloat ẩn thường ở toast và index. Fillfactor: mặc định heap 100 (nhồi kín). Bảng UPDATE nhiều → hạ xuống 70–90 để chừa chỗ cho HOT update cùng page (Chương 10). Trả giá: bảng to hơn 10–30%, seq scan chậm hơn tương ứng. Thứ tự cột: như mục 4 — sắp theo align giảm dần khi tạo bảng mới. Với bảng tồn tại, chỉ sửa được bằng rewrite. Checksum: luôn bật --data-checksums từ đầu (PG18 mặc định bật); bật sau bằng pg_checksums yêu cầu downtime. Theo dõi: extension pgstattuple cho tỷ lệ dead tuple/free space thật (đọc cả bảng — cẩn thận với bảng lớn); pg_freespacemap xem FSM. 9. Failure case của chương: “bảng 10GB nhưng dữ liệu thật chỉ 1GB” Triệu chứng: Seq scan chậm dần theo tuần dù số row không tăng. pg_relation_size = 10GB; SELECT count(*) như cũ.\nRoot cause: Table bloat — UPDATE/DELETE để lại dead tuple; VACUUM có dọn nhưng heap không bao giờ tự co lại (chỉ trả chỗ trống cho FSM; page cuối file chỉ được cắt nếu hoàn toàn rỗng). Pattern “UPDATE toàn bảng mỗi đêm” là thủ phạm kinh điển.\nBên trong: mỗi UPDATE chèn version mới có thể vào page mới cuối bảng → high-water mark tăng; version cũ thành dead → vacuum biến thành hố trống rải rác giữa file — seq scan vẫn phải đọc đủ 10GB page.\nĐiều tra: pgstattuple('orders') → xem dead_tuple_percent + free_percent; pg_stat_user_tables.n_dead_tup, last_autovacuum.\nKhắc phục: VACUUM FULL (rewrite, khóa exclusive — cần cửa bảo trì) hoặc pg_repack (online). Phòng tránh: sửa pattern update-toàn-bảng; fillfactor; autovacuum đủ hung hãn (Chương 10).\n10. Tóm tắt Relation → segment 1GB → page 8KB → tuple, định danh bằng ctid=(page, line pointer). Line pointer mua sự tự do dọn dẹp nội page; pd_lsn là chốt của WAL rule; hint bit khiến cả SELECT cũng ghi. Tuple header 23 byte là giá của MVCC; alignment là tiền thật; TOAST giấu chi phí ở bảng phụ. Heap không clustered: không page split cho bảng, nhưng UPDATE đổi chỗ row bắt mọi index trả giá — thứ HOT sẽ cứu. Heap không bao giờ tự co: bloat chỉ xử lý được bằng rewrite. Tiếp theo: Chương 4 — Buffer Manager: các page 8KB này sống trong RAM như thế nào.\n","wordCount":"2605","inLanguage":"en","datePublished":"2026-07-11T10:00:00+07:00","dateModified":"2026-07-11T10:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/postgres-internal/03-physical-storage/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/postgres-internal/>PostgreSQL Internals</a></div><h1 class="post-title entry-hint-parent">Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map</h1><div class=post-meta><span title='2026-07-11 10:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;13 min</div></header><div class=post-content><blockquote><p>Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page
-là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.</p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Bảng <code>orders</code> 200GB phải nằm trên disk sao cho:</p><ul><li>Tìm một order theo con trỏ mất đúng 1 lần đọc disk.</li><li>Thêm order mới không phải dịch chuyển dữ liệu cũ.</li><li>Nhiều version của một row (MVCC) cùng tồn tại được.</li><li>Crash giữa chừng không phá cấu trúc.</li><li>Cột <code>note</code> dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh.</li></ul><p>Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.</p><h2 id=2-từ-relation-đến-block--chuỗi-ánh-xạ>2. Từ Relation đến Block — chuỗi ánh xạ<a hidden class=anchor aria-hidden=true href=#2-từ-relation-đến-block--chuỗi-ánh-xạ>#</a></h2><pre tabindex=0><code>Relation (bảng/index)  &#34;orders&#34;
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/postgres-internal/">PostgreSQL Internals</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map
+    </h1>
+    <div class="post-meta"><span title='2026-07-11 10:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;13 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page
+là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Bảng <code>orders</code> 200GB phải nằm trên disk sao cho:</p>
+<ul>
+<li>Tìm một order theo con trỏ mất đúng 1 lần đọc disk.</li>
+<li>Thêm order mới không phải dịch chuyển dữ liệu cũ.</li>
+<li>Nhiều version của một row (MVCC) cùng tồn tại được.</li>
+<li>Crash giữa chừng không phá cấu trúc.</li>
+<li>Cột <code>note</code> dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh.</li>
+</ul>
+<p>Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.</p>
+<h2 id="2-từ-relation-đến-block--chuỗi-ánh-xạ">2. Từ Relation đến Block — chuỗi ánh xạ<a hidden class="anchor" aria-hidden="true" href="#2-từ-relation-đến-block--chuỗi-ánh-xạ">#</a></h2>
+<pre tabindex="0"><code>Relation (bảng/index)  &#34;orders&#34;
    │  ánh xạ qua catalog: pg_class.relfilenode = 16385
    ▼
 File vật lý           base/16384/16385, 16385.1, 16385.2 ...
@@ -40,7 +151,51 @@ Block / Page          mỗi file = dãy page 8KB đánh số 0,1,2,...
 Tuple                 mỗi page chứa nhiều tuple (row version)
    │  định danh bằng ItemPointer = (BlockNumber, OffsetNumber)
    ▼                  ← chính là ctid mà bạn thấy trong SQL
-Byte trên disk</code></pre><p><strong>Tại sao segment 1GB?</strong> Di sản từ thời filesystem không hỗ trợ file >2GB, giữ lại vì: copy/backup từng phần dễ, và một số filesystem vẫn xử lý file khổng lồ kém. Trade-off: bảng 1TB = 1000 file descriptor tiềm năng — PostgreSQL phải có LRU cache cho fd (<code>max_files_per_process</code>).</p><p><strong>Tại sao page 8KB?</strong> Cân bằng giữa: (a) đơn vị I/O đủ lớn để amortize chi phí syscall; (b) đủ nhỏ để không phí RAM khi chỉ cần 1 tuple; (c) khớp bội số của block filesystem 4KB. Đổi được lúc compile (<code>--with-blocksize</code>) nhưng gần như không ai đổi — toàn bộ tuning ecosystem giả định 8KB. Lưu ý quan trọng: <strong>8KB > 4KB atomic của disk → một page có thể bị ghi rách đôi (torn page)</strong> → sinh ra cơ chế full page write ở Chương 5.</p><h3 id=fork--một-relation-nhiều-file>Fork — một relation, nhiều file<a hidden class=anchor aria-hidden=true href=#fork--một-relation-nhiều-file>#</a></h3><p>Mỗi relation có tới 4 &ldquo;fork&rdquo; (dòng file song song):</p><table><thead><tr><th>Fork</th><th>File</th><th>Nội dung</th><th>Nếu bỏ đi thì sao?</th></tr></thead><tbody><tr><td>main</td><td><code>16385</code></td><td>Dữ liệu thật (heap/index page)</td><td>—</td></tr><tr><td>FSM</td><td><code>16385_fsm</code></td><td>Free Space Map: page nào còn bao nhiêu chỗ trống</td><td>INSERT phải quét tuần tự tìm chỗ trống → O(n) mỗi lần chèn</td></tr><tr><td>VM</td><td><code>16385_vm</code></td><td>Visibility Map: 2 bit/page — all-visible, all-frozen</td><td>Index-only scan bất khả thi; VACUUM phải đọc lại toàn bộ bảng mỗi lần</td></tr><tr><td>init</td><td><code>16385_init</code></td><td>Cho UNLOGGED table: ảnh trạng thái rỗng để reset sau crash</td><td>Unlogged table sau crash chứa rác thay vì rỗng sạch</td></tr></tbody></table><p><strong>FSM</strong> là cây max-heap 3 tầng lưu lượng chỗ trống (độ phân giải 1/256 page) — tìm &ldquo;page nào chứa vừa tuple X byte&rdquo; trong O(log n) mà không cần lock toàn bảng. Nó chỉ là <strong>gợi ý</strong> (hint): không được WAL-log đầy đủ, sau crash có thể lạc hậu, tự sửa dần khi dùng.</p><p><strong>VM</strong> quan trọng vượt cỡ của nó (2 bit/page — bảng 1TB chỉ cần VM 32MB): bit <code>all-visible</code> cho phép Index-Only Scan bỏ qua bước đọc heap (Chương 9), và cho VACUUM bỏ qua page không có gì để dọn (Chương 10). Bit <code>all-frozen</code> (PG9.6+) cho phép anti-wraparound vacuum bỏ qua page đã đóng băng — trước đó, vacuum freeze bảng 1TB phải đọc đủ 1TB.</p><h2 id=3-heap-page--giải-phẫu-8192-byte>3. Heap Page — giải phẫu 8192 byte<a hidden class=anchor aria-hidden=true href=#3-heap-page--giải-phẫu-8192-byte>#</a></h2><p>PostgreSQL dùng bố cục &ldquo;slotted page&rdquo; kinh điển, dữ liệu mọc từ hai đầu vào giữa:</p><pre tabindex=0><code> 0                                                          8192
+Byte trên disk</code></pre><p><strong>Tại sao segment 1GB?</strong> Di sản từ thời filesystem không hỗ trợ file &gt;2GB, giữ lại vì: copy/backup từng phần dễ, và một số filesystem vẫn xử lý file khổng lồ kém. Trade-off: bảng 1TB = 1000 file descriptor tiềm năng — PostgreSQL phải có LRU cache cho fd (<code>max_files_per_process</code>).</p>
+<p><strong>Tại sao page 8KB?</strong> Cân bằng giữa: (a) đơn vị I/O đủ lớn để amortize chi phí syscall; (b) đủ nhỏ để không phí RAM khi chỉ cần 1 tuple; (c) khớp bội số của block filesystem 4KB. Đổi được lúc compile (<code>--with-blocksize</code>) nhưng gần như không ai đổi — toàn bộ tuning ecosystem giả định 8KB. Lưu ý quan trọng: <strong>8KB &gt; 4KB atomic của disk → một page có thể bị ghi rách đôi (torn page)</strong> → sinh ra cơ chế full page write ở Chương 5.</p>
+<h3 id="fork--một-relation-nhiều-file">Fork — một relation, nhiều file<a hidden class="anchor" aria-hidden="true" href="#fork--một-relation-nhiều-file">#</a></h3>
+<p>Mỗi relation có tới 4 &ldquo;fork&rdquo; (dòng file song song):</p>
+<table>
+  <thead>
+      <tr>
+          <th>Fork</th>
+          <th>File</th>
+          <th>Nội dung</th>
+          <th>Nếu bỏ đi thì sao?</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>main</td>
+          <td><code>16385</code></td>
+          <td>Dữ liệu thật (heap/index page)</td>
+          <td>—</td>
+      </tr>
+      <tr>
+          <td>FSM</td>
+          <td><code>16385_fsm</code></td>
+          <td>Free Space Map: page nào còn bao nhiêu chỗ trống</td>
+          <td>INSERT phải quét tuần tự tìm chỗ trống → O(n) mỗi lần chèn</td>
+      </tr>
+      <tr>
+          <td>VM</td>
+          <td><code>16385_vm</code></td>
+          <td>Visibility Map: 2 bit/page — all-visible, all-frozen</td>
+          <td>Index-only scan bất khả thi; VACUUM phải đọc lại toàn bộ bảng mỗi lần</td>
+      </tr>
+      <tr>
+          <td>init</td>
+          <td><code>16385_init</code></td>
+          <td>Cho UNLOGGED table: ảnh trạng thái rỗng để reset sau crash</td>
+          <td>Unlogged table sau crash chứa rác thay vì rỗng sạch</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>FSM</strong> là cây max-heap 3 tầng lưu lượng chỗ trống (độ phân giải 1/256 page) — tìm &ldquo;page nào chứa vừa tuple X byte&rdquo; trong O(log n) mà không cần lock toàn bảng. Nó chỉ là <strong>gợi ý</strong> (hint): không được WAL-log đầy đủ, sau crash có thể lạc hậu, tự sửa dần khi dùng.</p>
+<p><strong>VM</strong> quan trọng vượt cỡ của nó (2 bit/page — bảng 1TB chỉ cần VM 32MB): bit <code>all-visible</code> cho phép Index-Only Scan bỏ qua bước đọc heap (Chương 9), và cho VACUUM bỏ qua page không có gì để dọn (Chương 10). Bit <code>all-frozen</code> (PG9.6+) cho phép anti-wraparound vacuum bỏ qua page đã đóng băng — trước đó, vacuum freeze bảng 1TB phải đọc đủ 1TB.</p>
+<h2 id="3-heap-page--giải-phẫu-8192-byte">3. Heap Page — giải phẫu 8192 byte<a hidden class="anchor" aria-hidden="true" href="#3-heap-page--giải-phẫu-8192-byte">#</a></h2>
+<p>PostgreSQL dùng bố cục &ldquo;slotted page&rdquo; kinh điển, dữ liệu mọc từ hai đầu vào giữa:</p>
+<pre tabindex="0"><code> 0                                                          8192
  ┌──────────┬────┬────┬────┬─────▶            ◀─────┬───────────┐
  │PageHeader│ lp1│ lp2│ lp3│  ...trống (hole)...    │  tuple3   │
  │ (24 byte)│(4B)│(4B)│(4B)│                        ├───────────┤
@@ -58,9 +213,15 @@ Byte trên disk</code></pre><p><strong>Tại sao segment 1GB?</strong> Di sản 
    pd_upper    (2B)  ← ranh giới đầu vùng tuple
    pd_special  (2B)  ← đầu vùng special (B-tree dùng cho sibling links)
    pd_pagesize_version (2B)
-   pd_prune_xid (4B) ← gợi ý: XID cũ nhất có thể prune được</code></pre><p>Ba câu hỏi thiết kế:</p><p><strong>Tại sao cần line pointer (gián tiếp), không trỏ thẳng vào tuple?</strong>
-Vì tuple <strong>di chuyển trong page</strong> khi defragment (prune/vacuum gom hố trống), và tuple <strong>bị thay thế</strong> trong HOT update. Line pointer là địa chỉ ổn định: index bên ngoài trỏ vào <code>(block, lp số 3)</code> — tuple thật nằm đâu trong page là chuyện nội bộ. Bỏ nó đi → mỗi lần dọn page phải cập nhật mọi index trỏ vào page đó. Đây là quyết định mua sự tự do dọn dẹp nội-page với giá 4 byte/tuple.</p><p><strong>Tại sao pd_lsn nằm ngay đầu page?</strong>
-Đây là chốt của quy tắc WAL (Chương 5): <em>page chỉ được ghi xuống disk khi WAL record có LSN ≤ pd_lsn đã được flush</em>. Buffer manager kiểm tra field này trước mỗi lần ghi page.</p><p><strong>pd_checksum:</strong> phát hiện hư hỏng do disk/RAM (bit rot). Tính khi ghi page ra disk, kiểm khi đọc lên. Chi phí ~vài % CPU. Không bật mặc định trước PG18 (initdb <code>--data-checksums</code>); production nên luôn bật — phát hiện corruption sớm rẻ hơn vô hạn lần so với phát hiện muộn.</p><h2 id=4-tuple--giải-phẫu-một-row-version>4. Tuple — giải phẫu một row version<a hidden class=anchor aria-hidden=true href=#4-tuple--giải-phẫu-một-row-version>#</a></h2><p>Đây là cấu trúc quan trọng nhất PostgreSQL. Mỗi tuple = header 23 byte (+ padding + null bitmap) + dữ liệu:</p><pre tabindex=0><code> ┌─────────────────────────── HeapTupleHeaderData ──────────────────────────┐
+   pd_prune_xid (4B) ← gợi ý: XID cũ nhất có thể prune được</code></pre><p>Ba câu hỏi thiết kế:</p>
+<p><strong>Tại sao cần line pointer (gián tiếp), không trỏ thẳng vào tuple?</strong>
+Vì tuple <strong>di chuyển trong page</strong> khi defragment (prune/vacuum gom hố trống), và tuple <strong>bị thay thế</strong> trong HOT update. Line pointer là địa chỉ ổn định: index bên ngoài trỏ vào <code>(block, lp số 3)</code> — tuple thật nằm đâu trong page là chuyện nội bộ. Bỏ nó đi → mỗi lần dọn page phải cập nhật mọi index trỏ vào page đó. Đây là quyết định mua sự tự do dọn dẹp nội-page với giá 4 byte/tuple.</p>
+<p><strong>Tại sao pd_lsn nằm ngay đầu page?</strong>
+Đây là chốt của quy tắc WAL (Chương 5): <em>page chỉ được ghi xuống disk khi WAL record có LSN ≤ pd_lsn đã được flush</em>. Buffer manager kiểm tra field này trước mỗi lần ghi page.</p>
+<p><strong>pd_checksum:</strong> phát hiện hư hỏng do disk/RAM (bit rot). Tính khi ghi page ra disk, kiểm khi đọc lên. Chi phí ~vài % CPU. Không bật mặc định trước PG18 (initdb <code>--data-checksums</code>); production nên luôn bật — phát hiện corruption sớm rẻ hơn vô hạn lần so với phát hiện muộn.</p>
+<h2 id="4-tuple--giải-phẫu-một-row-version">4. Tuple — giải phẫu một row version<a hidden class="anchor" aria-hidden="true" href="#4-tuple--giải-phẫu-một-row-version">#</a></h2>
+<p>Đây là cấu trúc quan trọng nhất PostgreSQL. Mỗi tuple = header 23 byte (+ padding + null bitmap) + dữ liệu:</p>
+<pre tabindex="0"><code> ┌─────────────────────────── HeapTupleHeaderData ──────────────────────────┐
  │ t_xmin      (4B)  XID của transaction TẠO tuple này                      │
  │ t_xmax      (4B)  XID của transaction XÓA/UPDATE tuple này (0 = còn sống)│
  │ t_cid       (4B)  CommandId trong transaction (INSERT thứ mấy)           │
@@ -75,12 +236,17 @@ Vì tuple <strong>di chuyển trong page</strong> khi defragment (prune/vacuum g
  │ [padding tới bội số MAXALIGN 8B]                                         │
  ├───────────────────────────── user data ──────────────────────────────────┤
  │ cột 1 │ cột 2 │ ...  (mỗi cột align theo typalign của kiểu)              │
- └───────────────────────────────────────────────────────────────────────────┘</code></pre><h3 id=những-hệ-quả-trực-tiếp-lên-đời-engineer>Những hệ quả trực tiếp lên đời engineer<a hidden class=anchor aria-hidden=true href=#những-hệ-quả-trực-tiếp-lên-đời-engineer>#</a></h3><p><strong>23 byte overhead mỗi row version.</strong> Bảng 1 tỷ row &ldquo;chỉ có 2 cột int&rdquo; (8 byte data) thực tế tốn ≥ (23 header + 1 pad + 8 data + 4 line pointer) ≈ 36 byte/row ≈ 36GB chưa kể page overhead. So sánh: cùng dữ liệu trong file nhị phân phẳng: 8GB. Khoảng chênh đó mua: MVCC, crash safety, khả năng truy vấn.</p><p><strong>Alignment (padding) là tiền thật.</strong> Cột được xếp đúng thứ tự khai báo, mỗi kiểu có yêu cầu align (int8/timestamp: 8B; int4: 4B; int2: 2B; text/varlena: 1B nhưng thường 4B):</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sql data-lang=sql><span style=display:flex><span><span style=color:#75715e>-- Bảng A: (id int4, created timestamptz, flag bool, amount int8)
-</span></span></span><span style=display:flex><span><span style=color:#75715e>--   int4(4) + PAD(4) + ts(8) + bool(1) + PAD(7) + int8(8) = 32 byte
-</span></span></span><span style=display:flex><span><span style=color:#75715e>-- Bảng B: (created timestamptz, amount int8, id int4, flag bool)
-</span></span></span><span style=display:flex><span><span style=color:#75715e>--   ts(8) + int8(8) + int4(4) + bool(1) + PAD(3)          = 24 byte
-</span></span></span><span style=display:flex><span><span style=color:#75715e>-- → Cùng dữ liệu, tiết kiệm 25% chỉ bằng thứ tự cột.
-</span></span></span></code></pre></div><p>Quy tắc thực dụng: <strong>khai báo cột từ kiểu to align xuống nhỏ</strong> (int8/timestamptz → int4 → int2 → bool → text/varlena).</p><p><strong>t_ctid và update chain.</strong> Khi UPDATE, version cũ có <code>t_ctid</code> trỏ tới version mới:</p><pre tabindex=0><code>UPDATE orders SET status=&#39;paid&#39; WHERE id=7;
+ └───────────────────────────────────────────────────────────────────────────┘</code></pre><h3 id="những-hệ-quả-trực-tiếp-lên-đời-engineer">Những hệ quả trực tiếp lên đời engineer<a hidden class="anchor" aria-hidden="true" href="#những-hệ-quả-trực-tiếp-lên-đời-engineer">#</a></h3>
+<p><strong>23 byte overhead mỗi row version.</strong> Bảng 1 tỷ row &ldquo;chỉ có 2 cột int&rdquo; (8 byte data) thực tế tốn ≥ (23 header + 1 pad + 8 data + 4 line pointer) ≈ 36 byte/row ≈ 36GB chưa kể page overhead. So sánh: cùng dữ liệu trong file nhị phân phẳng: 8GB. Khoảng chênh đó mua: MVCC, crash safety, khả năng truy vấn.</p>
+<p><strong>Alignment (padding) là tiền thật.</strong> Cột được xếp đúng thứ tự khai báo, mỗi kiểu có yêu cầu align (int8/timestamp: 8B; int4: 4B; int2: 2B; text/varlena: 1B nhưng thường 4B):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#75715e">-- Bảng A: (id int4, created timestamptz, flag bool, amount int8)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">--   int4(4) + PAD(4) + ts(8) + bool(1) + PAD(7) + int8(8) = 32 byte
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">-- Bảng B: (created timestamptz, amount int8, id int4, flag bool)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">--   ts(8) + int8(8) + int4(4) + bool(1) + PAD(3)          = 24 byte
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">-- → Cùng dữ liệu, tiết kiệm 25% chỉ bằng thứ tự cột.
+</span></span></span></code></pre></div><p>Quy tắc thực dụng: <strong>khai báo cột từ kiểu to align xuống nhỏ</strong> (int8/timestamptz → int4 → int2 → bool → text/varlena).</p>
+<p><strong>t_ctid và update chain.</strong> Khi UPDATE, version cũ có <code>t_ctid</code> trỏ tới version mới:</p>
+<pre tabindex="0"><code>UPDATE orders SET status=&#39;paid&#39; WHERE id=7;
 
  page 42                                   page 42 (sau update, còn chỗ)
  ┌──────────────────────────┐              ┌──────────────────────────────┐
@@ -89,13 +255,31 @@ Vì tuple <strong>di chuyển trong page</strong> khi defragment (prune/vacuum g
  │   ctid=(42,1)            │              │   ctid=(42,2) ───┐  bởi XID 205│
  │                          │              │ lp2 → tuple v2 ◀─┘           │
  │                          │              │   xmin=205 xmax=0            │
- └──────────────────────────┘              └──────────────────────────────┘</code></pre><p>Cả hai version cùng tồn tại. Ai nhìn thấy version nào do MVCC quyết (Chương 6). Version cũ trở thành <strong>dead tuple</strong> khi không snapshot nào cần → mồi cho VACUUM (Chương 10). <strong>Đây chính là nguồn gốc vật lý của table bloat.</strong></p><p><strong>Hint bits (t_infomask).</strong> Để biết XID 100 đã commit chưa, phải tra CLOG — một lần đọc SLRU có thể miss cache. Làm cho <em>mỗi tuple, mỗi lần đọc</em> thì quá đắt. Giải pháp: lần đầu tra xong, <strong>ghi kết quả vào chính tuple</strong> (bit XMIN_COMMITTED). Lần sau đọc bit là xong.</p><p>Hệ quả kinh điển làm sửng sốt người mới: <strong>SELECT có thể tạo ra write I/O</strong>. Đọc một bảng vừa bulk-insert xong → backend set hint bit hàng loạt → page dirty hàng loạt → SELECT đầu tiên sau import chậm và gây bão ghi. Xử lý: chạy <code>VACUUM</code> (không FULL) sau bulk load để set hint bit + freeze chủ động.</p><h2 id=5-toast--the-oversized-attribute-storage-technique>5. TOAST — The Oversized-Attribute Storage Technique<a hidden class=anchor aria-hidden=true href=#5-toast--the-oversized-attribute-storage-technique>#</a></h2><p><strong>Problem:</strong> tuple không được vượt ~2KB (để một page 8KB chứa được ≥4 tuple — con số chọn để B-tree index hoạt động tốt). Nhưng user cần lưu text/jsonb/bytea hàng MB.</p><p><strong>Giải pháp:</strong> giá trị lớn bị (theo thứ tự ưu tiên):</p><ol><li><strong>Nén</strong> tại chỗ (pglz, hoặc lz4 từ PG14 — nhanh hơn đáng kể, nên dùng).</li><li><strong>Cắt lát</strong> đưa sang bảng phụ <code>pg_toast.pg_toast_&lt;oid></code>, mỗi lát ~2000 byte; tuple gốc chỉ giữ con trỏ 18 byte (varatt_external: toast oid + value oid + size).</li></ol><pre tabindex=0><code> heap tuple:  │ id │ status │ [TOAST pointer 18B] │
+ └──────────────────────────┘              └──────────────────────────────┘</code></pre><p>Cả hai version cùng tồn tại. Ai nhìn thấy version nào do MVCC quyết (Chương 6). Version cũ trở thành <strong>dead tuple</strong> khi không snapshot nào cần → mồi cho VACUUM (Chương 10). <strong>Đây chính là nguồn gốc vật lý của table bloat.</strong></p>
+<p><strong>Hint bits (t_infomask).</strong> Để biết XID 100 đã commit chưa, phải tra CLOG — một lần đọc SLRU có thể miss cache. Làm cho <em>mỗi tuple, mỗi lần đọc</em> thì quá đắt. Giải pháp: lần đầu tra xong, <strong>ghi kết quả vào chính tuple</strong> (bit XMIN_COMMITTED). Lần sau đọc bit là xong.</p>
+<p>Hệ quả kinh điển làm sửng sốt người mới: <strong>SELECT có thể tạo ra write I/O</strong>. Đọc một bảng vừa bulk-insert xong → backend set hint bit hàng loạt → page dirty hàng loạt → SELECT đầu tiên sau import chậm và gây bão ghi. Xử lý: chạy <code>VACUUM</code> (không FULL) sau bulk load để set hint bit + freeze chủ động.</p>
+<h2 id="5-toast--the-oversized-attribute-storage-technique">5. TOAST — The Oversized-Attribute Storage Technique<a hidden class="anchor" aria-hidden="true" href="#5-toast--the-oversized-attribute-storage-technique">#</a></h2>
+<p><strong>Problem:</strong> tuple không được vượt ~2KB (để một page 8KB chứa được ≥4 tuple — con số chọn để B-tree index hoạt động tốt). Nhưng user cần lưu text/jsonb/bytea hàng MB.</p>
+<p><strong>Giải pháp:</strong> giá trị lớn bị (theo thứ tự ưu tiên):</p>
+<ol>
+<li><strong>Nén</strong> tại chỗ (pglz, hoặc lz4 từ PG14 — nhanh hơn đáng kể, nên dùng).</li>
+<li><strong>Cắt lát</strong> đưa sang bảng phụ <code>pg_toast.pg_toast_&lt;oid&gt;</code>, mỗi lát ~2000 byte; tuple gốc chỉ giữ con trỏ 18 byte (varatt_external: toast oid + value oid + size).</li>
+</ol>
+<pre tabindex="0"><code> heap tuple:  │ id │ status │ [TOAST pointer 18B] │
                                     │
                                     ▼
  pg_toast_16385 (bảng heap thường + index riêng):
    (chunk_id=9001, seq=0, data[~2000B])
    (chunk_id=9001, seq=1, data[~2000B])
-   ...</code></pre><p>4 chiến lược mỗi cột: <code>PLAIN</code> (không toast — kiểu fixed), <code>EXTENDED</code> (nén + external, mặc định), <code>EXTERNAL</code> (external không nén — tốt cho dữ liệu đã nén như ảnh), <code>MAIN</code> (ưu tiên nén, hạn chế external).</p><p><strong>Điểm hay bị bỏ qua trong production:</strong></p><ul><li>Đọc cột TOAST = thêm index scan + N lần đọc bảng toast → <code>SELECT *</code> trên bảng có jsonb to đắt hơn <code>SELECT id, status</code> <strong>hàng chục lần</strong>.</li><li>UPDATE một cột thường trên row có TOAST <strong>không</strong> rewrite phần toast (con trỏ được copy) — nhưng UPDATE chính cột toast thì ghi lại toàn bộ giá trị (không có sửa-một-phần).</li><li>Bảng toast cũng bloat, cũng cần vacuum, và <strong>ẩn</strong>: <code>pg_total_relation_size</code> mới thấy nó. Failure case #17 Chương 12.</li></ul><h2 id=6-cách-hoạt-động-insert-một-row-từng-bước-tới-từng-byte>6. Cách hoạt động: INSERT một row, từng bước, tới từng byte<a hidden class=anchor aria-hidden=true href=#6-cách-hoạt-động-insert-một-row-từng-bước-tới-từng-byte>#</a></h2><pre tabindex=0><code>INSERT INTO orders(id, amount) VALUES (7, 100);
+   ...</code></pre><p>4 chiến lược mỗi cột: <code>PLAIN</code> (không toast — kiểu fixed), <code>EXTENDED</code> (nén + external, mặc định), <code>EXTERNAL</code> (external không nén — tốt cho dữ liệu đã nén như ảnh), <code>MAIN</code> (ưu tiên nén, hạn chế external).</p>
+<p><strong>Điểm hay bị bỏ qua trong production:</strong></p>
+<ul>
+<li>Đọc cột TOAST = thêm index scan + N lần đọc bảng toast → <code>SELECT *</code> trên bảng có jsonb to đắt hơn <code>SELECT id, status</code> <strong>hàng chục lần</strong>.</li>
+<li>UPDATE một cột thường trên row có TOAST <strong>không</strong> rewrite phần toast (con trỏ được copy) — nhưng UPDATE chính cột toast thì ghi lại toàn bộ giá trị (không có sửa-một-phần).</li>
+<li>Bảng toast cũng bloat, cũng cần vacuum, và <strong>ẩn</strong>: <code>pg_total_relation_size</code> mới thấy nó. Failure case #17 Chương 12.</li>
+</ul>
+<h2 id="6-cách-hoạt-động-insert-một-row-từng-bước-tới-từng-byte">6. Cách hoạt động: INSERT một row, từng bước, tới từng byte<a hidden class="anchor" aria-hidden="true" href="#6-cách-hoạt-động-insert-một-row-từng-bước-tới-từng-byte">#</a></h2>
+<pre tabindex="0"><code>INSERT INTO orders(id, amount) VALUES (7, 100);
 
 1. Executor tạo tuple trong memory (palloc trong TupleTableSlot).
 2. heap_insert() (src/backend/access/heap/heapam.c):
@@ -112,21 +296,312 @@ Vì tuple <strong>di chuyển trong page</strong> khi defragment (prune/vacuum g
 3. COMMIT: flush WAL ≤ LSN đó + fsync; ghi bit &#34;committed&#34; vào CLOG.
 4. (sau này) checkpointer/bgwriter ghi page 42 xuống disk.
 5. (sau này) SELECT đầu tiên đọc tuple → tra CLOG thấy committed
-   → set hint bit XMIN_COMMITTED → page dirty lần nữa.</code></pre><p>Pseudo code Go cho bước 2e — nhìn rõ tính đơn giản của slotted page:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>PageAddItem</span>(<span style=color:#a6e22e>p</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Page</span>, <span style=color:#a6e22e>tuple</span> []<span style=color:#66d9ef>byte</span>) (<span style=color:#a6e22e>OffsetNumber</span>, <span style=color:#66d9ef>error</span>) {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>need</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>align8</span>(len(<span style=color:#a6e22e>tuple</span>))
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> int(<span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>pdUpper</span>)<span style=color:#f92672>-</span>int(<span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>pdLower</span>) &lt; <span style=color:#a6e22e>need</span><span style=color:#f92672>+</span><span style=color:#ae81ff>4</span> {
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>ErrNoSpace</span> <span style=color:#75715e>// caller sẽ hỏi FSM page khác</span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>pdUpper</span> <span style=color:#f92672>-=</span> uint16(<span style=color:#a6e22e>need</span>)
-</span></span><span style=display:flex><span>    copy(<span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>data</span>[<span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>pdUpper</span>:], <span style=color:#a6e22e>tuple</span>)
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>lp</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>LinePointer</span>{<span style=color:#a6e22e>Off</span>: <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>pdUpper</span>, <span style=color:#a6e22e>Len</span>: uint16(len(<span style=color:#a6e22e>tuple</span>)), <span style=color:#a6e22e>Flags</span>: <span style=color:#a6e22e>LP_NORMAL</span>}
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>writeLinePointerAt</span>(<span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>pdLower</span>, <span style=color:#a6e22e>lp</span>)
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>pdLower</span> <span style=color:#f92672>+=</span> <span style=color:#ae81ff>4</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>p</span>.<span style=color:#a6e22e>lineCount</span>(), <span style=color:#66d9ef>nil</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h2 id=7-trade-off-heap-vs-clustered-storage>7. Trade-off: Heap vs Clustered Storage<a hidden class=anchor aria-hidden=true href=#7-trade-off-heap-vs-clustered-storage>#</a></h2><p>Đây là khác biệt kiến trúc lớn nhất giữa PostgreSQL và MySQL/InnoDB:</p><table><thead><tr><th></th><th>PostgreSQL (Heap)</th><th>InnoDB (Clustered B-tree theo PK)</th></tr></thead><tbody><tr><td>Bảng là gì</td><td>Đống page không thứ tự</td><td>Chính là B-tree, leaf chứa full row</td></tr><tr><td>Secondary index trỏ vào</td><td>ctid (vị trí vật lý)</td><td>Giá trị PK (phải đi 2 B-tree khi tra)</td></tr><tr><td>Đọc range theo PK</td><td>Cần index scan + heap fetch tứ tán</td><td>Tuyệt vời — dữ liệu liền kề vật lý</td></tr><tr><td>UPDATE non-key</td><td>Version mới có thể cùng page (HOT) — index không cần sửa</td><td>Sửa in-place trong B-tree + undo log</td></tr><tr><td>UPDATE làm row di chuyển</td><td>ctid đổi → nếu không HOT, MỌI index phải thêm entry</td><td>Secondary index không đổi (trỏ PK)</td></tr><tr><td>Page split của bảng</td><td>Không tồn tại (heap không split)</td><td>Có — insert giữa chừng gây split</td></tr><tr><td>Bloat</td><td>Ở heap, index — cần VACUUM</td><td>Undo log dài do transaction dài</td></tr></tbody></table><p>Không bên nào thắng tuyệt đối. PostgreSQL trả giá &ldquo;index phải update khi row đổi chỗ&rdquo; và giảm nhẹ nó bằng <strong>HOT update</strong> (Chương 10). InnoDB trả giá &ldquo;mọi secondary index lookup đi qua 2 cây&rdquo;.</p><p><strong>&ldquo;Nếu muốn clustered trong PostgreSQL?&rdquo;</strong> Lệnh <code>CLUSTER</code> sắp xếp lại bảng theo một index <strong>một lần</strong> (không duy trì), khóa bảng khi chạy. Đủ dùng cho bảng gần-như-chỉ-đọc; không phải clustered storage thật.</p><h2 id=8-production>8. Production<a hidden class=anchor aria-hidden=true href=#8-production>#</a></h2><ul><li><strong>Đo kích thước đúng cách:</strong> <code>pg_relation_size</code> (main fork) &lt; <code>pg_table_size</code> (+toast, fsm, vm) &lt; <code>pg_total_relation_size</code> (+indexes). Bloat ẩn thường ở toast và index.</li><li><strong>Fillfactor:</strong> mặc định heap 100 (nhồi kín). Bảng UPDATE nhiều → hạ xuống 70–90 để chừa chỗ cho HOT update cùng page (Chương 10). Trả giá: bảng to hơn 10–30%, seq scan chậm hơn tương ứng.</li><li><strong>Thứ tự cột:</strong> như mục 4 — sắp theo align giảm dần khi tạo bảng mới. Với bảng tồn tại, chỉ sửa được bằng rewrite.</li><li><strong>Checksum:</strong> luôn bật <code>--data-checksums</code> từ đầu (PG18 mặc định bật); bật sau bằng <code>pg_checksums</code> yêu cầu downtime.</li><li><strong>Theo dõi:</strong> extension <code>pgstattuple</code> cho tỷ lệ dead tuple/free space thật (đọc cả bảng — cẩn thận với bảng lớn); <code>pg_freespacemap</code> xem FSM.</li></ul><h2 id=9-failure-case-của-chương-bảng-10gb-nhưng-dữ-liệu-thật-chỉ-1gb>9. Failure case của chương: &ldquo;bảng 10GB nhưng dữ liệu thật chỉ 1GB&rdquo;<a hidden class=anchor aria-hidden=true href=#9-failure-case-của-chương-bảng-10gb-nhưng-dữ-liệu-thật-chỉ-1gb>#</a></h2><p><strong>Triệu chứng:</strong> Seq scan chậm dần theo tuần dù số row không tăng. <code>pg_relation_size</code> = 10GB; <code>SELECT count(*)</code> như cũ.</p><p><strong>Root cause:</strong> Table bloat — UPDATE/DELETE để lại dead tuple; VACUUM có dọn nhưng <strong>heap không bao giờ tự co lại</strong> (chỉ trả chỗ trống cho FSM; page cuối file chỉ được cắt nếu hoàn toàn rỗng). Pattern &ldquo;UPDATE toàn bảng mỗi đêm&rdquo; là thủ phạm kinh điển.</p><p><strong>Bên trong:</strong> mỗi UPDATE chèn version mới có thể vào page mới cuối bảng → high-water mark tăng; version cũ thành dead → vacuum biến thành hố trống rải rác giữa file — seq scan vẫn phải đọc đủ 10GB page.</p><p><strong>Điều tra:</strong> <code>pgstattuple('orders')</code> → xem <code>dead_tuple_percent</code> + <code>free_percent</code>; <code>pg_stat_user_tables.n_dead_tup</code>, <code>last_autovacuum</code>.</p><p><strong>Khắc phục:</strong> <code>VACUUM FULL</code> (rewrite, khóa exclusive — cần cửa bảo trì) hoặc <code>pg_repack</code> (online). <strong>Phòng tránh:</strong> sửa pattern update-toàn-bảng; fillfactor; autovacuum đủ hung hãn (Chương 10).</p><h2 id=10-tóm-tắt>10. Tóm tắt<a hidden class=anchor aria-hidden=true href=#10-tóm-tắt>#</a></h2><ul><li>Relation → segment 1GB → page 8KB → tuple, định danh bằng ctid=(page, line pointer).</li><li>Line pointer mua sự tự do dọn dẹp nội page; pd_lsn là chốt của WAL rule; hint bit khiến cả SELECT cũng ghi.</li><li>Tuple header 23 byte là giá của MVCC; alignment là tiền thật; TOAST giấu chi phí ở bảng phụ.</li><li>Heap không clustered: không page split cho bảng, nhưng UPDATE đổi chỗ row bắt mọi index trả giá — thứ HOT sẽ cứu.</li><li>Heap không bao giờ tự co: bloat chỉ xử lý được bằng rewrite.</li></ul><p><strong>Tiếp theo:</strong> <a href=/series/postgres-internal/04-buffer-manager/>Chương 4 — Buffer Manager</a>: các page 8KB này sống trong RAM như thế nào.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/database/>Database</a></li><li><a href=https://thanhhv.github.io/tags/postgresql/>Postgresql</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/postgres-internal/02-architecture-process-memory/><span class=title>« Prev</span><br><span>Chương 2 — Kiến trúc tổng thể: Process & Shared Memory</span>
-</a><a class=next href=https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/><span class=title>Next »</span><br><span>Chương 4 — Buffer Manager</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f&amp;hashtags=backend%2cdatabase%2cpostgresql"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f&amp;title=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;summary=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f&title=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f03-physical-storage%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+   → set hint bit XMIN_COMMITTED → page dirty lần nữa.</code></pre><p>Pseudo code Go cho bước 2e — nhìn rõ tính đơn giản của slotted page:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">PageAddItem</span>(<span style="color:#a6e22e">p</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Page</span>, <span style="color:#a6e22e">tuple</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">OffsetNumber</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">need</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">align8</span>(len(<span style="color:#a6e22e">tuple</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> int(<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">pdUpper</span>)<span style="color:#f92672">-</span>int(<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">pdLower</span>) &lt; <span style="color:#a6e22e">need</span><span style="color:#f92672">+</span><span style="color:#ae81ff">4</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">ErrNoSpace</span> <span style="color:#75715e">// caller sẽ hỏi FSM page khác</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">pdUpper</span> <span style="color:#f92672">-=</span> uint16(<span style="color:#a6e22e">need</span>)
+</span></span><span style="display:flex;"><span>    copy(<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">data</span>[<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">pdUpper</span>:], <span style="color:#a6e22e">tuple</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lp</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">LinePointer</span>{<span style="color:#a6e22e">Off</span>: <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">pdUpper</span>, <span style="color:#a6e22e">Len</span>: uint16(len(<span style="color:#a6e22e">tuple</span>)), <span style="color:#a6e22e">Flags</span>: <span style="color:#a6e22e">LP_NORMAL</span>}
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">writeLinePointerAt</span>(<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">pdLower</span>, <span style="color:#a6e22e">lp</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">pdLower</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">lineCount</span>(), <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="7-trade-off-heap-vs-clustered-storage">7. Trade-off: Heap vs Clustered Storage<a hidden class="anchor" aria-hidden="true" href="#7-trade-off-heap-vs-clustered-storage">#</a></h2>
+<p>Đây là khác biệt kiến trúc lớn nhất giữa PostgreSQL và MySQL/InnoDB:</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>PostgreSQL (Heap)</th>
+          <th>InnoDB (Clustered B-tree theo PK)</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Bảng là gì</td>
+          <td>Đống page không thứ tự</td>
+          <td>Chính là B-tree, leaf chứa full row</td>
+      </tr>
+      <tr>
+          <td>Secondary index trỏ vào</td>
+          <td>ctid (vị trí vật lý)</td>
+          <td>Giá trị PK (phải đi 2 B-tree khi tra)</td>
+      </tr>
+      <tr>
+          <td>Đọc range theo PK</td>
+          <td>Cần index scan + heap fetch tứ tán</td>
+          <td>Tuyệt vời — dữ liệu liền kề vật lý</td>
+      </tr>
+      <tr>
+          <td>UPDATE non-key</td>
+          <td>Version mới có thể cùng page (HOT) — index không cần sửa</td>
+          <td>Sửa in-place trong B-tree + undo log</td>
+      </tr>
+      <tr>
+          <td>UPDATE làm row di chuyển</td>
+          <td>ctid đổi → nếu không HOT, MỌI index phải thêm entry</td>
+          <td>Secondary index không đổi (trỏ PK)</td>
+      </tr>
+      <tr>
+          <td>Page split của bảng</td>
+          <td>Không tồn tại (heap không split)</td>
+          <td>Có — insert giữa chừng gây split</td>
+      </tr>
+      <tr>
+          <td>Bloat</td>
+          <td>Ở heap, index — cần VACUUM</td>
+          <td>Undo log dài do transaction dài</td>
+      </tr>
+  </tbody>
+</table>
+<p>Không bên nào thắng tuyệt đối. PostgreSQL trả giá &ldquo;index phải update khi row đổi chỗ&rdquo; và giảm nhẹ nó bằng <strong>HOT update</strong> (Chương 10). InnoDB trả giá &ldquo;mọi secondary index lookup đi qua 2 cây&rdquo;.</p>
+<p><strong>&ldquo;Nếu muốn clustered trong PostgreSQL?&rdquo;</strong> Lệnh <code>CLUSTER</code> sắp xếp lại bảng theo một index <strong>một lần</strong> (không duy trì), khóa bảng khi chạy. Đủ dùng cho bảng gần-như-chỉ-đọc; không phải clustered storage thật.</p>
+<h2 id="8-production">8. Production<a hidden class="anchor" aria-hidden="true" href="#8-production">#</a></h2>
+<ul>
+<li><strong>Đo kích thước đúng cách:</strong> <code>pg_relation_size</code> (main fork) &lt; <code>pg_table_size</code> (+toast, fsm, vm) &lt; <code>pg_total_relation_size</code> (+indexes). Bloat ẩn thường ở toast và index.</li>
+<li><strong>Fillfactor:</strong> mặc định heap 100 (nhồi kín). Bảng UPDATE nhiều → hạ xuống 70–90 để chừa chỗ cho HOT update cùng page (Chương 10). Trả giá: bảng to hơn 10–30%, seq scan chậm hơn tương ứng.</li>
+<li><strong>Thứ tự cột:</strong> như mục 4 — sắp theo align giảm dần khi tạo bảng mới. Với bảng tồn tại, chỉ sửa được bằng rewrite.</li>
+<li><strong>Checksum:</strong> luôn bật <code>--data-checksums</code> từ đầu (PG18 mặc định bật); bật sau bằng <code>pg_checksums</code> yêu cầu downtime.</li>
+<li><strong>Theo dõi:</strong> extension <code>pgstattuple</code> cho tỷ lệ dead tuple/free space thật (đọc cả bảng — cẩn thận với bảng lớn); <code>pg_freespacemap</code> xem FSM.</li>
+</ul>
+<h2 id="9-failure-case-của-chương-bảng-10gb-nhưng-dữ-liệu-thật-chỉ-1gb">9. Failure case của chương: &ldquo;bảng 10GB nhưng dữ liệu thật chỉ 1GB&rdquo;<a hidden class="anchor" aria-hidden="true" href="#9-failure-case-của-chương-bảng-10gb-nhưng-dữ-liệu-thật-chỉ-1gb">#</a></h2>
+<p><strong>Triệu chứng:</strong> Seq scan chậm dần theo tuần dù số row không tăng. <code>pg_relation_size</code> = 10GB; <code>SELECT count(*)</code> như cũ.</p>
+<p><strong>Root cause:</strong> Table bloat — UPDATE/DELETE để lại dead tuple; VACUUM có dọn nhưng <strong>heap không bao giờ tự co lại</strong> (chỉ trả chỗ trống cho FSM; page cuối file chỉ được cắt nếu hoàn toàn rỗng). Pattern &ldquo;UPDATE toàn bảng mỗi đêm&rdquo; là thủ phạm kinh điển.</p>
+<p><strong>Bên trong:</strong> mỗi UPDATE chèn version mới có thể vào page mới cuối bảng → high-water mark tăng; version cũ thành dead → vacuum biến thành hố trống rải rác giữa file — seq scan vẫn phải đọc đủ 10GB page.</p>
+<p><strong>Điều tra:</strong> <code>pgstattuple('orders')</code> → xem <code>dead_tuple_percent</code> + <code>free_percent</code>; <code>pg_stat_user_tables.n_dead_tup</code>, <code>last_autovacuum</code>.</p>
+<p><strong>Khắc phục:</strong> <code>VACUUM FULL</code> (rewrite, khóa exclusive — cần cửa bảo trì) hoặc <code>pg_repack</code> (online). <strong>Phòng tránh:</strong> sửa pattern update-toàn-bảng; fillfactor; autovacuum đủ hung hãn (Chương 10).</p>
+<h2 id="10-tóm-tắt">10. Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#10-tóm-tắt">#</a></h2>
+<ul>
+<li>Relation → segment 1GB → page 8KB → tuple, định danh bằng ctid=(page, line pointer).</li>
+<li>Line pointer mua sự tự do dọn dẹp nội page; pd_lsn là chốt của WAL rule; hint bit khiến cả SELECT cũng ghi.</li>
+<li>Tuple header 23 byte là giá của MVCC; alignment là tiền thật; TOAST giấu chi phí ở bảng phụ.</li>
+<li>Heap không clustered: không page split cho bảng, nhưng UPDATE đổi chỗ row bắt mọi index trả giá — thứ HOT sẽ cứu.</li>
+<li>Heap không bao giờ tự co: bloat chỉ xử lý được bằng rewrite.</li>
+</ul>
+<p><strong>Tiếp theo:</strong> <a href="/series/postgres-internal/04-buffer-manager/">Chương 4 — Buffer Manager</a>: các page 8KB này sống trong RAM như thế nào.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/database/">Database</a></li>
+      <li><a href="http://localhost:1313/tags/postgresql/">Postgresql</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/postgres-internal/02-architecture-process-memory/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 2 — Kiến trúc tổng thể: Process &amp; Shared Memory</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/postgres-internal/04-buffer-manager/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 4 — Buffer Manager</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f&amp;hashtags=backend%2cdatabase%2cpostgresql">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f&amp;title=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;summary=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f&title=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%203%20%e2%80%94%20Physical%20Storage%3a%20Page%2c%20Tuple%2c%20TOAST%2c%20FSM%2c%20Visibility%20Map&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f03-physical-storage%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

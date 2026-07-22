@@ -1,63 +1,605 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>System-Design | Thanh HV's Blog</title>
-<meta name=keywords content><meta name=description content><meta name=author content><link rel=canonical href=https://thanhhv.github.io/tags/system-design/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/tags/system-design/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/tags/system-design/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/tags/system-design/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="System-Design"><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="System-Design"><meta name=twitter:description content></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/tags/>Tags</a></div><h1>System-Design</h1></header><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.10. Search System — Phần 9 trong hành động</h2></header><div class=entry-content><p>Case study cuối cùng có vai trò đặc biệt: Phần 9 đã cho đủ lý thuyết — bài này là bài tập tổng hợp có lời giải, đi qua đúng trình tự một team thật sẽ đi, để bạn đối chiếu với cách tự mình sẽ làm. Đọc theo cách của README Phần 14: dừng sau mỗi mục, tự trả lời trước, rồi so.
-1. Business Requirement & Constraint VietShop (Phần 12) ở giai đoạn 6+: 2M user, 800K SKU từ 10K seller. Search hiện tại là PostgreSQL ILIKE từ thời MVP — zero-result rate 22%, CTR search 11%, và đội data chỉ ra: phiên có search chuyển đổi gấp 2.3 lần phiên duyệt — nhưng search đang tệ. Bài toán được duyệt ngân sách như một dự án doanh thu, không phải dự án hạ tầng: đó là cách đúng để bài search được sinh ra.
-...</p></div><footer class=entry-footer><span title='2026-07-13 18:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 14.10. Search System — Phần 9 trong hành động" href=https://thanhhv.github.io/series/system-design/14-case-studies/10-search-system/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.9. AI Platform — GPU đắt và hai chế độ phục vụ</h2></header><div class=entry-content><p>Bài toán định hình: tài nguyên tính toán đắt nhất từng xuất hiện trong tài liệu này (GPU inference đắt hơn CPU serving 10–100×), thời gian xử lý một request dài nhất (giây, không phải mili-giây), và output không tất định. Ba đặc điểm đó bẻ cong nhiều phản xạ đã học — nhưng phần lớn bộ công cụ cũ vẫn đúng, chỉ cần vặn lại hệ số.
-1. Business Requirement & Constraint Nền tảng AI nội bộ cho một tập đoàn bán lẻ: các team sản phẩm gọi chung một cửa để dùng LLM (chatbot CSKH, tóm tắt đánh giá, sinh mô tả sản phẩm) và các model nội bộ (phân loại ảnh, dự báo). Kết hợp API bên ngoài (OpenAI/Claude-class) và model tự host trên GPU (model tiếng Việt fine-tune, dữ liệu nhạy cảm không được rời hạ tầng). Team 8 dev/ML. Ràng buộc thống trị: ngân sách GPU + API bill — đây là hệ thống đầu tiên trong tài liệu mà chi phí biến đổi theo từng request đủ lớn để thành NFR số một.
-...</p></div><footer class=entry-footer><span title='2026-07-13 18:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 14.9. AI Platform — GPU đắt và hai chế độ phục vụ" href=https://thanhhv.github.io/series/system-design/14-case-studies/09-ai-platform/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.8. SaaS Platform — multi-tenancy và noisy neighbor</h2></header><div class=entry-content><p>Bài toán định hình: một hạ tầng, nghìn khách hàng, và hai lời hứa mâu thuẫn — “dữ liệu của bạn cách ly tuyệt đối” và “giá rẻ nhờ dùng chung”. Multi-tenancy là nghệ thuật giữ cả hai lời hứa cùng lúc — và tenant lớn nhất luôn lớn hơn tenant nhỏ nhất bốn bậc độ lớn (13.2 — luật lũy thừa, lần thứ n).
-1. Business Requirement & Constraint SaaS quản lý bán hàng đa kênh cho SME Việt Nam (đơn hàng, kho, khách hàng, báo cáo — kết nối sàn TMĐT): 5.000 tenant từ shop 2 người đến chuỗi bán lẻ 200 cửa hàng. Doanh thu theo gói (freemium → enterprise). Team 12 dev. Ràng buộc sống còn của mô hình SaaS: chi phí phục vụ mỗi tenant phải giảm theo quy mô — nếu mỗi khách mới cần thêm người vận hành, đó là công ty outsourcing đội lốt SaaS.
-...</p></div><footer class=entry-footer><span title='2026-07-13 18:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to 14.8. SaaS Platform — multi-tenancy và noisy neighbor" href=https://thanhhv.github.io/series/system-design/14-case-studies/08-saas-platform/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.7. Ride Hailing — geo real-time và dữ liệu phù du</h2></header><div class=entry-content><p>Bài toán định hình: dữ liệu trung tâm (vị trí tài xế) mất giá trị sau vài giây — lần đầu trong tài liệu này, ta gặp dữ liệu mà không lưu mới là thiết kế đúng. Cộng với matching thời gian thực theo không gian — bài toán mà index truyền thống bó tay.
-1. Business Requirement & Constraint App gọi xe khu vực (xe máy + ô tô, 3 thành phố lớn VN): khách đặt xe, hệ tìm tài xế gần, khớp lệnh, theo dõi chuyến, tính cước, surge giờ cao điểm. 50K tài xế hoạt động, 500K khách; team 15 dev. Ràng buộc nghiệp vụ khắc nghiệt: matching chậm 5 giây = khách mở app đối thủ — thị trường hai chiều, cả hai phía đều có lựa chọn khác trong túi.
-...</p></div><footer class=entry-footer><span title='2026-07-13 18:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 14.7. Ride Hailing — geo real-time và dữ liệu phù du" href=https://thanhhv.github.io/series/system-design/14-case-studies/07-ride-hailing/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.6. Video Streaming — băng thông là kiến trúc</h2></header><div class=entry-content><p>Bài toán định hình: video là dữ liệu nặng hơn mọi thứ khác ba bậc độ lớn — một giờ video 1080p ≈ 2–4GB, bằng vài triệu bản ghi DB. Khi dữ liệu nặng đến thế, chi phí băng thông và vị trí đặt byte quyết định kiến trúc nhiều hơn mọi lựa chọn framework.
-1. Business Requirement & Constraint Nền tảng video học tập Việt Nam (khóa học quay sẵn + livestream lớp học): giảng viên upload bài giảng, học viên xem theo gói đăng ký. 500K học viên, mục tiêu 2M. Doanh thu theo subscription → trải nghiệm xem (không giật, tua nhanh) là sản phẩm; và chi phí băng thông là dòng chi phí lớn nhất của công ty — tối ưu nó không phải tối ưu kỹ thuật mà là tối ưu biên lợi nhuận.
-...</p></div><footer class=entry-footer><span title='2026-07-13 18:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to 14.6. Video Streaming — băng thông là kiến trúc" href=https://thanhhv.github.io/series/system-design/14-case-studies/06-video-streaming/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.5. Banking & FinTech — khi sai một đồng là sai tất cả</h2></header><div class=entry-content><p>Bài toán định hình: đúng tuyệt đối, chứng minh được, và kiểm toán được — trong khi throughput lại thấp một cách đáng ngạc nhiên. Banking đảo ngược trực giác của mọi case trước: đây là bài mà scale là chuyện phụ, còn từng đồng là chuyện chính.
-1. Business Requirement & Constraint Ví điện tử Việt Nam: nạp/rút qua ngân hàng, chuyển tiền P2P, thanh toán QR tại quầy. Ràng buộc đặc thù không case nào trước có: pháp lý là kiến trúc sư trưởng vô hình — giấy phép trung gian thanh toán của NHNN, đối soát bắt buộc với ngân hàng đối tác, audit trail nhiều năm, dữ liệu tại Việt Nam (1.1 §3.2). Sai lệch tiền không phải bug — là sự kiện phải báo cáo. Team 20 dev, trong đó có compliance officer ngồi trong các design review — một vị trí nói lên tất cả.
-...</p></div><footer class=entry-footer><span title='2026-07-13 18:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 14.5. Banking & FinTech — khi sai một đồng là sai tất cả" href=https://thanhhv.github.io/series/system-design/14-case-studies/05-banking-fintech/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.4. Notification System — fan-out đa kênh qua những bên không tin được</h2></header><div class=entry-content><p>Bài toán định hình: hệ thống không sở hữu chặng cuối — mọi kênh giao (APNs/FCM, SMS, email, Zalo ZNS) đều là bên thứ ba với rate limit, sự cố và hóa đơn của họ. Notification system là bài tổng hợp đẹp nhất của Phần 6 và 13.3/13.5.
-1. Business Requirement & Constraint VietShop (Phần 12) đến lúc cần một nền tảng thông báo dùng chung: trước giờ mỗi team tự gửi (order gửi email kiểu này, marketing bắn push kiểu kia) — kết quả là user nhận 14 thông báo/ngày, không tắt được thứ mình ghét, và một chiến dịch marketing từng làm nghẽn luôn đường OTP. Bài toán thật: gom mọi thông báo về một cửa, có luật — ưu tiên, tần suất, sở thích user — và gửi tin cậy qua các kênh không tin được. Team 5 dev, phục vụ 15 team nội bộ như khách hàng.
-...</p></div><footer class=entry-footer><span title='2026-07-13 17:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to 14.4. Notification System — fan-out đa kênh qua những bên không tin được" href=https://thanhhv.github.io/series/system-design/14-case-studies/04-notification-system/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.3. Chat Application — triệu kết nối sống</h2></header><div class=entry-content><p>Bài toán định hình: connection dài là state không dọn đi được — chat là nơi nguyên tắc “stateless hóa tầng app” (2.1) gặp giới hạn của nó, và phải thiết kế có state một cách kỷ luật.
-1. Business Requirement & Constraint Nền tảng chat cho thương mại (người mua ↔ shop, như chat của sàn TMĐT): hỏi hàng, trả giá, chăm sóc sau bán. Chat tốt = chốt đơn — độ trễ và độ tin của tin nhắn ảnh hưởng trực tiếp GMV. 2M user, 100K shop; team 6 dev. Ràng buộc đặc thù: shop dùng nhiều thiết bị đồng thời (app + web + nhân viên chung tài khoản), lịch sử chat là hồ sơ giao dịch — không được mất.
-...</p></div><footer class=entry-footer><span title='2026-07-13 17:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 14.3. Chat Application — triệu kết nối sống" href=https://thanhhv.github.io/series/system-design/14-case-studies/03-chat-application/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.2. Social Network — fan-out và celebrity problem</h2></header><div class=entry-content><p>Bài toán định hình: một hành động của một người phải đến với N người theo dõi — và N trải từ 3 đến 10 triệu trên cùng một hệ thống. Không có phân bố nào lệch hơn thế trong toàn bộ tài liệu này.
-1. Business Requirement & Constraint Mạng xã hội theo sở thích (cộng đồng thể thao/ẩm thực) tại Việt Nam: user đăng bài, theo dõi nhau, xem feed — dòng nội dung từ những người mình theo. Doanh thu: quảng cáo trong feed → feed là sản phẩm; nghẽn feed = nghẽn doanh thu. Team 8 dev, đã có 200K user sau viral, đang tăng 30%/tháng — bài toán không phải “thiết kế từ zero” mà là “monolith hiện tại bắt đầu oằn ở đâu”.
-...</p></div><footer class=entry-footer><span title='2026-07-13 17:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 14.2. Social Network — fan-out và celebrity problem" href=https://thanhhv.github.io/series/system-design/14-case-studies/02-social-network/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>14.1. URL Shortener — bài tập khởi động hoàn hảo</h2></header><div class=entry-content><p>Bài “nhỏ mà thâm”: đủ đơn giản để đi trọn chuỗi tư duy trong một chương, đủ sâu để lộ ra các quyết định thật. Đọc chương này như một bài tập mẫu về cách áp dụng chương 00 — giá trị nằm ở trình tự ra quyết định, không ở sơ đồ cuối.
-1. Business Requirement & Constraint Công ty martech Việt Nam cần rút gọn link cho các chiến dịch SMS/social của khách hàng doanh nghiệp: link ngắn tiết kiệm ký tự SMS, đo được lượt bấm, gắn được nhãn chiến dịch. Ràng buộc: team 2 dev, ra mắt trong 6 tuần, chi phí hạ tầng &lt; $200/tháng năm đầu. Doanh thu đến từ gói SaaS theo số link + analytics — nghĩa là đếm click là tính năng ăn tiền, không phải phụ kiện.
-...</p></div><footer class=entry-footer><span title='2026-07-13 17:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 14.1. URL Shortener — bài tập khởi động hoàn hảo" href=https://thanhhv.github.io/series/system-design/14-case-studies/01-url-shortener/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Phần 14 — Case Studies</h2></header><div class=entry-content><p>Mục lục 14.1. URL Shortener — bài tập khởi động hoàn hảo 14.2. Social Network — fan-out và celebrity problem 14.3. Chat Application — triệu kết nối sống 14.4. Notification System — fan-out đa kênh qua những bên không tin được 14.5. Banking & FinTech — khi sai một đồng là sai tất cả 14.6. Video Streaming — băng thông là kiến trúc 14.7. Ride Hailing — geo real-time và dữ liệu phù du 14.8. SaaS Platform — multi-tenancy và noisy neighbor 14.9. AI Platform — GPU đắt và hai chế độ phục vụ 14.10. Search System — Phần 9 trong hành động (E-commerce — case lớn nhất — là toàn bộ Phần 12; Search System đóng vai case tổng hợp của Phần 9.)
-...</p></div><footer class=entry-footer><span title='2026-07-13 17:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Phần 14 — Case Studies" href=https://thanhhv.github.io/series/system-design/14-case-studies/00-tong-quan/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>13.5. Infrastructure Failures</h2></header><div class=entry-content><p>Năm tình huống: GC Pause, Out of Memory, DNS Failure, Region Outage, Third-party API Down. Nhóm này nhắc một sự thật hay bị quên: dưới mọi kiến trúc đẹp là máy thật, mạng thật, và những công ty khác — tất cả đều hỏng theo lịch của riêng chúng.
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>System-Design | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/tags/system-design/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/system-design/index.xml">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/system-design/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/tags/">Tags</a></div>
+  <h1>
+    System-Design
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.10. Search System — Phần 9 trong hành động
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Case study cuối cùng có vai trò đặc biệt: Phần 9 đã cho đủ lý thuyết — bài này là bài tập tổng hợp có lời giải, đi qua đúng trình tự một team thật sẽ đi, để bạn đối chiếu với cách tự mình sẽ làm. Đọc theo cách của README Phần 14: dừng sau mỗi mục, tự trả lời trước, rồi so.
+1. Business Requirement &amp; Constraint VietShop (Phần 12) ở giai đoạn 6&#43;: 2M user, 800K SKU từ 10K seller. Search hiện tại là PostgreSQL ILIKE từ thời MVP — zero-result rate 22%, CTR search 11%, và đội data chỉ ra: phiên có search chuyển đổi gấp 2.3 lần phiên duyệt — nhưng search đang tệ. Bài toán được duyệt ngân sách như một dự án doanh thu, không phải dự án hạ tầng: đó là cách đúng để bài search được sinh ra.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 18:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 14.10. Search System — Phần 9 trong hành động" href="http://localhost:1313/series/system-design/14-case-studies/10-search-system/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.9. AI Platform — GPU đắt và hai chế độ phục vụ
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: tài nguyên tính toán đắt nhất từng xuất hiện trong tài liệu này (GPU inference đắt hơn CPU serving 10–100×), thời gian xử lý một request dài nhất (giây, không phải mili-giây), và output không tất định. Ba đặc điểm đó bẻ cong nhiều phản xạ đã học — nhưng phần lớn bộ công cụ cũ vẫn đúng, chỉ cần vặn lại hệ số.
+1. Business Requirement &amp; Constraint Nền tảng AI nội bộ cho một tập đoàn bán lẻ: các team sản phẩm gọi chung một cửa để dùng LLM (chatbot CSKH, tóm tắt đánh giá, sinh mô tả sản phẩm) và các model nội bộ (phân loại ảnh, dự báo). Kết hợp API bên ngoài (OpenAI/Claude-class) và model tự host trên GPU (model tiếng Việt fine-tune, dữ liệu nhạy cảm không được rời hạ tầng). Team 8 dev/ML. Ràng buộc thống trị: ngân sách GPU &#43; API bill — đây là hệ thống đầu tiên trong tài liệu mà chi phí biến đổi theo từng request đủ lớn để thành NFR số một.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 18:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 14.9. AI Platform — GPU đắt và hai chế độ phục vụ" href="http://localhost:1313/series/system-design/14-case-studies/09-ai-platform/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.8. SaaS Platform — multi-tenancy và noisy neighbor
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: một hạ tầng, nghìn khách hàng, và hai lời hứa mâu thuẫn — “dữ liệu của bạn cách ly tuyệt đối” và “giá rẻ nhờ dùng chung”. Multi-tenancy là nghệ thuật giữ cả hai lời hứa cùng lúc — và tenant lớn nhất luôn lớn hơn tenant nhỏ nhất bốn bậc độ lớn (13.2 — luật lũy thừa, lần thứ n).
+1. Business Requirement &amp; Constraint SaaS quản lý bán hàng đa kênh cho SME Việt Nam (đơn hàng, kho, khách hàng, báo cáo — kết nối sàn TMĐT): 5.000 tenant từ shop 2 người đến chuỗi bán lẻ 200 cửa hàng. Doanh thu theo gói (freemium → enterprise). Team 12 dev. Ràng buộc sống còn của mô hình SaaS: chi phí phục vụ mỗi tenant phải giảm theo quy mô — nếu mỗi khách mới cần thêm người vận hành, đó là công ty outsourcing đội lốt SaaS.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 18:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to 14.8. SaaS Platform — multi-tenancy và noisy neighbor" href="http://localhost:1313/series/system-design/14-case-studies/08-saas-platform/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.7. Ride Hailing — geo real-time và dữ liệu phù du
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: dữ liệu trung tâm (vị trí tài xế) mất giá trị sau vài giây — lần đầu trong tài liệu này, ta gặp dữ liệu mà không lưu mới là thiết kế đúng. Cộng với matching thời gian thực theo không gian — bài toán mà index truyền thống bó tay.
+1. Business Requirement &amp; Constraint App gọi xe khu vực (xe máy &#43; ô tô, 3 thành phố lớn VN): khách đặt xe, hệ tìm tài xế gần, khớp lệnh, theo dõi chuyến, tính cước, surge giờ cao điểm. 50K tài xế hoạt động, 500K khách; team 15 dev. Ràng buộc nghiệp vụ khắc nghiệt: matching chậm 5 giây = khách mở app đối thủ — thị trường hai chiều, cả hai phía đều có lựa chọn khác trong túi.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 18:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 14.7. Ride Hailing — geo real-time và dữ liệu phù du" href="http://localhost:1313/series/system-design/14-case-studies/07-ride-hailing/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.6. Video Streaming — băng thông là kiến trúc
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: video là dữ liệu nặng hơn mọi thứ khác ba bậc độ lớn — một giờ video 1080p ≈ 2–4GB, bằng vài triệu bản ghi DB. Khi dữ liệu nặng đến thế, chi phí băng thông và vị trí đặt byte quyết định kiến trúc nhiều hơn mọi lựa chọn framework.
+1. Business Requirement &amp; Constraint Nền tảng video học tập Việt Nam (khóa học quay sẵn &#43; livestream lớp học): giảng viên upload bài giảng, học viên xem theo gói đăng ký. 500K học viên, mục tiêu 2M. Doanh thu theo subscription → trải nghiệm xem (không giật, tua nhanh) là sản phẩm; và chi phí băng thông là dòng chi phí lớn nhất của công ty — tối ưu nó không phải tối ưu kỹ thuật mà là tối ưu biên lợi nhuận.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 18:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to 14.6. Video Streaming — băng thông là kiến trúc" href="http://localhost:1313/series/system-design/14-case-studies/06-video-streaming/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.5. Banking &amp; FinTech — khi sai một đồng là sai tất cả
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: đúng tuyệt đối, chứng minh được, và kiểm toán được — trong khi throughput lại thấp một cách đáng ngạc nhiên. Banking đảo ngược trực giác của mọi case trước: đây là bài mà scale là chuyện phụ, còn từng đồng là chuyện chính.
+1. Business Requirement &amp; Constraint Ví điện tử Việt Nam: nạp/rút qua ngân hàng, chuyển tiền P2P, thanh toán QR tại quầy. Ràng buộc đặc thù không case nào trước có: pháp lý là kiến trúc sư trưởng vô hình — giấy phép trung gian thanh toán của NHNN, đối soát bắt buộc với ngân hàng đối tác, audit trail nhiều năm, dữ liệu tại Việt Nam (1.1 §3.2). Sai lệch tiền không phải bug — là sự kiện phải báo cáo. Team 20 dev, trong đó có compliance officer ngồi trong các design review — một vị trí nói lên tất cả.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 18:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 14.5. Banking & FinTech — khi sai một đồng là sai tất cả" href="http://localhost:1313/series/system-design/14-case-studies/05-banking-fintech/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.4. Notification System — fan-out đa kênh qua những bên không tin được
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: hệ thống không sở hữu chặng cuối — mọi kênh giao (APNs/FCM, SMS, email, Zalo ZNS) đều là bên thứ ba với rate limit, sự cố và hóa đơn của họ. Notification system là bài tổng hợp đẹp nhất của Phần 6 và 13.3/13.5.
+1. Business Requirement &amp; Constraint VietShop (Phần 12) đến lúc cần một nền tảng thông báo dùng chung: trước giờ mỗi team tự gửi (order gửi email kiểu này, marketing bắn push kiểu kia) — kết quả là user nhận 14 thông báo/ngày, không tắt được thứ mình ghét, và một chiến dịch marketing từng làm nghẽn luôn đường OTP. Bài toán thật: gom mọi thông báo về một cửa, có luật — ưu tiên, tần suất, sở thích user — và gửi tin cậy qua các kênh không tin được. Team 5 dev, phục vụ 15 team nội bộ như khách hàng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 17:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to 14.4. Notification System — fan-out đa kênh qua những bên không tin được" href="http://localhost:1313/series/system-design/14-case-studies/04-notification-system/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.3. Chat Application — triệu kết nối sống
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: connection dài là state không dọn đi được — chat là nơi nguyên tắc “stateless hóa tầng app” (2.1) gặp giới hạn của nó, và phải thiết kế có state một cách kỷ luật.
+1. Business Requirement &amp; Constraint Nền tảng chat cho thương mại (người mua ↔ shop, như chat của sàn TMĐT): hỏi hàng, trả giá, chăm sóc sau bán. Chat tốt = chốt đơn — độ trễ và độ tin của tin nhắn ảnh hưởng trực tiếp GMV. 2M user, 100K shop; team 6 dev. Ràng buộc đặc thù: shop dùng nhiều thiết bị đồng thời (app &#43; web &#43; nhân viên chung tài khoản), lịch sử chat là hồ sơ giao dịch — không được mất.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 17:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 14.3. Chat Application — triệu kết nối sống" href="http://localhost:1313/series/system-design/14-case-studies/03-chat-application/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.2. Social Network — fan-out và celebrity problem
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài toán định hình: một hành động của một người phải đến với N người theo dõi — và N trải từ 3 đến 10 triệu trên cùng một hệ thống. Không có phân bố nào lệch hơn thế trong toàn bộ tài liệu này.
+1. Business Requirement &amp; Constraint Mạng xã hội theo sở thích (cộng đồng thể thao/ẩm thực) tại Việt Nam: user đăng bài, theo dõi nhau, xem feed — dòng nội dung từ những người mình theo. Doanh thu: quảng cáo trong feed → feed là sản phẩm; nghẽn feed = nghẽn doanh thu. Team 8 dev, đã có 200K user sau viral, đang tăng 30%/tháng — bài toán không phải “thiết kế từ zero” mà là “monolith hiện tại bắt đầu oằn ở đâu”.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 17:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 14.2. Social Network — fan-out và celebrity problem" href="http://localhost:1313/series/system-design/14-case-studies/02-social-network/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">14.1. URL Shortener — bài tập khởi động hoàn hảo
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài “nhỏ mà thâm”: đủ đơn giản để đi trọn chuỗi tư duy trong một chương, đủ sâu để lộ ra các quyết định thật. Đọc chương này như một bài tập mẫu về cách áp dụng chương 00 — giá trị nằm ở trình tự ra quyết định, không ở sơ đồ cuối.
+1. Business Requirement &amp; Constraint Công ty martech Việt Nam cần rút gọn link cho các chiến dịch SMS/social của khách hàng doanh nghiệp: link ngắn tiết kiệm ký tự SMS, đo được lượt bấm, gắn được nhãn chiến dịch. Ràng buộc: team 2 dev, ra mắt trong 6 tuần, chi phí hạ tầng &lt; $200/tháng năm đầu. Doanh thu đến từ gói SaaS theo số link &#43; analytics — nghĩa là đếm click là tính năng ăn tiền, không phải phụ kiện.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 17:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 14.1. URL Shortener — bài tập khởi động hoàn hảo" href="http://localhost:1313/series/system-design/14-case-studies/01-url-shortener/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Phần 14 — Case Studies
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Mục lục 14.1. URL Shortener — bài tập khởi động hoàn hảo 14.2. Social Network — fan-out và celebrity problem 14.3. Chat Application — triệu kết nối sống 14.4. Notification System — fan-out đa kênh qua những bên không tin được 14.5. Banking &amp; FinTech — khi sai một đồng là sai tất cả 14.6. Video Streaming — băng thông là kiến trúc 14.7. Ride Hailing — geo real-time và dữ liệu phù du 14.8. SaaS Platform — multi-tenancy và noisy neighbor 14.9. AI Platform — GPU đắt và hai chế độ phục vụ 14.10. Search System — Phần 9 trong hành động (E-commerce — case lớn nhất — là toàn bộ Phần 12; Search System đóng vai case tổng hợp của Phần 9.)
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 17:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Phần 14 — Case Studies" href="http://localhost:1313/series/system-design/14-case-studies/00-tong-quan/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">13.5. Infrastructure Failures
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Năm tình huống: GC Pause, Out of Memory, DNS Failure, Region Outage, Third-party API Down. Nhóm này nhắc một sự thật hay bị quên: dưới mọi kiến trúc đẹp là máy thật, mạng thật, và những công ty khác — tất cả đều hỏng theo lịch của riêng chúng.
 Case 17 — GC Pause Triệu chứng Latency p99/p999 có răng cưa chu kỳ trong khi p50 đẹp; service “đứng hình” 0.5–30 giây rồi sống lại như chưa có gì; hệ quả dây chuyền đặc trưng: bị văng khỏi consumer group (rebalance), mất leadership (không kịp gia hạn lease), health check fail → bị restart oan — node sống nhưng bị cả cụm đối xử như chết trong đúng khoảng pause (chương 4.4 — “chậm-như-đứt”).
-...</p></div><footer class=entry-footer><span title='2026-07-13 17:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;14 min</footer><a class=entry-link aria-label="post link to 13.5. Infrastructure Failures" href=https://thanhhv.github.io/series/system-design/13-production-failure-cases/05-infrastructure-failures/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>13.4. Distributed Failures</h2></header><div class=entry-content><p>Ba tình huống: Cascading Failure, Split Brain, Leader Election Failure. Đây là các sự cố “cấp hệ thống” — không thành phần nào hỏng nặng, nhưng tương tác giữa chúng giết cả hệ thống. Nền lý thuyết: Phần 4.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 17:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;14 min</footer>
+  <a class="entry-link" aria-label="post link to 13.5. Infrastructure Failures" href="http://localhost:1313/series/system-design/13-production-failure-cases/05-infrastructure-failures/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">13.4. Distributed Failures
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Ba tình huống: Cascading Failure, Split Brain, Leader Election Failure. Đây là các sự cố “cấp hệ thống” — không thành phần nào hỏng nặng, nhưng tương tác giữa chúng giết cả hệ thống. Nền lý thuyết: Phần 4.
 Case 14 — Cascading Failure Triệu chứng Bắt đầu bằng một sự cố nhỏ, cục bộ (một service chậm, một node chết, một deploy xấu) → lan như domino: service A chậm → upstream B cạn thread chờ A → B chậm → C cạn theo… → trong 5–15 phút, toàn hệ thống đỏ, kể cả những service không liên quan gì đến điểm khởi phát. Dashboard nhìn đâu cũng cháy — chính điều đó làm mất phương hướng.
-...</p></div><footer class=entry-footer><span title='2026-07-13 16:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to 13.4. Distributed Failures" href=https://thanhhv.github.io/series/system-design/13-production-failure-cases/04-distributed-failures/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>13.3. Messaging Failures</h2></header><div class=entry-content><p>Bốn tình huống: Kafka Lag, Message Duplication, Queue Backlog, Retry Storm. Hệ messaging đổi “fail ngay trước mặt” lấy “fail âm thầm phía sau” — sự cố của nó vì thế thường được phát hiện muộn, khi backlog đã thành núi.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 16:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to 13.4. Distributed Failures" href="http://localhost:1313/series/system-design/13-production-failure-cases/04-distributed-failures/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">13.3. Messaging Failures
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bốn tình huống: Kafka Lag, Message Duplication, Queue Backlog, Retry Storm. Hệ messaging đổi “fail ngay trước mặt” lấy “fail âm thầm phía sau” — sự cố của nó vì thế thường được phát hiện muộn, khi backlog đã thành núi.
 Case 10 — Kafka Lag (Consumer Lag) Triệu chứng Dữ liệu downstream “cũ dần”: dashboard analytics trễ 40 phút, projection CQRS lệch nguồn sự thật, email gửi sau sự kiện 2 giờ. Metric consumer group lag tăng — quan trọng nhất là tăng đơn điệu không hồi.
-...</p></div><footer class=entry-footer><span title='2026-07-13 16:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;12 min</footer><a class=entry-link aria-label="post link to 13.3. Messaging Failures" href=https://thanhhv.github.io/series/system-design/13-production-failure-cases/03-messaging-failures/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>13.2. Database Failures</h2></header><div class=entry-content><p>Sáu tình huống: Database Hotspot, N+1 Query, Deadlock, Replica Lag, Connection Pool Exhaustion, Hot Partition. Database là nơi bottleneck ghé thăm thường xuyên nhất (chương 1.5) — và cũng là nơi sự cố khó scale-out thoát thân nhất.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 16:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;12 min</footer>
+  <a class="entry-link" aria-label="post link to 13.3. Messaging Failures" href="http://localhost:1313/series/system-design/13-production-failure-cases/03-messaging-failures/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">13.2. Database Failures
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Sáu tình huống: Database Hotspot, N&#43;1 Query, Deadlock, Replica Lag, Connection Pool Exhaustion, Hot Partition. Database là nơi bottleneck ghé thăm thường xuyên nhất (chương 1.5) — và cũng là nơi sự cố khó scale-out thoát thân nhất.
 Case 4 — Database Hotspot Triệu chứng DB tổng thể “khỏe” (CPU trung bình 40%) nhưng một nhóm thao tác cụ thể chậm bất thường; lock wait tăng; các query chạm vào một hàng/một trang cụ thể xếp hàng dài.
-...</p></div><footer class=entry-footer><span title='2026-07-13 16:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to 13.2. Database Failures" href=https://thanhhv.github.io/series/system-design/13-production-failure-cases/02-database-failures/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>13.1. Caching Failures</h2></header><div class=entry-content><p>Ba tình huống anh em: Cache Stampede, Cache Avalanche, Thundering Herd. Chung một mô hình gốc — đồng bộ hóa ngẫu nhiên + khuếch đại — khác nhau ở phạm vi và ngòi nổ.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 16:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;13 min</footer>
+  <a class="entry-link" aria-label="post link to 13.2. Database Failures" href="http://localhost:1313/series/system-design/13-production-failure-cases/02-database-failures/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">13.1. Caching Failures
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Ba tình huống anh em: Cache Stampede, Cache Avalanche, Thundering Herd. Chung một mô hình gốc — đồng bộ hóa ngẫu nhiên &#43; khuếch đại — khác nhau ở phạm vi và ngòi nổ.
 Case 1 — Cache Stampede (dogpile trên MỘT key nóng) Triệu chứng Hệ thống êm ả, rồi đúng một khoảnh khắc: DB CPU dựng đứng trong vài giây, latency một nhóm endpoint tăng vọt, sau đó có thể tự hồi phục — lặp lại theo chu kỳ đúng bằng TTL của một key nào đó. Trong slow query log: hàng trăm bản sao của cùng một query trong cùng một giây.
-...</p></div><footer class=entry-footer><span title='2026-07-13 16:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 13.1. Caching Failures" href=https://thanhhv.github.io/series/system-design/13-production-failure-cases/01-caching-failures/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Phần 13 — Production Failure Cases</h2></header><div class=entry-content><p>21 tình huống sự cố production kinh điển. Mục tiêu không phải ghi nhớ từng ca — mà là nhận ra các mô hình lặp lại để khi gặp biến thể thứ 22, bạn đã có phản xạ đúng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 16:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 13.1. Caching Failures" href="http://localhost:1313/series/system-design/13-production-failure-cases/01-caching-failures/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Phần 13 — Production Failure Cases
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 21 tình huống sự cố production kinh điển. Mục tiêu không phải ghi nhớ từng ca — mà là nhận ra các mô hình lặp lại để khi gặp biến thể thứ 22, bạn đã có phản xạ đúng.
 Cấu trúc phân tích mỗi tình huống Mỗi failure case được phân tích theo khung 10 điểm:
-Triệu chứng — những gì dashboard/user cho thấy Root cause — nguyên nhân gốc Tại sao xảy ra — cơ chế vật lý/logic đằng sau Kiến trúc nào bị ảnh hưởng Metric cần theo dõi Dashboard — nhìn gì Alert — ngưỡng nào Quy trình điều tra — làm gì, theo thứ tự nào Cách khắc phục — cầm máu ngay + chữa gốc Cách phòng tránh Danh mục Nhóm File Các case Caching 13.1 Cache Stampede · Cache Avalanche · Thundering Herd Database 13.2 Database Hotspot · N+1 Query · Deadlock · Replica Lag · Connection Pool Exhaustion · Hot Partition Messaging 13.3 Kafka Lag · Message Duplication · Queue Backlog · Retry Storm Distributed 13.4 Cascading Failure · Split Brain · Leader Election Failure Infrastructure 13.5 GC Pause · Out of Memory · DNS Failure · Region Outage · Third-party API Down Bốn mô hình gốc đằng sau 21 tình huống Đọc xong cả phần, bạn sẽ thấy hầu hết sự cố quy về bốn cơ chế:
-...</p></div><footer class=entry-footer><span title='2026-07-13 16:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Phần 13 — Production Failure Cases" href=https://thanhhv.github.io/series/system-design/13-production-failure-cases/00-tong-quan/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 10 — Disaster Recovery</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? VietShop giờ xử lý GMV mà mỗi giờ downtime = tiền tỷ + tổn hại thương hiệu + điều khoản phạt hợp đồng enterprise. Câu hỏi chuyển từ “làm sao để không sập” (không thể đảm bảo tuyệt đối) sang: “khi thảm họa xảy ra, chúng ta quay lại trong bao lâu, mất bao nhiêu dữ liệu, và ai làm gì?”
+Triệu chứng — những gì dashboard/user cho thấy Root cause — nguyên nhân gốc Tại sao xảy ra — cơ chế vật lý/logic đằng sau Kiến trúc nào bị ảnh hưởng Metric cần theo dõi Dashboard — nhìn gì Alert — ngưỡng nào Quy trình điều tra — làm gì, theo thứ tự nào Cách khắc phục — cầm máu ngay &#43; chữa gốc Cách phòng tránh Danh mục Nhóm File Các case Caching 13.1 Cache Stampede · Cache Avalanche · Thundering Herd Database 13.2 Database Hotspot · N&#43;1 Query · Deadlock · Replica Lag · Connection Pool Exhaustion · Hot Partition Messaging 13.3 Kafka Lag · Message Duplication · Queue Backlog · Retry Storm Distributed 13.4 Cascading Failure · Split Brain · Leader Election Failure Infrastructure 13.5 GC Pause · Out of Memory · DNS Failure · Region Outage · Third-party API Down Bốn mô hình gốc đằng sau 21 tình huống Đọc xong cả phần, bạn sẽ thấy hầu hết sự cố quy về bốn cơ chế:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 16:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Phần 13 — Production Failure Cases" href="http://localhost:1313/series/system-design/13-production-failure-cases/00-tong-quan/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 10 — Disaster Recovery
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? VietShop giờ xử lý GMV mà mỗi giờ downtime = tiền tỷ &#43; tổn hại thương hiệu &#43; điều khoản phạt hợp đồng enterprise. Câu hỏi chuyển từ “làm sao để không sập” (không thể đảm bảo tuyệt đối) sang: “khi thảm họa xảy ra, chúng ta quay lại trong bao lâu, mất bao nhiêu dữ liệu, và ai làm gì?”
 Thảm họa ở đây không chỉ là region cloud sập. Thống kê ngành nhiều năm cho thấy các nguyên nhân thường gặp hơn: kỹ sư chạy nhầm lệnh xóa trên production, migration hỏng dữ liệu âm thầm suốt 3 ngày, ransomware, tài khoản cloud bị khóa/xâm nhập, bug ứng dụng ghi rác lan qua replication. Lưu ý điểm chung: replication không cứu được bất kỳ ca nào trong số đó — nó trung thành nhân bản cả thảm họa.
-...</p></div><footer class=entry-footer><span title='2026-07-13 16:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to Giai đoạn 10 — Disaster Recovery" href=https://thanhhv.github.io/series/system-design/12-evolution/10-disaster-recovery/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 9 — Multi-region</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? VietShop mở thị trường Indonesia và Thái Lan; đồng thời ký hợp đồng enterprise có cam kết availability cao. Ba áp lực:
-Vật lý: user Jakarta gọi API đặt tại VN/Singapore: mỗi round-trip +30–70ms; một trang cần 5 round-trip là +350ms — conversion giảm đo được theo từng 100ms. Pháp lý: một số loại dữ liệu người dùng Indonesia phải lưu tại Indonesia. Không phải bài toán hiệu năng — bài toán ranh giới dữ liệu. Rủi ro tập trung: sự cố lớn của một cloud region (đã từng xảy ra với mọi cloud lớn) = 100% hệ thống chết. Board hỏi câu không né được: “nếu region Singapore sập một ngày thì sao?” 2. Vì sao kiến trúc cũ không còn phù hợp? Kiến trúc một region đứng trên giả định “mọi thành phần gần nhau, round-trip ~0.5ms” — giả định thấm vào mọi thiết kế: sync replication rẻ, gọi chéo service thoải mái, một nguồn sự thật cho mọi dữ liệu. Bước ra đa region, tốc độ ánh sáng đập vỡ giả định đó: không thể có đồng thời (1) ghi latency thấp ở mọi region, (2) strong consistency toàn cầu, (3) sống sót khi mất một region — đây là PACELC (chương 4.1) hiện hình bằng tiền và mili-giây. Multi-region không phải “nhân đôi hạ tầng” — nó là chọn lại vị trí trên tam giác đó cho từng loại dữ liệu.
-...</p></div><footer class=entry-footer><span title='2026-07-13 15:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Giai đoạn 9 — Multi-region" href=https://thanhhv.github.io/series/system-design/12-evolution/09-multi-region/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 8 — CQRS</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? Seller dashboard (“doanh thu hôm nay, top sản phẩm, đơn chờ xử lý”) join 9 bảng, chạy 3 giây, và chạy trên cùng DB đang phục vụ checkout — mỗi lần seller F5, khách mua hàng chậm đi. Search + filter đa chiều (giá, đánh giá, khoảng cách, khuyến mãi) là loại query mà B-tree index của OLTP không bao giờ phục vụ tốt. Cùng một dữ liệu đơn hàng, giờ có 4 “hình dạng đọc” khác nhau: chi tiết đơn cho user, dashboard cho seller, phân tích cho ops, feature cho ML. Một schema chuẩn hóa không thể tối ưu cho cả 4 — chuẩn hóa vốn được thiết kế để tối ưu cho ghi đúng, không phải cho đọc nhanh. Tỷ lệ đọc:ghi đo được trên các luồng này: > 100:1. 2. Vì sao kiến trúc cũ không còn phù hợp? Một model duy nhất phục vụ hai ông chủ có yêu cầu ngược nhau: bên ghi cần chuẩn hóa, constraint, transaction, ít index (index làm chậm ghi); bên đọc cần denormalize, nhiều index, cấu trúc theo đúng hình dạng màn hình. Tối ưu cho bên này là làm hại bên kia — trên cùng một schema, cuộc giằng co này không có lời giải, chỉ có thỏa hiệp ngày càng tệ ở cả hai phía.
-...</p></div><footer class=entry-footer><span title='2026-07-13 15:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to Giai đoạn 8 — CQRS" href=https://thanhhv.github.io/series/system-design/12-evolution/08-cqrs/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 7 — Kafka & Event-driven Architecture</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? Sau 1 năm microservices, một dạng coupling mới mọc lên — coupling tích hợp:
-Khi đơn hàng được tạo, Order service phải biết và gọi: Email, Inventory, Analytics, Loyalty, Fraud, Recommendation. Thêm consumer thứ 7 = sửa code + deploy Order service. Producer lệ thuộc vào danh sách người nghe — ngược đời. Availability của “tạo đơn” = tích availability của 6 downstream (hoặc code retry/degrade cho từng cái, ×6). Team Analytics muốn đi lại lịch sử đơn hàng để tính lại metric — không thể: các lời gọi HTTP đã bay hơi, dữ liệu chỉ còn trạng thái cuối trong DB. RabbitMQ hiện tại: message tiêu thụ xong là biến mất — không phục vụ được nhu cầu “nhiều consumer độc lập, mỗi bên đọc theo nhịp riêng, replay được”. 2. Vì sao kiến trúc cũ không còn phù hợp? Mô hình “A gọi B” (dù sync HTTP hay qua work queue) mã hóa cứng ai cần biết điều gì vào producer. Số tuyến tích hợp tăng như N×M. First principles: sự kiện nghiệp vụ (“đơn #123 đã tạo”) là một sự thật — sự thật nên được công bố một lần và ai quan tâm thì tự đến đọc, thay vì được giao tận tay từng người. Đảo ngược hướng phụ thuộc: producer không biết consumer tồn tại.
-...</p></div><footer class=entry-footer><span title='2026-07-13 15:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to Giai đoạn 7 — Kafka & Event-driven Architecture" href=https://thanhhv.github.io/series/system-design/12-evolution/07-kafka-event-driven/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 6 — Tách Microservices</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? VietShop: 1M+ user, 60 dev / 8 team, modular monolith kỷ luật tốt. Ba áp lực mới mà “một deployable” không giải được:
-Nhịp deploy xung đột: team Search muốn deploy 5 lần/ngày để tune ranking; team Payments bị ràng buộc quy trình kiểm soát thay đổi nghiêm ngặt. Chung một deployable = Search bị Payments ghìm, Payments bị Search làm rủi ro. Nhu cầu tài nguyên xung đột: Search cần máy RAM lớn + Elasticsearch; xử lý ảnh cần CPU; API thường cần nhiều instance nhỏ. Một deployable = mọi instance mang mọi thứ. Bán kính sự cố chung: memory leak ở module khuyến mãi làm OOM cả app — gồm cả checkout. Một bug của team này đánh sập doanh thu của mọi team. 2. Vì sao kiến trúc cũ không còn phù hợp? Modular monolith đã giải bài toán ranh giới code nhưng ba tài nguyên vẫn dùng chung không tách được: tiến trình runtime (crash chung, GC chung, leak chung), pipeline deploy (nhịp chung, rollback chung), cụm hạ tầng (shape máy chung). Khi các module cần khác nhau về runtime, nhịp deploy, hình dạng hạ tầng — chỉ tách tiến trình mới giải được. Đó chính xác là (và chỉ là) điều microservices mang lại: ranh giới deploy độc lập.
-...</p></div><footer class=entry-footer><span title='2026-07-13 15:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to Giai đoạn 6 — Tách Microservices" href=https://thanhhv.github.io/series/system-design/12-evolution/06-microservices/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 5 — Modular Monolith</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? Công ty 25 dev, 4 nhóm tính năng. Hệ thống chạy ổn — vấn đề nằm ở việc phát triển nó:
-Build + test 25 phút; deploy 2 lần/tuần theo “chuyến tàu”, ai lỡ thì chờ. Thay đổi module khuyến mãi làm gãy checkout — vì code checkout import thẳng vào class nội bộ của khuyến mãi từ 2 năm trước. Không ai dám nói “tôi hiểu toàn bộ hệ thống”. Onboarding dev mới: 2 tháng. Ranh giới thư mục từ giai đoạn 1 đã xói mòn: 400 điểm import chéo giữa các “module”, 60 bảng DB mà module nào cũng đọc của nhau. Bottleneck bây giờ là coupling — đo bằng tốc độ ra feature và tỷ lệ regression liên-module, không phải bằng CPU.
-...</p></div><footer class=entry-footer><span title='2026-07-13 15:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Giai đoạn 5 — Modular Monolith" href=https://thanhhv.github.io/series/system-design/12-evolution/05-modular-monolith/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 4 — Thêm Message Queue</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? ~200K user, GMV bắt đầu có ý nghĩa, flash sale đầu tiên sắp chạy. Ba vấn đề với queue-trên-Redis hiện tại:
-Đảm bảo mỏng manh: một sự cố Redis đã làm mất ~2000 job trong 30 giây, trong đó có job cập nhật trạng thái thanh toán — team mất 2 ngày đối soát tay với cổng thanh toán. Thiếu công cụ xử lý lỗi trưởng thành: job fail 5 lần thì đi đâu? Ai xem? Retry với backoff + dead letter + đánh chỉ mục lỗi phải tự chế. Flash sale sắp tới: ước 10× peak vào endpoint đặt hàng trong 5 phút. Web + DB không nên (và không cần) được scale cho đỉnh 5 phút đó — cần một tầng hấp thụ spike và cho phép xử lý với tốc độ của hệ thống. 2. Vì sao kiến trúc cũ không còn phù hợp? Redis-queue là cache được nhờ vả làm broker. Nó thiếu các thuộc tính mà bài toán mới đòi: durability có cam kết (ghi disk, replicate trước khi ack), acknowledgement chuẩn (consumer chết giữa chừng → message quay lại queue), dead letter queue, routing, priority, và backpressure rõ ràng. Vá từng thiếu hụt bằng code tự chế = tự viết một message broker tồi.
-...</p></div><footer class=entry-footer><span title='2026-07-13 15:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to Giai đoạn 4 — Thêm Message Queue" href=https://thanhhv.github.io/series/system-design/12-evolution/04-message-queue/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 3 — Tách Background Worker</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? ~100K user. Triệu chứng:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 16:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 10 — Disaster Recovery" href="http://localhost:1313/series/system-design/12-evolution/10-disaster-recovery/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 9 — Multi-region
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? VietShop mở thị trường Indonesia và Thái Lan; đồng thời ký hợp đồng enterprise có cam kết availability cao. Ba áp lực:
+Vật lý: user Jakarta gọi API đặt tại VN/Singapore: mỗi round-trip &#43;30–70ms; một trang cần 5 round-trip là &#43;350ms — conversion giảm đo được theo từng 100ms. Pháp lý: một số loại dữ liệu người dùng Indonesia phải lưu tại Indonesia. Không phải bài toán hiệu năng — bài toán ranh giới dữ liệu. Rủi ro tập trung: sự cố lớn của một cloud region (đã từng xảy ra với mọi cloud lớn) = 100% hệ thống chết. Board hỏi câu không né được: “nếu region Singapore sập một ngày thì sao?” 2. Vì sao kiến trúc cũ không còn phù hợp? Kiến trúc một region đứng trên giả định “mọi thành phần gần nhau, round-trip ~0.5ms” — giả định thấm vào mọi thiết kế: sync replication rẻ, gọi chéo service thoải mái, một nguồn sự thật cho mọi dữ liệu. Bước ra đa region, tốc độ ánh sáng đập vỡ giả định đó: không thể có đồng thời (1) ghi latency thấp ở mọi region, (2) strong consistency toàn cầu, (3) sống sót khi mất một region — đây là PACELC (chương 4.1) hiện hình bằng tiền và mili-giây. Multi-region không phải “nhân đôi hạ tầng” — nó là chọn lại vị trí trên tam giác đó cho từng loại dữ liệu.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 15:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 9 — Multi-region" href="http://localhost:1313/series/system-design/12-evolution/09-multi-region/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 8 — CQRS
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? Seller dashboard (“doanh thu hôm nay, top sản phẩm, đơn chờ xử lý”) join 9 bảng, chạy 3 giây, và chạy trên cùng DB đang phục vụ checkout — mỗi lần seller F5, khách mua hàng chậm đi. Search &#43; filter đa chiều (giá, đánh giá, khoảng cách, khuyến mãi) là loại query mà B-tree index của OLTP không bao giờ phục vụ tốt. Cùng một dữ liệu đơn hàng, giờ có 4 “hình dạng đọc” khác nhau: chi tiết đơn cho user, dashboard cho seller, phân tích cho ops, feature cho ML. Một schema chuẩn hóa không thể tối ưu cho cả 4 — chuẩn hóa vốn được thiết kế để tối ưu cho ghi đúng, không phải cho đọc nhanh. Tỷ lệ đọc:ghi đo được trên các luồng này: &gt; 100:1. 2. Vì sao kiến trúc cũ không còn phù hợp? Một model duy nhất phục vụ hai ông chủ có yêu cầu ngược nhau: bên ghi cần chuẩn hóa, constraint, transaction, ít index (index làm chậm ghi); bên đọc cần denormalize, nhiều index, cấu trúc theo đúng hình dạng màn hình. Tối ưu cho bên này là làm hại bên kia — trên cùng một schema, cuộc giằng co này không có lời giải, chỉ có thỏa hiệp ngày càng tệ ở cả hai phía.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 15:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 8 — CQRS" href="http://localhost:1313/series/system-design/12-evolution/08-cqrs/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 7 — Kafka &amp; Event-driven Architecture
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? Sau 1 năm microservices, một dạng coupling mới mọc lên — coupling tích hợp:
+Khi đơn hàng được tạo, Order service phải biết và gọi: Email, Inventory, Analytics, Loyalty, Fraud, Recommendation. Thêm consumer thứ 7 = sửa code &#43; deploy Order service. Producer lệ thuộc vào danh sách người nghe — ngược đời. Availability của “tạo đơn” = tích availability của 6 downstream (hoặc code retry/degrade cho từng cái, ×6). Team Analytics muốn đi lại lịch sử đơn hàng để tính lại metric — không thể: các lời gọi HTTP đã bay hơi, dữ liệu chỉ còn trạng thái cuối trong DB. RabbitMQ hiện tại: message tiêu thụ xong là biến mất — không phục vụ được nhu cầu “nhiều consumer độc lập, mỗi bên đọc theo nhịp riêng, replay được”. 2. Vì sao kiến trúc cũ không còn phù hợp? Mô hình “A gọi B” (dù sync HTTP hay qua work queue) mã hóa cứng ai cần biết điều gì vào producer. Số tuyến tích hợp tăng như N×M. First principles: sự kiện nghiệp vụ (“đơn #123 đã tạo”) là một sự thật — sự thật nên được công bố một lần và ai quan tâm thì tự đến đọc, thay vì được giao tận tay từng người. Đảo ngược hướng phụ thuộc: producer không biết consumer tồn tại.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 15:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 7 — Kafka & Event-driven Architecture" href="http://localhost:1313/series/system-design/12-evolution/07-kafka-event-driven/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 6 — Tách Microservices
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? VietShop: 1M&#43; user, 60 dev / 8 team, modular monolith kỷ luật tốt. Ba áp lực mới mà “một deployable” không giải được:
+Nhịp deploy xung đột: team Search muốn deploy 5 lần/ngày để tune ranking; team Payments bị ràng buộc quy trình kiểm soát thay đổi nghiêm ngặt. Chung một deployable = Search bị Payments ghìm, Payments bị Search làm rủi ro. Nhu cầu tài nguyên xung đột: Search cần máy RAM lớn &#43; Elasticsearch; xử lý ảnh cần CPU; API thường cần nhiều instance nhỏ. Một deployable = mọi instance mang mọi thứ. Bán kính sự cố chung: memory leak ở module khuyến mãi làm OOM cả app — gồm cả checkout. Một bug của team này đánh sập doanh thu của mọi team. 2. Vì sao kiến trúc cũ không còn phù hợp? Modular monolith đã giải bài toán ranh giới code nhưng ba tài nguyên vẫn dùng chung không tách được: tiến trình runtime (crash chung, GC chung, leak chung), pipeline deploy (nhịp chung, rollback chung), cụm hạ tầng (shape máy chung). Khi các module cần khác nhau về runtime, nhịp deploy, hình dạng hạ tầng — chỉ tách tiến trình mới giải được. Đó chính xác là (và chỉ là) điều microservices mang lại: ranh giới deploy độc lập.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 15:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 6 — Tách Microservices" href="http://localhost:1313/series/system-design/12-evolution/06-microservices/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 5 — Modular Monolith
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? Công ty 25 dev, 4 nhóm tính năng. Hệ thống chạy ổn — vấn đề nằm ở việc phát triển nó:
+Build &#43; test 25 phút; deploy 2 lần/tuần theo “chuyến tàu”, ai lỡ thì chờ. Thay đổi module khuyến mãi làm gãy checkout — vì code checkout import thẳng vào class nội bộ của khuyến mãi từ 2 năm trước. Không ai dám nói “tôi hiểu toàn bộ hệ thống”. Onboarding dev mới: 2 tháng. Ranh giới thư mục từ giai đoạn 1 đã xói mòn: 400 điểm import chéo giữa các “module”, 60 bảng DB mà module nào cũng đọc của nhau. Bottleneck bây giờ là coupling — đo bằng tốc độ ra feature và tỷ lệ regression liên-module, không phải bằng CPU.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 15:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 5 — Modular Monolith" href="http://localhost:1313/series/system-design/12-evolution/05-modular-monolith/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 4 — Thêm Message Queue
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? ~200K user, GMV bắt đầu có ý nghĩa, flash sale đầu tiên sắp chạy. Ba vấn đề với queue-trên-Redis hiện tại:
+Đảm bảo mỏng manh: một sự cố Redis đã làm mất ~2000 job trong 30 giây, trong đó có job cập nhật trạng thái thanh toán — team mất 2 ngày đối soát tay với cổng thanh toán. Thiếu công cụ xử lý lỗi trưởng thành: job fail 5 lần thì đi đâu? Ai xem? Retry với backoff &#43; dead letter &#43; đánh chỉ mục lỗi phải tự chế. Flash sale sắp tới: ước 10× peak vào endpoint đặt hàng trong 5 phút. Web &#43; DB không nên (và không cần) được scale cho đỉnh 5 phút đó — cần một tầng hấp thụ spike và cho phép xử lý với tốc độ của hệ thống. 2. Vì sao kiến trúc cũ không còn phù hợp? Redis-queue là cache được nhờ vả làm broker. Nó thiếu các thuộc tính mà bài toán mới đòi: durability có cam kết (ghi disk, replicate trước khi ack), acknowledgement chuẩn (consumer chết giữa chừng → message quay lại queue), dead letter queue, routing, priority, và backpressure rõ ràng. Vá từng thiếu hụt bằng code tự chế = tự viết một message broker tồi.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 15:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 4 — Thêm Message Queue" href="http://localhost:1313/series/system-design/12-evolution/04-message-queue/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 3 — Tách Background Worker
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? ~100K user. Triệu chứng:
 Endpoint đặt hàng p99 = 4 giây. Tracing bóc ra: logic đơn hàng 150ms, gửi email xác nhận 800ms, gọi API đối tác vận chuyển 1.2s, bắn thông báo 500ms — 2.5s là việc user không cần chờ. Upload ảnh sản phẩm của seller treo 8–15 giây (resize 5 kích cỡ trong request). Khi SMTP provider chậm (chuyện của họ, không phải của ta), toàn bộ endpoint đặt hàng chậm theo — độ khả dụng của ta bị xích vào bên thứ ba. Thread/worker pool của web app cạn vào giờ peak vì bị chiếm bởi các request “treo chờ bên ngoài” → cả những endpoint nhanh cũng chờ (Little’s Law, chương 1.3). 2. Vì sao kiến trúc cũ không còn phù hợp? Kiến trúc cũ trộn hai loại công việc có bản chất khác nhau vào một đường xử lý:
-...</p></div><footer class=entry-footer><span title='2026-07-13 14:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to Giai đoạn 3 — Tách Background Worker" href=https://thanhhv.github.io/series/system-design/12-evolution/03-background-worker/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 2 — Thêm Redis</h2></header><div class=entry-content><p>1. Vấn đề gì xuất hiện? VietShop đạt ~50K user, chạy quảng cáo tối. Triệu chứng đo được:
-DB CPU 85% vào 20–22h; p99 trang chủ từ 200ms lên 2.5s đúng khung giờ đó. pg_stat_statements chỉ mặt: 70% thời gian DB dành cho ~20 query đọc lặp lại — trang chủ, danh mục, top sản phẩm — kết quả gần như không đổi giữa hai lần chạy liên tiếp. Tỷ lệ đọc:ghi đo được ~60:1. 2. Vì sao kiến trúc cũ không còn phù hợp? DB đang tính lại hàng nghìn lần mỗi phút một kết quả không đổi. Vấn đề không phải PostgreSQL yếu — vấn đề là dùng công cụ đắt (query engine + disk) cho việc rẻ (nhớ lại một kết quả đã biết). Scale-up DB mua thêm thời gian nhưng đốt tiền vào đúng sự lãng phí đó; thêm read replica cũng vậy (nhân bản sự lãng phí ra N máy). First principles: dữ liệu đọc nhiều-ghi ít-chịu được trễ vài giây thuộc về RAM, nơi truy cập rẻ hơn disk 3 bậc độ lớn.
-...</p></div><footer class=entry-footer><span title='2026-07-13 14:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Giai đoạn 2 — Thêm Redis" href=https://thanhhv.github.io/series/system-design/12-evolution/02-them-redis/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Giai đoạn 1 — Monolith + PostgreSQL</h2></header><div class=entry-content><p>Bối cảnh VietShop ngày 0: 3 founder (2 dev), vốn đủ sống 12 tháng, mục tiêu ra thị trường trong 2 tháng. FR: đăng ký/đăng nhập, danh mục sản phẩm, giỏ hàng, đặt hàng COD, quản trị đơn giản. NFR thật sự chỉ có hai: ra tính năng nhanh và không mất dữ liệu đơn hàng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 14:50:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 3 — Tách Background Worker" href="http://localhost:1313/series/system-design/12-evolution/03-background-worker/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 2 — Thêm Redis
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vấn đề gì xuất hiện? VietShop đạt ~50K user, chạy quảng cáo tối. Triệu chứng đo được:
+DB CPU 85% vào 20–22h; p99 trang chủ từ 200ms lên 2.5s đúng khung giờ đó. pg_stat_statements chỉ mặt: 70% thời gian DB dành cho ~20 query đọc lặp lại — trang chủ, danh mục, top sản phẩm — kết quả gần như không đổi giữa hai lần chạy liên tiếp. Tỷ lệ đọc:ghi đo được ~60:1. 2. Vì sao kiến trúc cũ không còn phù hợp? DB đang tính lại hàng nghìn lần mỗi phút một kết quả không đổi. Vấn đề không phải PostgreSQL yếu — vấn đề là dùng công cụ đắt (query engine &#43; disk) cho việc rẻ (nhớ lại một kết quả đã biết). Scale-up DB mua thêm thời gian nhưng đốt tiền vào đúng sự lãng phí đó; thêm read replica cũng vậy (nhân bản sự lãng phí ra N máy). First principles: dữ liệu đọc nhiều-ghi ít-chịu được trễ vài giây thuộc về RAM, nơi truy cập rẻ hơn disk 3 bậc độ lớn.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 14:40:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 2 — Thêm Redis" href="http://localhost:1313/series/system-design/12-evolution/02-them-redis/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Giai đoạn 1 — Monolith &#43; PostgreSQL
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Bối cảnh VietShop ngày 0: 3 founder (2 dev), vốn đủ sống 12 tháng, mục tiêu ra thị trường trong 2 tháng. FR: đăng ký/đăng nhập, danh mục sản phẩm, giỏ hàng, đặt hàng COD, quản trị đơn giản. NFR thật sự chỉ có hai: ra tính năng nhanh và không mất dữ liệu đơn hàng.
 1. Vấn đề cần giải Không phải scale — là tồn tại. Xác suất sản phẩm chết vì không có user cao gấp trăm lần chết vì quá nhiều user. Kiến trúc phù hợp là kiến trúc tối đa hóa tốc độ học từ thị trường trên mỗi đồng vốn.
-...</p></div><footer class=entry-footer><span title='2026-07-13 14:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Giai đoạn 1 — Monolith + PostgreSQL" href=https://thanhhv.github.io/series/system-design/12-evolution/01-monolith-postgresql/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Phần 12 — System Design Evolution</h2></header><div class=entry-content><p>Chương quan trọng nhất của tài liệu. Mọi khái niệm ở các phần trước được đặt vào một câu chuyện duy nhất, kể từ đầu đến cuối.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 14:30:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Giai đoạn 1 — Monolith &#43; PostgreSQL" href="http://localhost:1313/series/system-design/12-evolution/01-monolith-postgresql/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Phần 12 — System Design Evolution
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Chương quan trọng nhất của tài liệu. Mọi khái niệm ở các phần trước được đặt vào một câu chuyện duy nhất, kể từ đầu đến cuối.
 Hệ thống xuyên suốt: sàn E-commerce “VietShop” Chúng ta theo chân một sàn thương mại điện tử Việt Nam từ ngày đầu tiên đến khi phục vụ hàng chục triệu người dùng. Chọn e-commerce vì nó chứa đủ các bài toán kinh điển: read-heavy (duyệt sản phẩm), tranh chấp ghi (tồn kho), tiền bạc (không được sai), spike cực đoan (flash sale), tác vụ nền (email, ảnh), tìm kiếm, và báo cáo.
-...</p></div><footer class=entry-footer><span title='2026-07-13 14:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Phần 12 — System Design Evolution" href=https://thanhhv.github.io/series/system-design/12-evolution/00-tong-quan/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>11.3. Biên phòng thủ — API Gateway, Rate Limiting, WAF</h2></header><div class=entry-content><p>1. Problem Statement Internet là môi trường thù địch mặc định: bot chiếm phần lớn traffic của nhiều site, credential stuffing chạy 24/7, scraper hút catalog, và thi thoảng một chiến dịch DDoS thật sự. Nếu mỗi service tự xử lý các mối lo này, ta có N bản cài đặt lệch nhau của cùng các phòng thủ (11.1 §2 — cùng lý do tập trung AuthN). Biên (edge) tồn tại để gom các mối quan tâm cắt ngang về một tuyến phòng thủ có tầng — để service phía sau tập trung vào nghiệp vụ, và để “một chỗ vá” khi có chuyện.
-...</p></div><footer class=entry-footer><span title='2026-07-13 14:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 11.3. Biên phòng thủ — API Gateway, Rate Limiting, WAF" href=https://thanhhv.github.io/series/system-design/11-security/03-gateway-ratelimit-waf/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>11.2. OAuth2, OIDC & JWT — ủy quyền và token trong hệ phân tán</h2></header><div class=entry-content><p>1. Problem Statement Ba bài toán token của mọi hệ hiện đại: app bên thứ ba cần truy cập dữ liệu user mà không cầm mật khẩu của user (ủy quyền — OAuth2); nhiều ứng dụng cần cùng một đăng nhập (SSO — OIDC); và N service cần xác minh danh tính người gọi mà không gọi về trung tâm mỗi request (token tự xác minh — JWT). Ba bài, một họ chuẩn — và một bãi mìn thuật ngữ nơi “dùng JWT” và “dùng OAuth” bị nói như thể là quyết định một chữ, trong khi mỗi lựa chọn con bên trong (flow nào, token sống bao lâu, thu hồi thế nào) mới là nơi an toàn được quyết định.
-...</p></div><footer class=entry-footer><span title='2026-07-13 14:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 11.2. OAuth2, OIDC & JWT — ủy quyền và token trong hệ phân tán" href=https://thanhhv.github.io/series/system-design/11-security/02-oauth2-jwt/></a></article><footer class=page-footer><nav class=pagination><a class=next href=https://thanhhv.github.io/tags/system-design/page/2/>Next&nbsp;&nbsp;»</a></nav></footer></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 14:20:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Phần 12 — System Design Evolution" href="http://localhost:1313/series/system-design/12-evolution/00-tong-quan/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">11.3. Biên phòng thủ — API Gateway, Rate Limiting, WAF
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement Internet là môi trường thù địch mặc định: bot chiếm phần lớn traffic của nhiều site, credential stuffing chạy 24/7, scraper hút catalog, và thi thoảng một chiến dịch DDoS thật sự. Nếu mỗi service tự xử lý các mối lo này, ta có N bản cài đặt lệch nhau của cùng các phòng thủ (11.1 §2 — cùng lý do tập trung AuthN). Biên (edge) tồn tại để gom các mối quan tâm cắt ngang về một tuyến phòng thủ có tầng — để service phía sau tập trung vào nghiệp vụ, và để “một chỗ vá” khi có chuyện.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 14:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 11.3. Biên phòng thủ — API Gateway, Rate Limiting, WAF" href="http://localhost:1313/series/system-design/11-security/03-gateway-ratelimit-waf/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">11.2. OAuth2, OIDC &amp; JWT — ủy quyền và token trong hệ phân tán
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement Ba bài toán token của mọi hệ hiện đại: app bên thứ ba cần truy cập dữ liệu user mà không cầm mật khẩu của user (ủy quyền — OAuth2); nhiều ứng dụng cần cùng một đăng nhập (SSO — OIDC); và N service cần xác minh danh tính người gọi mà không gọi về trung tâm mỗi request (token tự xác minh — JWT). Ba bài, một họ chuẩn — và một bãi mìn thuật ngữ nơi “dùng JWT” và “dùng OAuth” bị nói như thể là quyết định một chữ, trong khi mỗi lựa chọn con bên trong (flow nào, token sống bao lâu, thu hồi thế nào) mới là nơi an toàn được quyết định.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-13 14:00:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 11.2. OAuth2, OIDC & JWT — ủy quyền và token trong hệ phân tán" href="http://localhost:1313/series/system-design/11-security/02-oauth2-jwt/"></a>
+</article>
+<footer class="page-footer">
+  <nav class="pagination">
+    <a class="next" href="http://localhost:1313/tags/system-design/page/2/">Next&nbsp;&nbsp;»
+    </a>
+  </nav>
+</footer>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

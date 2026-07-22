@@ -1,63 +1,605 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Software-Design | Thanh HV's Blog</title>
-<meta name=keywords content><meta name=description content><meta name=author content><link rel=canonical href=https://thanhhv.github.io/tags/software-design/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/tags/software-design/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/tags/software-design/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/tags/software-design/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Software-Design"><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Software-Design"><meta name=twitter:description content></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/tags/>Tags</a></div><h1>Software-Design</h1></header><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>5.4 — Tổng kết: toàn bộ tài liệu trên một trang, và con đường tiếp theo</h2></header><div class=entry-content><p>1. Một sợi chỉ xuyên suốt Ba mươi ba chương quy về một hàm mục tiêu duy nhất, phát biểu từ chương 1.1 và chưa từng đổi:
-Tối thiểu hóa tổng chi phí thay đổi (hiểu + lan truyền + kiểm chứng + phối hợp), chiết khấu theo xác suất thay đổi đó xảy ra — với chi phí hiện tại chấp nhận được.
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Software-Design | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/tags/software-design/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/software-design/index.xml">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/software-design/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/tags/">Tags</a></div>
+  <h1>
+    Software-Design
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">5.4 — Tổng kết: toàn bộ tài liệu trên một trang, và con đường tiếp theo
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Một sợi chỉ xuyên suốt Ba mươi ba chương quy về một hàm mục tiêu duy nhất, phát biểu từ chương 1.1 và chưa từng đổi:
+Tối thiểu hóa tổng chi phí thay đổi (hiểu &#43; lan truyền &#43; kiểm chứng &#43; phối hợp), chiết khấu theo xác suất thay đổi đó xảy ra — với chi phí hiện tại chấp nhận được.
 Mọi thứ còn lại là công cụ phục vụ hàm đó, xếp thành bốn tầng:
-...</p></div><footer class=entry-footer><span title='2026-07-17 13:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to 5.4 — Tổng kết: toàn bộ tài liệu trên một trang, và con đường tiếp theo" href=https://thanhhv.github.io/series/software-design/level-5-architecture/04-tong-ket/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>5.3 — Production Case Studies: đọc pattern trong code thật đang chạy</h2></header><div class=entry-content><p>Chương này là bài tập tổng hợp của toàn bộ tài liệu: soi các hệ thống lớn — mỗi hệ vài đoạn, theo cùng khung ba câu hỏi: họ chọn pattern gì, vì sao (đánh đổi cái gì), và nếu chọn khác thì hệ quả ra sao. Nhiều case đã được nhắc rải rác ở các chương trước — ở đây gom lại thành chân dung trọn vẹn.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 13:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to 5.4 — Tổng kết: toàn bộ tài liệu trên một trang, và con đường tiếp theo" href="http://localhost:1313/series/software-design/level-5-architecture/04-tong-ket/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">5.3 — Production Case Studies: đọc pattern trong code thật đang chạy
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Chương này là bài tập tổng hợp của toàn bộ tài liệu: soi các hệ thống lớn — mỗi hệ vài đoạn, theo cùng khung ba câu hỏi: họ chọn pattern gì, vì sao (đánh đổi cái gì), và nếu chọn khác thì hệ quả ra sao. Nhiều case đã được nhắc rải rác ở các chương trước — ở đây gom lại thành chân dung trọn vẹn.
 A. Go Standard Library — bậc thầy của interface nhỏ io.Reader / io.Writer Chọn gì: interface 1 method (ISP 2.4 cực hạn), hợp đồng ngữ nghĩa viết kỹ từng trường hợp biên (LSP 2.3), composition chồng vô hạn (Decorator 4.5: bufio bọc gzip bọc net.Conn). Vì sao: số implementation là vô hạn và không biết trước — hợp đồng phải tối thiểu để dễ thỏa mãn nhất có thể; đổi lại caller chịu khó (loop đọc cẩn thận) và stdlib bù bằng helper (io.ReadAll, io.Copy — kèm tối ưu sniff optional interface WriterTo/ReaderFrom, kỹ thuật 2.4 bước 3). Nếu chọn khác: interface “tiện caller” kiểu ReadAll() []byte → mất streaming (buộc load hết vào RAM), mất composition — cả hệ sinh thái streaming của Go không tồn tại. Một quyết định 1 method, hệ quả 15 năm.
-...</p></div><footer class=entry-footer><span title='2026-07-17 12:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 5.3 — Production Case Studies: đọc pattern trong code thật đang chạy" href=https://thanhhv.github.io/series/software-design/level-5-architecture/03-case-studies/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>5.2 — Event-driven Architecture & CQRS: khi nào đáng trả giá cho bất đồng bộ</h2></header><div class=entry-content><p>1. Event-driven Architecture — Observer (4.8) phóng to hết cỡ Con đường leo thang — và trạm dừng ở mỗi bậc Toàn bộ nền đã xây: event là dữ liệu bất biến quá khứ (4.8), domain events sinh trong transaction (4.13), outbox đưa event rời process an toàn (4.13), consumer idempotent (4.9). Event-driven architecture là quyết định dùng chuỗi đó làm xương sống liên lạc giữa các bounded context (5.0): context phát sự kiện về điều đã xảy ra trong nó; context khác phản ứng — không ai gọi trực tiếp ai.
-...</p></div><footer class=entry-footer><span title='2026-07-17 12:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to 5.2 — Event-driven Architecture & CQRS: khi nào đáng trả giá cho bất đồng bộ" href=https://thanhhv.github.io/series/software-design/level-5-architecture/02-event-driven-cqrs/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>5.1 — Clean & Hexagonal Architecture: một ý tưởng, nhiều tên gọi</h2></header><div class=entry-content><p>1. Gỡ rối tên gọi trước — vì chúng là MỘT ý tưởng Hexagonal/Ports & Adapters (Cockburn 2005), Onion (Palermo 2008), Clean Architecture (Martin 2012) — ba “trường phái” mà thực chất là ba bản vẽ của cùng một nguyên tắc, nguyên tắc mà bạn đã học trọn ở chương 2.5:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 12:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 5.3 — Production Case Studies: đọc pattern trong code thật đang chạy" href="http://localhost:1313/series/software-design/level-5-architecture/03-case-studies/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">5.2 — Event-driven Architecture &amp; CQRS: khi nào đáng trả giá cho bất đồng bộ
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Event-driven Architecture — Observer (4.8) phóng to hết cỡ Con đường leo thang — và trạm dừng ở mỗi bậc Toàn bộ nền đã xây: event là dữ liệu bất biến quá khứ (4.8), domain events sinh trong transaction (4.13), outbox đưa event rời process an toàn (4.13), consumer idempotent (4.9). Event-driven architecture là quyết định dùng chuỗi đó làm xương sống liên lạc giữa các bounded context (5.0): context phát sự kiện về điều đã xảy ra trong nó; context khác phản ứng — không ai gọi trực tiếp ai.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 12:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to 5.2 — Event-driven Architecture & CQRS: khi nào đáng trả giá cho bất đồng bộ" href="http://localhost:1313/series/software-design/level-5-architecture/02-event-driven-cqrs/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">5.1 — Clean &amp; Hexagonal Architecture: một ý tưởng, nhiều tên gọi
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Gỡ rối tên gọi trước — vì chúng là MỘT ý tưởng Hexagonal/Ports &amp; Adapters (Cockburn 2005), Onion (Palermo 2008), Clean Architecture (Martin 2012) — ba “trường phái” mà thực chất là ba bản vẽ của cùng một nguyên tắc, nguyên tắc mà bạn đã học trọn ở chương 2.5:
 Nghiệp vụ ở trung tâm, không biết gì về thế giới ngoài. Mọi mũi tên phụ thuộc trỏ VÀO trong. Thế giới ngoài (DB, HTTP, queue, UI) nói chuyện với trung tâm qua các cổng (interface) do TRUNG TÂM định nghĩa.
-...</p></div><footer class=entry-footer><span title='2026-07-17 12:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to 5.1 — Clean & Hexagonal Architecture: một ý tưởng, nhiều tên gọi" href=https://thanhhv.github.io/series/software-design/level-5-architecture/01-clean-hexagonal/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>5.0 — Domain-Driven Design: thiết kế theo nghiệp vụ, không theo công nghệ</h2></header><div class=entry-content><p>1. Problem Statement — căn bệnh mà DDD sinh ra để chữa Level 1–4 làm việc ở quy mô hàm, struct, package. Level 5 hỏi câu hỏi quy mô hệ thống — và bắt đầu bằng căn bệnh phổ biến nhất của hệ thống lớn, một căn bệnh không phải về code:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 12:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to 5.1 — Clean & Hexagonal Architecture: một ý tưởng, nhiều tên gọi" href="http://localhost:1313/series/software-design/level-5-architecture/01-clean-hexagonal/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">5.0 — Domain-Driven Design: thiết kế theo nghiệp vụ, không theo công nghệ
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement — căn bệnh mà DDD sinh ra để chữa Level 1–4 làm việc ở quy mô hàm, struct, package. Level 5 hỏi câu hỏi quy mô hệ thống — và bắt đầu bằng căn bệnh phổ biến nhất của hệ thống lớn, một căn bệnh không phải về code:
 Team kỹ thuật và team nghiệp vụ nói hai ngôn ngữ khác nhau về cùng một thứ.
 Triệu chứng cụ thể, quen thuộc đến đau lòng: PM nói “khách hàng”, codebase có User, Account, Customer, Client, Member — năm tên cho không-rõ-mấy khái niệm; bảng orders có cột status 14 giá trị trong đó 5 giá trị “không còn dùng nhưng không ai dám xóa”; tính năng mới cần ba cuộc họp để thống nhất “ý anh nói đơn hủy là hủy kiểu nào?”; và bug nghiệp vụ sinh ra không phải vì code sai thuật toán, mà vì dev hiểu sai luật chơi của domain.
-...</p></div><footer class=entry-footer><span title='2026-07-17 12:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 5.0 — Domain-Driven Design: thiết kế theo nghiệp vụ, không theo công nghệ" href=https://thanhhv.github.io/series/software-design/level-5-architecture/00-ddd/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.13 — Pipeline, Plugin, Domain Events, Saga & Outbox — và bản đồ tổng kết Level 4</h2></header><div class=entry-content><p>Chương khép Level 4: hai idiom kiến trúc nhỏ (Pipeline, Plugin — phần lớn đã xây ở các chương trước, giờ chốt sổ), rồi bộ ba pattern của thế giới phân tán (Domain Events → Saga → Outbox — ba nấc của cùng một câu chuyện), và bảng phân loại cuối cùng: đâu là GoF, đâu là Enterprise, đâu là idiom Go.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 12:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 5.0 — Domain-Driven Design: thiết kế theo nghiệp vụ, không theo công nghệ" href="http://localhost:1313/series/software-design/level-5-architecture/00-ddd/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.13 — Pipeline, Plugin, Domain Events, Saga &amp; Outbox — và bản đồ tổng kết Level 4
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Chương khép Level 4: hai idiom kiến trúc nhỏ (Pipeline, Plugin — phần lớn đã xây ở các chương trước, giờ chốt sổ), rồi bộ ba pattern của thế giới phân tán (Domain Events → Saga → Outbox — ba nấc của cùng một câu chuyện), và bảng phân loại cuối cùng: đâu là GoF, đâu là Enterprise, đâu là idiom Go.
 A. Pipeline — chốt sổ Đã xây ở 3.4 (Replace Loop with Strategy → tách khung khỏi rule) và 4.5 (middleware = pipeline của handler). Định nghĩa chốt: chuỗi giai đoạn xử lý, output giai đoạn này là input giai đoạn sau, mỗi giai đoạn không biết gì về nhau ngoài hợp đồng dữ liệu. Ba hình dạng trong Go, chọn theo tải:
-...</p></div><footer class=entry-footer><span title='2026-07-17 12:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.13 — Pipeline, Plugin, Domain Events, Saga & Outbox — và bản đồ tổng kết Level 4" href=https://thanhhv.github.io/series/software-design/level-4-patterns/13-pipeline-plugin-events-saga-outbox/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.12 — Repository, Unit of Work & Specification: bộ ba Enterprise Pattern quanh dữ liệu</h2></header><div class=entry-content><p>Ba pattern từ danh mục Enterprise (Fowler, Patterns of Enterprise Application Architecture, 2002 — không phải GoF): sinh ra cho bài toán mà GoF chưa chạm tới — ranh giới giữa mô hình nghiệp vụ trong RAM và cơ sở dữ liệu. Cũng là bộ ba bị cargo-cult nhiều bậc nhất trong thế giới backend; chương này dựng chúng từ bài toán thật và vạch rõ ngưỡng lạm dụng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 12:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.13 — Pipeline, Plugin, Domain Events, Saga & Outbox — và bản đồ tổng kết Level 4" href="http://localhost:1313/series/software-design/level-4-patterns/13-pipeline-plugin-events-saga-outbox/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.12 — Repository, Unit of Work &amp; Specification: bộ ba Enterprise Pattern quanh dữ liệu
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Ba pattern từ danh mục Enterprise (Fowler, Patterns of Enterprise Application Architecture, 2002 — không phải GoF): sinh ra cho bài toán mà GoF chưa chạm tới — ranh giới giữa mô hình nghiệp vụ trong RAM và cơ sở dữ liệu. Cũng là bộ ba bị cargo-cult nhiều bậc nhất trong thế giới backend; chương này dựng chúng từ bài toán thật và vạch rõ ngưỡng lạm dụng.
 A. Repository 1. Bài toán — đã gặp, giờ gọi đúng tên Toàn bộ Level 2 đã xây nó từng viên gạch: ProductSource của pricing (2.5), FileStore với contract test (2.3), UserGetter phía consumer (2.4). Repository = tổng hợp các viên gạch đó thành pattern có tên: một interface nói ngôn ngữ domain đứng giữa nghiệp vụ và persistence, cho nghiệp vụ ảo tưởng có kiểm soát rằng aggregate nằm trong một collection trong RAM:
-...</p></div><footer class=entry-footer><span title='2026-07-17 12:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.12 — Repository, Unit of Work & Specification: bộ ba Enterprise Pattern quanh dữ liệu" href=https://thanhhv.github.io/series/software-design/level-4-patterns/12-repository-uow-specification/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.11 — Dependency Injection & DI Container: từ nguyên tắc đến công cụ, và ranh giới giữa hai thứ</h2></header><div class=entry-content><p>1. Đặt lại nền — ba khái niệm hay bị trộn làm một Chương 2.5 đã cắm mốc, giờ dựng thành khung hoàn chỉnh vì toàn bộ chương này đứng trên đó:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 12:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.12 — Repository, Unit of Work & Specification: bộ ba Enterprise Pattern quanh dữ liệu" href="http://localhost:1313/series/software-design/level-4-patterns/12-repository-uow-specification/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.11 — Dependency Injection &amp; DI Container: từ nguyên tắc đến công cụ, và ranh giới giữa hai thứ
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Đặt lại nền — ba khái niệm hay bị trộn làm một Chương 2.5 đã cắm mốc, giờ dựng thành khung hoàn chỉnh vì toàn bộ chương này đứng trên đó:
 DIP (nguyên tắc) : chiều mũi tên — nghiệp vụ định nghĩa interface, hạ tầng implement DI (kỹ thuật) : cách trao dependency — tạo ở ngoài, đưa vào qua constructor/tham số DI Container (công cụ): máy tự động hóa việc trao — tự phân giải graph, tự gọi constructorBa tầng độc lập: dùng container cả ngày vẫn vi phạm DIP được (inject thẳng concrete hạ tầng vào domain); tuân DIP hoàn hảo không cần container nào (wiring tay ở main). Chương này trả lời câu hỏi thực dụng còn nợ: khi nào kỹ thuật cần leo lên công cụ — và cái giá của cú leo đó.
-...</p></div><footer class=entry-footer><span title='2026-07-17 11:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 4.11 — Dependency Injection & DI Container: từ nguyên tắc đến công cụ, và ranh giới giữa hai thứ" href=https://thanhhv.github.io/series/software-design/level-4-patterns/11-dependency-injection/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.10 — Template Method, Visitor, Iterator & Memento: bốn số phận thời hậu GoF</h2></header><div class=entry-content><p>Bốn pattern behavioral còn lại, điểm chung: ngôn ngữ hiện đại đã thay đổi số phận của chúng mạnh nhất — hai cái tan gần hết vào ngôn ngữ (Template Method, Iterator), một cái thu hẹp về ngách chuyên môn (Visitor), một cái sống dưới các tên khác (Memento). Chương này ngắn có chủ đích, ưu tiên “nhận ra và chọn đúng thay thế” hơn là “cài đặt nguyên bản”.
-...</p></div><footer class=entry-footer><span title='2026-07-17 11:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.10 — Template Method, Visitor, Iterator & Memento: bốn số phận thời hậu GoF" href=https://thanhhv.github.io/series/software-design/level-4-patterns/10-template-visitor-iterator-memento/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.9 — Command, Chain of Responsibility & Mediator</h2></header><div class=entry-content><p>Ba pattern behavioral về tổ chức lời gọi: Command biến lời gọi thành dữ liệu; Chain of Responsibility cho lời gọi chạy qua một hàng người xử lý; Mediator gom các lời gọi chéo nhau về một trung tâm điều phối.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 11:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 4.11 — Dependency Injection & DI Container: từ nguyên tắc đến công cụ, và ranh giới giữa hai thứ" href="http://localhost:1313/series/software-design/level-4-patterns/11-dependency-injection/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.10 — Template Method, Visitor, Iterator &amp; Memento: bốn số phận thời hậu GoF
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Bốn pattern behavioral còn lại, điểm chung: ngôn ngữ hiện đại đã thay đổi số phận của chúng mạnh nhất — hai cái tan gần hết vào ngôn ngữ (Template Method, Iterator), một cái thu hẹp về ngách chuyên môn (Visitor), một cái sống dưới các tên khác (Memento). Chương này ngắn có chủ đích, ưu tiên “nhận ra và chọn đúng thay thế” hơn là “cài đặt nguyên bản”.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 11:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.10 — Template Method, Visitor, Iterator & Memento: bốn số phận thời hậu GoF" href="http://localhost:1313/series/software-design/level-4-patterns/10-template-visitor-iterator-memento/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.9 — Command, Chain of Responsibility &amp; Mediator
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Ba pattern behavioral về tổ chức lời gọi: Command biến lời gọi thành dữ liệu; Chain of Responsibility cho lời gọi chạy qua một hàng người xử lý; Mediator gom các lời gọi chéo nhau về một trung tâm điều phối.
 Phần A — Command 1. Bài toán — khi lời gọi hàm cần được cầm nắm Lời gọi hàm thường: xảy ra ngay, không lưu được, không xếp hàng được, không hoàn tác được, không gửi đi xa được. Một loạt nhu cầu thực tế đòi hỏi ngược lại:
-...</p></div><footer class=entry-footer><span title='2026-07-17 11:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 4.9 — Command, Chain of Responsibility & Mediator" href=https://thanhhv.github.io/series/software-design/level-4-patterns/09-command-chain-mediator/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.8 — Observer & pub/sub: tách người gây chuyện khỏi người quan tâm</h2></header><div class=entry-content><p>1. Problem Statement — code evolution Quay lại ConfirmOrder (1.2). Khi đó ta tách Notifier ra sau interface — nhưng service vẫn gọi notifier. Giờ nghiệp vụ phình theo hướng khác: sau khi xác nhận đơn, cần thêm nhiều việc ăn theo:
-// ❌ V1 — use case chính trở thành danh bạ của mọi bên quan tâm func (s *Service) ConfirmOrder(ctx context.Context, orderID string) error { /* ... load, confirm, save — NGHIỆP VỤ LÕI, 10 dòng ... */ // và cái đuôi mọc dài mãi: s.notifier.OrderConfirmed(ctx, o) // gửi mail s.loyalty.AddPoints(ctx, o.CustomerID, o.Total()) // cộng điểm s.analytics.Track(ctx, "order_confirmed", o) // sự kiện analytics s.recommender.InvalidateCache(ctx, o.CustomerID) // xóa cache gợi ý s.fraud.ReportSignal(ctx, o) // tín hiệu chống gian lận return nil } Quan sát bệnh sinh: mỗi bên quan tâm mới (team Loyalty, team Analytics…) = mở use case lõi ra sửa + thêm một dependency vào struct — trong khi nghiệp vụ “xác nhận đơn” không hề đổi. Mũi tên phụ thuộc trỏ sai chiều: module quan trọng nhất (order) phải biết mọi module ăn theo (analytics, recommender — những thứ đổi xoành xoạch). Vi phạm OCP theo trục “bên quan tâm”, vi phạm DIP về chiều ổn định. Và câu hỏi khó chịu bắt đầu xuất hiện: lỗi cộng điểm có nên làm hỏng việc xác nhận đơn không? — trong V1, có, dù chẳng ai chủ đích quyết như vậy.
-...</p></div><footer class=entry-footer><span title='2026-07-17 11:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.8 — Observer & pub/sub: tách người gây chuyện khỏi người quan tâm" href=https://thanhhv.github.io/series/software-design/level-4-patterns/08-observer-pubsub/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.7 — Strategy & State: hai anh em cùng cấu trúc, khác linh hồn</h2></header><div class=entry-content><p>1. Strategy — pattern bạn đã dùng suốt từ đầu tài liệu Không cần dựng lại code evolution — bạn đã đi trọn con đường của nó ba lần: rule tính phí ship thành []FeeRule (1.1 → 1.4), gateway thanh toán thành interface + registry (2.2), rule hoa hồng thành []RateRule (3.4). Chỉ cần chính danh hóa:
-Intent (GoF): đóng gói một họ thuật toán thay thế được cho nhau, để thuật toán biến thiên độc lập với client dùng nó. Cấu trúc GoF: interface Strategy + N concrete class + context giữ tham chiếu strategy.
-...</p></div><footer class=entry-footer><span title='2026-07-17 11:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to 4.7 — Strategy & State: hai anh em cùng cấu trúc, khác linh hồn" href=https://thanhhv.github.io/series/software-design/level-4-patterns/07-strategy-state/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.6 — Composite, Bridge & Flyweight: ba pattern cấu trúc còn lại</h2></header><div class=entry-content><p>Ba pattern khép lại nhóm Structural, mỗi cái một số phận khác nhau trong backend hiện đại: Composite sống khỏe ở một ngách rõ ràng (cấu trúc cây); Bridge là ý tưởng quan trọng hơn hình thức; Flyweight chủ yếu đã chuyển hộ khẩu xuống tầng runtime và thư viện.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 11:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 4.9 — Command, Chain of Responsibility & Mediator" href="http://localhost:1313/series/software-design/level-4-patterns/09-command-chain-mediator/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.8 — Observer &amp; pub/sub: tách người gây chuyện khỏi người quan tâm
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement — code evolution Quay lại ConfirmOrder (1.2). Khi đó ta tách Notifier ra sau interface — nhưng service vẫn gọi notifier. Giờ nghiệp vụ phình theo hướng khác: sau khi xác nhận đơn, cần thêm nhiều việc ăn theo:
+// ❌ V1 — use case chính trở thành danh bạ của mọi bên quan tâm func (s *Service) ConfirmOrder(ctx context.Context, orderID string) error { /* ... load, confirm, save — NGHIỆP VỤ LÕI, 10 dòng ... */ // và cái đuôi mọc dài mãi: s.notifier.OrderConfirmed(ctx, o) // gửi mail s.loyalty.AddPoints(ctx, o.CustomerID, o.Total()) // cộng điểm s.analytics.Track(ctx, &#34;order_confirmed&#34;, o) // sự kiện analytics s.recommender.InvalidateCache(ctx, o.CustomerID) // xóa cache gợi ý s.fraud.ReportSignal(ctx, o) // tín hiệu chống gian lận return nil } Quan sát bệnh sinh: mỗi bên quan tâm mới (team Loyalty, team Analytics…) = mở use case lõi ra sửa &#43; thêm một dependency vào struct — trong khi nghiệp vụ “xác nhận đơn” không hề đổi. Mũi tên phụ thuộc trỏ sai chiều: module quan trọng nhất (order) phải biết mọi module ăn theo (analytics, recommender — những thứ đổi xoành xoạch). Vi phạm OCP theo trục “bên quan tâm”, vi phạm DIP về chiều ổn định. Và câu hỏi khó chịu bắt đầu xuất hiện: lỗi cộng điểm có nên làm hỏng việc xác nhận đơn không? — trong V1, có, dù chẳng ai chủ đích quyết như vậy.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 11:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.8 — Observer & pub/sub: tách người gây chuyện khỏi người quan tâm" href="http://localhost:1313/series/software-design/level-4-patterns/08-observer-pubsub/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.7 — Strategy &amp; State: hai anh em cùng cấu trúc, khác linh hồn
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Strategy — pattern bạn đã dùng suốt từ đầu tài liệu Không cần dựng lại code evolution — bạn đã đi trọn con đường của nó ba lần: rule tính phí ship thành []FeeRule (1.1 → 1.4), gateway thanh toán thành interface &#43; registry (2.2), rule hoa hồng thành []RateRule (3.4). Chỉ cần chính danh hóa:
+Intent (GoF): đóng gói một họ thuật toán thay thế được cho nhau, để thuật toán biến thiên độc lập với client dùng nó. Cấu trúc GoF: interface Strategy &#43; N concrete class &#43; context giữ tham chiếu strategy.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 11:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to 4.7 — Strategy & State: hai anh em cùng cấu trúc, khác linh hồn" href="http://localhost:1313/series/software-design/level-4-patterns/07-strategy-state/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.6 — Composite, Bridge &amp; Flyweight: ba pattern cấu trúc còn lại
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Ba pattern khép lại nhóm Structural, mỗi cái một số phận khác nhau trong backend hiện đại: Composite sống khỏe ở một ngách rõ ràng (cấu trúc cây); Bridge là ý tưởng quan trọng hơn hình thức; Flyweight chủ yếu đã chuyển hộ khẩu xuống tầng runtime và thư viện.
 Phần A — Composite 1. Bài toán — khi phần tử và nhóm phần tử phải cư xử như nhau Bài toán thật: hệ thống phân quyền theo nhóm. Ban đầu chỉ có user:
-...</p></div><footer class=entry-footer><span title='2026-07-17 11:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.6 — Composite, Bridge & Flyweight: ba pattern cấu trúc còn lại" href=https://thanhhv.github.io/series/software-design/level-4-patterns/06-composite-bridge-flyweight/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.5 — Decorator & Proxy — và Middleware, đứa con lớn nhất của chúng</h2></header><div class=entry-content><p>1. Vị trí xuất phát Decorator không cần giới thiệu dài: chương 1.4 đã phát minh lại nó khi tháo cây kế thừa Notifier — retry/rate-limit/logging thành các wrapper cùng interface, tổ hợp tự do. Chương này làm ba việc: gọi tên chính thức và nêu đủ cấu trúc; phân định với người anh em song sinh Proxy; và mổ Middleware — hình thái Decorator quan trọng nhất của backend hiện đại, kèm những bài học production mà bản đồ chơi ở 1.4 chưa chạm tới.
-...</p></div><footer class=entry-footer><span title='2026-07-17 10:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.5 — Decorator & Proxy — và Middleware, đứa con lớn nhất của chúng" href=https://thanhhv.github.io/series/software-design/level-4-patterns/05-decorator-proxy/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình</h2></header><div class=entry-content><p>Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 11:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.6 — Composite, Bridge & Flyweight: ba pattern cấu trúc còn lại" href="http://localhost:1313/series/software-design/level-4-patterns/06-composite-bridge-flyweight/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.5 — Decorator &amp; Proxy — và Middleware, đứa con lớn nhất của chúng
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Vị trí xuất phát Decorator không cần giới thiệu dài: chương 1.4 đã phát minh lại nó khi tháo cây kế thừa Notifier — retry/rate-limit/logging thành các wrapper cùng interface, tổ hợp tự do. Chương này làm ba việc: gọi tên chính thức và nêu đủ cấu trúc; phân định với người anh em song sinh Proxy; và mổ Middleware — hình thái Decorator quan trọng nhất của backend hiện đại, kèm những bài học production mà bản đồ chơi ở 1.4 chưa chạm tới.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 10:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.5 — Decorator & Proxy — và Middleware, đứa con lớn nhất của chúng" href="http://localhost:1313/series/software-design/level-4-patterns/05-decorator-proxy/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.4 — Adapter &amp; Facade: hai cách thuần hóa code không phải của mình
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.
 Phần A — Adapter 1. Problem Statement — code evolution Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:
-...</p></div><footer class=entry-footer><span title='2026-07-17 10:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình" href=https://thanhhv.github.io/series/software-design/level-4-patterns/04-adapter-facade/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.3 — Singleton & Prototype: hai pattern thu hẹp đất sống</h2></header><div class=entry-content><p>Hai pattern Creational còn lại thuộc nhóm số phận thứ ba của bản đồ 4.0: bài toán gốc của chúng hoặc đã có lời giải rẻ hơn, hoặc hiếm hơn xưa nhiều. Chương này ngắn hơn các chương khác một cách chủ đích — độ dài tỉ lệ với tần suất bạn nên dùng chúng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 10:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình" href="http://localhost:1313/series/software-design/level-4-patterns/04-adapter-facade/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.3 — Singleton &amp; Prototype: hai pattern thu hẹp đất sống
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Hai pattern Creational còn lại thuộc nhóm số phận thứ ba của bản đồ 4.0: bài toán gốc của chúng hoặc đã có lời giải rẻ hơn, hoặc hiếm hơn xưa nhiều. Chương này ngắn hơn các chương khác một cách chủ đích — độ dài tỉ lệ với tần suất bạn nên dùng chúng.
 Phần A — Singleton 1. Bài toán gốc — và cú trượt dài nửa thế kỷ Bài toán chính đáng: một tài nguyên về bản chất chỉ nên tồn tại một trong process — connection pool, logger gốc, registry metric, config đã load. Tạo nhiều bản là lãng phí (N connection pool) hoặc sai (hai registry metric đếm lệch nhau).
-...</p></div><footer class=entry-footer><span title='2026-07-17 10:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.3 — Singleton & Prototype: hai pattern thu hẹp đất sống" href=https://thanhhv.github.io/series/software-design/level-4-patterns/03-singleton-prototype/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.2 — Builder & Functional Options: khởi tạo phức tạp mà không phát điên</h2></header><div class=entry-content><p>1. Problem Statement Factory (4.1) giải bài toán chọn loại nào. Chương này giải bài toán trực giao: một loại duy nhất nhưng khởi tạo phức tạp — nhiều tham số, đa số tùy chọn, có ràng buộc chéo giữa các tham số, có giá trị mặc định thông minh. Nạn nhân điển hình: HTTP client, server, DB connection, message consumer — thứ nào cũng 15+ nút vặn.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 10:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.3 — Singleton & Prototype: hai pattern thu hẹp đất sống" href="http://localhost:1313/series/software-design/level-4-patterns/03-singleton-prototype/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.2 — Builder &amp; Functional Options: khởi tạo phức tạp mà không phát điên
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement Factory (4.1) giải bài toán chọn loại nào. Chương này giải bài toán trực giao: một loại duy nhất nhưng khởi tạo phức tạp — nhiều tham số, đa số tùy chọn, có ràng buộc chéo giữa các tham số, có giá trị mặc định thông minh. Nạn nhân điển hình: HTTP client, server, DB connection, message consumer — thứ nào cũng 15&#43; nút vặn.
 2. Code Evolution — con đường đau khổ quen thuộc V1 — constructor phình dần (Massive Constructor, đã điểm mặt trong danh sách anti-pattern từ đầu tài liệu):
-...</p></div><footer class=entry-footer><span title='2026-07-17 10:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 4.2 — Builder & Functional Options: khởi tạo phức tạp mà không phát điên" href=https://thanhhv.github.io/series/software-design/level-4-patterns/02-builder-functional-options/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.1 — Factory Method & Abstract Factory: kiểm soát điểm tạo object</h2></header><div class=entry-content><p>1. Problem Statement Xâu chuỗi những gì đã có: chương 2.2 (OCP) đưa các phương thức thanh toán về interface Gateway + registry; chương 3.4 kết thúc Replace Conditional with Polymorphism bằng câu: “nơi tạo object từ string trở thành điểm switch duy nhất còn lại — và nó có tên: Factory”. Chương này trả lời nốt: điểm tạo object đó thiết kế thế nào cho tử tế — vì new (hay &amp;Struct{}) chính là dạng coupling cứng nhất: nơi nào gọi &amp;MomoGateway{...} là nơi đó dính chặt vào concrete type, biết cấu trúc field, chịu trách nhiệm truyền config.
-...</p></div><footer class=entry-footer><span title='2026-07-17 10:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to 4.1 — Factory Method & Abstract Factory: kiểm soát điểm tạo object" href=https://thanhhv.github.io/series/software-design/level-4-patterns/01-factory/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4.0 — Design Patterns: cách đọc GoF bằng con mắt 2026</h2></header><div class=entry-content><p>1. Pattern là gì — và cuốn sách GoF thực ra nói gì Năm 1994, bốn tác giả (Gang of Four) xuất bản Design Patterns: Elements of Reusable Object-Oriented Software — danh mục 23 cấu trúc lặp đi lặp lại mà họ quan sát thấy trong các hệ thống C++/Smalltalk tốt. Ý tưởng mượn từ kiến trúc sư Christopher Alexander: pattern = một giải pháp đã được kiểm chứng cho một bài toán lặp lại trong một ngữ cảnh cụ thể — kèm tên gọi chung để kỹ sư nói chuyện với nhau bằng một từ thay vì mười phút giải thích.
-...</p></div><footer class=entry-footer><span title='2026-07-17 10:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to 4.0 — Design Patterns: cách đọc GoF bằng con mắt 2026" href=https://thanhhv.github.io/series/software-design/level-4-patterns/00-tong-quan-patterns/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>3.4 — Kỹ thuật refactoring cấu trúc: Replace Conditional with Polymorphism, Replace Inheritance with Composition, Replace Loop with Strategy</h2></header><div class=entry-content><p>Ba kỹ thuật này khác nhóm 3.3 về tầm vóc: chúng không dọn dẹp bên trong một hàm/class mà đổi cấu trúc phân nhánh và quan hệ giữa các type — và điểm đến của chúng thường chính là một design pattern. Đây là cây cầu sang Level 4: pattern không phải thứ áp vào từ đầu, mà là hình dạng code sau khi các refactoring này hoàn thành.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 10:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 4.2 — Builder & Functional Options: khởi tạo phức tạp mà không phát điên" href="http://localhost:1313/series/software-design/level-4-patterns/02-builder-functional-options/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.1 — Factory Method &amp; Abstract Factory: kiểm soát điểm tạo object
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement Xâu chuỗi những gì đã có: chương 2.2 (OCP) đưa các phương thức thanh toán về interface Gateway &#43; registry; chương 3.4 kết thúc Replace Conditional with Polymorphism bằng câu: “nơi tạo object từ string trở thành điểm switch duy nhất còn lại — và nó có tên: Factory”. Chương này trả lời nốt: điểm tạo object đó thiết kế thế nào cho tử tế — vì new (hay &amp;Struct{}) chính là dạng coupling cứng nhất: nơi nào gọi &amp;MomoGateway{...} là nơi đó dính chặt vào concrete type, biết cấu trúc field, chịu trách nhiệm truyền config.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 10:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to 4.1 — Factory Method & Abstract Factory: kiểm soát điểm tạo object" href="http://localhost:1313/series/software-design/level-4-patterns/01-factory/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4.0 — Design Patterns: cách đọc GoF bằng con mắt 2026
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Pattern là gì — và cuốn sách GoF thực ra nói gì Năm 1994, bốn tác giả (Gang of Four) xuất bản Design Patterns: Elements of Reusable Object-Oriented Software — danh mục 23 cấu trúc lặp đi lặp lại mà họ quan sát thấy trong các hệ thống C&#43;&#43;/Smalltalk tốt. Ý tưởng mượn từ kiến trúc sư Christopher Alexander: pattern = một giải pháp đã được kiểm chứng cho một bài toán lặp lại trong một ngữ cảnh cụ thể — kèm tên gọi chung để kỹ sư nói chuyện với nhau bằng một từ thay vì mười phút giải thích.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 10:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to 4.0 — Design Patterns: cách đọc GoF bằng con mắt 2026" href="http://localhost:1313/series/software-design/level-4-patterns/00-tong-quan-patterns/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">3.4 — Kỹ thuật refactoring cấu trúc: Replace Conditional with Polymorphism, Replace Inheritance with Composition, Replace Loop with Strategy
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Ba kỹ thuật này khác nhóm 3.3 về tầm vóc: chúng không dọn dẹp bên trong một hàm/class mà đổi cấu trúc phân nhánh và quan hệ giữa các type — và điểm đến của chúng thường chính là một design pattern. Đây là cây cầu sang Level 4: pattern không phải thứ áp vào từ đầu, mà là hình dạng code sau khi các refactoring này hoàn thành.
 A. Replace Conditional with Polymorphism Bài toán nó giải: cùng một cấu trúc switch/if-else trên cùng một “loại” bị lặp ở nhiều hàm — mỗi lần thêm loại phải đi săn đủ các bản sao (đã phân tích tiêu chí đầy đủ ở OCP, chương 2.2).
-...</p></div><footer class=entry-footer><span title='2026-07-17 09:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to 3.4 — Kỹ thuật refactoring cấu trúc: Replace Conditional with Polymorphism, Replace Inheritance with Composition, Replace Loop with Strategy" href=https://thanhhv.github.io/series/software-design/level-3-refactoring/04-ky-thuat-cau-truc/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>3.3 — Kỹ thuật refactoring cơ bản: Extract Method, Move Method, Extract Class, Introduce Parameter Object</h2></header><div class=entry-content><p>Bốn thao tác “dao kéo hằng ngày” — 90% công việc refactoring thực tế là bốn thao tác này lặp đi lặp lại. Mỗi kỹ thuật trình bày: khi nào dùng → các bước cơ giới (mechanics) → bẫy đặc thù → ví dụ Go. Phần mechanics quan trọng hơn vẻ ngoài của nó: refactoring an toàn là chuỗi bước nhỏ đến mức nhàm chán, mỗi bước giữ test xanh — không phải “đập ra sắp lại theo trí nhớ”.
-...</p></div><footer class=entry-footer><span title='2026-07-17 09:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 3.3 — Kỹ thuật refactoring cơ bản: Extract Method, Move Method, Extract Class, Introduce Parameter Object" href=https://thanhhv.github.io/series/software-design/level-3-refactoring/03-ky-thuat-co-ban/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>3.2 — Code Smells nhóm coupling: Duplicate Code, Shotgun Surgery, Feature Envy, Message Chains, Middle Man</h2></header><div class=entry-content><p>Nhóm smell này chung bệnh sinh: tri thức đặt sai chỗ — hoặc một tri thức bị nhân bản nhiều nơi, hoặc hành vi sống xa dữ liệu của nó, hoặc cấu trúc nội bộ bị phơi ra cho kẻ khác dựa vào.
-A. Duplicate Code Ví dụ — ba cấp độ, cấp sau khó thấy hơn cấp trước // Cấp 1 — trùng nguyên văn (dễ thấy, tool bắt được): // hai handler cùng 12 dòng parse-validate-load-user y hệt nhau // Cấp 2 — trùng cấu trúc, khác chi tiết: func exportOrdersCSV(orders []Order) []byte { /* mở buffer, ghi header, loop, format, flush */ } func exportUsersCSV(users []User) []byte { /* mở buffer, ghi header, loop, format, flush */ } // Cấp 3 — trùng TRI THỨC, code trông khác hẳn nhau (nguy hiểm nhất): // Rule "đơn >= 500k miễn ship" xuất hiện ở: // - Go backend: if total >= 500_000 { fee = 0 } // - TS frontend: total >= 500_000 ? "Miễn phí" : "20.000đ" // - SQL report: CASE WHEN total >= 500000 THEN 0 ... // - Chatbot config: "đơn từ 500 nghìn được freeship nha!" Nguyên nhân Copy-paste là đường đi ngắn nhất lúc viết; hai người viết cùng logic không biết nhau; và ranh giới hệ thống (frontend/backend/report) khiến trùng lặp tri thức gần như bắt buộc về mặt kỹ thuật — nhưng không ai ghi sổ để đồng bộ.
-...</p></div><footer class=entry-footer><span title='2026-07-17 09:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to 3.2 — Code Smells nhóm coupling: Duplicate Code, Shotgun Surgery, Feature Envy, Message Chains, Middle Man" href=https://thanhhv.github.io/series/software-design/level-3-refactoring/02-smells-coupling/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps</h2></header><div class=entry-content><p>Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm “một tí”.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 09:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to 3.4 — Kỹ thuật refactoring cấu trúc: Replace Conditional with Polymorphism, Replace Inheritance with Composition, Replace Loop with Strategy" href="http://localhost:1313/series/software-design/level-3-refactoring/04-ky-thuat-cau-truc/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">3.3 — Kỹ thuật refactoring cơ bản: Extract Method, Move Method, Extract Class, Introduce Parameter Object
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Bốn thao tác “dao kéo hằng ngày” — 90% công việc refactoring thực tế là bốn thao tác này lặp đi lặp lại. Mỗi kỹ thuật trình bày: khi nào dùng → các bước cơ giới (mechanics) → bẫy đặc thù → ví dụ Go. Phần mechanics quan trọng hơn vẻ ngoài của nó: refactoring an toàn là chuỗi bước nhỏ đến mức nhàm chán, mỗi bước giữ test xanh — không phải “đập ra sắp lại theo trí nhớ”.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 09:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 3.3 — Kỹ thuật refactoring cơ bản: Extract Method, Move Method, Extract Class, Introduce Parameter Object" href="http://localhost:1313/series/software-design/level-3-refactoring/03-ky-thuat-co-ban/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">3.2 — Code Smells nhóm coupling: Duplicate Code, Shotgun Surgery, Feature Envy, Message Chains, Middle Man
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Nhóm smell này chung bệnh sinh: tri thức đặt sai chỗ — hoặc một tri thức bị nhân bản nhiều nơi, hoặc hành vi sống xa dữ liệu của nó, hoặc cấu trúc nội bộ bị phơi ra cho kẻ khác dựa vào.
+A. Duplicate Code Ví dụ — ba cấp độ, cấp sau khó thấy hơn cấp trước // Cấp 1 — trùng nguyên văn (dễ thấy, tool bắt được): // hai handler cùng 12 dòng parse-validate-load-user y hệt nhau // Cấp 2 — trùng cấu trúc, khác chi tiết: func exportOrdersCSV(orders []Order) []byte { /* mở buffer, ghi header, loop, format, flush */ } func exportUsersCSV(users []User) []byte { /* mở buffer, ghi header, loop, format, flush */ } // Cấp 3 — trùng TRI THỨC, code trông khác hẳn nhau (nguy hiểm nhất): // Rule &#34;đơn &gt;= 500k miễn ship&#34; xuất hiện ở: // - Go backend: if total &gt;= 500_000 { fee = 0 } // - TS frontend: total &gt;= 500_000 ? &#34;Miễn phí&#34; : &#34;20.000đ&#34; // - SQL report: CASE WHEN total &gt;= 500000 THEN 0 ... // - Chatbot config: &#34;đơn từ 500 nghìn được freeship nha!&#34; Nguyên nhân Copy-paste là đường đi ngắn nhất lúc viết; hai người viết cùng logic không biết nhau; và ranh giới hệ thống (frontend/backend/report) khiến trùng lặp tri thức gần như bắt buộc về mặt kỹ thuật — nhưng không ai ghi sổ để đồng bộ.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 09:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to 3.2 — Code Smells nhóm coupling: Duplicate Code, Shotgun Surgery, Feature Envy, Message Chains, Middle Man" href="http://localhost:1313/series/software-design/level-3-refactoring/02-smells-coupling/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm “một tí”.
 Mỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.
-A. Long Method Ví dụ // ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) { // ...15 dòng parse + validate JSON... // ...10 dòng check tồn kho, gọi inventory service... // ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship... // ...15 dòng ghi DB trong transaction, xử lý rollback... // ...10 dòng gửi event Kafka, log, metric... // ...10 dòng build response... } Nguyên nhân Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng “tiện thể nhét vào đây vì context sẵn rồi”. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân.
-...</p></div><footer class=entry-footer><span title='2026-07-17 09:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label='post link to 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps' href=https://thanhhv.github.io/series/software-design/level-3-refactoring/01-smells-phinh-to/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>3.0 — Technical Debt & Legacy Code: kinh tế học của việc refactor</h2></header><div class=entry-content><p>1. Problem Statement Level 1–2 cho bạn lý thuyết về thiết kế tốt. Nhưng bạn không làm việc trên trang giấy trắng — bạn làm việc trên một codebase 4 năm tuổi, 200 nghìn dòng, viết bởi 15 người trong đó 10 người đã nghỉ, không có test, và đang chạy production nuôi sống công ty. Câu hỏi thực tế không phải “thiết kế đẹp trông thế nào” mà là:
-...</p></div><footer class=entry-footer><span title='2026-07-17 09:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to 3.0 — Technical Debt & Legacy Code: kinh tế học của việc refactor" href=https://thanhhv.github.io/series/software-design/level-3-refactoring/00-technical-debt-legacy-code/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>2.6 — DRY, KISS, YAGNI, Law of Demeter, Tell Don't Ask</h2></header><div class=entry-content><p>Năm nguyên tắc “dân gian” — được trích dẫn nhiều nhất và hiểu sai nhiều nhất. Chương này trả mỗi cái về đúng phát biểu gốc, chỉ ra dạng hiểu sai phổ biến, và quan trọng nhất: chúng mâu thuẫn nhau ở đâu và trọng tài là gì.
+A. Long Method Ví dụ // ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) { // ...15 dòng parse &#43; validate JSON... // ...10 dòng check tồn kho, gọi inventory service... // ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship... // ...15 dòng ghi DB trong transaction, xử lý rollback... // ...10 dòng gửi event Kafka, log, metric... // ...10 dòng build response... } Nguyên nhân Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng “tiện thể nhét vào đây vì context sẵn rồi”. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 09:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps" href="http://localhost:1313/series/software-design/level-3-refactoring/01-smells-phinh-to/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">3.0 — Technical Debt &amp; Legacy Code: kinh tế học của việc refactor
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement Level 1–2 cho bạn lý thuyết về thiết kế tốt. Nhưng bạn không làm việc trên trang giấy trắng — bạn làm việc trên một codebase 4 năm tuổi, 200 nghìn dòng, viết bởi 15 người trong đó 10 người đã nghỉ, không có test, và đang chạy production nuôi sống công ty. Câu hỏi thực tế không phải “thiết kế đẹp trông thế nào” mà là:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 09:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to 3.0 — Technical Debt & Legacy Code: kinh tế học của việc refactor" href="http://localhost:1313/series/software-design/level-3-refactoring/00-technical-debt-legacy-code/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2.6 — DRY, KISS, YAGNI, Law of Demeter, Tell Don&#39;t Ask
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Năm nguyên tắc “dân gian” — được trích dẫn nhiều nhất và hiểu sai nhiều nhất. Chương này trả mỗi cái về đúng phát biểu gốc, chỉ ra dạng hiểu sai phổ biến, và quan trọng nhất: chúng mâu thuẫn nhau ở đâu và trọng tài là gì.
 A. DRY — Don’t Repeat Yourself Phát biểu gốc — và phần bị quên The Pragmatic Programmer (1999): “Every piece of knowledge must have a single, unambiguous, authoritative representation within a system.”
-...</p></div><footer class=entry-footer><span title='2026-07-17 09:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to 2.6 — DRY, KISS, YAGNI, Law of Demeter, Tell Don't Ask" href=https://thanhhv.github.io/series/software-design/level-2-principles/06-dry-kiss-yagni-lod/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>2.5 — Dependency Inversion Principle: đảo chiều phụ thuộc</h2></header><div class=entry-content><p>1. Problem Statement DIP là nguyên tắc kiến trúc nhất trong SOLID — nó không nói về một class hay một interface, mà về chiều của các mũi tên trong toàn hệ thống. Và nó là nền móng trực tiếp của Clean Architecture, Hexagonal Architecture (Level 5).
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 09:00:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to 2.6 — DRY, KISS, YAGNI, Law of Demeter, Tell Don&#39;t Ask" href="http://localhost:1313/series/software-design/level-2-principles/06-dry-kiss-yagni-lod/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2.5 — Dependency Inversion Principle: đảo chiều phụ thuộc
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement DIP là nguyên tắc kiến trúc nhất trong SOLID — nó không nói về một class hay một interface, mà về chiều của các mũi tên trong toàn hệ thống. Và nó là nền móng trực tiếp của Clean Architecture, Hexagonal Architecture (Level 5).
 Phát biểu gốc gồm hai vế:
 High-level modules không nên phụ thuộc low-level modules. Cả hai nên phụ thuộc abstraction. Abstraction không nên phụ thuộc chi tiết. Chi tiết nên phụ thuộc abstraction. “High-level” = chính sách, nghiệp vụ, lý do phần mềm tồn tại (“đơn hàng được xác nhận thì trừ kho và báo khách”). “Low-level” = cơ chế thực thi (Postgres, Kafka, SendGrid, HTTP). Trực giác nền (chương 1.3): mũi tên phải trỏ từ thứ hay đổi về thứ ổn định — và nghiệp vụ ổn định hơn hạ tầng: công ty đổi Redis sang Memcached, đổi REST sang gRPC thường xuyên hơn nhiều so với đổi “đơn xác nhận thì trừ kho”.
-...</p></div><footer class=entry-footer><span title='2026-07-17 08:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 2.5 — Dependency Inversion Principle: đảo chiều phụ thuộc" href=https://thanhhv.github.io/series/software-design/level-2-principles/05-dip/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>2.4 — Interface Segregation Principle: interface nhỏ, phía consumer</h2></header><div class=entry-content><p>1. Problem Statement Câu chuyện gốc của ISP đáng kể lại vì nó rất “đời”: Robert Martin tư vấn cho Xerox, hệ thống điều khiển máy in đa năng. Mọi tác vụ (in, scan, staple, fax) đều đi qua một class Job khổng lồ. Task chỉ cần in cũng phụ thuộc Job — nên mỗi khi ai đó sửa phần staple, toàn bộ hệ thống recompile và redeploy (C++ thập niên 90: recompile tính bằng giờ). Thuốc của Martin: tách Job thành các interface theo từng client — PrintJob, StapleJob — mỗi client chỉ thấy phần nó dùng.
-...</p></div><footer class=entry-footer><span title='2026-07-17 08:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to 2.4 — Interface Segregation Principle: interface nhỏ, phía consumer" href=https://thanhhv.github.io/series/software-design/level-2-principles/04-isp/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>2.3 — Liskov Substitution Principle: hợp đồng hành vi</h2></header><div class=entry-content><p>1. Problem Statement LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc thực chiến nhất với dev Go/TS hiện đại — vì nó trả lời câu hỏi: “khi nào một implementation của interface là ĐÚNG?”
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 08:50:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 2.5 — Dependency Inversion Principle: đảo chiều phụ thuộc" href="http://localhost:1313/series/software-design/level-2-principles/05-dip/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2.4 — Interface Segregation Principle: interface nhỏ, phía consumer
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement Câu chuyện gốc của ISP đáng kể lại vì nó rất “đời”: Robert Martin tư vấn cho Xerox, hệ thống điều khiển máy in đa năng. Mọi tác vụ (in, scan, staple, fax) đều đi qua một class Job khổng lồ. Task chỉ cần in cũng phụ thuộc Job — nên mỗi khi ai đó sửa phần staple, toàn bộ hệ thống recompile và redeploy (C&#43;&#43; thập niên 90: recompile tính bằng giờ). Thuốc của Martin: tách Job thành các interface theo từng client — PrintJob, StapleJob — mỗi client chỉ thấy phần nó dùng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 08:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to 2.4 — Interface Segregation Principle: interface nhỏ, phía consumer" href="http://localhost:1313/series/software-design/level-2-principles/04-isp/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2.3 — Liskov Substitution Principle: hợp đồng hành vi
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc thực chiến nhất với dev Go/TS hiện đại — vì nó trả lời câu hỏi: “khi nào một implementation của interface là ĐÚNG?”
 Phát biểu của Barbara Liskov (1987, diễn giải): nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S.
-...</p></div><footer class=entry-footer><span title='2026-07-17 08:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 2.3 — Liskov Substitution Principle: hợp đồng hành vi" href=https://thanhhv.github.io/series/software-design/level-2-principles/03-lsp/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>2.2 — Open/Closed Principle: mở rộng mà không sửa</h2></header><div class=entry-content><p>1. Problem Statement Bài toán quen thuộc đến mức mọi backend engineer đều từng viết nó: thanh toán qua nhiều cổng. Ngày đầu chỉ có COD. Rồi thêm Momo. Rồi VNPay, ZaloPay, thẻ quốc tế, trả góp…
-// V1 — hoàn toàn ổn khi có 2 phương thức func ProcessPayment(o *Order) error { switch o.PaymentMethod { case "cod": o.Status = "awaiting_delivery" return nil case "momo": return callMomoAPI(o) default: return fmt.Errorf("unsupported payment method: %s", o.PaymentMethod) } } 18 tháng sau, hàm này 400 dòng, 9 case, mỗi case gọi API khác nhau với retry/timeout khác nhau. Và điều tệ hơn: cùng cái switch o.PaymentMethod đó bị lặp ở 5 nơi khác — tính phí giao dịch, render UI text, xử lý refund, đối soát, webhook. Thêm ZaloPay nghĩa là tìm đủ 6 cái switch rải rác để thêm case — sót một cái là bug âm thầm (default nuốt lỗi hoặc panic ở production).
-...</p></div><footer class=entry-footer><span title='2026-07-17 08:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 2.2 — Open/Closed Principle: mở rộng mà không sửa" href=https://thanhhv.github.io/series/software-design/level-2-principles/02-ocp/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>2.1 — Single Responsibility Principle: trục của sự thay đổi</h2></header><div class=entry-content><p>1. Problem Statement SRP là nguyên tắc bị hiểu sai nhiều nhất trong SOLID. Cách hiểu sai phổ biến: “mỗi hàm/class chỉ làm một việc” → dẫn đến trò chẻ code thành trăm hàm 3 dòng, mỗi lần đọc luồng nghiệp vụ phải nhảy 15 file. Đó không phải SRP.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 08:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 2.3 — Liskov Substitution Principle: hợp đồng hành vi" href="http://localhost:1313/series/software-design/level-2-principles/03-lsp/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2.2 — Open/Closed Principle: mở rộng mà không sửa
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement Bài toán quen thuộc đến mức mọi backend engineer đều từng viết nó: thanh toán qua nhiều cổng. Ngày đầu chỉ có COD. Rồi thêm Momo. Rồi VNPay, ZaloPay, thẻ quốc tế, trả góp…
+// V1 — hoàn toàn ổn khi có 2 phương thức func ProcessPayment(o *Order) error { switch o.PaymentMethod { case &#34;cod&#34;: o.Status = &#34;awaiting_delivery&#34; return nil case &#34;momo&#34;: return callMomoAPI(o) default: return fmt.Errorf(&#34;unsupported payment method: %s&#34;, o.PaymentMethod) } } 18 tháng sau, hàm này 400 dòng, 9 case, mỗi case gọi API khác nhau với retry/timeout khác nhau. Và điều tệ hơn: cùng cái switch o.PaymentMethod đó bị lặp ở 5 nơi khác — tính phí giao dịch, render UI text, xử lý refund, đối soát, webhook. Thêm ZaloPay nghĩa là tìm đủ 6 cái switch rải rác để thêm case — sót một cái là bug âm thầm (default nuốt lỗi hoặc panic ở production).
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 08:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 2.2 — Open/Closed Principle: mở rộng mà không sửa" href="http://localhost:1313/series/software-design/level-2-principles/02-ocp/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">2.1 — Single Responsibility Principle: trục của sự thay đổi
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1. Problem Statement SRP là nguyên tắc bị hiểu sai nhiều nhất trong SOLID. Cách hiểu sai phổ biến: “mỗi hàm/class chỉ làm một việc” → dẫn đến trò chẻ code thành trăm hàm 3 dòng, mỗi lần đọc luồng nghiệp vụ phải nhảy 15 file. Đó không phải SRP.
 Định nghĩa gốc của Martin:
 “A module should have one, and only one, reason to change.” — một module chỉ nên có MỘT LÝ DO ĐỂ THAY ĐỔI.
-...</p></div><footer class=entry-footer><span title='2026-07-17 08:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to 2.1 — Single Responsibility Principle: trục của sự thay đổi" href=https://thanhhv.github.io/series/software-design/level-2-principles/01-srp/></a></article><footer class=page-footer><nav class=pagination><a class=next href=https://thanhhv.github.io/tags/software-design/page/2/>Next&nbsp;&nbsp;»</a></nav></footer></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-17 08:10:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to 2.1 — Single Responsibility Principle: trục của sự thay đổi" href="http://localhost:1313/series/software-design/level-2-principles/01-srp/"></a>
+</article>
+<footer class="page-footer">
+  <nav class="pagination">
+    <a class="next" href="http://localhost:1313/tags/software-design/page/2/">Next&nbsp;&nbsp;»
+    </a>
+  </nav>
+</footer>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

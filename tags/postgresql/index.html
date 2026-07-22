@@ -1,43 +1,411 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Postgresql | Thanh HV's Blog</title>
-<meta name=keywords content><meta name=description content><meta name=author content><link rel=canonical href=https://thanhhv.github.io/tags/postgresql/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/tags/postgresql/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/tags/postgresql/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/tags/postgresql/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Postgresql"><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Postgresql"><meta name=twitter:description content></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/tags/>Tags</a></div><h1>Postgresql</h1></header><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 13 — Anti-pattern & Khi nào PostgreSQL không phù hợp</h2></header><div class=entry-content><p>Level 5. Chương kết. Phần một: các cách dùng sai lặp đi lặp lại — mỗi cái là một chương lý thuyết bị vi phạm. Phần hai: ranh giới kiến trúc thật sự của PostgreSQL — nơi vấn đề không phải “dùng sai” mà là “chọn sai công cụ”.
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Postgresql | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/tags/postgresql/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/postgresql/index.xml">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/postgresql/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/tags/">Tags</a></div>
+  <h1>
+    Postgresql
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 13 — Anti-pattern &amp; Khi nào PostgreSQL không phù hợp
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 5. Chương kết. Phần một: các cách dùng sai lặp đi lặp lại — mỗi cái là một chương lý thuyết bị vi phạm. Phần hai: ranh giới kiến trúc thật sự của PostgreSQL — nơi vấn đề không phải “dùng sai” mà là “chọn sai công cụ”.
 Phần 1 — Anti-patterns Mỗi anti-pattern dưới đây đều có chung cấu trúc: tiện trước mắt → vi phạm một cơ chế nội tại → trả giá trễ và trả bằng lãi kép.
-...</p></div><footer class=entry-footer><span title='2026-07-11 20:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to Chương 13 — Anti-pattern & Khi nào PostgreSQL không phù hợp" href=https://thanhhv.github.io/series/postgres-internal/13-antipatterns-limits/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 12 — Production Failure Cases: 21 hồ sơ sự cố</h2></header><div class=entry-content><p>Level 5. Mỗi case theo khuôn: Triệu chứng → Root cause → Bên trong PostgreSQL → Điều tra (metric/log/lệnh) → Khắc phục → Phòng tránh. Các case tham chiếu ngược về chương lý thuyết tương ứng — chương này đồng thời là bài tổng ôn.
-Dashboard nền khuyến nghị (dùng chung cho mọi case): wait events theo thời gian (pg_stat_activity), TPS + p99 latency, connections theo state, dead tuples + last_(auto)vacuum các bảng top, WAL bytes/s + checkpoint timeline, replication lag byte, disk %util + fsync latency, cache hit ratio, max(age(datfrozenxid)).
-...</p></div><footer class=entry-footer><span title='2026-07-11 19:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to Chương 12 — Production Failure Cases: 21 hồ sơ sự cố" href=https://thanhhv.github.io/series/postgres-internal/12-production-failure-cases/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 11 — Checkpoint, Recovery, Replication</h2></header><div class=entry-content><p>Level 3–5. Chương 5 hứa: “crash không mất gì, WAL dựng lại được”. Chương này trả nghĩa vụ chứng minh — và mở rộng cùng cơ chế đó thành PITR và replication: ba tính năng, một nền tảng duy nhất là WAL replay.
-1. Problem Statement Crash recovery: sau mất điện, dựng lại trạng thái đã commit — tự động, không thao tác tay, thời gian đoán được. Backup/PITR: “khôi phục về 14:59, ngay trước câu DELETE nhầm lúc 15:00” — backup định kỳ thuần túy không làm nổi. Replication: bản sao nóng, trễ mili giây, đọc được — và failover khi primary chết. Cả ba là cùng một bài toán: tái tạo trạng thái từ (một ảnh chụp cũ) + (dòng WAL). Ai kiểm soát điểm dừng replay, người đó có tính năng tương ứng: dừng ở cuối WAL = crash recovery; dừng ở timestamp = PITR; không bao giờ dừng = replica.
-...</p></div><footer class=entry-footer><span title='2026-07-11 18:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to Chương 11 — Checkpoint, Recovery, Replication" href=https://thanhhv.github.io/series/postgres-internal/11-recovery-replication/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 10 — VACUUM, HOT, Freeze, Wraparound</h2></header><div class=entry-content><p>Level 3–5. MVCC vay nợ: mỗi UPDATE/DELETE để lại rác, mỗi transaction đốt một XID hữu hạn. VACUUM là bộ máy trả nợ. Vận hành PostgreSQL nghiêm túc = vận hành VACUUM nghiêm túc. Chương này là chương “đáng tiền” nhất với người trực production.
-1. Problem Statement — ba món nợ của MVCC Dead tuple: version cũ không còn snapshot nào cần (Chương 6). Không dọn → bảng/index phình, cache loãng, scan chậm. Không gian XID hữu hạn: XID 32 bit so sánh vòng tròn. Tuple mang xmin quá già (cách hiện tại >2³¹) sẽ bị phép so sánh hiểu ngược thành “tương lai” → dữ liệu committed biến mất. Phải “đóng băng” (freeze) tuple già trước khi điều đó xảy ra. Thống kê & Visibility Map lạc hậu: planner cần ANALYZE; index-only scan cần VM được cập nhật. VACUUM giải cả ba. Nếu bỏ VACUUM? — không phải “chậm dần” mà là dừng hẳn: đầy disk vì bloat, rồi trước cả đó, cluster tự khóa ghi để chống wraparound. Không có lựa chọn “không vacuum”, chỉ có “vacuum có kiểm soát” hoặc “vacuum lúc 3h sáng theo lệnh của PostgreSQL”.
-...</p></div><footer class=entry-footer><span title='2026-07-11 17:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to Chương 10 — VACUUM, HOT, Freeze, Wraparound" href=https://thanhhv.github.io/series/postgres-internal/10-vacuum-hot-freeze/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 9 — Index Internals: B-tree, Hash, GIN, GiST, BRIN</h2></header><div class=entry-content><p>Level 4. Index là cấu trúc dữ liệu trên disk — nghĩa là mọi thiết kế của nó bị chi phối bởi page 8KB, WAL, MVCC và concurrency. Chương này mở nắp từng loại.
-1. Problem Statement Heap không có thứ tự (Chương 3): tìm WHERE email='x@y.vn' = đọc toàn bộ bảng, O(N) page. Bảng 100GB → ~13 giây chỉ riêng I/O tuần tự, mỗi query. Cần cấu trúc phụ ánh xạ giá trị → ctid với chi phí tra cứu ~O(log N) tính bằng số page (không phải số phần tử — mỗi page là một lần I/O tiềm năng).
-...</p></div><footer class=entry-footer><span title='2026-07-11 16:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to Chương 9 — Index Internals: B-tree, Hash, GIN, GiST, BRIN" href=https://thanhhv.github.io/series/postgres-internal/09-index-internals/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 8 — Query Processing: từ SQL text đến thao tác trên Page</h2></header><div class=entry-content><p>Level 4. SQL là ngôn ngữ khai báo: bạn nói cần gì, không nói làm thế nào. Toàn bộ chương này là câu chuyện PostgreSQL biến “cần gì” thành “làm thế nào” — và tại sao đôi khi nó chọn sai.
-1. Problem Statement SELECT c.name, sum(o.amount) FROM customers c JOIN orders o ON o.customer_id = c.id WHERE c.region = 'APAC' AND o.created_at > now() - interval '30 days' GROUP BY c.name; Câu này có thể thực thi theo hàng nghìn cách: quét bảng nào trước, dùng index nào, join bằng thuật toán nào, group bằng hash hay sort. Chênh lệch giữa plan tốt nhất và tệ nhất trên dữ liệu lớn: 10⁴–10⁶ lần. Không tầng nào khác của database tạo ra chênh lệch hiệu năng lớn như planner.
-...</p></div><footer class=entry-footer><span title='2026-07-11 15:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to Chương 8 — Query Processing: từ SQL text đến thao tác trên Page" href=https://thanhhv.github.io/series/postgres-internal/08-query-processing/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 7 — Lock Manager</h2></header><div class=entry-content><p>Level 3. MVCC loại bỏ xung đột reader–writer. Phần còn lại — writer–writer, DDL, và bảo vệ cấu trúc trong bộ nhớ — thuộc về ba tầng lock của PostgreSQL. Đa số sự cố “database treo” trong production là sự cố lock, không phải sự cố I/O.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 20:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 13 — Anti-pattern & Khi nào PostgreSQL không phù hợp" href="http://localhost:1313/series/postgres-internal/13-antipatterns-limits/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 12 — Production Failure Cases: 21 hồ sơ sự cố
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 5. Mỗi case theo khuôn: Triệu chứng → Root cause → Bên trong PostgreSQL → Điều tra (metric/log/lệnh) → Khắc phục → Phòng tránh. Các case tham chiếu ngược về chương lý thuyết tương ứng — chương này đồng thời là bài tổng ôn.
+Dashboard nền khuyến nghị (dùng chung cho mọi case): wait events theo thời gian (pg_stat_activity), TPS &#43; p99 latency, connections theo state, dead tuples &#43; last_(auto)vacuum các bảng top, WAL bytes/s &#43; checkpoint timeline, replication lag byte, disk %util &#43; fsync latency, cache hit ratio, max(age(datfrozenxid)).
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 19:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;13 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 12 — Production Failure Cases: 21 hồ sơ sự cố" href="http://localhost:1313/series/postgres-internal/12-production-failure-cases/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 11 — Checkpoint, Recovery, Replication
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3–5. Chương 5 hứa: “crash không mất gì, WAL dựng lại được”. Chương này trả nghĩa vụ chứng minh — và mở rộng cùng cơ chế đó thành PITR và replication: ba tính năng, một nền tảng duy nhất là WAL replay.
+1. Problem Statement Crash recovery: sau mất điện, dựng lại trạng thái đã commit — tự động, không thao tác tay, thời gian đoán được. Backup/PITR: “khôi phục về 14:59, ngay trước câu DELETE nhầm lúc 15:00” — backup định kỳ thuần túy không làm nổi. Replication: bản sao nóng, trễ mili giây, đọc được — và failover khi primary chết. Cả ba là cùng một bài toán: tái tạo trạng thái từ (một ảnh chụp cũ) &#43; (dòng WAL). Ai kiểm soát điểm dừng replay, người đó có tính năng tương ứng: dừng ở cuối WAL = crash recovery; dừng ở timestamp = PITR; không bao giờ dừng = replica.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 18:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 11 — Checkpoint, Recovery, Replication" href="http://localhost:1313/series/postgres-internal/11-recovery-replication/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 10 — VACUUM, HOT, Freeze, Wraparound
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3–5. MVCC vay nợ: mỗi UPDATE/DELETE để lại rác, mỗi transaction đốt một XID hữu hạn. VACUUM là bộ máy trả nợ. Vận hành PostgreSQL nghiêm túc = vận hành VACUUM nghiêm túc. Chương này là chương “đáng tiền” nhất với người trực production.
+1. Problem Statement — ba món nợ của MVCC Dead tuple: version cũ không còn snapshot nào cần (Chương 6). Không dọn → bảng/index phình, cache loãng, scan chậm. Không gian XID hữu hạn: XID 32 bit so sánh vòng tròn. Tuple mang xmin quá già (cách hiện tại &gt;2³¹) sẽ bị phép so sánh hiểu ngược thành “tương lai” → dữ liệu committed biến mất. Phải “đóng băng” (freeze) tuple già trước khi điều đó xảy ra. Thống kê &amp; Visibility Map lạc hậu: planner cần ANALYZE; index-only scan cần VM được cập nhật. VACUUM giải cả ba. Nếu bỏ VACUUM? — không phải “chậm dần” mà là dừng hẳn: đầy disk vì bloat, rồi trước cả đó, cluster tự khóa ghi để chống wraparound. Không có lựa chọn “không vacuum”, chỉ có “vacuum có kiểm soát” hoặc “vacuum lúc 3h sáng theo lệnh của PostgreSQL”.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 17:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 10 — VACUUM, HOT, Freeze, Wraparound" href="http://localhost:1313/series/postgres-internal/10-vacuum-hot-freeze/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 9 — Index Internals: B-tree, Hash, GIN, GiST, BRIN
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 4. Index là cấu trúc dữ liệu trên disk — nghĩa là mọi thiết kế của nó bị chi phối bởi page 8KB, WAL, MVCC và concurrency. Chương này mở nắp từng loại.
+1. Problem Statement Heap không có thứ tự (Chương 3): tìm WHERE email=&#39;x@y.vn&#39; = đọc toàn bộ bảng, O(N) page. Bảng 100GB → ~13 giây chỉ riêng I/O tuần tự, mỗi query. Cần cấu trúc phụ ánh xạ giá trị → ctid với chi phí tra cứu ~O(log N) tính bằng số page (không phải số phần tử — mỗi page là một lần I/O tiềm năng).
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 16:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 9 — Index Internals: B-tree, Hash, GIN, GiST, BRIN" href="http://localhost:1313/series/postgres-internal/09-index-internals/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 8 — Query Processing: từ SQL text đến thao tác trên Page
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 4. SQL là ngôn ngữ khai báo: bạn nói cần gì, không nói làm thế nào. Toàn bộ chương này là câu chuyện PostgreSQL biến “cần gì” thành “làm thế nào” — và tại sao đôi khi nó chọn sai.
+1. Problem Statement SELECT c.name, sum(o.amount) FROM customers c JOIN orders o ON o.customer_id = c.id WHERE c.region = &#39;APAC&#39; AND o.created_at &gt; now() - interval &#39;30 days&#39; GROUP BY c.name; Câu này có thể thực thi theo hàng nghìn cách: quét bảng nào trước, dùng index nào, join bằng thuật toán nào, group bằng hash hay sort. Chênh lệch giữa plan tốt nhất và tệ nhất trên dữ liệu lớn: 10⁴–10⁶ lần. Không tầng nào khác của database tạo ra chênh lệch hiệu năng lớn như planner.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 15:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 8 — Query Processing: từ SQL text đến thao tác trên Page" href="http://localhost:1313/series/postgres-internal/08-query-processing/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 7 — Lock Manager
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3. MVCC loại bỏ xung đột reader–writer. Phần còn lại — writer–writer, DDL, và bảo vệ cấu trúc trong bộ nhớ — thuộc về ba tầng lock của PostgreSQL. Đa số sự cố “database treo” trong production là sự cố lock, không phải sự cố I/O.
 1. Problem Statement Ba lớp bài toán tranh chấp khác nhau về bản chất và thang thời gian:
-Micro (nanô giây): hai CPU cùng sửa một biến trong shared memory (refcount của buffer). Cần loại trừ trong vài chục chu kỳ CPU. Meso (micro giây): một backend sửa nội dung page trong khi backend khác đọc. Cần read/write lock ngắn. Macro (mili giây → giờ): hai transaction cùng UPDATE một row; ALTER TABLE trong khi query đang chạy. Cần lock theo ngữ nghĩa transaction: có hàng đợi, có phát hiện deadlock, tự nhả khi commit. Một cơ chế duy nhất không phục vụ nổi cả ba (lock có hàng đợi + deadlock detection quá đắt cho việc tăng một biến đếm). PostgreSQL xây ba tầng:
-...</p></div><footer class=entry-footer><span title='2026-07-11 14:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to Chương 7 — Lock Manager" href=https://thanhhv.github.io/series/postgres-internal/07-lock-manager/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 6 — Transaction Engine: MVCC, Snapshot, Visibility</h2></header><div class=entry-content><p>Level 3. MVCC là quyết định thiết kế trung tâm của PostgreSQL. Hiểu nó là hiểu được: tại sao reader không block writer, tại sao có dead tuple, tại sao có VACUUM, tại sao “idle in transaction” là kẻ giết hệ thống thầm lặng.
+Micro (nanô giây): hai CPU cùng sửa một biến trong shared memory (refcount của buffer). Cần loại trừ trong vài chục chu kỳ CPU. Meso (micro giây): một backend sửa nội dung page trong khi backend khác đọc. Cần read/write lock ngắn. Macro (mili giây → giờ): hai transaction cùng UPDATE một row; ALTER TABLE trong khi query đang chạy. Cần lock theo ngữ nghĩa transaction: có hàng đợi, có phát hiện deadlock, tự nhả khi commit. Một cơ chế duy nhất không phục vụ nổi cả ba (lock có hàng đợi &#43; deadlock detection quá đắt cho việc tăng một biến đếm). PostgreSQL xây ba tầng:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 14:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 7 — Lock Manager" href="http://localhost:1313/series/postgres-internal/07-lock-manager/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 6 — Transaction Engine: MVCC, Snapshot, Visibility
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3. MVCC là quyết định thiết kế trung tâm của PostgreSQL. Hiểu nó là hiểu được: tại sao reader không block writer, tại sao có dead tuple, tại sao có VACUUM, tại sao “idle in transaction” là kẻ giết hệ thống thầm lặng.
 1. Problem Statement 1.000 transaction đồng thời trên cùng bảng. Yêu cầu Isolation: mỗi transaction thấy database như một ảnh chụp nhất quán, không thấy thay đổi dở dang của người khác.
-...</p></div><footer class=entry-footer><span title='2026-07-11 13:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to Chương 6 — Transaction Engine: MVCC, Snapshot, Visibility" href=https://thanhhv.github.io/series/postgres-internal/06-mvcc-transactions/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 5 — WAL: Write-Ahead Log</h2></header><div class=entry-content><p>Level 3. WAL là phát minh quan trọng nhất của ngành database (ARIES, 1992). Nó là lý do PostgreSQL dám giữ dirty page trong RAM, là nền của recovery, replication, PITR — và là nguồn của một nửa số sự cố production về disk.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 13:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 6 — Transaction Engine: MVCC, Snapshot, Visibility" href="http://localhost:1313/series/postgres-internal/06-mvcc-transactions/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 5 — WAL: Write-Ahead Log
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3. WAL là phát minh quan trọng nhất của ngành database (ARIES, 1992). Nó là lý do PostgreSQL dám giữ dirty page trong RAM, là nền của recovery, replication, PITR — và là nguồn của một nửa số sự cố production về disk.
 1. Problem Statement Chương 1 xác lập hai sự thật vật lý mâu thuẫn nhau:
-Durability đòi hỏi fsync trước khi báo commit — mà fsync đắt (~0.1–1ms NVMe, ~10ms HDD). Thay đổi của một transaction rải rác trên nhiều page (heap, nhiều index, toast) — fsync tất cả các page đó mỗi commit = nhiều random write + nhiều fsync → vài chục ms mỗi commit → throughput chết. Thêm bài toán thứ ba: page 8KB > sector atomic 4KB → crash giữa lúc ghi page tạo torn page — nửa mới nửa cũ, checksum sai, không dùng được.
-...</p></div><footer class=entry-footer><span title='2026-07-11 12:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to Chương 5 — WAL: Write-Ahead Log" href=https://thanhhv.github.io/series/postgres-internal/05-wal/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 4 — Buffer Manager</h2></header><div class=entry-content><p>Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.
+Durability đòi hỏi fsync trước khi báo commit — mà fsync đắt (~0.1–1ms NVMe, ~10ms HDD). Thay đổi của một transaction rải rác trên nhiều page (heap, nhiều index, toast) — fsync tất cả các page đó mỗi commit = nhiều random write &#43; nhiều fsync → vài chục ms mỗi commit → throughput chết. Thêm bài toán thứ ba: page 8KB &gt; sector atomic 4KB → crash giữa lúc ghi page tạo torn page — nửa mới nửa cũ, checksum sai, không dùng được.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 12:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 5 — WAL: Write-Ahead Log" href="http://localhost:1313/series/postgres-internal/05-wal/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 4 — Buffer Manager
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.
 1. Problem Statement Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều read()/write() xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.
-...</p></div><footer class=entry-footer><span title='2026-07-11 11:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer><a class=entry-link aria-label="post link to Chương 4 — Buffer Manager" href=https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map</h2></header><div class=entry-content><p>Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 11:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 4 — Buffer Manager" href="http://localhost:1313/series/postgres-internal/04-buffer-manager/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.
 1. Problem Statement Bảng orders 200GB phải nằm trên disk sao cho:
 Tìm một order theo con trỏ mất đúng 1 lần đọc disk. Thêm order mới không phải dịch chuyển dữ liệu cũ. Nhiều version của một row (MVCC) cùng tồn tại được. Crash giữa chừng không phá cấu trúc. Cột note dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh. Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.
-...</p></div><footer class=entry-footer><span title='2026-07-11 10:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map" href=https://thanhhv.github.io/series/postgres-internal/03-physical-storage/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 2 — Kiến trúc tổng thể: Process & Shared Memory</h2></header><div class=entry-content><p>Level 1–2. PostgreSQL là một “hệ điều hành thu nhỏ”: có process quản lý, có bộ nhớ chia sẻ, có scheduler nền, có cơ chế phục hồi. Chương này vẽ bản đồ toàn bộ hệ thống đó.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 10:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;13 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map" href="http://localhost:1313/series/postgres-internal/03-physical-storage/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 2 — Kiến trúc tổng thể: Process &amp; Shared Memory
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 1–2. PostgreSQL là một “hệ điều hành thu nhỏ”: có process quản lý, có bộ nhớ chia sẻ, có scheduler nền, có cơ chế phục hồi. Chương này vẽ bản đồ toàn bộ hệ thống đó.
 1. Problem Statement Một database server phải đồng thời: phục vụ hàng trăm connection, ghi dữ liệu nền, dọn rác, đồng bộ replica, thu thập thống kê — mà một thành phần chết không được kéo sập dữ liệu. Bài toán: tổ chức các đơn vị thực thi (process/thread) và bộ nhớ chung như thế nào để vừa cô lập lỗi, vừa chia sẻ trạng thái hiệu quả?
-...</p></div><footer class=entry-footer><span title='2026-07-11 09:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;12 min</footer><a class=entry-link aria-label="post link to Chương 2 — Kiến trúc tổng thể: Process & Shared Memory" href=https://thanhhv.github.io/series/postgres-internal/02-architecture-process-memory/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 1 — Database Fundamentals: từ First Principles</h2></header><div class=entry-content><p>Level 1. Trước khi nói về PostgreSQL, phải trả lời câu hỏi gốc: tại sao phần mềm quản lý dữ liệu lại khó đến mức cần một engine hàng triệu dòng code?
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 09:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;12 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 2 — Kiến trúc tổng thể: Process & Shared Memory" href="http://localhost:1313/series/postgres-internal/02-architecture-process-memory/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 1 — Database Fundamentals: từ First Principles
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 1. Trước khi nói về PostgreSQL, phải trả lời câu hỏi gốc: tại sao phần mềm quản lý dữ liệu lại khó đến mức cần một engine hàng triệu dòng code?
 1. Problem Statement Mọi hệ thống phần mềm đều quy về một bài toán: nhận dữ liệu, lưu dữ liệu, trả lại dữ liệu đúng.
 Một hệ thống thanh toán nhận lệnh chuyển 500.000đ từ tài khoản A sang B. Yêu cầu nghe đơn giản:
-...</p></div><footer class=entry-footer><span title='2026-07-11 08:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;12 min</footer><a class=entry-link aria-label="post link to Chương 1 — Database Fundamentals: từ First Principles" href=https://thanhhv.github.io/series/postgres-internal/01-database-fundamentals/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>PostgreSQL Internals — Bên dưới lớp SQL</h2></header><div class=entry-content><p>Bộ tài liệu chuyên sâu về cách PostgreSQL hoạt động bên dưới lớp SQL và Storage, viết cho Backend Engineer, Database Engineer và Software Architect.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 08:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;12 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 1 — Database Fundamentals: từ First Principles" href="http://localhost:1313/series/postgres-internal/01-database-fundamentals/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">PostgreSQL Internals — Bên dưới lớp SQL
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bộ tài liệu chuyên sâu về cách PostgreSQL hoạt động bên dưới lớp SQL và Storage, viết cho Backend Engineer, Database Engineer và Software Architect.
 Tài liệu này KHÔNG phải là gì Đây không phải tài liệu dạy SQL. Không có CREATE TABLE ở chương mở đầu. Không giải thích cú pháp.
 Đây là tài liệu giúp bạn hiểu PostgreSQL như một hệ điều hành thu nhỏ dành cho dữ liệu: cách nó tổ chức bộ nhớ, quản lý page, lưu tuple, điều phối transaction, ghi WAL, phục hồi sau sự cố, tối ưu truy vấn, và phối hợp với OS để đạt hiệu năng và độ tin cậy.
-...</p></div><footer class=entry-footer><span title='2026-07-11 07:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to PostgreSQL Internals — Bên dưới lớp SQL" href=https://thanhhv.github.io/series/postgres-internal/00-muc-luc/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>4 Nguyên Tắc Vàng Khi Dùng Index Mà Mình Ước Gì Biết Sớm Hơn</h2></header><div class=entry-content><p>Chào mọi người, trong quá trình làm việc với database, mình thấy rất nhiều trường hợp không hiểu rõ bản chất của index dẫn đến không sử dụng index một cách hiệu quả. Hôm nay, tranh thủ dịp lễ 1/5 không được đi chơi, ở nhà thôi thì ngồi viết một bài blog về vấn đề này vậy. (Lưu ý: Bài viết mình có tham khảo AI sau khi viết để chỉnh chu lại văn phong và ngữ pháp cũng như là verify lại kiến thức của mình nhé, nào gét gô)
-...</p></div><footer class=entry-footer><span title='2026-05-01 20:00:00 +0700 +07'>May 1, 2026</span>&nbsp;·&nbsp;13 min</footer><a class=entry-link aria-label="post link to 4 Nguyên Tắc Vàng Khi Dùng Index Mà Mình Ước Gì Biết Sớm Hơn" href=https://thanhhv.github.io/posts/database-index/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>PostgreSQL xử lý câu lệnh DML như thế nào?</h2></header><div class=entry-content><p>Khi làm việc với database chắc hẳn chúng ta đã quen với các câu lệnh như SELECT, UPDATE, INSERT, DELETE,…
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-11 07:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to PostgreSQL Internals — Bên dưới lớp SQL" href="http://localhost:1313/series/postgres-internal/00-muc-luc/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">4 Nguyên Tắc Vàng Khi Dùng Index Mà Mình Ước Gì Biết Sớm Hơn
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Chào mọi người, trong quá trình làm việc với database, mình thấy rất nhiều trường hợp không hiểu rõ bản chất của index dẫn đến không sử dụng index một cách hiệu quả. Hôm nay, tranh thủ dịp lễ 1/5 không được đi chơi, ở nhà thôi thì ngồi viết một bài blog về vấn đề này vậy. (Lưu ý: Bài viết mình có tham khảo AI sau khi viết để chỉnh chu lại văn phong và ngữ pháp cũng như là verify lại kiến thức của mình nhé, nào gét gô)
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-01 20:00:00 +0700 +07'>May 1, 2026</span>&nbsp;·&nbsp;13 min</footer>
+  <a class="entry-link" aria-label="post link to 4 Nguyên Tắc Vàng Khi Dùng Index Mà Mình Ước Gì Biết Sớm Hơn" href="http://localhost:1313/posts/database-index/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">PostgreSQL xử lý câu lệnh DML như thế nào?
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Khi làm việc với database chắc hẳn chúng ta đã quen với các câu lệnh như SELECT, UPDATE, INSERT, DELETE,…
 Giả sử khi chạy một câu lệnh INSERT INTO ... để thêm record vào DB thì bên trong cơ sở dữ liệu sẽ làm những gì để xử lý?
 Trong bài viết này, hãy cùng mình tìm hiểu đằng sau một câu lệnh SQL khi thực thi sẽ đi qua những bước gì nhé.
-...</p></div><footer class=entry-footer><span title='2025-09-07 23:00:00 +0700 +07'>September 7, 2025</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to PostgreSQL xử lý câu lệnh DML như thế nào?" href=https://thanhhv.github.io/posts/postgresql-fundamental/></a></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2025-09-07 23:00:00 +0700 +07'>September 7, 2025</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to PostgreSQL xử lý câu lệnh DML như thế nào?" href="http://localhost:1313/posts/postgresql-fundamental/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

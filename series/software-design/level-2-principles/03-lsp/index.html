@@ -1,77 +1,456 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>2.3 — Liskov Substitution Principle: hợp đồng hành vi | Thanh HV's Blog</title>
-<meta name=keywords content="backend,software-design,design-patterns"><meta name=description content="1. Problem Statement
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>2.3 — Liskov Substitution Principle: hợp đồng hành vi | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, software-design, design-patterns">
+<meta name="description" content="1. Problem Statement
 LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc thực chiến nhất với dev Go/TS hiện đại — vì nó trả lời câu hỏi: &ldquo;khi nào một implementation của interface là ĐÚNG?&rdquo;
-Phát biểu của Barbara Liskov (1987, diễn giải): nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/software-design/level-2-principles/03-lsp/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/software-design/level-2-principles/03-lsp/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/software-design/level-2-principles/03-lsp/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="2.3 — Liskov Substitution Principle: hợp đồng hành vi"><meta property="og:description" content="1. Problem Statement LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc thực chiến nhất với dev Go/TS hiện đại — vì nó trả lời câu hỏi: “khi nào một implementation của interface là ĐÚNG?”
-Phát biểu của Barbara Liskov (1987, diễn giải): nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-17T08:30:00+07:00"><meta property="article:modified_time" content="2026-07-17T08:30:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Software-Design"><meta property="article:tag" content="Design-Patterns"><meta name=twitter:card content="summary"><meta name=twitter:title content="2.3 — Liskov Substitution Principle: hợp đồng hành vi"><meta name=twitter:description content="1. Problem Statement
-LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc thực chiến nhất với dev Go/TS hiện đại — vì nó trả lời câu hỏi: &ldquo;khi nào một implementation của interface là ĐÚNG?&rdquo;
-Phát biểu của Barbara Liskov (1987, diễn giải): nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Software Design \u0026 Design Patterns","item":"https://thanhhv.github.io/series/software-design/"},{"@type":"ListItem","position":3,"name":"2.3 — Liskov Substitution Principle: hợp đồng hành vi","item":"https://thanhhv.github.io/series/software-design/level-2-principles/03-lsp/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"2.3 — Liskov Substitution Principle: hợp đồng hành vi","name":"2.3 — Liskov Substitution Principle: hợp đồng hành vi","description":"1. Problem Statement LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc thực chiến nhất với dev Go/TS hiện đại — vì nó trả lời câu hỏi: \u0026ldquo;khi nào một implementation của interface là ĐÚNG?\u0026rdquo;\nPhát biểu của Barbara Liskov (1987, diễn giải): nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S.\n","keywords":["backend","software-design","design-patterns"],"articleBody":"1. Problem Statement LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc thực chiến nhất với dev Go/TS hiện đại — vì nó trả lời câu hỏi: “khi nào một implementation của interface là ĐÚNG?”\nPhát biểu của Barbara Liskov (1987, diễn giải): nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S.\nChìa khóa nằm ở vế sau: “mà không cần biết”. Polymorphism chỉ có giá trị khi caller tin được mọi implementation hành xử theo cùng hợp đồng. Mất niềm tin đó, caller bắt đầu viết if _, ok := x.(*S3Storage); ok { ... } — và toàn bộ lợi ích của abstraction sụp đổ: bạn có chi phí của interface cộng chi phí của switch-theo-loại.\n2. Code Smell — vi phạm LSP trong Go trông như thế nào Go không có inheritance, nhưng vi phạm LSP đầy rẫy — dưới dạng implementation phản bội hợp đồng ngầm của interface. Bài toán thật: hệ thống lưu file, có local disk và S3.\ntype FileStore interface { Save(ctx context.Context, path string, data []byte) error Load(ctx context.Context, path string) ([]byte, error) Delete(ctx context.Context, path string) error } // Implementation 1 — LocalStore: Delete file không tồn tại → error func (s *LocalStore) Delete(ctx context.Context, path string) error { return os.Remove(s.root + path) // file không có → *PathError } // Implementation 2 — S3Store: Delete object không tồn tại → S3 trả 204, KHÔNG error func (s *S3Store) Delete(ctx context.Context, path string) error { _, err := s.client.DeleteObject(ctx, /*...*/) return err // không tồn tại → nil! } Caller viết code dựa trên hành vi của LocalStore (môi trường dev):\n// ❌ logic nghiệp vụ dựa vào \"Delete file thiếu sẽ báo lỗi\" if err := store.Delete(ctx, path); err != nil { metrics.Inc(\"delete_missing_file\") // dev: chạy đúng. prod (S3): không bao giờ tăng } Test pass ở local, hành vi lệch ở production — loại bug khó nhất: không crash, chỉ sai lặng lẽ. Các biến thể cùng họ, gặp hằng ngày:\nMethod này trả nil slice, method kia trả slice rỗng, caller check == nil. Implementation A thread-safe, B thì không — swap vào là data race. A trả error khi not-found, B trả (nil, nil). Fake trong test hành xử khác thật (fake cho phép Save trùng key, thật thì không) → test xanh, prod đỏ. Fake cũng là một subtype — LSP áp dụng cho cả test double. Mock “chồng chất kỳ vọng” đến mức chỉ mô phỏng đúng một kịch bản — thay đổi caller một chút là mock sai kiểu khác. 3. First Principles — hợp đồng gồm những gì Chữ ký hàm (types) chỉ là phần cú pháp của hợp đồng — compiler check được. LSP nói về phần ngữ nghĩa — compiler KHÔNG check được:\nPrecondition — subtype không được đòi hỏi nhiều hơn (base nhận mọi path, subtype panic với path có dấu / → caller vỡ). Postcondition — subtype không được hứa ít hơn (base bảo đảm “sau Save thì Load thấy ngay”, subtype eventual-consistent → caller vỡ). Invariant \u0026 hiệu ứng phụ — error semantics, nil vs empty, thread-safety, idempotency, blocking hay không. Quy tắc nhớ nhanh: subtype được phép rộng lượng hơn với input và nghiêm ngặt hơn với output — không bao giờ ngược lại.\nTrong Go, hợp đồng ngữ nghĩa sống ở doc comment của interface. Đọc io.Reader sẽ thấy nó dày đặc điều khoản: “Read may return n \u003c len(p)”, “may return either err == EOF or err == nil” ở cuối stream, “Callers should always process the n \u003e 0 bytes returned before considering the error err”… Mỗi câu là một điều khoản mà mọi implementation phải giữ và mọi caller được phép dựa vào. Viết interface mà không viết hợp đồng = mời mỗi implementation tự phát minh ngữ nghĩa riêng.\n4. Refactoring Journey Bước 1 — viết hợp đồng thành lời:\n// FileStore lưu trữ blob theo path. // // Hợp đồng cho MỌI implementation: // - Save ghi đè nếu path đã tồn tại. // - Load trả ErrNotFound nếu path không tồn tại (không bao giờ (nil, nil)). // - Delete là idempotent: xóa path không tồn tại trả nil. // - An toàn khi gọi đồng thời từ nhiều goroutine. var ErrNotFound = errors.New(\"filestore: not found\") type FileStore interface { /* ... như cũ ... */ } Lưu ý hai quyết định: chuẩn hóa error bằng sentinel error để caller check errors.Is(err, ErrNotFound) — không caller nào phải biết *PathError hay S3 error code (đó là chi tiết rò rỉ); và chọn Delete idempotent (theo S3) rồi buộc LocalStore tuân theo — chọn chuẩn nào ít quan trọng bằng việc có chuẩn.\nBước 2 — ép mọi implementation về hợp đồng:\nfunc (s *LocalStore) Delete(ctx context.Context, path string) error { err := os.Remove(filepath.Join(s.root, path)) if errors.Is(err, fs.ErrNotExist) { return nil // tuân thủ hợp đồng idempotent } return err } func (s *LocalStore) Load(ctx context.Context, path string) ([]byte, error) { b, err := os.ReadFile(filepath.Join(s.root, path)) if errors.Is(err, fs.ErrNotExist) { return nil, ErrNotFound // dịch error hạ tầng → error hợp đồng } return b, err } Bước 3 — hợp đồng phải được TEST: contract test chạy chung cho mọi implementation. Đây là kỹ thuật ăn tiền nhất chương này:\n// filestore_contract_test.go — một bộ test, N implementation func RunContractTests(t *testing.T, newStore func(t *testing.T) FileStore) { t.Run(\"load missing returns ErrNotFound\", func(t *testing.T) { s := newStore(t) _, err := s.Load(context.Background(), \"nope\") if !errors.Is(err, ErrNotFound) { t.Fatalf(\"want ErrNotFound, got %v\", err) } }) t.Run(\"delete is idempotent\", func(t *testing.T) { s := newStore(t) if err := s.Delete(context.Background(), \"nope\"); err != nil { t.Fatalf(\"delete missing must be nil, got %v\", err) } }) t.Run(\"save then load roundtrip\", func(t *testing.T) { /* ... */ }) } func TestLocalStore(t *testing.T) { RunContractTests(t, newTempLocalStore) } func TestS3Store(t *testing.T) { RunContractTests(t, newS3TestStore) } // testcontainers/minio func TestFakeStore(t *testing.T) { RunContractTests(t, newFakeStore) } // fake CŨNG phải qua! Dòng cuối là điểm sâu nhất: fake dùng trong unit test phải pass cùng contract test với implementation thật — đó là cách duy nhất bảo đảm “test xanh với fake” suy ra được điều gì đó về production. Chuỗi niềm tin: caller tin interface → interface được định nghĩa bằng contract test → mọi implementation (kể cả fake) pass contract test.\n5. Trade-off Hợp đồng chặt vs quyền tự do của implementation: quy định “Delete idempotent” giúp caller đơn giản nhưng bắt mọi backend tương lai phải mô phỏng được điều đó (một backend không hỗ trợ sẽ phải thêm một round-trip check — chậm hơn). Hợp đồng càng hứa nhiều, caller càng sướng, implementation càng khổ — cân theo tỉ lệ caller/implementation. Hợp đồng lỏng vs gánh nặng caller: io.Reader hứa rất ít (được phép trả 0 byte + nil error!) → cực dễ implement, và caller phải viết loop cẩn thận (nên mới có io.ReadFull, io.ReadAll làm helper). Stdlib chọn lỏng vì số implementation là vô hạn. App nội bộ thường nên chọn chặt vì caller nhiều hơn implementation. Chi phí contract test: thêm hạ tầng test (testcontainers cho S3/Postgres thật) — nhưng đây là chỗ ROI cao nhất của integration test: một bộ test khóa chặt ngữ nghĩa cho mọi backend hiện tại và tương lai. 6. Production Examples io.Reader: hợp đồng viết kỹ đến từng trường hợp biên. Vi phạm nổi tiếng nhất: implementation trả (n \u003e 0, EOF) cùng lúc là hợp lệ nhưng nhiều caller xử lý sai — bug xuất hiện cả trong code các công ty lớn. Bài học: hợp đồng tinh tế cần helper chính chủ (io.ReadAll) để caller khỏi tự viết sai. context.Context: hợp đồng “Done() có thể được gọi nhiều lần, từ nhiều goroutine, phải trả cùng channel” — mọi custom context phải giữ, nếu không mọi thư viện dựa trên context vỡ. sql.DB drivers: một bài học LSP dài một thập kỷ — các driver khác nhau về hỗ trợ LastInsertId, named parameter, isolation level. database/sql xử lý bằng cách để hợp đồng lõi tối thiểu + interface tùy chọn, và app dùng ORM/query builder để che khác biệt còn lại. Ecosystem TS: Promise A+ spec chính là một contract spec cho “thenable” — có cả bộ test chuẩn (promises-aplus-tests) mà mọi thư viện promise phải pass: contract test ở quy mô cộng đồng, đúng mô hình Bước 3. 7. Anti-pattern Type-switch trong caller: if s3, ok := store.(*S3Store); ok { /* đường riêng */ } — lời thú nhận interface đã chết. Sửa tận gốc: đưa khác biệt vào hợp đồng (thêm method, thêm capability interface) hoặc hợp nhất ngữ nghĩa. Method “không hỗ trợ”: func (s *ReadOnlyStore) Save(...) error { return errors.New(\"not supported\") } — thỏa cú pháp, phản bội ngữ nghĩa; caller nhận interface đầy đủ nhưng ăn lỗi runtime. Sửa: tách interface nhỏ hơn (Loader riêng khỏi Saver) — chính là ISP, chương kế tiếp. LSP violation thường là triệu chứng; ISP là thuốc. Fake dễ dãi: fake chấp nhận mọi thứ, không mô phỏng ràng buộc (unique key, not-found…) → unit test kiểm chứng một thế giới không tồn tại. 8. Khi nào KHÔNG cần nghiêm ngặt Interface một implementation duy nhất + fake test đơn giản: hợp đồng ngầm đủ dùng, đừng viết văn bản pháp lý cho package 200 dòng. Mức đầu tư theo số lượng và độ “xa lạ” của implementation: 1 impl → doc ngắn; 2-3 impl trong repo → doc kỹ + contract test; interface public cho bên thứ ba implement → hợp đồng chi tiết + bộ conformance test là bắt buộc (như Kubernetes CSI/CNI, Terraform provider SDK đều có).\nTiếp theo: 2.4 — Interface Segregation Principle\n","wordCount":"1651","inLanguage":"en","datePublished":"2026-07-17T08:30:00+07:00","dateModified":"2026-07-17T08:30:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/software-design/level-2-principles/03-lsp/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/software-design/>Software Design & Design Patterns</a></div><h1 class="post-title entry-hint-parent">2.3 — Liskov Substitution Principle: hợp đồng hành vi</h1><div class=post-meta><span title='2026-07-17 08:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min</div></header><div class=post-content><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc <strong>thực chiến nhất</strong> với dev Go/TS hiện đại — vì nó trả lời câu hỏi: <em>&ldquo;khi nào một implementation của interface là ĐÚNG?&rdquo;</em></p><p>Phát biểu của Barbara Liskov (1987, diễn giải): <strong>nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S.</strong></p><p>Chìa khóa nằm ở vế sau: <em>&ldquo;mà không cần biết&rdquo;</em>. Polymorphism chỉ có giá trị khi caller <strong>tin</strong> được mọi implementation hành xử theo cùng hợp đồng. Mất niềm tin đó, caller bắt đầu viết <code>if _, ok := x.(*S3Storage); ok { ... }</code> — và toàn bộ lợi ích của abstraction sụp đổ: bạn có chi phí của interface <em>cộng</em> chi phí của switch-theo-loại.</p><h2 id=2-code-smell--vi-phạm-lsp-trong-go-trông-như-thế-nào>2. Code Smell — vi phạm LSP trong Go trông như thế nào<a hidden class=anchor aria-hidden=true href=#2-code-smell--vi-phạm-lsp-trong-go-trông-như-thế-nào>#</a></h2><p>Go không có inheritance, nhưng vi phạm LSP đầy rẫy — dưới dạng <strong>implementation phản bội hợp đồng ngầm của interface</strong>. Bài toán thật: hệ thống lưu file, có local disk và S3.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>FileStore</span> <span style=color:#66d9ef>interface</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>Save</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>data</span> []<span style=color:#66d9ef>byte</span>) <span style=color:#66d9ef>error</span>
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>Load</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>) ([]<span style=color:#66d9ef>byte</span>, <span style=color:#66d9ef>error</span>)
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>Delete</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Implementation 1 — LocalStore: Delete file không tồn tại → error</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>LocalStore</span>) <span style=color:#a6e22e>Delete</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Remove</span>(<span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>root</span> <span style=color:#f92672>+</span> <span style=color:#a6e22e>path</span>)   <span style=color:#75715e>// file không có → *PathError</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// Implementation 2 — S3Store: Delete object không tồn tại → S3 trả 204, KHÔNG error</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>S3Store</span>) <span style=color:#a6e22e>Delete</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>client</span>.<span style=color:#a6e22e>DeleteObject</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#75715e>/*...*/</span>)
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>                         <span style=color:#75715e>// không tồn tại → nil!</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Caller viết code dựa trên hành vi của LocalStore (môi trường dev):</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ❌ logic nghiệp vụ dựa vào &#34;Delete file thiếu sẽ báo lỗi&#34;</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>store</span>.<span style=color:#a6e22e>Delete</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>path</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>metrics</span>.<span style=color:#a6e22e>Inc</span>(<span style=color:#e6db74>&#34;delete_missing_file&#34;</span>)   <span style=color:#75715e>// dev: chạy đúng. prod (S3): không bao giờ tăng</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Test pass ở local, hành vi <em>lệch</em> ở production — loại bug khó nhất: không crash, chỉ <em>sai lặng lẽ</em>. Các biến thể cùng họ, gặp hằng ngày:</p><ul><li>Method này trả <code>nil</code> slice, method kia trả slice rỗng, caller check <code>== nil</code>.</li><li>Implementation A thread-safe, B thì không — swap vào là data race.</li><li>A trả error khi not-found, B trả <code>(nil, nil)</code>.</li><li>Fake trong test hành xử khác thật (fake cho phép Save trùng key, thật thì không) → test xanh, prod đỏ. <strong>Fake cũng là một subtype — LSP áp dụng cho cả test double.</strong></li><li>Mock &ldquo;chồng chất kỳ vọng&rdquo; đến mức chỉ mô phỏng đúng một kịch bản — thay đổi caller một chút là mock sai kiểu khác.</li></ul><h2 id=3-first-principles--hợp-đồng-gồm-những-gì>3. First Principles — hợp đồng gồm những gì<a hidden class=anchor aria-hidden=true href=#3-first-principles--hợp-đồng-gồm-những-gì>#</a></h2><p>Chữ ký hàm (types) chỉ là phần <strong>cú pháp</strong> của hợp đồng — compiler check được. LSP nói về phần <strong>ngữ nghĩa</strong> — compiler KHÔNG check được:</p><ol><li><strong>Precondition</strong> — subtype không được <em>đòi hỏi nhiều hơn</em> (base nhận mọi path, subtype panic với path có dấu <code>/</code> → caller vỡ).</li><li><strong>Postcondition</strong> — subtype không được <em>hứa ít hơn</em> (base bảo đảm &ldquo;sau Save thì Load thấy ngay&rdquo;, subtype eventual-consistent → caller vỡ).</li><li><strong>Invariant & hiệu ứng phụ</strong> — error semantics, nil vs empty, thread-safety, idempotency, blocking hay không.</li></ol><p>Quy tắc nhớ nhanh: <strong>subtype được phép rộng lượng hơn với input và nghiêm ngặt hơn với output — không bao giờ ngược lại.</strong></p><p>Trong Go, hợp đồng ngữ nghĩa sống ở <strong>doc comment của interface</strong>. Đọc <code>io.Reader</code> sẽ thấy nó dày đặc điều khoản: <em>&ldquo;Read may return n &lt; len(p)&rdquo;</em>, <em>&ldquo;may return either err == EOF or err == nil&rdquo;</em> ở cuối stream, <em>&ldquo;Callers should always process the n > 0 bytes returned before considering the error err&rdquo;</em>&mldr; Mỗi câu là một điều khoản mà <strong>mọi</strong> implementation phải giữ và <strong>mọi</strong> caller được phép dựa vào. Viết interface mà không viết hợp đồng = mời mỗi implementation tự phát minh ngữ nghĩa riêng.</p><h2 id=4-refactoring-journey>4. Refactoring Journey<a hidden class=anchor aria-hidden=true href=#4-refactoring-journey>#</a></h2><p><strong>Bước 1 — viết hợp đồng thành lời:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// FileStore lưu trữ blob theo path.</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>//</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// Hợp đồng cho MỌI implementation:</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>//   - Save ghi đè nếu path đã tồn tại.</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>//   - Load trả ErrNotFound nếu path không tồn tại (không bao giờ (nil, nil)).</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>//   - Delete là idempotent: xóa path không tồn tại trả nil.</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>//   - An toàn khi gọi đồng thời từ nhiều goroutine.</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>ErrNotFound</span> = <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;filestore: not found&#34;</span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>FileStore</span> <span style=color:#66d9ef>interface</span> { <span style=color:#75715e>/* ... như cũ ... */</span> }
-</span></span></code></pre></div><p>Lưu ý hai quyết định: chuẩn hóa error bằng <strong>sentinel error</strong> để caller check <code>errors.Is(err, ErrNotFound)</code> — không caller nào phải biết <code>*PathError</code> hay S3 error code (đó là chi tiết rò rỉ); và <strong>chọn</strong> Delete idempotent (theo S3) rồi buộc LocalStore tuân theo — chọn chuẩn nào ít quan trọng bằng việc <em>có</em> chuẩn.</p><p><strong>Bước 2 — ép mọi implementation về hợp đồng:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>LocalStore</span>) <span style=color:#a6e22e>Delete</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Remove</span>(<span style=color:#a6e22e>filepath</span>.<span style=color:#a6e22e>Join</span>(<span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>root</span>, <span style=color:#a6e22e>path</span>))
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Is</span>(<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>ErrNotExist</span>) {
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>                    <span style=color:#75715e>// tuân thủ hợp đồng idempotent</span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>LocalStore</span>) <span style=color:#a6e22e>Load</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>) ([]<span style=color:#66d9ef>byte</span>, <span style=color:#66d9ef>error</span>) {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>b</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>ReadFile</span>(<span style=color:#a6e22e>filepath</span>.<span style=color:#a6e22e>Join</span>(<span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>root</span>, <span style=color:#a6e22e>path</span>))
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Is</span>(<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>ErrNotExist</span>) {
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>ErrNotFound</span>       <span style=color:#75715e>// dịch error hạ tầng → error hợp đồng</span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>b</span>, <span style=color:#a6e22e>err</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p><strong>Bước 3 — hợp đồng phải được TEST: contract test chạy chung cho mọi implementation.</strong> Đây là kỹ thuật ăn tiền nhất chương này:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// filestore_contract_test.go — một bộ test, N implementation</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>RunContractTests</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>, <span style=color:#a6e22e>newStore</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) <span style=color:#a6e22e>FileStore</span>) {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Run</span>(<span style=color:#e6db74>&#34;load missing returns ErrNotFound&#34;</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>s</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>newStore</span>(<span style=color:#a6e22e>t</span>)
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>Load</span>(<span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>(), <span style=color:#e6db74>&#34;nope&#34;</span>)
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Is</span>(<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>ErrNotFound</span>) {
-</span></span><span style=display:flex><span>            <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;want ErrNotFound, got %v&#34;</span>, <span style=color:#a6e22e>err</span>)
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>    })
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Run</span>(<span style=color:#e6db74>&#34;delete is idempotent&#34;</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>s</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>newStore</span>(<span style=color:#a6e22e>t</span>)
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>Delete</span>(<span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>(), <span style=color:#e6db74>&#34;nope&#34;</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>            <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;delete missing must be nil, got %v&#34;</span>, <span style=color:#a6e22e>err</span>)
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>    })
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Run</span>(<span style=color:#e6db74>&#34;save then load roundtrip&#34;</span>, <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) { <span style=color:#75715e>/* ... */</span> })
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestLocalStore</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) { <span style=color:#a6e22e>RunContractTests</span>(<span style=color:#a6e22e>t</span>, <span style=color:#a6e22e>newTempLocalStore</span>) }
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestS3Store</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>)    { <span style=color:#a6e22e>RunContractTests</span>(<span style=color:#a6e22e>t</span>, <span style=color:#a6e22e>newS3TestStore</span>) }   <span style=color:#75715e>// testcontainers/minio</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestFakeStore</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>)  { <span style=color:#a6e22e>RunContractTests</span>(<span style=color:#a6e22e>t</span>, <span style=color:#a6e22e>newFakeStore</span>) }     <span style=color:#75715e>// fake CŨNG phải qua!</span>
-</span></span></code></pre></div><p>Dòng cuối là điểm sâu nhất: <strong>fake dùng trong unit test phải pass cùng contract test với implementation thật</strong> — đó là cách duy nhất bảo đảm &ldquo;test xanh với fake&rdquo; suy ra được điều gì đó về production. Chuỗi niềm tin: caller tin interface → interface được định nghĩa bằng contract test → mọi implementation (kể cả fake) pass contract test.</p><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><ul><li><strong>Hợp đồng chặt vs quyền tự do của implementation</strong>: quy định &ldquo;Delete idempotent&rdquo; giúp caller đơn giản nhưng bắt mọi backend tương lai phải mô phỏng được điều đó (một backend không hỗ trợ sẽ phải thêm một round-trip check — chậm hơn). Hợp đồng càng hứa nhiều, caller càng sướng, implementation càng khổ — cân theo tỉ lệ caller/implementation.</li><li><strong>Hợp đồng lỏng vs gánh nặng caller</strong>: <code>io.Reader</code> hứa rất ít (được phép trả 0 byte + nil error!) → cực dễ implement, và caller phải viết loop cẩn thận (nên mới có <code>io.ReadFull</code>, <code>io.ReadAll</code> làm helper). Stdlib chọn lỏng vì số implementation là vô hạn. App nội bộ thường nên chọn chặt vì caller nhiều hơn implementation.</li><li><strong>Chi phí contract test</strong>: thêm hạ tầng test (testcontainers cho S3/Postgres thật) — nhưng đây là chỗ ROI cao nhất của integration test: một bộ test khóa chặt ngữ nghĩa cho mọi backend hiện tại và tương lai.</li></ul><h2 id=6-production-examples>6. Production Examples<a hidden class=anchor aria-hidden=true href=#6-production-examples>#</a></h2><ul><li><strong><code>io.Reader</code></strong>: hợp đồng viết kỹ đến từng trường hợp biên. Vi phạm nổi tiếng nhất: implementation trả <code>(n > 0, EOF)</code> cùng lúc là <em>hợp lệ</em> nhưng nhiều caller xử lý sai — bug xuất hiện cả trong code các công ty lớn. Bài học: hợp đồng tinh tế cần helper chính chủ (<code>io.ReadAll</code>) để caller khỏi tự viết sai.</li><li><strong><code>context.Context</code></strong>: hợp đồng &ldquo;Done() có thể được gọi nhiều lần, từ nhiều goroutine, phải trả cùng channel&rdquo; — mọi custom context phải giữ, nếu không mọi thư viện dựa trên context vỡ.</li><li><strong><code>sql.DB</code> drivers</strong>: một bài học LSP dài một thập kỷ — các driver khác nhau về hỗ trợ <code>LastInsertId</code>, named parameter, isolation level. <code>database/sql</code> xử lý bằng cách để hợp đồng lõi tối thiểu + interface tùy chọn, và app dùng ORM/query builder để che khác biệt còn lại.</li><li><strong>Ecosystem TS</strong>: Promise A+ spec chính là một contract spec cho &ldquo;thenable&rdquo; — có cả bộ test chuẩn (promises-aplus-tests) mà mọi thư viện promise phải pass: contract test ở quy mô cộng đồng, đúng mô hình Bước 3.</li></ul><h2 id=7-anti-pattern>7. Anti-pattern<a hidden class=anchor aria-hidden=true href=#7-anti-pattern>#</a></h2><ul><li><strong>Type-switch trong caller</strong>: <code>if s3, ok := store.(*S3Store); ok { /* đường riêng */ }</code> — lời thú nhận interface đã chết. Sửa tận gốc: đưa khác biệt vào hợp đồng (thêm method, thêm capability interface) hoặc hợp nhất ngữ nghĩa.</li><li><strong>Method &ldquo;không hỗ trợ&rdquo;</strong>: <code>func (s *ReadOnlyStore) Save(...) error { return errors.New("not supported") }</code> — thỏa cú pháp, phản bội ngữ nghĩa; caller nhận interface đầy đủ nhưng ăn lỗi runtime. Sửa: tách interface nhỏ hơn (<code>Loader</code> riêng khỏi <code>Saver</code>) — chính là ISP, chương kế tiếp. <em>LSP violation thường là triệu chứng; ISP là thuốc.</em></li><li><strong>Fake dễ dãi</strong>: fake chấp nhận mọi thứ, không mô phỏng ràng buộc (unique key, not-found&mldr;) → unit test kiểm chứng một thế giới không tồn tại.</li></ul><h2 id=8-khi-nào-không-cần-nghiêm-ngặt>8. Khi nào KHÔNG cần nghiêm ngặt<a hidden class=anchor aria-hidden=true href=#8-khi-nào-không-cần-nghiêm-ngặt>#</a></h2><p>Interface một implementation duy nhất + fake test đơn giản: hợp đồng ngầm đủ dùng, đừng viết văn bản pháp lý cho package 200 dòng. Mức đầu tư theo số lượng và độ &ldquo;xa lạ&rdquo; của implementation: 1 impl → doc ngắn; 2-3 impl trong repo → doc kỹ + contract test; interface public cho bên thứ ba implement → hợp đồng chi tiết + bộ conformance test là bắt buộc (như Kubernetes CSI/CNI, Terraform provider SDK đều có).</p><hr><p><em>Tiếp theo: <a href=/series/software-design/level-2-principles/04-isp/>2.4 — Interface Segregation Principle</a></em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/software-design/>Software-Design</a></li><li><a href=https://thanhhv.github.io/tags/design-patterns/>Design-Patterns</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/software-design/level-2-principles/02-ocp/><span class=title>« Prev</span><br><span>2.2 — Open/Closed Principle: mở rộng mà không sửa</span>
-</a><a class=next href=https://thanhhv.github.io/series/software-design/level-2-principles/04-isp/><span class=title>Next »</span><br><span>2.4 — Interface Segregation Principle: interface nhỏ, phía consumer</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on x" href="https://x.com/intent/tweet/?text=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f&amp;hashtags=backend%2csoftware-design%2cdesign-patterns"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f&amp;title=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;summary=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f&title=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on whatsapp" href="https://api.whatsapp.com/send?text=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on telegram" href="https://telegram.me/share/url?text=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on ycombinator" href="https://news.ycombinator.com/submitlink?t=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+Phát biểu của Barbara Liskov (1987, diễn giải): nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/software-design/level-2-principles/03-lsp/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/software-design/level-2-principles/03-lsp/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/software-design/">Software Design &amp; Design Patterns</a></div>
+    <h1 class="post-title entry-hint-parent">
+      2.3 — Liskov Substitution Principle: hợp đồng hành vi
+    </h1>
+    <div class="post-meta"><span title='2026-07-17 08:30:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;8 min
+
+</div>
+  </header> 
+  <div class="post-content"><h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>LSP nổi tiếng qua ví dụ Hình vuông/Hình chữ nhật, nhưng ví dụ đó khiến nhiều người nghĩ nó là chuyện hàn lâm về kế thừa. Thực tế, LSP là nguyên tắc <strong>thực chiến nhất</strong> với dev Go/TS hiện đại — vì nó trả lời câu hỏi: <em>&ldquo;khi nào một implementation của interface là ĐÚNG?&rdquo;</em></p>
+<p>Phát biểu của Barbara Liskov (1987, diễn giải): <strong>nếu S là subtype của T, thì mọi chỗ dùng T phải hoạt động đúng khi thay bằng S — mà không cần biết đó là S.</strong></p>
+<p>Chìa khóa nằm ở vế sau: <em>&ldquo;mà không cần biết&rdquo;</em>. Polymorphism chỉ có giá trị khi caller <strong>tin</strong> được mọi implementation hành xử theo cùng hợp đồng. Mất niềm tin đó, caller bắt đầu viết <code>if _, ok := x.(*S3Storage); ok { ... }</code> — và toàn bộ lợi ích của abstraction sụp đổ: bạn có chi phí của interface <em>cộng</em> chi phí của switch-theo-loại.</p>
+<h2 id="2-code-smell--vi-phạm-lsp-trong-go-trông-như-thế-nào">2. Code Smell — vi phạm LSP trong Go trông như thế nào<a hidden class="anchor" aria-hidden="true" href="#2-code-smell--vi-phạm-lsp-trong-go-trông-như-thế-nào">#</a></h2>
+<p>Go không có inheritance, nhưng vi phạm LSP đầy rẫy — dưới dạng <strong>implementation phản bội hợp đồng ngầm của interface</strong>. Bài toán thật: hệ thống lưu file, có local disk và S3.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">FileStore</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Load</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>) ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Delete</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Implementation 1 — LocalStore: Delete file không tồn tại → error</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LocalStore</span>) <span style="color:#a6e22e">Delete</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Remove</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">root</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">path</span>)   <span style="color:#75715e">// file không có → *PathError</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Implementation 2 — S3Store: Delete object không tồn tại → S3 trả 204, KHÔNG error</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">S3Store</span>) <span style="color:#a6e22e">Delete</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">DeleteObject</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#75715e">/*...*/</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>                         <span style="color:#75715e">// không tồn tại → nil!</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Caller viết code dựa trên hành vi của LocalStore (môi trường dev):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ❌ logic nghiệp vụ dựa vào &#34;Delete file thiếu sẽ báo lỗi&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">store</span>.<span style="color:#a6e22e">Delete</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">path</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">metrics</span>.<span style="color:#a6e22e">Inc</span>(<span style="color:#e6db74">&#34;delete_missing_file&#34;</span>)   <span style="color:#75715e">// dev: chạy đúng. prod (S3): không bao giờ tăng</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Test pass ở local, hành vi <em>lệch</em> ở production — loại bug khó nhất: không crash, chỉ <em>sai lặng lẽ</em>. Các biến thể cùng họ, gặp hằng ngày:</p>
+<ul>
+<li>Method này trả <code>nil</code> slice, method kia trả slice rỗng, caller check <code>== nil</code>.</li>
+<li>Implementation A thread-safe, B thì không — swap vào là data race.</li>
+<li>A trả error khi not-found, B trả <code>(nil, nil)</code>.</li>
+<li>Fake trong test hành xử khác thật (fake cho phép Save trùng key, thật thì không) → test xanh, prod đỏ. <strong>Fake cũng là một subtype — LSP áp dụng cho cả test double.</strong></li>
+<li>Mock &ldquo;chồng chất kỳ vọng&rdquo; đến mức chỉ mô phỏng đúng một kịch bản — thay đổi caller một chút là mock sai kiểu khác.</li>
+</ul>
+<h2 id="3-first-principles--hợp-đồng-gồm-những-gì">3. First Principles — hợp đồng gồm những gì<a hidden class="anchor" aria-hidden="true" href="#3-first-principles--hợp-đồng-gồm-những-gì">#</a></h2>
+<p>Chữ ký hàm (types) chỉ là phần <strong>cú pháp</strong> của hợp đồng — compiler check được. LSP nói về phần <strong>ngữ nghĩa</strong> — compiler KHÔNG check được:</p>
+<ol>
+<li><strong>Precondition</strong> — subtype không được <em>đòi hỏi nhiều hơn</em> (base nhận mọi path, subtype panic với path có dấu <code>/</code> → caller vỡ).</li>
+<li><strong>Postcondition</strong> — subtype không được <em>hứa ít hơn</em> (base bảo đảm &ldquo;sau Save thì Load thấy ngay&rdquo;, subtype eventual-consistent → caller vỡ).</li>
+<li><strong>Invariant &amp; hiệu ứng phụ</strong> — error semantics, nil vs empty, thread-safety, idempotency, blocking hay không.</li>
+</ol>
+<p>Quy tắc nhớ nhanh: <strong>subtype được phép rộng lượng hơn với input và nghiêm ngặt hơn với output — không bao giờ ngược lại.</strong></p>
+<p>Trong Go, hợp đồng ngữ nghĩa sống ở <strong>doc comment của interface</strong>. Đọc <code>io.Reader</code> sẽ thấy nó dày đặc điều khoản: <em>&ldquo;Read may return n &lt; len(p)&rdquo;</em>, <em>&ldquo;may return either err == EOF or err == nil&rdquo;</em> ở cuối stream, <em>&ldquo;Callers should always process the n &gt; 0 bytes returned before considering the error err&rdquo;</em>&hellip; Mỗi câu là một điều khoản mà <strong>mọi</strong> implementation phải giữ và <strong>mọi</strong> caller được phép dựa vào. Viết interface mà không viết hợp đồng = mời mỗi implementation tự phát minh ngữ nghĩa riêng.</p>
+<h2 id="4-refactoring-journey">4. Refactoring Journey<a hidden class="anchor" aria-hidden="true" href="#4-refactoring-journey">#</a></h2>
+<p><strong>Bước 1 — viết hợp đồng thành lời:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// FileStore lưu trữ blob theo path.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Hợp đồng cho MỌI implementation:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//   - Save ghi đè nếu path đã tồn tại.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//   - Load trả ErrNotFound nếu path không tồn tại (không bao giờ (nil, nil)).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//   - Delete là idempotent: xóa path không tồn tại trả nil.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//   - An toàn khi gọi đồng thời từ nhiều goroutine.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ErrNotFound</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;filestore: not found&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">FileStore</span> <span style="color:#66d9ef">interface</span> { <span style="color:#75715e">/* ... như cũ ... */</span> }
+</span></span></code></pre></div><p>Lưu ý hai quyết định: chuẩn hóa error bằng <strong>sentinel error</strong> để caller check <code>errors.Is(err, ErrNotFound)</code> — không caller nào phải biết <code>*PathError</code> hay S3 error code (đó là chi tiết rò rỉ); và <strong>chọn</strong> Delete idempotent (theo S3) rồi buộc LocalStore tuân theo — chọn chuẩn nào ít quan trọng bằng việc <em>có</em> chuẩn.</p>
+<p><strong>Bước 2 — ép mọi implementation về hợp đồng:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LocalStore</span>) <span style="color:#a6e22e">Delete</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Remove</span>(<span style="color:#a6e22e">filepath</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">root</span>, <span style="color:#a6e22e">path</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">ErrNotExist</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>                    <span style="color:#75715e">// tuân thủ hợp đồng idempotent</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">LocalStore</span>) <span style="color:#a6e22e">Load</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>) ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">ReadFile</span>(<span style="color:#a6e22e">filepath</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">root</span>, <span style="color:#a6e22e">path</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">ErrNotExist</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">ErrNotFound</span>       <span style="color:#75715e">// dịch error hạ tầng → error hợp đồng</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Bước 3 — hợp đồng phải được TEST: contract test chạy chung cho mọi implementation.</strong> Đây là kỹ thuật ăn tiền nhất chương này:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// filestore_contract_test.go — một bộ test, N implementation</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">RunContractTests</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>, <span style="color:#a6e22e">newStore</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) <span style="color:#a6e22e">FileStore</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Run</span>(<span style="color:#e6db74">&#34;load missing returns ErrNotFound&#34;</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">newStore</span>(<span style="color:#a6e22e">t</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Load</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;nope&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">ErrNotFound</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;want ErrNotFound, got %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Run</span>(<span style="color:#e6db74">&#34;delete is idempotent&#34;</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">newStore</span>(<span style="color:#a6e22e">t</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Delete</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;nope&#34;</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;delete missing must be nil, got %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Run</span>(<span style="color:#e6db74">&#34;save then load roundtrip&#34;</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) { <span style="color:#75715e">/* ... */</span> })
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestLocalStore</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) { <span style="color:#a6e22e">RunContractTests</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">newTempLocalStore</span>) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestS3Store</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>)    { <span style="color:#a6e22e">RunContractTests</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">newS3TestStore</span>) }   <span style="color:#75715e">// testcontainers/minio</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestFakeStore</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>)  { <span style="color:#a6e22e">RunContractTests</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">newFakeStore</span>) }     <span style="color:#75715e">// fake CŨNG phải qua!</span>
+</span></span></code></pre></div><p>Dòng cuối là điểm sâu nhất: <strong>fake dùng trong unit test phải pass cùng contract test với implementation thật</strong> — đó là cách duy nhất bảo đảm &ldquo;test xanh với fake&rdquo; suy ra được điều gì đó về production. Chuỗi niềm tin: caller tin interface → interface được định nghĩa bằng contract test → mọi implementation (kể cả fake) pass contract test.</p>
+<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
+<ul>
+<li><strong>Hợp đồng chặt vs quyền tự do của implementation</strong>: quy định &ldquo;Delete idempotent&rdquo; giúp caller đơn giản nhưng bắt mọi backend tương lai phải mô phỏng được điều đó (một backend không hỗ trợ sẽ phải thêm một round-trip check — chậm hơn). Hợp đồng càng hứa nhiều, caller càng sướng, implementation càng khổ — cân theo tỉ lệ caller/implementation.</li>
+<li><strong>Hợp đồng lỏng vs gánh nặng caller</strong>: <code>io.Reader</code> hứa rất ít (được phép trả 0 byte + nil error!) → cực dễ implement, và caller phải viết loop cẩn thận (nên mới có <code>io.ReadFull</code>, <code>io.ReadAll</code> làm helper). Stdlib chọn lỏng vì số implementation là vô hạn. App nội bộ thường nên chọn chặt vì caller nhiều hơn implementation.</li>
+<li><strong>Chi phí contract test</strong>: thêm hạ tầng test (testcontainers cho S3/Postgres thật) — nhưng đây là chỗ ROI cao nhất của integration test: một bộ test khóa chặt ngữ nghĩa cho mọi backend hiện tại và tương lai.</li>
+</ul>
+<h2 id="6-production-examples">6. Production Examples<a hidden class="anchor" aria-hidden="true" href="#6-production-examples">#</a></h2>
+<ul>
+<li><strong><code>io.Reader</code></strong>: hợp đồng viết kỹ đến từng trường hợp biên. Vi phạm nổi tiếng nhất: implementation trả <code>(n &gt; 0, EOF)</code> cùng lúc là <em>hợp lệ</em> nhưng nhiều caller xử lý sai — bug xuất hiện cả trong code các công ty lớn. Bài học: hợp đồng tinh tế cần helper chính chủ (<code>io.ReadAll</code>) để caller khỏi tự viết sai.</li>
+<li><strong><code>context.Context</code></strong>: hợp đồng &ldquo;Done() có thể được gọi nhiều lần, từ nhiều goroutine, phải trả cùng channel&rdquo; — mọi custom context phải giữ, nếu không mọi thư viện dựa trên context vỡ.</li>
+<li><strong><code>sql.DB</code> drivers</strong>: một bài học LSP dài một thập kỷ — các driver khác nhau về hỗ trợ <code>LastInsertId</code>, named parameter, isolation level. <code>database/sql</code> xử lý bằng cách để hợp đồng lõi tối thiểu + interface tùy chọn, và app dùng ORM/query builder để che khác biệt còn lại.</li>
+<li><strong>Ecosystem TS</strong>: Promise A+ spec chính là một contract spec cho &ldquo;thenable&rdquo; — có cả bộ test chuẩn (promises-aplus-tests) mà mọi thư viện promise phải pass: contract test ở quy mô cộng đồng, đúng mô hình Bước 3.</li>
+</ul>
+<h2 id="7-anti-pattern">7. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#7-anti-pattern">#</a></h2>
+<ul>
+<li><strong>Type-switch trong caller</strong>: <code>if s3, ok := store.(*S3Store); ok { /* đường riêng */ }</code> — lời thú nhận interface đã chết. Sửa tận gốc: đưa khác biệt vào hợp đồng (thêm method, thêm capability interface) hoặc hợp nhất ngữ nghĩa.</li>
+<li><strong>Method &ldquo;không hỗ trợ&rdquo;</strong>: <code>func (s *ReadOnlyStore) Save(...) error { return errors.New(&quot;not supported&quot;) }</code> — thỏa cú pháp, phản bội ngữ nghĩa; caller nhận interface đầy đủ nhưng ăn lỗi runtime. Sửa: tách interface nhỏ hơn (<code>Loader</code> riêng khỏi <code>Saver</code>) — chính là ISP, chương kế tiếp. <em>LSP violation thường là triệu chứng; ISP là thuốc.</em></li>
+<li><strong>Fake dễ dãi</strong>: fake chấp nhận mọi thứ, không mô phỏng ràng buộc (unique key, not-found&hellip;) → unit test kiểm chứng một thế giới không tồn tại.</li>
+</ul>
+<h2 id="8-khi-nào-không-cần-nghiêm-ngặt">8. Khi nào KHÔNG cần nghiêm ngặt<a hidden class="anchor" aria-hidden="true" href="#8-khi-nào-không-cần-nghiêm-ngặt">#</a></h2>
+<p>Interface một implementation duy nhất + fake test đơn giản: hợp đồng ngầm đủ dùng, đừng viết văn bản pháp lý cho package 200 dòng. Mức đầu tư theo số lượng và độ &ldquo;xa lạ&rdquo; của implementation: 1 impl → doc ngắn; 2-3 impl trong repo → doc kỹ + contract test; interface public cho bên thứ ba implement → hợp đồng chi tiết + bộ conformance test là bắt buộc (như Kubernetes CSI/CNI, Terraform provider SDK đều có).</p>
+<hr>
+<p><em>Tiếp theo: <a href="/series/software-design/level-2-principles/04-isp/">2.4 — Interface Segregation Principle</a></em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/software-design/">Software-Design</a></li>
+      <li><a href="http://localhost:1313/tags/design-patterns/">Design-Patterns</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/software-design/level-2-principles/02-ocp/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>2.2 — Open/Closed Principle: mở rộng mà không sửa</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/software-design/level-2-principles/04-isp/">
+    <span class="title">Next »</span>
+    <br>
+    <span>2.4 — Interface Segregation Principle: interface nhỏ, phía consumer</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on x"
+            href="https://x.com/intent/tweet/?text=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f&amp;hashtags=backend%2csoftware-design%2cdesign-patterns">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f&amp;title=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;summary=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f&title=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on whatsapp"
+            href="https://api.whatsapp.com/send?text=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on telegram"
+            href="https://telegram.me/share/url?text=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 2.3 — Liskov Substitution Principle: hợp đồng hành vi on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=2.3%20%e2%80%94%20Liskov%20Substitution%20Principle%3a%20h%e1%bb%a3p%20%c4%91%e1%bb%93ng%20h%c3%a0nh%20vi&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-2-principles%2f03-lsp%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

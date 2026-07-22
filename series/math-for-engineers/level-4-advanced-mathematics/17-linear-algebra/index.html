@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 4 – Advanced Mathematics
+Yêu cầu trước: Chương 02 (Set Theory, Functions &amp; Relations), Chương 10 (Complexity Analysis), Chương 11 (Probability)
+
+1. Problem Statement
+Người dùng gõ vào ô tìm kiếm của trang thương mại điện tử: &ldquo;đồ giữ ấm cho bé mùa đông&rdquo;. Kho hàng có sản phẩm tên &ldquo;Áo khoác lông cừu trẻ em&rdquo; — không chung một từ nào với query. Full-text search truyền thống (kể cả Elasticsearch với inverted index từ chương 10) trả về 0 kết quả: nó tìm từ, không tìm nghĩa. Team thử vá bằng từ điển đồng nghĩa — và nhanh chóng chết chìm: &ldquo;giữ ấm&rdquo; ~ &ldquo;khoác&rdquo; ~ &ldquo;len&rdquo; ~ &ldquo;nỉ&rdquo; ~ &ldquo;lông cừu&rdquo;&hellip;, tổ hợp nổ theo cấp số nhân, tiếng Việt lại còn &ldquo;bé&rdquo; ~ &ldquo;trẻ em&rdquo; ~ &ldquo;em bé&rdquo; ~ &ldquo;kids&rdquo;. Không ai bảo trì nổi.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/17-linear-algebra/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/17-linear-algebra/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 09:50:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;28 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 4 – Advanced Mathematics
+Yêu cầu trước: Chương 02 (Set Theory, Functions &amp; Relations), Chương 10 (Complexity Analysis), Chương 11 (Probability)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Người dùng gõ vào ô tìm kiếm của trang thương mại điện tử: &ldquo;đồ giữ ấm cho bé mùa đông&rdquo;. Kho hàng có sản phẩm tên &ldquo;Áo khoác lông cừu trẻ em&rdquo; — không chung một từ nào với query. Full-text search truyền thống (kể cả Elasticsearch với inverted index từ chương 10) trả về <strong>0 kết quả</strong>: nó tìm <em>từ</em>, không tìm <em>nghĩa</em>. Team thử vá bằng từ điển đồng nghĩa — và nhanh chóng chết chìm: &ldquo;giữ ấm&rdquo; ~ &ldquo;khoác&rdquo; ~ &ldquo;len&rdquo; ~ &ldquo;nỉ&rdquo; ~ &ldquo;lông cừu&rdquo;&hellip;, tổ hợp nổ theo cấp số nhân, tiếng Việt lại còn &ldquo;bé&rdquo; ~ &ldquo;trẻ em&rdquo; ~ &ldquo;em bé&rdquo; ~ &ldquo;kids&rdquo;. Không ai bảo trì nổi.</p>
+<p>Lời giải mà mọi hệ thống semantic search hiện đại dùng nghe như khoa học viễn tưởng nếu nói vào năm 2010: <strong>biến mỗi câu thành một điểm trong không gian ~1000 chiều</strong>, sao cho các câu gần nghĩa nằm gần nhau. &ldquo;Đồ giữ ấm cho bé&rdquo; và &ldquo;Áo khoác lông cừu trẻ em&rdquo; — hai chuỗi ký tự không giao nhau — trở thành hai vector chỉ lệch nhau vài độ. Tìm kiếm ngữ nghĩa = tìm hàng xóm gần nhất trong không gian đó.</p>
+<p>Câu hỏi lập tức nảy ra, và chúng là nội dung của cả chương:</p>
+<ol>
+<li>&ldquo;Điểm trong không gian 1000 chiều&rdquo; nghĩa là gì, và <strong>&ldquo;gần nhau&rdquo; đo bằng gì</strong>? (vector, dot product, cosine similarity)</li>
+<li>Model biến đổi dữ liệu qua từng tầng bằng công cụ nào? (matrix — và vì sao nó là <em>phép biến đổi</em>, không phải bảng số)</li>
+<li>Không gian 1000 chiều quá đắt — <strong>nén xuống còn 100 chiều mà giữ được cấu trúc</strong> bằng cách nào? (eigenvector, PCA)</li>
+<li>Vì sao mọi thứ trên chạy trên GPU, và vì sao AI engineer bị ám ảnh bởi phép nhân ma trận?</li>
+</ol>
+<p>Linear algebra là môn nhiều engineer từng học ở đại học dưới dạng &ldquo;giải hệ phương trình và tính định thức&rdquo; rồi quên sạch — vì chưa ai nói cho họ rằng nó là <strong>ngôn ngữ mô tả không gian và biến đổi</strong>, và rằng recommendation của Netflix, ranking của Google, và mọi LLM đều viết bằng ngôn ngữ đó.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="vector-không-phải-mảng-số">Vector không phải &ldquo;mảng số&rdquo;<a hidden class="anchor" aria-hidden="true" href="#vector-không-phải-mảng-số">#</a></h3>
+<p>Trong code, vector là <code>[]float64</code>. Nhưng nếu chỉ nhìn nó như mảng số, toàn bộ hình học biến mất — mà hình học mới là thứ đáng tiền. Một vector là <strong>một điểm (hoặc một mũi tên từ gốc tọa độ) trong không gian</strong>:</p>
+<pre tabindex="0"><code>        y
+        │      ● b = (1, 3)
+      3 ┤     ╱
+        │    ╱        góc θ giữa a và b nhỏ
+      2 ┤   ╱    ● a = (3, 2)   → a và b &#34;cùng hướng&#34;
+        │  ╱  ╱
+      1 ┤ ╱ ╱
+        │╱╱          ● c = (2, -1): gần vuông góc với b
+        └─┬──┬──┬──── x           → &#34;không liên quan&#34;
+          1  2  3</code></pre><p>Trong 2–3 chiều, mỗi tọa độ là một thuộc tính không gian. Bước nhảy trực giác quan trọng nhất chương: <strong>tọa độ không nhất thiết là không gian vật lý — nó có thể là bất kỳ thuộc tính đo được nào</strong>. Một bộ phim là một điểm trong không gian (độ hành động, độ lãng mạn, độ hài, năm sản xuất&hellip;). Một người dùng cũng là một điểm trong <em>cùng không gian đó</em>: tọa độ là mức độ họ thích từng thuộc tính. Đột nhiên &ldquo;gợi ý phim&rdquo; = &ldquo;tìm phim gần vị trí của user&rdquo; — một bài toán hình học.</p>
+<p><strong>Embedding</strong> chính là bước cuối của trực giác này: thay vì người thiết kế chọn thuộc tính bằng tay, một model học ra không gian ~300–3000 chiều nơi <em>khoảng cách phản ánh ngữ nghĩa</em>. Không ai biết chiều 217 của không gian embedding &ldquo;nghĩa là gì&rdquo; — không cần biết. Điều được đảm bảo (bằng cách model được huấn luyện) là: câu gần nghĩa → vector gần nhau. Embedding là <strong>vector hóa ngữ nghĩa</strong>: nén thứ mờ nhòe như &ldquo;ý nghĩa&rdquo; thành thứ đo đếm được như tọa độ.</p>
+<h3 id="matrix-không-phải-bảng-số">Matrix không phải &ldquo;bảng số&rdquo;<a hidden class="anchor" aria-hidden="true" href="#matrix-không-phải-bảng-số">#</a></h3>
+<p>Sai lầm trực giác thứ hai cần đập bỏ: matrix là bảng Excel. Cách nhìn đúng — và là cách duy nhất khiến mọi công thức trở nên hiển nhiên — matrix là <strong>một phép biến đổi không gian</strong>: một cái máy nhận vector vào, trả vector ra, và làm điều đó một cách &ldquo;tuyến tính&rdquo; (mục 3 định nghĩa chặt). Ma trận 2×2 là máy biến đổi mặt phẳng:</p>
+<pre tabindex="0"><code>   Phép xoay 90° ngược kim đồng hồ          Phép scale x2 theo trục x
+        ┌         ┐                              ┌       ┐
+    R = │  0  -1  │                          S = │ 2   0 │
+        │  1   0  │                              │ 0   1 │
+        └         ┘                              └       ┘
+
+    ▲ (0,1)                  ▲ (0,1)         hình vuông → chữ nhật
+    │     R·(1,0) = (0,1)    │
+    │  ●──── (1,0)           │  ●──────────── (2,0)
+    └──────►                 └──────────────►
+   &#34;xoay cả mặt phẳng&#34;       &#34;kéo giãn cả mặt phẳng&#34;</code></pre><p>Mỗi cột của matrix trả lời một câu hỏi cụ thể: <strong>vector cơ sở thứ i bay đến đâu?</strong> Cột 1 của R là (0,1) — nghĩa là trục x sau khi xoay chỉ lên trời. Biết số phận của các vector cơ sở là biết số phận của <em>mọi</em> vector (vì tính tuyến tính). Đó là toàn bộ bí mật của matrix: nó là <strong>bảng ghi số phận của các trục tọa độ</strong>.</p>
+<p>Từ cách nhìn này, các sự thật khô khan trở thành hiển nhiên:</p>
+<ul>
+<li><strong>Nhân matrix với vector</strong> = áp phép biến đổi lên điểm.</li>
+<li><strong>Nhân hai matrix</strong> = ghép nối hai phép biến đổi (làm B trước rồi A: A·B). Và lập tức hiểu <strong>vì sao không giao hoán</strong>: &ldquo;xoay 90° rồi kéo giãn trục x&rdquo; cho hình khác hẳn &ldquo;kéo giãn trục x rồi xoay 90°&rdquo; — thứ tự biến đổi có nghĩa, hệt như thứ tự middleware trong HTTP stack.</li>
+<li><strong>Một layer neural network</strong> = một phép biến đổi không gian (nhân matrix) + một cú bẻ cong phi tuyến (activation). Deep learning = chuỗi dài các phép biến đổi không gian, học ra được.</li>
+</ul>
+<h3 id="nếu-không-có-ngôn-ngữ-này-thì-sao">Nếu không có ngôn ngữ này thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-ngôn-ngữ-này-thì-sao">#</a></h3>
+<p>Không có linear algebra, mỗi bài toán trên phải phát minh lại từ đầu bằng vòng lặp và if: so khớp văn bản bằng luật, gợi ý bằng bảng tra thủ công, đồ họa 3D bằng lượng giác chắp vá từng trường hợp. Linear algebra làm cho hàng nghìn bài toán bề ngoài khác nhau — ranking trang web, nén ảnh, khử nhiễu, gợi ý phim, xoay camera trong game — trở thành <em>cùng vài phép toán</em>, và vì thế phần cứng (GPU/TPU) chỉ cần tăng tốc đúng vài phép toán đó để tăng tốc tất cả.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="tuyến-tính-nghĩa-là-gì-chính-xác">&ldquo;Tuyến tính&rdquo; nghĩa là gì, chính xác?<a hidden class="anchor" aria-hidden="true" href="#tuyến-tính-nghĩa-là-gì-chính-xác">#</a></h3>
+<p>Một phép biến đổi f là <strong>tuyến tính</strong> khi nó tôn trọng hai phép toán của không gian vector:</p>
+<blockquote>
+<p>f(u + v) = f(u) + f(v)  và  f(c·u) = c·f(u)</p></blockquote>
+<p>Diễn giải hình học: tuyến tính = <strong>lưới tọa độ sau biến đổi vẫn là lưới</strong> — các đường thẳng song song cách đều vẫn song song cách đều, gốc tọa độ đứng yên. Được phép: xoay, kéo giãn, lật, chiếu, trượt nghiêng (shear). Không được phép: uốn cong, dịch chuyển gốc, phóng đại chỗ này ít chỗ kia nhiều.</p>
+<p>Hệ quả nền tảng — lý do matrix tồn tại: một phép tuyến tính bị <strong>xác định hoàn toàn bởi ảnh của các vector cơ sở</strong>. Vì mọi v = x·e₁ + y·e₂ nên f(v) = x·f(e₁) + y·f(e₂). Chỉ cần lưu f(e₁), f(e₂), &hellip; — xếp chúng thành các cột, và đó <em>chính là</em> matrix của f. Matrix không phải là quy ước ghi chép tùy hứng; nó là lượng thông tin tối thiểu đủ để tái tạo cả phép biến đổi. (So sánh với interface: một phép tuyến tính là implementation, matrix là bản serialize gọn nhất của nó.)</p>
+<h3 id="dot-product-một-con-số-đo-độ-cùng-hướng">Dot product: một con số đo &ldquo;độ cùng hướng&rdquo;<a hidden class="anchor" aria-hidden="true" href="#dot-product-một-con-số-đo-độ-cùng-hướng">#</a></h3>
+<p>Dot product của hai vector n chiều:</p>
+<blockquote>
+<p>a·b = a₁b₁ + a₂b₂ + &hellip; + aₙbₙ</p></blockquote>
+<p>Định nghĩa đại số này trông vô hồn cho đến khi thấy mặt hình học của nó:</p>
+<blockquote>
+<p><strong>a·b = |a|·|b|·cos θ</strong>, với θ là góc giữa hai vector</p></blockquote>
+<p>Dẫn xuất trực quan không cần lượng giác nặng: xét trường hợp đơn giản nhất — b nằm dọc trục x, tức b = (|b|, 0). Khi đó a·b = a₁·|b| + a₂·0 = a₁·|b|. Mà a₁ chính là <strong>hình chiếu của a lên trục x</strong> = |a|·cosθ. Vậy a·b = |a|·|b|·cosθ trong trường hợp này. Trường hợp tổng quát chỉ là xoay hệ tọa độ cho b về trục x — và phép xoay không đổi độ dài lẫn góc, cũng không đổi dot product. Bản chất: <strong>dot product = độ dài a chiếu lên hướng b, nhân độ dài b</strong> — nó đo &ldquo;a có bao nhiêu phần đi theo hướng của b&rdquo;.</p>
+<p>Từ đó có bộ ba trạng thái đáng nhớ:</p>
+<table>
+  <thead>
+      <tr>
+          <th>a·b</th>
+          <th>θ</th>
+          <th>Ý nghĩa</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>&gt; 0</td>
+          <td>&lt; 90°</td>
+          <td>cùng hướng — &ldquo;đồng thuận&rdquo;</td>
+      </tr>
+      <tr>
+          <td>= 0</td>
+          <td>= 90°</td>
+          <td>trực giao — &ldquo;không liên quan&rdquo;</td>
+      </tr>
+      <tr>
+          <td>&lt; 0</td>
+          <td>&gt; 90°</td>
+          <td>ngược hướng — &ldquo;đối nghịch&rdquo;</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="cosine-similarity-vì-sao-search-dùng-góc-thay-vì-khoảng-cách">Cosine similarity: vì sao search dùng góc thay vì khoảng cách<a hidden class="anchor" aria-hidden="true" href="#cosine-similarity-vì-sao-search-dùng-góc-thay-vì-khoảng-cách">#</a></h3>
+<p>Đảo công thức trên:</p>
+<blockquote>
+<p>cos θ = (a·b) / (|a|·|b|)</p></blockquote>
+<p>Đây là <strong>cosine similarity</strong> — thước đo mặc định của semantic search và recommendation. Vì sao không dùng khoảng cách Euclid |a−b| cho thẳng? Vì với text embedding, <strong>độ dài vector thường nhiễm thông tin không liên quan đến ngữ nghĩa</strong> — độ dài văn bản, tần suất từ, biên độ mà model tình cờ gán. Một tài liệu dài về &ldquo;cà phê&rdquo; và một câu ngắn về &ldquo;cà phê&rdquo; cho hai vector <em>cùng hướng</em> nhưng khác độ lớn: Euclid thấy chúng xa nhau, cosine thấy chúng trùng chủ đề. Cosine <strong>bất biến với scale</strong>: cos(a, 10a) = 1. Ta muốn hỏi &ldquo;hai văn bản nói về cùng thứ không?&rdquo;, không phải &ldquo;hai văn bản dài bằng nhau không?&rdquo; — chọn metric là chọn câu hỏi.</p>
+<p>Mẹo production quan trọng suy ra ngay từ công thức: nếu <strong>chuẩn hóa mọi vector về độ dài 1</strong> ngay khi ghi vào hệ thống, cosine similarity thoái hóa thành dot product trần — rẻ hơn (khỏi tính hai căn bậc hai mỗi lần so), và khi đó xếp hạng theo cosine, theo dot product, theo Euclid cho <em>cùng thứ tự</em>. Đây là lý do các vector database khuyên (hoặc tự động) normalize embedding.</p>
+<p>Và câu &ldquo;khi nào KHÔNG dùng cosine&rdquo;: khi độ lớn <em>mang nghĩa</em>. Vector (số đơn hàng, doanh thu) của khách hàng — khách chi 10 triệu và khách chi 100 nghìn cùng tỷ lệ mua sắm sẽ có cosine = 1, nhưng gộp họ làm một là sai nghiệp vụ. Cosine vứt bỏ độ lớn; chỉ vứt khi độ lớn đáng vứt.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="matrix-multiply-hợp-thành-biến-đổi">Matrix multiply: hợp thành biến đổi<a hidden class="anchor" aria-hidden="true" href="#matrix-multiply-hợp-thành-biến-đổi">#</a></h3>
+<p>Với A kích thước m×n và B kích thước n×p, tích C = A·B có C[i][j] = Σₖ A[i][k]·B[k][j] — tức <strong>C[i][j] = dot product của hàng i (A) với cột j (B)</strong>. Công thức trông tùy tiện cho đến khi hỏi: nó <em>phải</em> là gì để A·B biểu diễn &ldquo;biến đổi B trước, A sau&rdquo;? Cột j của C phải là ảnh qua A của (cột j của B) — khai triển đúng ra công thức trên. Phép nhân ma trận không được &ldquo;định nghĩa&rdquo;, nó được <strong>suy ra</strong> từ yêu cầu hợp thành.</p>
+<p>Chi phí: O(m·n·p) — với hai matrix vuông n×n là O(n³) phép nhân-cộng. Đây là con quái vật ăn điện của AI: một lần suy luận LLM là hàng nghìn phép nhân matrix cỡ hàng nghìn. (Thuật toán Strassen O(n^2.81) tồn tại nhưng hằng số và cache khiến nó hiếm khi thắng trong thực tế — đúng bài học chương 10.)</p>
+<h3 id="matrix-vector-multiply--n-dot-product-và-bài-học-cache">Matrix-vector multiply = n dot product, và bài học cache<a hidden class="anchor" aria-hidden="true" href="#matrix-vector-multiply--n-dot-product-và-bài-học-cache">#</a></h3>
+<p>A·x (A: n×n, x: n) là n dot product — hàng i của A chấm với x. Đây là phép toán nền của mọi layer neural network, và là nơi lý thuyết chạm phần cứng. Go (như C) lưu matrix 2 chiều theo <strong>row-major</strong>: các phần tử cùng hàng nằm liền kề trong bộ nhớ. Duyệt theo hàng → cache prefetch hoạt động; duyệt theo cột → mỗi bước nhảy xa n×8 byte, gần như mỗi truy cập một cache miss.</p>
+<p>Với matrix multiply C = A·B, cùng một công thức có 6 cách xếp 3 vòng lặp, <em>cùng số phép toán</em>, khác nhau nhiều lần về tốc độ:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// i-j-k: cách &#34;chép từ định nghĩa&#34; — chậm</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// B[k][j] với k chạy: nhảy cột trên B → cache miss liên tục</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">j</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">j</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sum</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">k</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">k</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">sum</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>][<span style="color:#a6e22e">k</span>] <span style="color:#f92672">*</span> <span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">k</span>][<span style="color:#a6e22e">j</span>] <span style="color:#75715e">// b nhảy dọc cột: tội đồ ở đây</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span>][<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">sum</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// i-k-j: đảo hai vòng trong — nhanh hơn nhiều lần</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cố định a[i][k], quét b[k][j] với j chạy: cả B lẫn C đều đi theo hàng</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">k</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">k</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">aik</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>][<span style="color:#a6e22e">k</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">j</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">j</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span>][<span style="color:#a6e22e">j</span>] <span style="color:#f92672">+=</span> <span style="color:#a6e22e">aik</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">k</span>][<span style="color:#a6e22e">j</span>] <span style="color:#75715e">// mọi truy cập đều tuần tự</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Trên máy x86 hiện đại với n = 1024 (float64), bản i-j-k thường mất cỡ 3–5 giây, bản i-k-j cỡ 0.5–1 giây — <strong>chênh 5–8 lần chỉ nhờ đổi thứ tự hai dòng <code>for</code></strong>, zero thay đổi về Big-O. Thư viện BLAS còn đi xa hơn (blocking để khối con nằm gọn trong L1/L2, SIMD, đa luồng) và nhanh hơn bản naive 50–100 lần. Bài học gắn với chương 10: khi bậc đã kịch trần, <strong>hằng số là chiến trường</strong>, và hằng số trên phần cứng hiện đại đánh vần là c-a-c-h-e.</p>
+<h3 id="eigenvalue--eigenvector-hướng-bất-biến-của-biến-đổi">Eigenvalue / Eigenvector: hướng bất biến của biến đổi<a hidden class="anchor" aria-hidden="true" href="#eigenvalue--eigenvector-hướng-bất-biến-của-biến-đổi">#</a></h3>
+<p>Trực giác trước công thức. Một phép biến đổi nói chung vừa xoay vừa kéo giãn các vector. Nhưng hầu hết matrix có vài <strong>hướng đặc biệt</strong>: vector nằm trên hướng đó bị biến đổi <em>chỉ kéo giãn, không đổi hướng</em> — như trục quay của một vật đang xoay, hay thớ gỗ của một tấm ván bị kéo. Hướng đó là <strong>eigenvector</strong>, hệ số kéo giãn là <strong>eigenvalue</strong> λ:</p>
+<blockquote>
+<p>A·v = λ·v  (v ≠ 0)</p></blockquote>
+<p>Vì sao engineer cần quan tâm? Vì eigenvector trả lời câu hỏi: <strong>lặp lại biến đổi này nhiều lần thì hệ đi về đâu?</strong> Viết x theo các eigenvector: x = c₁v₁ + c₂v₂ + &hellip;; sau k lần áp A:</p>
+<blockquote>
+<p>Aᵏx = c₁λ₁ᵏv₁ + c₂λ₂ᵏv₂ + &hellip;</p></blockquote>
+<p>Các λᵏ tăng/tụt theo cấp số nhân, nên thành phần có |λ| lớn nhất <strong>nuốt chửng</strong> mọi thành phần khác: dù xuất phát gần như bất kỳ đâu, Aᵏx tiến về hướng v₁. Eigenvector lớn nhất là &ldquo;điểm hút&rdquo; của phép lặp — trạng thái dừng của hệ.</p>
+<h3 id="pagerank-eigenvector-trị-giá-một-đế-chế">PageRank: eigenvector trị giá một đế chế<a hidden class="anchor" aria-hidden="true" href="#pagerank-eigenvector-trị-giá-một-đế-chế">#</a></h3>
+<p>Bài toán của Google năm 1998: xếp hạng trang web sao cho không thể gian lận bằng nhồi từ khóa. Ý tưởng: mô hình hóa &ldquo;người lướt web ngẫu nhiên&rdquo; — mỗi bước click ngẫu nhiên một link trên trang hiện tại (thỉnh thoảng nhảy ngẫu nhiên bất kỳ, hệ số damping ~0.85, để không mắc kẹt). Câu hỏi &ldquo;trang nào quan trọng?&rdquo; trở thành &ldquo;<strong>về lâu dài, người lướt ở trang nào thường xuyên nhất?</strong>&rdquo;.</p>
+<p>Gọi xₖ là vector phân bố xác suất trên các trang tại bước k, M là ma trận chuyển (M[i][j] = xác suất từ trang j click sang trang i). Thì xₖ₊₁ = M·xₖ — mỗi bước thời gian là một phép nhân matrix. Phân bố dừng x* thỏa:</p>
+<blockquote>
+<p>M·x* = x*</p></blockquote>
+<p>Tức x* là <strong>eigenvector của M với eigenvalue 1</strong>. PageRank của một trang = tọa độ của nó trong eigenvector đó. Toán học của chuỗi Markov đảm bảo (với damping) eigenvalue 1 là lớn nhất và duy nhất — nên phép lặp hội tụ về đúng một đáp án, không phụ thuộc điểm xuất phát.</p>
+<h3 id="pca-nén-không-gian-bằng-eigenvector">PCA: nén không gian bằng eigenvector<a hidden class="anchor" aria-hidden="true" href="#pca-nén-không-gian-bằng-eigenvector">#</a></h3>
+<p>Bài toán: embedding 1536 chiều quá đắt để lưu và search; giảm còn 256 chiều mà mất ít thông tin nhất. Trực giác hình học: đám mây điểm dữ liệu thường &ldquo;dẹt&rdquo; — trải rộng theo vài hướng, mỏng dính theo các hướng còn lại (các chiều tương quan nhau). <strong>Hướng đáng giữ là hướng dữ liệu trải rộng nhất</strong> — phương sai lớn nhất — vì đó là hướng phân biệt các điểm với nhau; hướng mỏng gần như hằng số, vứt đi mất ít.</p>
+<pre tabindex="0"><code>      ▲        ·  ·                 v₁: hướng phương sai lớn nhất
+      │      · · ·● ╱                   (eigenvector lớn nhất của covariance)
+      │    · ·●· ╱· ·
+      │   · ·● ╱ ·  ·               v₂ ⊥ v₁: phương sai còn lại
+      │  · · ╱ ●· ·                 → chiếu mọi điểm lên v₁:
+      │   ·╱ · ·                      2D → 1D, giữ phần lớn &#34;độ khác nhau&#34;
+      └────────────────►</code></pre><p>Kết nối đẹp nhất chương: hướng phương sai lớn nhất <strong>chính là eigenvector lớn nhất của covariance matrix</strong> C (ma trận n×n với C[i][j] = covariance giữa chiều i và j — chương 18). Phác thảo lý do: phương sai của dữ liệu chiếu lên hướng đơn vị v là vᵀCv; cực đại hóa đại lượng này với ràng buộc |v| = 1 đạt được tại eigenvector ứng với λ lớn nhất, và phương sai đạt được đúng bằng λ. PCA = tính C, lấy k eigenvector đầu, chiếu dữ liệu lên chúng. Giảm chiều embedding, nén ảnh, khử nhiễu, trực quan hóa dữ liệu cao chiều xuống 2D — cùng một phép toán.</p>
+<h3 id="matrix-factorization-recommendation-là-bài-toán-phân-rã">Matrix factorization: recommendation là bài toán phân rã<a hidden class="anchor" aria-hidden="true" href="#matrix-factorization-recommendation-là-bài-toán-phân-rã">#</a></h3>
+<p>Netflix có ma trận R: hàng = user, cột = phim, R[u][i] = điểm user u chấm phim i — và 99% ô <strong>trống</strong>. Dự đoán ô trống = gợi ý phim. Ý tưởng then chốt: sở thích con người không tùy tiện — nó bị chi phối bởi một số nhỏ <strong>latent factor</strong> (độ hành động, độ hài, độ &ldquo;nghệ&rdquo;&hellip;). Nếu đúng vậy, R xấp xỉ được bằng tích hai matrix gầy:</p>
+<blockquote>
+<p>R (m×n) ≈ U (m×k) · Vᵀ (k×n),  k ~ 50–200 ≪ m, n</p></blockquote>
+<p>Hàng u của U = &ldquo;gu&rdquo; của user trong không gian k latent factor; cột i của Vᵀ = &ldquo;chất&rdquo; của phim trong cùng không gian. Điểm dự đoán = <strong>dot product</strong> của hai vector đó — lại là &ldquo;độ cùng hướng&rdquo;: user hợp gu phim nào thì vector cùng hướng với phim đó. Huấn luyện = tìm U, V khớp các ô đã biết (gradient descent hoặc ALS — chương 21); các ô trống được điền <em>tự động</em> bởi cấu trúc thấp chiều. Không ai định nghĩa các factor — chúng <strong>nổi lên từ dữ liệu</strong>, hệt như chiều của embedding. Thực tế, matrix factorization chính là tổ tiên trực hệ của embedding hiện đại: cùng một ý tưởng &ldquo;nén thực thể thành vector k chiều sao cho dot product có nghĩa&rdquo;.</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<h3 id="bộ-đồ-nghề-vector-trong-go">Bộ đồ nghề vector trong Go<a hidden class="anchor" aria-hidden="true" href="#bộ-đồ-nghề-vector-trong-go">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Dot product — viên gạch của mọi thứ trong chương này.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">dot</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">float64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s</span> <span style="color:#66d9ef">float64</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">a</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">s</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">*</span> <span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">i</span>] <span style="color:#75715e">// compiler tự vector hóa (SIMD) vòng lặp đơn giản này</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">norm</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">float64</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Sqrt</span>(<span style="color:#a6e22e">dot</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">a</span>)) }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cosine similarity. Trong production: normalize sẵn khi ghi,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// lúc đọc chỉ cần dot() — tiết kiệm 2 lần norm mỗi phép so sánh.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">cosine</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">float64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">dot</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>) <span style="color:#f92672">/</span> (<span style="color:#a6e22e">norm</span>(<span style="color:#a6e22e">a</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">norm</span>(<span style="color:#a6e22e">b</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Matrix-vector multiply: y = A·x, tức n dot product.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// A lưu phẳng row-major (a[i*n+j]) — một allocation, cache-friendly,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// nhanh hơn [][]float64 vốn rải các hàng khắp heap.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">matVec</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">x</span>, <span style="color:#a6e22e">y</span> []<span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">y</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">dot</span>(<span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">*</span><span style="color:#a6e22e">n</span>:(<span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span><span style="color:#a6e22e">n</span>], <span style="color:#a6e22e">x</span>) <span style="color:#75715e">// hàng i nằm liên tục trong bộ nhớ</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Chi tiết <code>a[i*n+j]</code> thay cho <code>[][]float64</code> không phải là micro-optimization tùy hứng: slice của slice khiến mỗi hàng là một allocation riêng nằm rải rác trên heap — mất tính tuần tự mà mục 4 vừa chứng minh là quyết định hiệu năng. Mọi thư viện tính toán (gonum, NumPy, BLAS) đều lưu phẳng.</p>
+<h3 id="power-iteration-tìm-eigenvector-lớn-nhất-bằng-15-dòng">Power iteration: tìm eigenvector lớn nhất bằng 15 dòng<a hidden class="anchor" aria-hidden="true" href="#power-iteration-tìm-eigenvector-lớn-nhất-bằng-15-dòng">#</a></h3>
+<p>Từ trực giác &ldquo;Aᵏx tiến về hướng eigenvector lớn nhất&rdquo; ở mục 4, thuật toán tự viết ra: nhân lặp đi lặp lại và chuẩn hóa (để số không nổ tung):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// powerIteration tìm eigenvector ứng với |eigenvalue| lớn nhất của A (n×n).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Đây chính là bộ máy bên trong PageRank.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">powerIteration</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">iters</span> <span style="color:#66d9ef">int</span>) []<span style="color:#66d9ef">float64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">x</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">n</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">x</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">x</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#ae81ff">1</span> <span style="color:#f92672">/</span> float64(<span style="color:#a6e22e">n</span>) <span style="color:#75715e">// xuất phát bất kỳ, miễn không trực giao với v₁</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">y</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">n</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">k</span> &lt; <span style="color:#a6e22e">iters</span>; <span style="color:#a6e22e">k</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">matVec</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">x</span>, <span style="color:#a6e22e">y</span>, <span style="color:#a6e22e">n</span>)         <span style="color:#75715e">// y = A·x: thành phần theo v₁ được khuếch đại</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">norm</span>(<span style="color:#a6e22e">y</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">y</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">x</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">y</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">/</span> <span style="color:#a6e22e">s</span>        <span style="color:#75715e">// chuẩn hóa: chỉ giữ HƯỚNG, vứt độ lớn</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Sản phẩm phụ: s hội tụ về |λ₁| — có luôn eigenvalue</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">x</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Mỗi vòng, tỷ trọng của v₁ trong x tăng theo tỷ số |λ₁/λ₂| — hội tụ tuyến tính với tốc độ phụ thuộc <strong>khoảng cách giữa hai eigenvalue lớn nhất</strong> (spectral gap). Với PageRank, damping 0.85 đảm bảo gap đủ rộng để ~50–100 vòng lặp là đủ cho cả web graph — mỗi vòng chỉ là một phép nhân matrix thưa với vector, phân tán được trên MapReduce. Google xếp hạng cả Internet không phải bằng thuật toán bí hiểm, mà bằng phép nhân matrix-vector lặp lại — cái bạn vừa viết trong 15 dòng Go.</p>
+<p>Khi nào KHÔNG dùng power iteration: cần <em>nhiều</em> eigenvector (PCA lấy top-k → dùng Lanczos/SVD của thư viện), hoặc λ₁ ≈ λ₂ (hội tụ rùa bò), hoặc matrix nhỏ (gọi thẳng gonum cho lành). Giá trị của power iteration với engineer là <strong>hiểu bản chất</strong> — nó là mô hình tư duy đúng về eigenvector: điểm hút của phép lặp.</p>
+<h3 id="từ-đây-đến-hệ-thống-thật">Từ đây đến hệ thống thật<a hidden class="anchor" aria-hidden="true" href="#từ-đây-đến-hệ-thống-thật">#</a></h3>
+<p>Semantic search vận hành đúng pipeline các phép toán trên: (1) embedding model biến query thành vector q — chuỗi matVec + phi tuyến; (2) so q với hàng triệu vector tài liệu bằng dot product; (3) lấy top-k bằng heap (chương 16). Bản brute-force O(n·d) mỗi query chịu được đến ~10⁵–10⁶ vector; vượt ngưỡng đó cần approximate nearest neighbor (HNSW — đồ thị &ldquo;small world&rdquo; nhiều tầng cho search ~O(log n), đổi một chút recall lấy nhiều bậc tốc độ; chi tiết thuộc chương 24). Điểm cần thấy: <strong>toàn bộ trí thông minh nằm ở không gian embedding; phần &ldquo;search&rdquo; chỉ là hình học + cấu trúc dữ liệu.</strong></p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Cosine vs Euclidean vs dot product trần.</strong> Cosine bất biến độ dài — đúng cho text/semantic; Euclid giữ độ lớn — đúng khi tọa độ là số đo vật lý cùng đơn vị; dot product trần (không chuẩn hóa) cho phép độ dài vector mã hóa &ldquo;độ phổ biến&rdquo; (item hot có norm lớn → được ưu tiên) — một số hệ recommendation <em>cố tình</em> dùng nó. Chọn metric = chọn cái gì được phép ảnh hưởng kết quả; đổi metric sau khi đã đánh index là phải đánh lại toàn bộ.</p>
+<p><strong>Exact vs approximate.</strong> Brute-force dot product: đúng 100%, O(n·d), song song hóa tầm thường, zero cấu trúc phụ. HNSW: nhanh hơn hàng trăm lần, recall ~95–99%, nhưng tốn RAM cho đồ thị, build index chậm, và delete/update phiền phức. Dưới ~10⁵ vector, brute-force thường là lựa chọn <em>đúng</em> — đừng trả phí ANN khi n chưa đáng.</p>
+<p><strong>Số chiều: biểu đạt vs chi phí.</strong> Chiều cao hơn → nhồi được nhiều sắc thái ngữ nghĩa, nhưng chi phí lưu + search tuyến tính theo d, và <strong>curse of dimensionality</strong>: chiều càng cao, khoảng cách giữa mọi cặp điểm càng xích lại gần nhau, contrast giữa &ldquo;gần&rdquo; và &ldquo;xa&rdquo; nhạt dần (liên hệ chương 22). PCA/quantization giảm chiều là dao hai lưỡi: rẻ hơn nhiều, mất một ít recall — đo trên dữ liệu của bạn, đừng tin số của người khác.</p>
+<p><strong>Tự viết vs BLAS.</strong> Vòng lặp Go thuần: dễ đọc, dễ debug, đủ nhanh cho vector lẻ tẻ. gonum/BLAS: nhanh hơn 10–100 lần cho matrix lớn nhờ blocking + SIMD, đổi lấy dependency (cgo với OpenBLAS) và stack trace khó hiểu. Ranh giới thực dụng: phép toán trên <em>một</em> vector d ≤ vài nghìn — tự viết vô tư; nhân matrix từ nghìn×nghìn trở lên hoặc nằm trong vòng nóng — dùng thư viện, đừng anh hùng.</p>
+<p><strong>Precompute vs compute-on-read.</strong> Normalize embedding lúc ghi (một lần) so với lúc đọc (mỗi query × mỗi ứng viên). Materialize ma trận U·Vᵀ cho top user? Cùng họ trade-off với index của chương 16: trả trước ở đường ghi để đường đọc rẻ — đáng khi read/write ratio cao.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>Vector database — pgvector, Milvus, Qdrant.</strong> <code>CREATE EXTENSION vector</code> biến PostgreSQL thành semantic search engine: cột <code>vector(1536)</code>, toán tử <code>&lt;=&gt;</code> là cosine distance, index HNSW/IVFFlat cho ANN. Toàn bộ giá trị cột này nằm trong mục 3–4 của chương: distance là dot product + chuẩn hóa, index là cấu trúc đồ thị trên không gian mà <em>metric quyết định hình dạng</em>. RAG — kiến trúc LLM phổ biến nhất hiện nay — về mặt hạ tầng chỉ là: embed tài liệu, lưu vector, cosine top-k, nhét vào prompt.</p>
+<p><strong>Netflix / Spotify recommendation.</strong> Netflix Prize (2006–2009) đưa matrix factorization thành chuẩn công nghiệp: R ≈ U·Vᵀ như mục 4, huấn luyện bằng ALS trên Spark. Spotify dùng biến thể cho implicit feedback (nghe/bỏ qua thay vì chấm sao). Ngày nay các model phức tạp hơn (two-tower network) nhưng giao diện cuối vẫn hệt: <strong>user vector chấm item vector, lấy top-k</strong> — nghĩa là hạ tầng serving của recommendation và của semantic search là <em>cùng một hệ thống</em>: ANN trên không gian vector.</p>
+<p><strong>Neural network và câu trả lời &ldquo;vì sao GPU&rdquo;.</strong> Một layer fully-connected là y = σ(W·x + b): nhân matrix chiếm &gt;90% FLOP của cả forward lẫn backward. GPU về bản chất là <strong>phần cứng nhân ma trận</strong>: hàng chục nghìn core làm cùng một phép nhân-cộng trên dữ liệu khác nhau; tensor core của NVIDIA còn chuyên hơn — mỗi chu kỳ nhân một khối matrix 4×4. &ldquo;AI bùng nổ nhờ GPU&rdquo; dịch sát nghĩa: AI bùng nổ nhờ phần cứng làm linear algebra rẻ đi ba bậc. Ai hiểu mục 4 (cache, memory layout) hiểu luôn vì sao tối ưu inference xoay quanh memory bandwidth chứ không phải FLOP.</p>
+<p><strong>Graphics pipeline.</strong> Mỗi khung hình game, mọi đỉnh của mọi model 3D đi qua chuỗi biến đổi: model→world→camera→projection — mỗi mũi tên là một matrix 4×4, cả chuỗi được <strong>nhân gộp trước thành một matrix duy nhất</strong> (hợp thành biến đổi — mục 4) rồi áp cho hàng triệu đỉnh. GPU sinh ra năm 1999 để làm đúng việc này; AI mượn lại sau — không phải trùng hợp, mà vì cùng ngôn ngữ toán.</p>
+<p><strong>BLAS/LAPACK — thư viện lâu đài của ngành.</strong> Fortran interface từ 1979, được tối ưu đến mức viết tay assembly cho từng đời CPU (OpenBLAS, Intel MKL) và là backend của NumPy, PyTorch, R, MATLAB, gonum. Ba cấp (vector-vector, matrix-vector, matrix-matrix) phản ánh đúng thang cache-intensity ở mục 4. Bài học kiến trúc: chuẩn hóa <em>phép toán nguyên thủy</em> đúng cách một lần, cả ngành hưởng 45 năm.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p><strong>Rotate Image (LeetCode 48)</strong> — xoay ma trận n×n tại chỗ 90° theo chiều kim đồng hồ. Lời giải phổ biến: &ldquo;transpose rồi reverse từng hàng&rdquo; — thường được dạy như trick thuộc lòng. Linear algebra cho lời giải <em>có lý do</em>: transpose là phép <strong>lật qua đường chéo chính</strong>; reverse mỗi hàng là phép <strong>lật qua trục dọc giữa</strong>; và định lý hình học phẳng nói <em>hợp thành hai phép lật là một phép xoay, góc xoay = 2× góc giữa hai trục lật</em>. Hai trục (chéo chính, dọc giữa) lệch nhau 45° → xoay 90°. Kiểm chứng bằng tọa độ: transpose đưa (i,j)→(j,i), reverse hàng đưa (j,i)→(j, n−1−i); hợp lại (i,j)→(j, n−1−i) — đúng công thức xoay 90° CW của lưới. Người hiểu điều này tự trả lời được mọi biến thể trong 30 giây: xoay ngược chiều = transpose + reverse <em>cột</em>; xoay 180° = hai lần 90° = reverse cả hàng lẫn cột. Không còn gì để thuộc.</p>
+<p><strong>Spiral Matrix (54)</strong> — thuần kỹ năng quản lý biên (4 con trỏ top/bottom/left/right thu hẹp dần — lại là invariant, chương 03). Giá trị phỏng vấn của nó là code sạch dưới áp lực; giá trị &ldquo;toán&rdquo; là nhắc bạn phân biệt: đây là bài <em>duyệt</em> bảng số, còn Rotate Image là bài <em>biến đổi</em> — đúng ranh giới &ldquo;bảng số vs phép biến đổi&rdquo; của mục 2.</p>
+<p><strong>Matrix Chain Multiplication</strong> — nhân chuỗi A₁A₂&hellip;Aₙ theo thứ tự kết hợp nào để ít phép nhân nhất? Tính kết hợp (associativity) cho quyền chọn chỗ đặt ngoặc, và lựa chọn chênh nhau khủng khiếp: A(10×1000)·B(1000×5)·C(5×5000) — tính (AB)C tốn 10·1000·5 + 10·5·5000 = 300K phép nhân; A(BC) tốn 1000·5·5000 + 10·1000·5000 = 75M — <strong>chênh 250 lần</strong> chỉ do chỗ đặt ngoặc. Bài toán tối ưu là DP khoảng kinh điển O(n³) (chương 14). Trong thực tế đây là việc query optimizer làm với thứ tự join, và các framework tensor làm khi hợp nhất chuỗi phép biến đổi.</p>
+<p><strong>Câu hỏi hệ thống: &ldquo;Thiết kế semantic search cho 10 triệu tài liệu&rdquo;</strong> — bài linear algebra trá hình, và là nơi chương này thành lợi thế cạnh tranh. Khung trả lời: (1) chọn embedding model, số chiều — trade-off mục 6; (2) chuẩn hóa vector lúc ghi để cosine → dot product; (3) dưới 10⁵ dùng brute-force, trên đó HNSW/pgvector — nêu trade-off recall/RAM/update; (4) top-k bằng heap; (5) đo bằng recall@k so với brute-force làm ground truth. Ứng viên nói được <em>vì sao cosine</em> và <em>vì sao phải normalize</em> nổi bật ngay khỏi đám đông chỉ biết niệm chú &ldquo;dùng vector DB&rdquo;.</p>
+<p><strong>Lỗi tư duy thường gặp:</strong> học thuộc &ldquo;transpose + reverse&rdquo; mà không biết vì sao (bị hỏi xoay ngược chiều là gãy); tin rằng phải &ldquo;giỏi giải tích&rdquo; mới đụng được AI — trong khi 90% là linear algebra ở mức chương này; nhầm cosine similarity (lớn = gần) với cosine distance (= 1 − similarity, nhỏ = gần) — bug đảo ngược ranking có thật trong production; và so sánh embedding của <em>hai model khác nhau</em> — hai không gian tọa độ khác nhau, khoảng cách giữa chúng vô nghĩa.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Nhân ma trận lớn bằng vòng lặp ngây thơ.</strong> Bản i-j-k tự viết chậm hơn BLAS 50–100 lần — trong vòng nóng, đó là khác biệt giữa 1 GPU và 100 GPU tiền điện. Tự viết để học; production dùng gonum/BLAS, hoặc tốt hơn: đặt câu hỏi vì sao phép nhân đó không nằm trong model serving framework vốn đã tối ưu sẵn.</p>
+<p><strong>Đo khoảng cách Euclid trên embedding chưa chuẩn hóa</strong> rồi kết luận &ldquo;semantic search không hoạt động&rdquo;. Norm của embedding nhiễm độ dài văn bản; hai đoạn cùng chủ đề khác độ dài bị đẩy ra xa. Triệu chứng kinh điển: tài liệu dài luôn/không bao giờ xuất hiện trong kết quả. Chữa: normalize, hoặc dùng cosine — và nhất quán <em>cùng một metric</em> từ index đến query.</p>
+<p><strong>Trộn embedding từ hai model (hoặc hai version của một model).</strong> Nâng cấp model embedding mà chỉ re-embed tài liệu mới → kho vector hai hệ tọa độ trộn lẫn, so sánh chéo vô nghĩa, chất lượng search suy giảm âm thầm không có error log nào. Re-embed toàn bộ hoặc lưu version vào metadata và tách index.</p>
+<p><strong>Coi matrix là bảng và mô phỏng biến đổi bằng rừng if.</strong> Code xử lý hình học viết bằng <code>if quadrant == 1 {...}</code> cho từng trường hợp xoay/lật — nở tổ hợp, đầy bug góc cạnh. Một matrix 2×2 (hoặc 4×4 đồng nhất) biểu diễn <em>mọi</em> biến đổi tuyến tính và hợp thành bằng phép nhân — ít code hơn, đúng theo cấu trúc thay vì đúng theo từng case.</p>
+<p><strong>PCA/giảm chiều mà không kiểm tra phương sai giữ lại.</strong> Cắt 1536 → 128 chiều vì &ldquo;cho rẻ&rdquo; mà không nhìn phổ eigenvalue: nếu 128 chiều đầu chỉ giữ 70% phương sai, bạn đã âm thầm vứt 30% &ldquo;độ khác nhau&rdquo; của dữ liệu. Luôn in tỷ lệ phương sai tích lũy và đo recall trước/sau trên tập query thật.</p>
+<p><strong>Tối ưu FLOP khi nghẽn ở memory.</strong> Đếm phép nhân rồi kết luận &ldquo;còn headroom&rdquo; trong khi matVec lớn là bài toán <strong>memory-bound</strong>: mỗi phần tử matrix chỉ được dùng một lần, băng thông RAM mới là trần. Đúng bài học pprof của chương 10: đo cái đang nghẽn, không phải cái dễ đếm.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Nghĩ về vector như điểm/hướng có hình học, matrix như phép biến đổi — mọi công thức của chương suy lại được từ hai hình ảnh này khi quên.</li>
+<li>Chuẩn hóa embedding ngay khi ghi (norm = 1), lưu metadata: model, version, số chiều, metric. Coi bộ ba (model, metric, index) là một contract — đổi một phần là re-index.</li>
+<li>Lưu matrix phẳng row-major trong Go; sắp vòng lặp cho truy cập tuần tự; vượt cỡ nghìn×nghìn trong vòng nóng thì chuyển gonum/BLAS.</li>
+<li>Bắt đầu vector search bằng brute-force làm baseline + ground truth; chỉ nâng cấp ANN khi p99 latency bắt buộc, và luôn báo cáo recall@k so với baseline.</li>
+<li>Khi gặp hệ &ldquo;lặp một phép biến đổi đến ổn định&rdquo; (ranking, lan truyền ảnh hưởng, Markov chain), nhận diện ngay: trạng thái dừng = eigenvector — có cả kho lý thuyết và thuật toán dùng sẵn.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không dùng cosine khi độ lớn vector mang nghĩa nghiệp vụ (chi tiêu, số lượng) — và ngược lại, không dùng Euclid trên embedding văn bản thô.</li>
+<li>Không tự cài PCA/SVD/eigendecomposition cho production — độ ổn định số (numerical stability) là bãi mìn; dùng gonum/LAPACK.</li>
+<li>Không đánh giá chất lượng semantic search bằng cảm quan vài query — dựng tập đánh giá nhỏ có ground truth trước khi chỉnh bất kỳ tham số nào.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Vì sao cosine similarity phù hợp với text embedding hơn khoảng cách Euclid, và khi nào điều ngược lại đúng?</li>
+<li>Không nhìn code, giải thích vì sao đổi thứ tự vòng lặp từ i-j-k sang i-k-j tăng tốc nhân ma trận nhiều lần dù số phép toán không đổi.</li>
+<li>PageRank giải bài toán gì, và vì sao đáp án của nó là một eigenvector? Phép lặp nào tìm ra eigenvector đó và mỗi vòng lặp tốn gì?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-4-advanced-mathematics/18-statistics/">18 — Statistics</a>, nơi các vector dữ liệu của chương này được nhìn bằng con mắt khác: không hỏi &ldquo;điểm này gần điểm kia không?&rdquo; mà hỏi &ldquo;đám mây điểm này nói gì về tổng thể?&rdquo; — percentile cho monitoring, confidence interval cho A/B testing, và lý do p99 quan trọng hơn trung bình.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/16-sorting-searching-heap/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 16 — Sorting, Searching &amp; Heap: Trật tự và cái giá của nó</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/18-statistics/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Linear%20Algebra%3a%20Ng%c3%b4n%20ng%e1%bb%af%20c%e1%bb%a7a%20AI%20v%c3%a0%20kh%c3%b4ng%20gian%20nhi%e1%bb%81u%20chi%e1%bb%81u&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f&amp;title=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Linear%20Algebra%3a%20Ng%c3%b4n%20ng%e1%bb%af%20c%e1%bb%a7a%20AI%20v%c3%a0%20kh%c3%b4ng%20gian%20nhi%e1%bb%81u%20chi%e1%bb%81u&amp;summary=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Linear%20Algebra%3a%20Ng%c3%b4n%20ng%e1%bb%af%20c%e1%bb%a7a%20AI%20v%c3%a0%20kh%c3%b4ng%20gian%20nhi%e1%bb%81u%20chi%e1%bb%81u&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f&title=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Linear%20Algebra%3a%20Ng%c3%b4n%20ng%e1%bb%af%20c%e1%bb%a7a%20AI%20v%c3%a0%20kh%c3%b4ng%20gian%20nhi%e1%bb%81u%20chi%e1%bb%81u">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Linear%20Algebra%3a%20Ng%c3%b4n%20ng%e1%bb%af%20c%e1%bb%a7a%20AI%20v%c3%a0%20kh%c3%b4ng%20gian%20nhi%e1%bb%81u%20chi%e1%bb%81u%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Linear%20Algebra%3a%20Ng%c3%b4n%20ng%e1%bb%af%20c%e1%bb%a7a%20AI%20v%c3%a0%20kh%c3%b4ng%20gian%20nhi%e1%bb%81u%20chi%e1%bb%81u&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Linear%20Algebra%3a%20Ng%c3%b4n%20ng%e1%bb%af%20c%e1%bb%a7a%20AI%20v%c3%a0%20kh%c3%b4ng%20gian%20nhi%e1%bb%81u%20chi%e1%bb%81u&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f17-linear-algebra%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

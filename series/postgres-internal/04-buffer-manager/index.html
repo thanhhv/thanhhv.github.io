@@ -1,17 +1,138 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 4 — Buffer Manager | Thanh HV's Blog</title>
-<meta name=keywords content="backend,database,postgresql"><meta name=description content="
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 4 — Buffer Manager | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, database, postgresql">
+<meta name="description" content="
 Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định
 PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.
 
 1. Problem Statement
-Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều read()/write() xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 4 — Buffer Manager"><meta property="og:description" content=" Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.
-1. Problem Statement Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều read()/write() xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-11T11:00:00+07:00"><meta property="article:modified_time" content="2026-07-11T11:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Database"><meta property="article:tag" content="Postgresql"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 4 — Buffer Manager"><meta name=twitter:description content="
-Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định
-PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.
+Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều read()/write() xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/postgres-internal/04-buffer-manager/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/postgres-internal/04-buffer-manager/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Problem Statement
-Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều read()/write() xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"PostgreSQL Internals","item":"https://thanhhv.github.io/series/postgres-internal/"},{"@type":"ListItem","position":3,"name":"Chương 4 — Buffer Manager","item":"https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 4 — Buffer Manager","name":"Chương 4 — Buffer Manager","description":" Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.\n1. Problem Statement Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều read()/write() xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.\n","keywords":["backend","database","postgresql"],"articleBody":" Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.\n1. Problem Statement Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều read()/write() xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.\nBài toán con mà Buffer Manager phải giải cùng lúc:\nTra cứu: page (relation R, block B) đang ở đâu trong RAM? — phải O(1). Thay thế: RAM đầy, đuổi (evict) page nào? — đuổi sai page nóng là thảm họa. Đồng thời: hàng trăm backend cùng đọc/sửa page — ai chờ ai, chờ bao lâu? An toàn: page bẩn (dirty) chỉ được ghi disk sau WAL của nó (WAL rule). Không bị quét rác: một seq scan bảng 500GB không được đuổi sạch cache nóng. Nếu bỏ Buffer Manager, dựa hoàn toàn vào OS page cache? Mất: kiểm soát WAL-before-data (kernel không biết LSN), pin page trong lúc sửa (kernel có thể evict bất cứ lúc nào), thứ tự flush cho checkpoint, và thông tin usage theo ngữ nghĩa database. Một số hệ (như SQLite ở mức nào đó) chấp nhận; mọi database server nghiêm túc đều tự quản cache.\n2. Internal Architecture BufTable (hash table trong shared memory) key: BufferTag{spcOid, dbOid, relNumber, forkNum, blockNum} value: buffer_id ──────────────────┐ ▼ ┌──────────────────────────────────────────────────────────────┐ │ BufferDescriptors[N] (mảng descriptor, mỗi cái 64B = 1 cache line)│ │ ┌──────────────────────────────────────────────┐ │ │ │ tag : page nào đang ở đây │ │ │ │ state (atomic u32) đóng gói: │ │ │ │ refcount : bao nhiêu backend đang PIN │ │ │ │ usage_count: 0..5 — độ \"nóng\" (clock sweep)│ │ │ │ flags : DIRTY | VALID | IO_IN_PROGRESS│ │ │ │ content_lock : LWLock đọc/sửa nội dung page │ │ │ └──────────────────────────────────────────────┘ │ └──────────────────────────────────────────────────────────────┘ │ buffer_id × 8192 ▼ ┌──────────────────────────────────────────────────────────────┐ │ BufferBlocks: N × 8KB — dữ liệu page thật (shared_buffers) │ └──────────────────────────────────────────────────────────────┘Ba tầng bảo vệ đồng thời, từ nhẹ tới nặng:\nCơ chế Bảo vệ gì Thời gian giữ Pin (refcount, atomic) Page không bị evict khi đang dùng Suốt lúc xử lý tuple trong page Content LWLock (share/exclusive) Nội dung page nhất quán khi đọc/sửa Vài µs — chỉ lúc thao tác byte Buffer mapping lock (partition ×128) Hash table khi thêm/xóa entry Rất ngắn Chi tiết LWLock/spinlock ở Chương 7. Điều cần nhớ: pin rẻ (một atomic op) nhưng giữ lâu; lock đắt hơn nhưng giữ cực ngắn.\n3. Cách hoạt động — ReadBuffer từng bước // Pseudo code: backend cần page (rel, blk) func ReadBuffer(rel Relation, blk BlockNumber) Buffer { tag := BufferTag{rel.spc, rel.db, rel.filenode, MAIN_FORK, blk} // 1. HIT PATH — mong đợi 99% if id, ok := bufTable.Lookup(tag); ok { PinBuffer(id) // atomic refcount++ bumpUsageCount(id) // tối đa 5 return id // KHÔNG có syscall nào } // 2. MISS PATH victim := ClockSweep() // tìm buffer đuổi được (xem dưới) if victim.dirty { // ★ WAL RULE: flush WAL tới victim.page.pd_lsn trước XLogFlush(victim.page.LSN()) smgrwrite(victim.tag, victim.data) // write() → OS cache // (không fsync ở đây — checkpoint mới fsync) } bufTable.Delete(victim.tag) bufTable.Insert(tag, victim.id) smgrread(tag, victim.data) // read() 8KB — có thể hit OS cache! victim.state = VALID | PINNED return victim.id } Clock Sweep — thuật toán thay thế PostgreSQL không dùng LRU đúng nghĩa. LRU cần cập nhật danh sách liên kết mỗi lần chạm page → một điểm ghi chung, tranh chấp khủng khiếp với hàng trăm backend. Thay vào đó: clock sweep (LRU xấp xỉ):\nbuffers xếp thành vòng tròn, một \"kim đồng hồ\" đi quanh: ┌───┐ usage=3 ┌───┐ │ B2│ ┌───┐ Kim chỉ B4: usage=0 \u0026 unpinned → VICTIM! u=5 │ B1│ └───┘ │ B3│ u=1 Nếu usage\u003e0: usage-- rồi đi tiếp. └───┘ ▲ └───┘ Nếu pinned: bỏ qua. ┌─┴─┐ │ B4│ u=0 ← kim └───┘func ClockSweep() *BufferDesc { for { buf := buffers[clockHand] clockHand = (clockHand + 1) % N if buf.refcount == 0 { // không ai pin if buf.usageCount == 0 { return buf // victim } buf.usageCount-- // \"tha lần này\" } } } Mỗi lần page được dùng: usage_count++ (trần 5). Page phải bị kim quét qua 5 lần không ai chạm mới bị đuổi. Trade-off so với LRU thật: kém chính xác một chút, nhưng hit path hoàn toàn không có điểm tranh chấp chung (chỉ atomic trên descriptor của chính page đó).\nRing buffer — chống seq scan phá cache Seq scan bảng lớn hơn 1/4 shared_buffers không dùng chung cơ chế trên: nó được cấp một ring buffer riêng ~256KB (32 buffer) và tự tái sử dụng vòng tròn trong đó. Tương tự: VACUUM (ring 2MB), bulk write như COPY (16MB).\nNếu bỏ cơ chế này: một analyst chạy SELECT count(*) FROM events (bảng 500GB) → 64 triệu page đi qua cache → usage_count của mọi page nóng bị kim quét về 0 → toàn bộ cache OLTP bị đuổi → p99 latency của cả hệ thống tăng vọt trong nhiều phút. Ring buffer đổi “seq scan nhanh hơn một chút nhờ cache” lấy “phần còn lại của hệ thống không bị thảm sát” — một trade-off dễ.\nHệ quả ngược cần biết: vì seq scan lớn dùng ring 256KB, chạy lại seq scan lần hai vẫn đọc I/O như lần đầu (nó không được cache trong shared buffers — nhưng có thể hit OS cache).\n4. Bên dưới lớp vật lý — Double Buffering với OS cache PostgreSQL đọc/ghi data file bằng buffered I/O (không dùng O_DIRECT cho data). Nghĩa là một page nóng tồn tại hai bản: một trong shared buffers, một trong OS page cache.\nshared_buffers (8GB) ┌────────── RAM 64GB ──────────┐ ┌────────────┐ │ │ │ page A ● │ write() │ OS page cache (~50GB) │ │ page B ● │ ──────────▶ │ page A ● (bản sao!) │ └────────────┘ │ page C ● (chỉ ở đây) │ ▲ └──────────┬───────────────────┘ │ read() page C: \"miss\" của PG │ fsync khi checkpoint │ nhưng hit OS cache → ~vài µs ▼ │ (nhanh hơn disk 20-50 lần) DISKTại sao chấp nhận lãng phí này? (a) OS cache miễn phí về code — kernel làm readahead, writeback scheduling giỏi; (b) shared buffers quá lớn từng có scalability issue với clock sweep và checkpoint ghi dồn; (c) linh hoạt — RAM không bị “khóa cứng” cho PostgreSQL. Đây là lý do khuyến nghị kinh điển shared_buffers = 25% RAM: phần còn lại làm OS cache, và “miss” của shared buffers thường chỉ rơi xuống OS cache chứ không xuống disk.\nHướng tương lai: PG16+ xây dựng lại tầng I/O (AIO trong PG18, direct I/O thử nghiệm) để dần thoát double buffering — theo dõi vì khuyến nghị 25% sẽ thay đổi.\nLưu ý đo lường quan trọng: pg_stat_database.blks_read đếm “miss của shared buffers”, không phải “đọc từ disk”. Hit ratio 90% không có nghĩa 10% còn lại chạm disk — đa phần hit OS cache. Muốn biết disk thật: pg_stat_io (PG16+) kết hợp iostat.\n5. Dirty page và hai người ghi nền Page bị sửa chỉ đánh dấu DIRTY trong RAM. Ai ghi nó xuống disk? Ba ứng viên, theo thứ tự mong muốn giảm dần:\nCheckpointer (Chương 11): mỗi 5 phút ghi tất cả dirty page, rải đều theo checkpoint_completion_target. Ghi tuần tự theo file → hiệu quả I/O tốt nhất. Background writer: chạy trước kim clock sweep, ghi sẵn các page sắp-bị-evict để backend khỏi phải ghi. Nhịp bgwriter_delay=200ms, mỗi nhịp tối đa bgwriter_lru_maxpages=100 page (mặc định — thường phải tăng). Backend tự ghi (tệ nhất): clock sweep chọn victim dirty → backend phải flush WAL + write() page trong critical path của query → latency spike cho user. Giám sát tỉ lệ ba nguồn này (PG17: pg_stat_io, cột writes theo backend_type; trước đó: pg_stat_bgwriter.buffers_backend vs buffers_clean vs buffers_checkpoint). Backend chiếm tỉ lệ cao = shared_buffers thiếu hoặc bgwriter yếu.\n6. Trade-off Quyết định Được Mất Clock sweep thay LRU thật Hit path không tranh chấp Xấp xỉ — page nóng vẫn có thể bị đuổi oan Buffered I/O thay O_DIRECT Tận dụng kernel readahead/writeback, code đơn giản Double buffering tốn RAM; kernel writeback khó dự đoán (checkpoint storm — Chương 12 #5) shared_buffers 25% thay 80% OS cache đỡ miss; tránh nghẽn checkpoint Hai lần copy cho page nóng Ring buffer cho scan lớn Cache OLTP an toàn Scan lặp lại không nhanh lên Pin/unpin bằng atomic Rẻ Buffer bị pin lâu (cursor bỏ quên) chặn evict và vacuum 7. Production Định cỡ: bắt đầu 25% RAM. Tăng lên nếu: working set xác định được và vừa RAM, pg_stat_io cho thấy miss thật xuống disk nhiều. Giảm nếu: checkpoint viết quá dồn, hoặc máy chạy chung nhiều dịch vụ. Workload ghi nặng đôi khi chạy tốt hơn với shared_buffers nhỏ hơn (ít dirty page dồn cục cho checkpoint). Hit ratio: blks_hit/(blks_hit+blks_read) — OLTP lành mạnh ≥ 99%. Nhưng nhớ mục 4: đây là hit của tầng PG, không phải của RAM tổng. Đo từng bảng: pg_statio_user_tables — bảng nào gây miss nhiều nhất; extension pg_buffercache — soi chính xác cái gì đang chiếm cache (SELECT relname, count(*) FROM pg_buffercache b JOIN pg_class c ON b.relfilenode=c.relfilenode GROUP BY 1 ORDER BY 2 DESC). prewarm: sau restart, cache nguội → p99 xấu trong nhiều phút. pg_prewarm (kèm pg_prewarm.autoprewarm=on) lưu danh sách buffer và nạp lại sau restart. Benchmark đại diện (pgbench scale 1000, ~15GB data, máy 16GB RAM, NVMe): shared_buffers=1GB : tps ≈ 8.500 (miss nhiều nhưng OS cache đỡ) shared_buffers=4GB : tps ≈ 12.000 (working set index vừa vào) shared_buffers=12GB: tps ≈ 9.000 (OS cache còn quá ít, checkpoint nặng) → Đường cong hình chuông — \"to hơn\" không phải lúc nào cũng \"nhanh hơn\".8. Failure Cases Case A: Buffer cache thrashing Triệu chứng: hit ratio tụt từ 99% xuống 85%, mọi query chậm đều, disk read tăng vọt, CPU iowait cao. Root cause điển hình: working set phình vượt RAM (dữ liệu tăng trưởng tự nhiên/bloat làm working set “loãng”), hoặc một query pattern mới quét index khổng lồ. Bên trong: clock sweep quay điên cuồng (theo dõi được qua pg_stat_bgwriter.buffers_alloc tăng vọt), page nóng bị đuổi rồi nạp lại liên tục. Điều tra: pg_buffercache xem cache đang chứa gì; pg_stat_statements sort theo shared_blks_read tìm query gây miss; kiểm tra bloat (working set loãng vì dead tuple chen giữa). Khắc phục: diệt bloat trước (rẻ nhất), thêm index cho query quét rộng, rồi mới tính thêm RAM.\nCase B: “IO chậm nhưng chỉ thỉnh thoảng” — backend tự ghi page Triệu chứng: p99 nhấp nhô theo chu kỳ, trùng nhịp không rõ ràng. Root cause: bgwriter không kịp → backend tự evict dirty page → mỗi lần dính thêm 1 write + có thể 1 XLogFlush. Điều tra: buffers_backend (hoặc pg_stat_io writes của backend_type=client backend) chiếm \u003e20–30% tổng write. Khắc phục: tăng bgwriter_lru_maxpages (vd 1000), giảm bgwriter_delay, xem lại shared_buffers và nhịp checkpoint.\n9. Tóm tắt Buffer manager = hash table + descriptor + clock sweep + 3 tầng bảo vệ (pin, content lock, mapping lock). WAL rule được thi hành tại điểm evict và checkpoint: không dirty page nào chạm disk trước WAL của nó. Ring buffer cách ly scan lớn khỏi cache OLTP. Double buffering với OS cache là lựa chọn có chủ đích — nguồn gốc quy tắc 25% RAM, đang thay đổi dần với direct I/O/AIO. Ba người ghi dirty page: checkpointer (tốt) \u003e bgwriter (ổn) \u003e backend (xấu — theo dõi tỉ lệ này). Tiếp theo: Chương 5 — WAL: thứ cho phép mọi dirty page trong chương này được phép “lười”.\n","wordCount":"1957","inLanguage":"en","datePublished":"2026-07-11T11:00:00+07:00","dateModified":"2026-07-11T11:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/postgres-internal/>PostgreSQL Internals</a></div><h1 class="post-title entry-hint-parent">Chương 4 — Buffer Manager</h1><div class=post-meta><span title='2026-07-11 11:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min</div></header><div class=post-content><blockquote><p>Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định
-PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.</p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều <code>read()</code>/<code>write()</code> xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.</p><p>Bài toán con mà Buffer Manager phải giải cùng lúc:</p><ol><li><strong>Tra cứu</strong>: page (relation R, block B) đang ở đâu trong RAM? — phải O(1).</li><li><strong>Thay thế</strong>: RAM đầy, đuổi (evict) page nào? — đuổi sai page nóng là thảm họa.</li><li><strong>Đồng thời</strong>: hàng trăm backend cùng đọc/sửa page — ai chờ ai, chờ bao lâu?</li><li><strong>An toàn</strong>: page bẩn (dirty) chỉ được ghi disk sau WAL của nó (WAL rule).</li><li><strong>Không bị quét rác</strong>: một seq scan bảng 500GB không được đuổi sạch cache nóng.</li></ol><p><strong>Nếu bỏ Buffer Manager, dựa hoàn toàn vào OS page cache?</strong> Mất: kiểm soát WAL-before-data (kernel không biết LSN), pin page trong lúc sửa (kernel có thể evict bất cứ lúc nào), thứ tự flush cho checkpoint, và thông tin usage theo ngữ nghĩa database. Một số hệ (như SQLite ở mức nào đó) chấp nhận; mọi database server nghiêm túc đều tự quản cache.</p><h2 id=2-internal-architecture>2. Internal Architecture<a hidden class=anchor aria-hidden=true href=#2-internal-architecture>#</a></h2><pre tabindex=0><code>                 BufTable (hash table trong shared memory)
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/postgres-internal/">PostgreSQL Internals</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 4 — Buffer Manager
+    </h1>
+    <div class="post-meta"><span title='2026-07-11 11:00:00 +0700 +07'>July 11, 2026</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định
+PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều <code>read()</code>/<code>write()</code> xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.</p>
+<p>Bài toán con mà Buffer Manager phải giải cùng lúc:</p>
+<ol>
+<li><strong>Tra cứu</strong>: page (relation R, block B) đang ở đâu trong RAM? — phải O(1).</li>
+<li><strong>Thay thế</strong>: RAM đầy, đuổi (evict) page nào? — đuổi sai page nóng là thảm họa.</li>
+<li><strong>Đồng thời</strong>: hàng trăm backend cùng đọc/sửa page — ai chờ ai, chờ bao lâu?</li>
+<li><strong>An toàn</strong>: page bẩn (dirty) chỉ được ghi disk sau WAL của nó (WAL rule).</li>
+<li><strong>Không bị quét rác</strong>: một seq scan bảng 500GB không được đuổi sạch cache nóng.</li>
+</ol>
+<p><strong>Nếu bỏ Buffer Manager, dựa hoàn toàn vào OS page cache?</strong> Mất: kiểm soát WAL-before-data (kernel không biết LSN), pin page trong lúc sửa (kernel có thể evict bất cứ lúc nào), thứ tự flush cho checkpoint, và thông tin usage theo ngữ nghĩa database. Một số hệ (như SQLite ở mức nào đó) chấp nhận; mọi database server nghiêm túc đều tự quản cache.</p>
+<h2 id="2-internal-architecture">2. Internal Architecture<a hidden class="anchor" aria-hidden="true" href="#2-internal-architecture">#</a></h2>
+<pre tabindex="0"><code>                 BufTable (hash table trong shared memory)
         key: BufferTag{spcOid, dbOid, relNumber, forkNum, blockNum}
         value: buffer_id ──────────────────┐
                                            ▼
@@ -30,32 +151,63 @@ PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết
                                            ▼
  ┌──────────────────────────────────────────────────────────────┐
  │ BufferBlocks: N × 8KB — dữ liệu page thật (shared_buffers)   │
- └──────────────────────────────────────────────────────────────┘</code></pre><p>Ba tầng bảo vệ đồng thời, từ nhẹ tới nặng:</p><table><thead><tr><th>Cơ chế</th><th>Bảo vệ gì</th><th>Thời gian giữ</th></tr></thead><tbody><tr><td><strong>Pin</strong> (refcount, atomic)</td><td>Page không bị evict khi đang dùng</td><td>Suốt lúc xử lý tuple trong page</td></tr><tr><td><strong>Content LWLock</strong> (share/exclusive)</td><td>Nội dung page nhất quán khi đọc/sửa</td><td>Vài µs — chỉ lúc thao tác byte</td></tr><tr><td><strong>Buffer mapping lock</strong> (partition ×128)</td><td>Hash table khi thêm/xóa entry</td><td>Rất ngắn</td></tr></tbody></table><p>Chi tiết LWLock/spinlock ở Chương 7. Điều cần nhớ: <strong>pin rẻ (một atomic op) nhưng giữ lâu; lock đắt hơn nhưng giữ cực ngắn</strong>.</p><h2 id=3-cách-hoạt-động--readbuffer-từng-bước>3. Cách hoạt động — ReadBuffer từng bước<a hidden class=anchor aria-hidden=true href=#3-cách-hoạt-động--readbuffer-từng-bước>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Pseudo code: backend cần page (rel, blk)</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ReadBuffer</span>(<span style=color:#a6e22e>rel</span> <span style=color:#a6e22e>Relation</span>, <span style=color:#a6e22e>blk</span> <span style=color:#a6e22e>BlockNumber</span>) <span style=color:#a6e22e>Buffer</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>tag</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>BufferTag</span>{<span style=color:#a6e22e>rel</span>.<span style=color:#a6e22e>spc</span>, <span style=color:#a6e22e>rel</span>.<span style=color:#a6e22e>db</span>, <span style=color:#a6e22e>rel</span>.<span style=color:#a6e22e>filenode</span>, <span style=color:#a6e22e>MAIN_FORK</span>, <span style=color:#a6e22e>blk</span>}
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// 1. HIT PATH — mong đợi 99%</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>id</span>, <span style=color:#a6e22e>ok</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>bufTable</span>.<span style=color:#a6e22e>Lookup</span>(<span style=color:#a6e22e>tag</span>); <span style=color:#a6e22e>ok</span> {
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>PinBuffer</span>(<span style=color:#a6e22e>id</span>)                    <span style=color:#75715e>// atomic refcount++</span>
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>bumpUsageCount</span>(<span style=color:#a6e22e>id</span>)               <span style=color:#75715e>// tối đa 5</span>
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>id</span>                        <span style=color:#75715e>// KHÔNG có syscall nào</span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// 2. MISS PATH</span>
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>victim</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ClockSweep</span>()               <span style=color:#75715e>// tìm buffer đuổi được (xem dưới)</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>dirty</span> {
-</span></span><span style=display:flex><span>        <span style=color:#75715e>// ★ WAL RULE: flush WAL tới victim.page.pd_lsn trước</span>
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>XLogFlush</span>(<span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>page</span>.<span style=color:#a6e22e>LSN</span>())
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>smgrwrite</span>(<span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>tag</span>, <span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>data</span>)   <span style=color:#75715e>// write() → OS cache</span>
-</span></span><span style=display:flex><span>        <span style=color:#75715e>// (không fsync ở đây — checkpoint mới fsync)</span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>bufTable</span>.<span style=color:#a6e22e>Delete</span>(<span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>tag</span>)
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>bufTable</span>.<span style=color:#a6e22e>Insert</span>(<span style=color:#a6e22e>tag</span>, <span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>id</span>)
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>smgrread</span>(<span style=color:#a6e22e>tag</span>, <span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>data</span>)           <span style=color:#75715e>// read() 8KB — có thể hit OS cache!</span>
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>state</span> = <span style=color:#a6e22e>VALID</span> | <span style=color:#a6e22e>PINNED</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>victim</span>.<span style=color:#a6e22e>id</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h3 id=clock-sweep--thuật-toán-thay-thế>Clock Sweep — thuật toán thay thế<a hidden class=anchor aria-hidden=true href=#clock-sweep--thuật-toán-thay-thế>#</a></h3><p>PostgreSQL không dùng LRU đúng nghĩa. LRU cần cập nhật danh sách liên kết <strong>mỗi lần chạm page</strong> → một điểm ghi chung, tranh chấp khủng khiếp với hàng trăm backend. Thay vào đó: <strong>clock sweep (LRU xấp xỉ)</strong>:</p><pre tabindex=0><code>        buffers xếp thành vòng tròn, một &#34;kim đồng hồ&#34; đi quanh:
+ └──────────────────────────────────────────────────────────────┘</code></pre><p>Ba tầng bảo vệ đồng thời, từ nhẹ tới nặng:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Cơ chế</th>
+          <th>Bảo vệ gì</th>
+          <th>Thời gian giữ</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Pin</strong> (refcount, atomic)</td>
+          <td>Page không bị evict khi đang dùng</td>
+          <td>Suốt lúc xử lý tuple trong page</td>
+      </tr>
+      <tr>
+          <td><strong>Content LWLock</strong> (share/exclusive)</td>
+          <td>Nội dung page nhất quán khi đọc/sửa</td>
+          <td>Vài µs — chỉ lúc thao tác byte</td>
+      </tr>
+      <tr>
+          <td><strong>Buffer mapping lock</strong> (partition ×128)</td>
+          <td>Hash table khi thêm/xóa entry</td>
+          <td>Rất ngắn</td>
+      </tr>
+  </tbody>
+</table>
+<p>Chi tiết LWLock/spinlock ở Chương 7. Điều cần nhớ: <strong>pin rẻ (một atomic op) nhưng giữ lâu; lock đắt hơn nhưng giữ cực ngắn</strong>.</p>
+<h2 id="3-cách-hoạt-động--readbuffer-từng-bước">3. Cách hoạt động — ReadBuffer từng bước<a hidden class="anchor" aria-hidden="true" href="#3-cách-hoạt-động--readbuffer-từng-bước">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Pseudo code: backend cần page (rel, blk)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ReadBuffer</span>(<span style="color:#a6e22e">rel</span> <span style="color:#a6e22e">Relation</span>, <span style="color:#a6e22e">blk</span> <span style="color:#a6e22e">BlockNumber</span>) <span style="color:#a6e22e">Buffer</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">tag</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">BufferTag</span>{<span style="color:#a6e22e">rel</span>.<span style="color:#a6e22e">spc</span>, <span style="color:#a6e22e">rel</span>.<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">rel</span>.<span style="color:#a6e22e">filenode</span>, <span style="color:#a6e22e">MAIN_FORK</span>, <span style="color:#a6e22e">blk</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 1. HIT PATH — mong đợi 99%</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bufTable</span>.<span style="color:#a6e22e">Lookup</span>(<span style="color:#a6e22e">tag</span>); <span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">PinBuffer</span>(<span style="color:#a6e22e">id</span>)                    <span style="color:#75715e">// atomic refcount++</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">bumpUsageCount</span>(<span style="color:#a6e22e">id</span>)               <span style="color:#75715e">// tối đa 5</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">id</span>                        <span style="color:#75715e">// KHÔNG có syscall nào</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 2. MISS PATH</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">victim</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ClockSweep</span>()               <span style="color:#75715e">// tìm buffer đuổi được (xem dưới)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">dirty</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// ★ WAL RULE: flush WAL tới victim.page.pd_lsn trước</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">XLogFlush</span>(<span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">LSN</span>())
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">smgrwrite</span>(<span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">tag</span>, <span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">data</span>)   <span style="color:#75715e">// write() → OS cache</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// (không fsync ở đây — checkpoint mới fsync)</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">bufTable</span>.<span style="color:#a6e22e">Delete</span>(<span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">tag</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">bufTable</span>.<span style="color:#a6e22e">Insert</span>(<span style="color:#a6e22e">tag</span>, <span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">id</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">smgrread</span>(<span style="color:#a6e22e">tag</span>, <span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">data</span>)           <span style="color:#75715e">// read() 8KB — có thể hit OS cache!</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">VALID</span> | <span style="color:#a6e22e">PINNED</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">victim</span>.<span style="color:#a6e22e">id</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="clock-sweep--thuật-toán-thay-thế">Clock Sweep — thuật toán thay thế<a hidden class="anchor" aria-hidden="true" href="#clock-sweep--thuật-toán-thay-thế">#</a></h3>
+<p>PostgreSQL không dùng LRU đúng nghĩa. LRU cần cập nhật danh sách liên kết <strong>mỗi lần chạm page</strong> → một điểm ghi chung, tranh chấp khủng khiếp với hàng trăm backend. Thay vào đó: <strong>clock sweep (LRU xấp xỉ)</strong>:</p>
+<pre tabindex="0"><code>        buffers xếp thành vòng tròn, một &#34;kim đồng hồ&#34; đi quanh:
 
               ┌───┐ usage=3
         ┌───┐ │ B2│ ┌───┐          Kim chỉ B4: usage=0 &amp; unpinned → VICTIM!
@@ -63,19 +215,26 @@ PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết
         └───┘   ▲   └───┘          Nếu pinned: bỏ qua.
               ┌─┴─┐
               │ B4│ u=0  ← kim
-              └───┘</code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ClockSweep</span>() <span style=color:#f92672>*</span><span style=color:#a6e22e>BufferDesc</span> {
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> {
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>buf</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>buffers</span>[<span style=color:#a6e22e>clockHand</span>]
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>clockHand</span> = (<span style=color:#a6e22e>clockHand</span> <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>) <span style=color:#f92672>%</span> <span style=color:#a6e22e>N</span>
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>buf</span>.<span style=color:#a6e22e>refcount</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> {           <span style=color:#75715e>// không ai pin</span>
-</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>buf</span>.<span style=color:#a6e22e>usageCount</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> {
-</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>buf</span>               <span style=color:#75715e>// victim</span>
-</span></span><span style=display:flex><span>            }
-</span></span><span style=display:flex><span>            <span style=color:#a6e22e>buf</span>.<span style=color:#a6e22e>usageCount</span><span style=color:#f92672>--</span>             <span style=color:#75715e>// &#34;tha lần này&#34;</span>
-</span></span><span style=display:flex><span>        }
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Mỗi lần page được dùng: usage_count++ (trần 5). Page phải bị kim quét qua 5 lần không ai chạm mới bị đuổi. Trade-off so với LRU thật: kém chính xác một chút, nhưng <strong>hit path hoàn toàn không có điểm tranh chấp chung</strong> (chỉ atomic trên descriptor của chính page đó).</p><h3 id=ring-buffer--chống-seq-scan-phá-cache>Ring buffer — chống seq scan phá cache<a hidden class=anchor aria-hidden=true href=#ring-buffer--chống-seq-scan-phá-cache>#</a></h3><p>Seq scan bảng lớn hơn 1/4 shared_buffers <strong>không</strong> dùng chung cơ chế trên: nó được cấp một <strong>ring buffer riêng ~256KB</strong> (32 buffer) và tự tái sử dụng vòng tròn trong đó. Tương tự: VACUUM (ring 2MB), bulk write như COPY (16MB).</p><p><strong>Nếu bỏ cơ chế này:</strong> một analyst chạy <code>SELECT count(*) FROM events</code> (bảng 500GB) → 64 triệu page đi qua cache → usage_count của mọi page nóng bị kim quét về 0 → toàn bộ cache OLTP bị đuổi → p99 latency của cả hệ thống tăng vọt trong nhiều phút. Ring buffer đổi &ldquo;seq scan nhanh hơn một chút nhờ cache&rdquo; lấy &ldquo;phần còn lại của hệ thống không bị thảm sát&rdquo; — một trade-off dễ.</p><p>Hệ quả ngược cần biết: vì seq scan lớn dùng ring 256KB, <strong>chạy lại seq scan lần hai vẫn đọc I/O như lần đầu</strong> (nó không được cache trong shared buffers — nhưng có thể hit OS cache).</p><h2 id=4-bên-dưới-lớp-vật-lý--double-buffering-với-os-cache>4. Bên dưới lớp vật lý — Double Buffering với OS cache<a hidden class=anchor aria-hidden=true href=#4-bên-dưới-lớp-vật-lý--double-buffering-với-os-cache>#</a></h2><p>PostgreSQL đọc/ghi data file bằng buffered I/O (không dùng O_DIRECT cho data). Nghĩa là một page nóng tồn tại <strong>hai bản</strong>: một trong shared buffers, một trong OS page cache.</p><pre tabindex=0><code>   shared_buffers (8GB)        ┌────────── RAM 64GB ──────────┐
+              └───┘</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ClockSweep</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">BufferDesc</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">buf</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">buffers</span>[<span style="color:#a6e22e">clockHand</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">clockHand</span> = (<span style="color:#a6e22e">clockHand</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">%</span> <span style="color:#a6e22e">N</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">refcount</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {           <span style="color:#75715e">// không ai pin</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">usageCount</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">buf</span>               <span style="color:#75715e">// victim</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">usageCount</span><span style="color:#f92672">--</span>             <span style="color:#75715e">// &#34;tha lần này&#34;</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Mỗi lần page được dùng: usage_count++ (trần 5). Page phải bị kim quét qua 5 lần không ai chạm mới bị đuổi. Trade-off so với LRU thật: kém chính xác một chút, nhưng <strong>hit path hoàn toàn không có điểm tranh chấp chung</strong> (chỉ atomic trên descriptor của chính page đó).</p>
+<h3 id="ring-buffer--chống-seq-scan-phá-cache">Ring buffer — chống seq scan phá cache<a hidden class="anchor" aria-hidden="true" href="#ring-buffer--chống-seq-scan-phá-cache">#</a></h3>
+<p>Seq scan bảng lớn hơn 1/4 shared_buffers <strong>không</strong> dùng chung cơ chế trên: nó được cấp một <strong>ring buffer riêng ~256KB</strong> (32 buffer) và tự tái sử dụng vòng tròn trong đó. Tương tự: VACUUM (ring 2MB), bulk write như COPY (16MB).</p>
+<p><strong>Nếu bỏ cơ chế này:</strong> một analyst chạy <code>SELECT count(*) FROM events</code> (bảng 500GB) → 64 triệu page đi qua cache → usage_count của mọi page nóng bị kim quét về 0 → toàn bộ cache OLTP bị đuổi → p99 latency của cả hệ thống tăng vọt trong nhiều phút. Ring buffer đổi &ldquo;seq scan nhanh hơn một chút nhờ cache&rdquo; lấy &ldquo;phần còn lại của hệ thống không bị thảm sát&rdquo; — một trade-off dễ.</p>
+<p>Hệ quả ngược cần biết: vì seq scan lớn dùng ring 256KB, <strong>chạy lại seq scan lần hai vẫn đọc I/O như lần đầu</strong> (nó không được cache trong shared buffers — nhưng có thể hit OS cache).</p>
+<h2 id="4-bên-dưới-lớp-vật-lý--double-buffering-với-os-cache">4. Bên dưới lớp vật lý — Double Buffering với OS cache<a hidden class="anchor" aria-hidden="true" href="#4-bên-dưới-lớp-vật-lý--double-buffering-với-os-cache">#</a></h2>
+<p>PostgreSQL đọc/ghi data file bằng buffered I/O (không dùng O_DIRECT cho data). Nghĩa là một page nóng tồn tại <strong>hai bản</strong>: một trong shared buffers, một trong OS page cache.</p>
+<pre tabindex="0"><code>   shared_buffers (8GB)        ┌────────── RAM 64GB ──────────┐
    ┌────────────┐              │                              │
    │ page A ●   │   write()    │   OS page cache (~50GB)      │
    │ page B ●   │ ──────────▶  │   page A ● (bản sao!)        │
@@ -83,19 +242,306 @@ PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết
         ▲                      └──────────┬───────────────────┘
         │ read() page C: &#34;miss&#34; của PG    │ fsync khi checkpoint
         │ nhưng hit OS cache → ~vài µs    ▼
-        │ (nhanh hơn disk 20-50 lần)    DISK</code></pre><p><strong>Tại sao chấp nhận lãng phí này?</strong> (a) OS cache miễn phí về code — kernel làm readahead, writeback scheduling giỏi; (b) shared buffers quá lớn từng có scalability issue với clock sweep và checkpoint ghi dồn; (c) linh hoạt — RAM không bị &ldquo;khóa cứng&rdquo; cho PostgreSQL. Đây là lý do khuyến nghị kinh điển <code>shared_buffers = 25% RAM</code>: phần còn lại làm OS cache, và &ldquo;miss&rdquo; của shared buffers thường chỉ rơi xuống OS cache chứ không xuống disk.</p><p><strong>Hướng tương lai:</strong> PG16+ xây dựng lại tầng I/O (AIO trong PG18, direct I/O thử nghiệm) để dần thoát double buffering — theo dõi vì khuyến nghị 25% sẽ thay đổi.</p><p>Lưu ý đo lường quan trọng: <code>pg_stat_database.blks_read</code> đếm &ldquo;miss của shared buffers&rdquo;, <strong>không phải</strong> &ldquo;đọc từ disk&rdquo;. Hit ratio 90% không có nghĩa 10% còn lại chạm disk — đa phần hit OS cache. Muốn biết disk thật: <code>pg_stat_io</code> (PG16+) kết hợp iostat.</p><h2 id=5-dirty-page-và-hai-người-ghi-nền>5. Dirty page và hai người ghi nền<a hidden class=anchor aria-hidden=true href=#5-dirty-page-và-hai-người-ghi-nền>#</a></h2><p>Page bị sửa chỉ đánh dấu DIRTY trong RAM. Ai ghi nó xuống disk? Ba ứng viên, theo thứ tự mong muốn <strong>giảm dần</strong>:</p><ol><li><strong>Checkpointer</strong> (Chương 11): mỗi 5 phút ghi <em>tất cả</em> dirty page, rải đều theo <code>checkpoint_completion_target</code>. Ghi tuần tự theo file → hiệu quả I/O tốt nhất.</li><li><strong>Background writer</strong>: chạy trước kim clock sweep, ghi sẵn các page sắp-bị-evict để backend khỏi phải ghi. Nhịp <code>bgwriter_delay=200ms</code>, mỗi nhịp tối đa <code>bgwriter_lru_maxpages=100</code> page (mặc định — thường phải tăng).</li><li><strong>Backend tự ghi</strong> (tệ nhất): clock sweep chọn victim dirty → backend phải flush WAL + write() page <strong>trong critical path của query</strong> → latency spike cho user.</li></ol><p>Giám sát tỉ lệ ba nguồn này (PG17: <code>pg_stat_io</code>, cột <code>writes</code> theo <code>backend_type</code>; trước đó: <code>pg_stat_bgwriter.buffers_backend</code> vs <code>buffers_clean</code> vs <code>buffers_checkpoint</code>). <strong>Backend chiếm tỉ lệ cao = shared_buffers thiếu hoặc bgwriter yếu.</strong></p><h2 id=6-trade-off>6. Trade-off<a hidden class=anchor aria-hidden=true href=#6-trade-off>#</a></h2><table><thead><tr><th>Quyết định</th><th>Được</th><th>Mất</th></tr></thead><tbody><tr><td>Clock sweep thay LRU thật</td><td>Hit path không tranh chấp</td><td>Xấp xỉ — page nóng vẫn có thể bị đuổi oan</td></tr><tr><td>Buffered I/O thay O_DIRECT</td><td>Tận dụng kernel readahead/writeback, code đơn giản</td><td>Double buffering tốn RAM; kernel writeback khó dự đoán (checkpoint storm — Chương 12 #5)</td></tr><tr><td>shared_buffers 25% thay 80%</td><td>OS cache đỡ miss; tránh nghẽn checkpoint</td><td>Hai lần copy cho page nóng</td></tr><tr><td>Ring buffer cho scan lớn</td><td>Cache OLTP an toàn</td><td>Scan lặp lại không nhanh lên</td></tr><tr><td>Pin/unpin bằng atomic</td><td>Rẻ</td><td>Buffer bị pin lâu (cursor bỏ quên) chặn evict và vacuum</td></tr></tbody></table><h2 id=7-production>7. Production<a hidden class=anchor aria-hidden=true href=#7-production>#</a></h2><ul><li><strong>Định cỡ:</strong> bắt đầu 25% RAM. Tăng lên nếu: working set xác định được và vừa RAM, <code>pg_stat_io</code> cho thấy miss thật xuống disk nhiều. Giảm nếu: checkpoint viết quá dồn, hoặc máy chạy chung nhiều dịch vụ. Workload ghi nặng đôi khi chạy tốt hơn với shared_buffers <strong>nhỏ hơn</strong> (ít dirty page dồn cục cho checkpoint).</li><li><strong>Hit ratio:</strong> <code>blks_hit/(blks_hit+blks_read)</code> — OLTP lành mạnh ≥ 99%. Nhưng nhớ mục 4: đây là hit của tầng PG, không phải của RAM tổng.</li><li><strong>Đo từng bảng:</strong> <code>pg_statio_user_tables</code> — bảng nào gây miss nhiều nhất; extension <code>pg_buffercache</code> — soi chính xác cái gì đang chiếm cache (<code>SELECT relname, count(*) FROM pg_buffercache b JOIN pg_class c ON b.relfilenode=c.relfilenode GROUP BY 1 ORDER BY 2 DESC</code>).</li><li><strong>prewarm:</strong> sau restart, cache nguội → p99 xấu trong nhiều phút. <code>pg_prewarm</code> (kèm <code>pg_prewarm.autoprewarm=on</code>) lưu danh sách buffer và nạp lại sau restart.</li><li><strong>Benchmark đại diện</strong> (pgbench scale 1000, ~15GB data, máy 16GB RAM, NVMe):</li></ul><pre tabindex=0><code>shared_buffers=1GB : tps ≈ 8.500   (miss nhiều nhưng OS cache đỡ)
+        │ (nhanh hơn disk 20-50 lần)    DISK</code></pre><p><strong>Tại sao chấp nhận lãng phí này?</strong> (a) OS cache miễn phí về code — kernel làm readahead, writeback scheduling giỏi; (b) shared buffers quá lớn từng có scalability issue với clock sweep và checkpoint ghi dồn; (c) linh hoạt — RAM không bị &ldquo;khóa cứng&rdquo; cho PostgreSQL. Đây là lý do khuyến nghị kinh điển <code>shared_buffers = 25% RAM</code>: phần còn lại làm OS cache, và &ldquo;miss&rdquo; của shared buffers thường chỉ rơi xuống OS cache chứ không xuống disk.</p>
+<p><strong>Hướng tương lai:</strong> PG16+ xây dựng lại tầng I/O (AIO trong PG18, direct I/O thử nghiệm) để dần thoát double buffering — theo dõi vì khuyến nghị 25% sẽ thay đổi.</p>
+<p>Lưu ý đo lường quan trọng: <code>pg_stat_database.blks_read</code> đếm &ldquo;miss của shared buffers&rdquo;, <strong>không phải</strong> &ldquo;đọc từ disk&rdquo;. Hit ratio 90% không có nghĩa 10% còn lại chạm disk — đa phần hit OS cache. Muốn biết disk thật: <code>pg_stat_io</code> (PG16+) kết hợp iostat.</p>
+<h2 id="5-dirty-page-và-hai-người-ghi-nền">5. Dirty page và hai người ghi nền<a hidden class="anchor" aria-hidden="true" href="#5-dirty-page-và-hai-người-ghi-nền">#</a></h2>
+<p>Page bị sửa chỉ đánh dấu DIRTY trong RAM. Ai ghi nó xuống disk? Ba ứng viên, theo thứ tự mong muốn <strong>giảm dần</strong>:</p>
+<ol>
+<li><strong>Checkpointer</strong> (Chương 11): mỗi 5 phút ghi <em>tất cả</em> dirty page, rải đều theo <code>checkpoint_completion_target</code>. Ghi tuần tự theo file → hiệu quả I/O tốt nhất.</li>
+<li><strong>Background writer</strong>: chạy trước kim clock sweep, ghi sẵn các page sắp-bị-evict để backend khỏi phải ghi. Nhịp <code>bgwriter_delay=200ms</code>, mỗi nhịp tối đa <code>bgwriter_lru_maxpages=100</code> page (mặc định — thường phải tăng).</li>
+<li><strong>Backend tự ghi</strong> (tệ nhất): clock sweep chọn victim dirty → backend phải flush WAL + write() page <strong>trong critical path của query</strong> → latency spike cho user.</li>
+</ol>
+<p>Giám sát tỉ lệ ba nguồn này (PG17: <code>pg_stat_io</code>, cột <code>writes</code> theo <code>backend_type</code>; trước đó: <code>pg_stat_bgwriter.buffers_backend</code> vs <code>buffers_clean</code> vs <code>buffers_checkpoint</code>). <strong>Backend chiếm tỉ lệ cao = shared_buffers thiếu hoặc bgwriter yếu.</strong></p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Quyết định</th>
+          <th>Được</th>
+          <th>Mất</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Clock sweep thay LRU thật</td>
+          <td>Hit path không tranh chấp</td>
+          <td>Xấp xỉ — page nóng vẫn có thể bị đuổi oan</td>
+      </tr>
+      <tr>
+          <td>Buffered I/O thay O_DIRECT</td>
+          <td>Tận dụng kernel readahead/writeback, code đơn giản</td>
+          <td>Double buffering tốn RAM; kernel writeback khó dự đoán (checkpoint storm — Chương 12 #5)</td>
+      </tr>
+      <tr>
+          <td>shared_buffers 25% thay 80%</td>
+          <td>OS cache đỡ miss; tránh nghẽn checkpoint</td>
+          <td>Hai lần copy cho page nóng</td>
+      </tr>
+      <tr>
+          <td>Ring buffer cho scan lớn</td>
+          <td>Cache OLTP an toàn</td>
+          <td>Scan lặp lại không nhanh lên</td>
+      </tr>
+      <tr>
+          <td>Pin/unpin bằng atomic</td>
+          <td>Rẻ</td>
+          <td>Buffer bị pin lâu (cursor bỏ quên) chặn evict và vacuum</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="7-production">7. Production<a hidden class="anchor" aria-hidden="true" href="#7-production">#</a></h2>
+<ul>
+<li><strong>Định cỡ:</strong> bắt đầu 25% RAM. Tăng lên nếu: working set xác định được và vừa RAM, <code>pg_stat_io</code> cho thấy miss thật xuống disk nhiều. Giảm nếu: checkpoint viết quá dồn, hoặc máy chạy chung nhiều dịch vụ. Workload ghi nặng đôi khi chạy tốt hơn với shared_buffers <strong>nhỏ hơn</strong> (ít dirty page dồn cục cho checkpoint).</li>
+<li><strong>Hit ratio:</strong> <code>blks_hit/(blks_hit+blks_read)</code> — OLTP lành mạnh ≥ 99%. Nhưng nhớ mục 4: đây là hit của tầng PG, không phải của RAM tổng.</li>
+<li><strong>Đo từng bảng:</strong> <code>pg_statio_user_tables</code> — bảng nào gây miss nhiều nhất; extension <code>pg_buffercache</code> — soi chính xác cái gì đang chiếm cache (<code>SELECT relname, count(*) FROM pg_buffercache b JOIN pg_class c ON b.relfilenode=c.relfilenode GROUP BY 1 ORDER BY 2 DESC</code>).</li>
+<li><strong>prewarm:</strong> sau restart, cache nguội → p99 xấu trong nhiều phút. <code>pg_prewarm</code> (kèm <code>pg_prewarm.autoprewarm=on</code>) lưu danh sách buffer và nạp lại sau restart.</li>
+<li><strong>Benchmark đại diện</strong> (pgbench scale 1000, ~15GB data, máy 16GB RAM, NVMe):</li>
+</ul>
+<pre tabindex="0"><code>shared_buffers=1GB : tps ≈ 8.500   (miss nhiều nhưng OS cache đỡ)
 shared_buffers=4GB : tps ≈ 12.000  (working set index vừa vào)
 shared_buffers=12GB: tps ≈ 9.000   (OS cache còn quá ít, checkpoint nặng)
-→ Đường cong hình chuông — &#34;to hơn&#34; không phải lúc nào cũng &#34;nhanh hơn&#34;.</code></pre><h2 id=8-failure-cases>8. Failure Cases<a hidden class=anchor aria-hidden=true href=#8-failure-cases>#</a></h2><h3 id=case-a-buffer-cache-thrashing>Case A: Buffer cache thrashing<a hidden class=anchor aria-hidden=true href=#case-a-buffer-cache-thrashing>#</a></h3><p><strong>Triệu chứng:</strong> hit ratio tụt từ 99% xuống 85%, mọi query chậm đều, disk read tăng vọt, CPU iowait cao.
+→ Đường cong hình chuông — &#34;to hơn&#34; không phải lúc nào cũng &#34;nhanh hơn&#34;.</code></pre><h2 id="8-failure-cases">8. Failure Cases<a hidden class="anchor" aria-hidden="true" href="#8-failure-cases">#</a></h2>
+<h3 id="case-a-buffer-cache-thrashing">Case A: Buffer cache thrashing<a hidden class="anchor" aria-hidden="true" href="#case-a-buffer-cache-thrashing">#</a></h3>
+<p><strong>Triệu chứng:</strong> hit ratio tụt từ 99% xuống 85%, mọi query chậm đều, disk read tăng vọt, CPU iowait cao.
 <strong>Root cause điển hình:</strong> working set phình vượt RAM (dữ liệu tăng trưởng tự nhiên/bloat làm working set &ldquo;loãng&rdquo;), hoặc một query pattern mới quét index khổng lồ.
 <strong>Bên trong:</strong> clock sweep quay điên cuồng (theo dõi được qua <code>pg_stat_bgwriter.buffers_alloc</code> tăng vọt), page nóng bị đuổi rồi nạp lại liên tục.
 <strong>Điều tra:</strong> <code>pg_buffercache</code> xem cache đang chứa gì; <code>pg_stat_statements</code> sort theo <code>shared_blks_read</code> tìm query gây miss; kiểm tra bloat (working set loãng vì dead tuple chen giữa).
-<strong>Khắc phục:</strong> diệt bloat trước (rẻ nhất), thêm index cho query quét rộng, rồi mới tính thêm RAM.</p><h3 id=case-b-io-chậm-nhưng-chỉ-thỉnh-thoảng--backend-tự-ghi-page>Case B: &ldquo;IO chậm nhưng chỉ thỉnh thoảng&rdquo; — backend tự ghi page<a hidden class=anchor aria-hidden=true href=#case-b-io-chậm-nhưng-chỉ-thỉnh-thoảng--backend-tự-ghi-page>#</a></h3><p><strong>Triệu chứng:</strong> p99 nhấp nhô theo chu kỳ, trùng nhịp không rõ ràng.
+<strong>Khắc phục:</strong> diệt bloat trước (rẻ nhất), thêm index cho query quét rộng, rồi mới tính thêm RAM.</p>
+<h3 id="case-b-io-chậm-nhưng-chỉ-thỉnh-thoảng--backend-tự-ghi-page">Case B: &ldquo;IO chậm nhưng chỉ thỉnh thoảng&rdquo; — backend tự ghi page<a hidden class="anchor" aria-hidden="true" href="#case-b-io-chậm-nhưng-chỉ-thỉnh-thoảng--backend-tự-ghi-page">#</a></h3>
+<p><strong>Triệu chứng:</strong> p99 nhấp nhô theo chu kỳ, trùng nhịp không rõ ràng.
 <strong>Root cause:</strong> bgwriter không kịp → backend tự evict dirty page → mỗi lần dính thêm 1 write + có thể 1 XLogFlush.
-<strong>Điều tra:</strong> <code>buffers_backend</code> (hoặc <code>pg_stat_io</code> writes của backend_type=client backend) chiếm >20–30% tổng write.
-<strong>Khắc phục:</strong> tăng <code>bgwriter_lru_maxpages</code> (vd 1000), giảm <code>bgwriter_delay</code>, xem lại shared_buffers và nhịp checkpoint.</p><h2 id=9-tóm-tắt>9. Tóm tắt<a hidden class=anchor aria-hidden=true href=#9-tóm-tắt>#</a></h2><ul><li>Buffer manager = hash table + descriptor + clock sweep + 3 tầng bảo vệ (pin, content lock, mapping lock).</li><li>WAL rule được thi hành tại điểm evict và checkpoint: không dirty page nào chạm disk trước WAL của nó.</li><li>Ring buffer cách ly scan lớn khỏi cache OLTP.</li><li>Double buffering với OS cache là lựa chọn có chủ đích — nguồn gốc quy tắc 25% RAM, đang thay đổi dần với direct I/O/AIO.</li><li>Ba người ghi dirty page: checkpointer (tốt) > bgwriter (ổn) > backend (xấu — theo dõi tỉ lệ này).</li></ul><p><strong>Tiếp theo:</strong> <a href=/series/postgres-internal/05-wal/>Chương 5 — WAL</a>: thứ cho phép mọi dirty page trong chương này được phép &ldquo;lười&rdquo;.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/database/>Database</a></li><li><a href=https://thanhhv.github.io/tags/postgresql/>Postgresql</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/postgres-internal/03-physical-storage/><span class=title>« Prev</span><br><span>Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map</span>
-</a><a class=next href=https://thanhhv.github.io/series/postgres-internal/05-wal/><span class=title>Next »</span><br><span>Chương 5 — WAL: Write-Ahead Log</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f&amp;hashtags=backend%2cdatabase%2cpostgresql"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f&amp;title=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;summary=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f&title=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fpostgres-internal%2f04-buffer-manager%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+<strong>Điều tra:</strong> <code>buffers_backend</code> (hoặc <code>pg_stat_io</code> writes của backend_type=client backend) chiếm &gt;20–30% tổng write.
+<strong>Khắc phục:</strong> tăng <code>bgwriter_lru_maxpages</code> (vd 1000), giảm <code>bgwriter_delay</code>, xem lại shared_buffers và nhịp checkpoint.</p>
+<h2 id="9-tóm-tắt">9. Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#9-tóm-tắt">#</a></h2>
+<ul>
+<li>Buffer manager = hash table + descriptor + clock sweep + 3 tầng bảo vệ (pin, content lock, mapping lock).</li>
+<li>WAL rule được thi hành tại điểm evict và checkpoint: không dirty page nào chạm disk trước WAL của nó.</li>
+<li>Ring buffer cách ly scan lớn khỏi cache OLTP.</li>
+<li>Double buffering với OS cache là lựa chọn có chủ đích — nguồn gốc quy tắc 25% RAM, đang thay đổi dần với direct I/O/AIO.</li>
+<li>Ba người ghi dirty page: checkpointer (tốt) &gt; bgwriter (ổn) &gt; backend (xấu — theo dõi tỉ lệ này).</li>
+</ul>
+<p><strong>Tiếp theo:</strong> <a href="/series/postgres-internal/05-wal/">Chương 5 — WAL</a>: thứ cho phép mọi dirty page trong chương này được phép &ldquo;lười&rdquo;.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/database/">Database</a></li>
+      <li><a href="http://localhost:1313/tags/postgresql/">Postgresql</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/postgres-internal/03-physical-storage/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/postgres-internal/05-wal/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 5 — WAL: Write-Ahead Log</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f&amp;hashtags=backend%2cdatabase%2cpostgresql">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f&amp;title=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;summary=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f&title=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 4 — Buffer Manager on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%204%20%e2%80%94%20Buffer%20Manager&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fpostgres-internal%2f04-buffer-manager%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

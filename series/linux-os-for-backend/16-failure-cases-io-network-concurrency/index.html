@@ -1,57 +1,460 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 16 — Production Failure Cases (2): IO, Network & Concurrency | Thanh HV's Blog</title>
-<meta name=keywords content="backend,linux,operating-system"><meta name=description content="
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 16 — Production Failure Cases (2): IO, Network &amp; Concurrency | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, linux, operating-system">
+<meta name="description" content="
 Tiếp nối khung phân tích của chương 15.
 
 Case 10 — File Descriptor Exhausted
 Triệu chứng: accept: too many open files / EMFILE; connection mới bị từ chối trong khi connection cũ vẫn chạy; có thể lan cả máy (ENFILE — trần toàn hệ thống).
-Bên trong kernel: mỗi process có bảng FD (chương 04, files_struct) giới hạn bởi RLIMIT_NOFILE (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi fs.file-max. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — mọi thứ là FD. Cạn FD thường là leak: quên close socket khi lỗi giữa chừng, response body không đóng (Go resp.Body.Close() — bug số một của HTTP client Go), connection pool cấu hình vô hạn."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 16 — Production Failure Cases (2): IO, Network & Concurrency"><meta property="og:description" content=" Tiếp nối khung phân tích của chương 15.
-Case 10 — File Descriptor Exhausted Triệu chứng: accept: too many open files / EMFILE; connection mới bị từ chối trong khi connection cũ vẫn chạy; có thể lan cả máy (ENFILE — trần toàn hệ thống).
-Bên trong kernel: mỗi process có bảng FD (chương 04, files_struct) giới hạn bởi RLIMIT_NOFILE (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi fs.file-max. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — mọi thứ là FD. Cạn FD thường là leak: quên close socket khi lỗi giữa chừng, response body không đóng (Go resp.Body.Close() — bug số một của HTTP client Go), connection pool cấu hình vô hạn."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-02-21T23:00:00+07:00"><meta property="article:modified_time" content="2026-02-21T23:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Linux"><meta property="article:tag" content="Operating-System"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 16 — Production Failure Cases (2): IO, Network & Concurrency"><meta name=twitter:description content="
-Tiếp nối khung phân tích của chương 15.
+Bên trong kernel: mỗi process có bảng FD (chương 04, files_struct) giới hạn bởi RLIMIT_NOFILE (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi fs.file-max. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — mọi thứ là FD. Cạn FD thường là leak: quên close socket khi lỗi giữa chừng, response body không đóng (Go resp.Body.Close() — bug số một của HTTP client Go), connection pool cấu hình vô hạn.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-Case 10 — File Descriptor Exhausted
-Triệu chứng: accept: too many open files / EMFILE; connection mới bị từ chối trong khi connection cũ vẫn chạy; có thể lan cả máy (ENFILE — trần toàn hệ thống).
-Bên trong kernel: mỗi process có bảng FD (chương 04, files_struct) giới hạn bởi RLIMIT_NOFILE (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi fs.file-max. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — mọi thứ là FD. Cạn FD thường là leak: quên close socket khi lỗi giữa chừng, response body không đóng (Go resp.Body.Close() — bug số một của HTTP client Go), connection pool cấu hình vô hạn."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Operating Systems cho Backend Engineer","item":"https://thanhhv.github.io/series/linux-os-for-backend/"},{"@type":"ListItem","position":3,"name":"Chương 16 — Production Failure Cases (2): IO, Network \u0026 Concurrency","item":"https://thanhhv.github.io/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 16 — Production Failure Cases (2): IO, Network \u0026 Concurrency","name":"Chương 16 — Production Failure Cases (2): IO, Network \u0026 Concurrency","description":" Tiếp nối khung phân tích của chương 15.\nCase 10 — File Descriptor Exhausted Triệu chứng: accept: too many open files / EMFILE; connection mới bị từ chối trong khi connection cũ vẫn chạy; có thể lan cả máy (ENFILE — trần toàn hệ thống).\nBên trong kernel: mỗi process có bảng FD (chương 04, files_struct) giới hạn bởi RLIMIT_NOFILE (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi fs.file-max. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — mọi thứ là FD. Cạn FD thường là leak: quên close socket khi lỗi giữa chừng, response body không đóng (Go resp.Body.Close() — bug số một của HTTP client Go), connection pool cấu hình vô hạn.\n","keywords":["backend","linux","operating-system"],"articleBody":" Tiếp nối khung phân tích của chương 15.\nCase 10 — File Descriptor Exhausted Triệu chứng: accept: too many open files / EMFILE; connection mới bị từ chối trong khi connection cũ vẫn chạy; có thể lan cả máy (ENFILE — trần toàn hệ thống).\nBên trong kernel: mỗi process có bảng FD (chương 04, files_struct) giới hạn bởi RLIMIT_NOFILE (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi fs.file-max. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — mọi thứ là FD. Cạn FD thường là leak: quên close socket khi lỗi giữa chừng, response body không đóng (Go resp.Body.Close() — bug số một của HTTP client Go), connection pool cấu hình vô hạn.\nĐiều tra:\n1. ls /proc//fd | wc -l so với cat /proc//limits | grep files 2. Loại gì đang chiếm: ls -l /proc//fd | awk '{print $NF}' | sed 's/:.*//' | sort | uniq -c → socket đa số? → ss -p | grep → tới đích nào, state gì (đống CLOSE_WAIT = phía mình quên close sau khi bên kia đóng — leak rõ ràng) 3. Tăng theo thời gian? → leak; theo traffic? → limit thấp thậtKhắc phục: nâng limit (systemd LimitNOFILE=65536, không phải chỉ ulimit trong shell!); fix leak (defer close, timeout cho idle). Phòng tránh: metric FD count/limit mọi service (node_exporter có sẵn); lint/review pattern close; test lỗi (bên kia đóng đột ngột) trong CI.\nCase 11 — Disk IO 100% / IO chậm Triệu chứng: %wa cao, load cao (D-state), mọi thứ chạm disk đều chậm; app timeout lác đác.\nBên trong kernel (chương 09): hàng đợi block layer dồn ứ — do (a) lượng IO vượt năng lực thiết bị (bão đọc do cache hụt, backup/compaction, thiếu index DB quét bảng); (b) thiết bị suy thoái (SSD hết over-provisioning, lỗi media, RAID rebuild, cloud volume hết burst credit — rất phổ biến trên EBS gp2/gp3!); (c) writeback storm (dirty dồn — chương 09 case mẫu).\nĐiều tra:\n1. iostat -x 1: await tăng so baseline? aqu-sz sâu? r/s w/s bao nhiêu? (nhớ: %util vô nghĩa với NVMe — nhìn await + aqu-sz) 2. AI gây: iotop -o; biosnoop-bpfcc (từng IO: pid, size, latency, sector) 3. Kiểu IO: đọc hay ghi? tuần tự hay ngẫu nhiên (sector nhảy loạn trong biosnoop)? 4. Cloud: dashboard volume (IOPS/throughput/burst balance) — chạm trần thuê bao? 5. dmesg: I/O error, reset link NVMe? smartctl -a: media wearout?Khắc phục: theo nguồn — thêm cache/index (giảm IO là vua), giới hạn batch job (cgroup io.max, ionice), nâng cấp volume/tách disk (WAL riêng!), fix burst credit. Phòng tránh: alert theo latency (await, biolatency p99) chứ không phải %util; capacity planning IOPS; tách ổ theo vai trò.\nCase 12 — fsync chậm Triệu chứng: p99 của ghi (commit DB, produce Kafka acks=all, ghi WAL) tăng vọt trong khi đọc bình thường; DB log “checkpoint took too long” / “WAL flush slow”.\nBên trong kernel (chương 09): fsync = flush dirty page của file + chờ journal commit + FLUSH cache thiết bị. Chậm khi: hàng đợi disk đang ứ IO khác (fsync xếp sau — ưu tiên kém), journal của FS thành điểm tuần tự hóa (nhiều fsync đồng thời chờ nhau commit transaction chung — ext4 một journal!), thiết bị không có write cache an toàn (consumer SSD: FLUSH thật sự đắt; enterprise có PLP nên FLUSH ~rẻ), hoặc cloud volume trần IOPS.\nĐiều tra:\n1. Đo trực tiếp: bpftrace -e 'kprobe:vfs_fsync { @start[tid]=nsecs; } kretprobe:vfs_fsync /@start[tid]/ { @us=hist((nsecs-@start[tid])/1000); delete(@start[tid]); }' → histogram latency fsync thật, theo thời gian thực 2. ext4: cat /proc/fs/jbd2/-8/info → thời gian transaction journal 3. iostat -x: disk đang bận vì ai? (Case 11) — biosnoop lọc flush (F) 4. Phần cứng: loại SSD? PLP? cloud volume loại gì?Khắc phục: tách WAL/journal sang thiết bị riêng ít tranh chấp; group commit (DB đã có — kiểm tra config commit_delay…); đánh giá lại mức bền cần thiết (synchronous_commit=off cho data chấp nhận mất 200ms? Kafka dựa replication?); phần cứng có PLP. Phòng tránh: benchmark fsync (fio --fsync=1) khi chọn phần cứng/volume — con số này quyết định trần commit-rate của mọi database đặt lên.\nCase 13 — inode đầy Triệu chứng: “No space left on device” nhưng df -h còn 40% trống — dòng gây bối rối kinh điển.\nBên trong kernel (chương 09): ext4 cấp số inode cố định lúc mkfs (mặc định ~1 inode/16KB); hàng chục triệu file bé (session file, cache PHP, maildir, artifact CI, container layer bỏ quên) ăn hết inode trước khi hết byte. XFS cấp inode động — hiếm gặp hơn.\nĐiều tra:\n1. df -i → IUse% 100% 2. Ổ đâu ra triệu file: du --inodes -xd3 / | sort -n | tail -20 3. Thủ phạm quen mặt: /var/lib/docker (layer/volume mồ côi), /tmp session, thư mục cache của framework, log chia file theo phútKhắc phục: xóa có chủ đích (docker system prune, dọn cache theo tuổi — cẩn thận rm hàng triệu file cũng là bão IO, dùng find -delete từng phần giờ thấp điểm); dài hạn: mkfs lại với -i nhỏ hơn hoặc chuyển XFS. Phòng tránh: alert df -i song song df -h (nhiều nơi chỉ có cái sau!); thiết kế tránh triệu-file-nhỏ (bucket, SQLite, object store).\nCase 14 — TCP Backlog Full Triệu chứng: client chập chờn “connection timeout/refused” khi tải cao; server “có vẻ khỏe” (CPU/RAM ổn).\nBên trong kernel (chương 11): accept queue đầy vì app gọi accept() chậm hơn tốc độ connection hoàn tất handshake (GC pause, thread accept kẹt, đơn giản là tải tăng). Kernel drop ACK cuối/SYN — client kẹt hoặc retry.\nĐiều tra:\n1. nstat -az | grep -Ei 'ListenOverflows|ListenDrops' → tăng = chẩn đoán XONG 2. ss -lnt → cột Recv-Q (đang đầy) vs Send-Q (sức chứa) của listen socket 3. Vì sao accept chậm: GC log? thread accept đang làm gì (py-spy/jstack/pprof)? 4. somaxconn \u0026 backlog app: sysctl net.core.somaxconn; giá trị listen() trong codeKhắc phục: nâng somaxconn + backlog của app (mua thời gian sống qua burst/pause); fix nguồn accept chậm; nhiều acceptor + SO_REUSEPORT. Phòng tránh: alert ListenOverflows \u003e 0 (phải luôn = 0); load test có burst hình răng cưa chứ không chỉ tải phẳng.\nCase 15 — SYN Flood Triệu chứng: đột ngột không nhận connection mới; dmesg: “possible SYN flooding on port 443”; SYN queue đầy các entry half-open từ IP giả.\nBên trong kernel (chương 11): kẻ tấn công gửi bão SYN không hoàn tất handshake → SYN queue (chứa request state chờ ACK) đầy → SYN thật bị drop. Kernel phòng vệ bằng syncookies: khi queue đầy, thay vì lưu state, mã hóa state vào chính sequence number của SYN-ACK — ACK quay lại giải mã ra state → không tốn memory cho half-open. Trả giá: mất một số TCP option (window scale bị hạn chế…) trong lúc kích hoạt.\nĐiều tra:\n1. nstat | grep -i syn → TcpExtTCPSynRetrans? SyncookiesSent tăng = đang bị + đang chống 2. ss -ntp state syn-recv | head; đếm: ss -n state syn-recv | wc -l 3. Nguồn: tcpdump -c 1000 'tcp[13]=2' → phân bố src IP (giả mạo thì vô nghĩa, nhưng biết được prefix/pattern)Khắc phục: xác nhận net.ipv4.tcp_syncookies=1 (mặc định); tăng tcp_max_syn_backlog; chặn upstream (network ACL, XDP/eBPF drop sớm — rẻ hơn nghìn lần so với để stack xử lý, Anycast/CDN/DDoS provider cho tấn công lớn). Phòng tránh: expose qua LB/CDN có chống DDoS thay vì IP trần; alert SyncookiesSent; diễn tập.\nCase 16 — Epoll Bug (edge-trigger bỏ đói connection) Triệu chứng: một tỷ lệ nhỏ connection “đóng băng” — client chờ mãi trong khi server tưởng không có gì để làm; xuất hiện ngẫu nhiên, tải càng cao càng nhiều; restart hết ngay (rồi quay lại).\nBên trong kernel (chương 10): ET chỉ báo khi socket chuyển rỗng→có-data. Bug app: đọc một phần rồi quay lại chờ (không đọc tới EAGAIN) → data còn nhưng không bao giờ có event mới → connection kẹt vĩnh viễn. Biến thể: hai thread cùng xử lý một fd (event nuốt lẫn nhau), quên đăng ký lại EPOLLONESHOT, xử lý accept với ET mà không accept-cạn.\nĐiều tra:\n1. Nhận diện connection kẹt: ss -tmi | grep -B1 -A1 'rcv_data' → socket có Recv-Q \u003e 0 đứng yên lâu trong khi app \"rảnh\" = bằng chứng vàng 2. App đang chờ gì: pprof/jstack → thread event loop ngủ trong epoll_wait 3. Đọc code đường xử lý EPOLLIN: có vòng while đọc tới EAGAIN không? EPOLLONESHOT có re-arm không?Khắc phục: sửa handler đọc-cạn; hoặc chuyển LT (đơn giản, chấp nhận thừa wakeup). Phòng tránh: dùng thư viện event loop đã kiểm chứng (libuv, netty, Go netpoller) thay vì tự viết trừ khi là nghề của bạn; test với data lớn hơn buffer đọc một lần (điều kiện kích hoạt bug); metric “socket Recv-Q\u003e0 kéo dài” như canary.\nCase 17 — Thread Explosion Triệu chứng: số thread của một process tăng từ trăm lên chục nghìn; memory tăng (kernel stack ~16KB + stack user); context switch bùng nổ (Case 3); có thể chạm kernel.threads-max/pids.max → không tạo nổi thread mới → crash dây chuyền.\nBên trong kernel: mỗi thread = task_struct + kernel stack (chương 05) — kernel không ngăn bạn tự sát bằng số lượng (trừ pids cgroup). Nguồn nổ điển hình: thread-per-request không giới hạn khi downstream chậm lại (mỗi request treo giữ một thread — chậm càng chậm); thread pool “cached/unbounded” (Java newCachedThreadPool dưới tải là quả bom); Go: blocking syscall/cgo dồn dập đẻ M (chương 05).\nĐiều tra:\n1. cat /proc//status | grep Threads — theo dõi theo thời gian 2. Thread đang làm gì: eu-stack -p / jstack / Go: pprof goroutine + go_threads metric → đa số thread block ở đâu? (thường: chờ downstream) 3. Đối chiếu timeline với latency downstream → thấy quan hệ nhân quảKhắc phục: chặn nguồn (timeout cho mọi call ra ngoài! circuit breaker); giới hạn pool + hàng đợi có giới hạn + từ chối sớm (load shedding — fail fast hơn là chết chùm). Phòng tránh: nguyên tắc “mọi tài nguyên có giới hạn tường minh”; alert thread count; load test kịch bản downstream chậm (không chỉ downstream chết — chậm nguy hiểm hơn chết).\nCase 18 — Fork Bomb Triệu chứng: máy tê liệt trong vài giây; không fork nổi lệnh mới để cứu (ssh được nhưng ps fail); load số nghìn.\nBên trong kernel: process đẻ theo cấp số nhân chiếm sạch PID + task_struct + run queue. Kinh điển :(){ :|:\u0026 };: — nhưng bản production thường vô tình: script retry-khi-fail tự gọi mình, supervisor restart-loop không backoff, CI runner đệ quy.\nĐiều tra \u0026 Khắc phục:\n1. Nếu còn shell: exec ps (exec không fork!) / đọc /proc trực tiếp 2. Chặn: kill -STOP cả nhóm trước (SIGKILL từng con = whack-a-mole, chúng đẻ nhanh hơn bạn giết) → rồi kill -KILL cả session/cgroup: systemctl kill -s SIGKILL (giết theo CGROUP — đúng bài) 3. Không vào nổi → reboot (chấp nhận), rồi phân tích nguồn từ log/auditPhòng tránh: pids.max cho MỌI unit/pod (systemd TasksMax, K8s pids limit, mặc định đã có nhưng kiểm tra); user limit ulimit -u; restart policy có backoff; review script retry.\nCase 19 — Zombie Process (Đã phân tích cơ chế đầy đủ ở chương 04 §4.4 và case cạn PID §8.) Tóm tắt tác chiến: zombie = con chết chưa được wait(). Vài con vô hại; tích lũy = cha bug. ps -eo stat,ppid | awk '$1~/Z/{print $2}' | sort | uniq -c → tìm cha; fix cha hoặc restart cha (zombie về init được reap). Container: PID 1 phải biết reap (--init/tini). Alert số zombie \u003e 100. Không thể kill zombie — nó đã chết rồi.\nCase 20 — Deadlock Triệu chứng: một nhóm thread/goroutine đứng im vĩnh viễn; request liên quan treo tới timeout; CPU của nhóm đó = 0 (khác livelock!); phần còn lại của service có thể vẫn chạy → sự cố “một phần tính năng chết” khó thấy.\nBên trong kernel: kernel không biết app deadlock — các thread ngủ ngoan trong futex_wait như mọi thread chờ lock khác, không bao giờ được đánh thức. Bốn điều kiện Coffman hội đủ, thường là lock ordering ngược: T1 giữ A chờ B, T2 giữ B chờ A (chương 08); biến thể hiện đại: goroutine chờ channel không ai gửi, connection pool cạn + giữ connection đi xin connection nữa (self-deadlock qua pool!), lock + chờ chính worker pool đang bị mình chặn.\nĐiều tra:\n1. Chụp stack TOÀN BỘ: Go: /debug/pprof/goroutine?debug=2 (goroutine \"chan receive, 47 minutes\" = ngay đó); Java: jstack (tự phát hiện \"Found one Java-level deadlock\"!); C: gdb -p → thread apply all bt 2. Tìm chu trình: ai giữ gì chờ gì — futex thì địa chỉ lock trong frame 3. Kernel-side hiếm hơn: task D-state mãi mãi + /proc//stack (lock FS/NFS)Khắc phục: restart (deadlock không tự khỏi); rồi fix: thứ tự lock toàn cục, TryLock + timeout, thu hẹp critical section, tách pool. Phòng tránh: quy ước lock ordering trong docs kiến trúc; Go race detector + go vet; timeout cho mọi thao tác chờ (không có “chờ vô hạn” trong production); test hỗn loạn concurrency.\nCase 21 — Livelock Triệu chứng: như deadlock nhưng CPU 100%: các bên liên tục hoạt động (retry, back-off rồi lại đụng nhau) mà không bên nào tiến triển. Ví dụ thật: hai service retry lẫn nhau tức thời khi lỗi → bão retry tự duy trì sau một trục trặc thoáng qua (retry storm = livelock phân tán — kịch bản sập dây chuyền phổ biến nhất của microservice); CAS loop nóng dưới contention cực đại; hai transaction DB deadlock-detector giết rồi retry đồng thời mãi.\nĐiều tra: profile thấy vòng lặp retry/CAS chiếm CPU; log lỗi lặp chu kỳ; đồ thị traffic nội bộ gấp nhiều lần traffic vào (khuếch đại retry).\nKhắc phục \u0026 phòng tránh: exponential backoff + jitter (jitter là phần hay bị quên — không có nó mọi client đồng bộ hóa nhịp retry!); retry budget (ví dụ tối đa 20% traffic là retry); circuit breaker; ở tầng lock: hàng đợi (ticket/futex) thay vì spin tự do. Nguyên lý: hệ có retry là hệ có vòng phản hồi dương tiềm ẩn — phải thiết kế phần tử cản.\nCase 22 — Priority Inversion Triệu chứng: task ưu tiên cao (RT hoặc nice thấp) thỉnh thoảng trễ rất lâu một cách không thể hiểu — đúng bằng thời gian chạy của các task ưu tiên trung bình chẳng liên quan.\nBên trong kernel (chương 06, 08): H (cao) chờ lock mà L (thấp) đang giữ; M (giữa) preempt L → L không chạy được để nhả lock → H chờ M — đảo ngược ưu tiên. Kinh điển: Mars Pathfinder 1997. Linux giải bằng priority inheritance cho futex PI (pthread_mutexattr_setprotocol(PTHREAD_PRIO_INHERIT)): L tạm “mượn” ưu tiên của H khi giữ lock H cần; rt_mutex trong kernel có PI sẵn. Nhưng: mutex thường không có PI, và PI không cứu được nếu chuỗi chờ đi qua tài nguyên không phải lock (queue, IO).\nĐiều tra: chỉ hiện hình khi trace scheduling — perf sched timehist / ftrace sched_switch quanh thời điểm trễ: thấy H ở trạng thái chờ lock, L runnable-nhưng-không-được-chạy, M chiếm CPU.\nKhắc phục \u0026 phòng tránh: nếu buộc phải trộn RT + lock chia sẻ → PI mutex, giữ critical section cực ngắn, cấp CPU riêng cho RT (isolcpus/cpuset); tốt hơn: đừng chia sẻ lock giữa các mức ưu tiên khác nhau — giao tiếp qua lock-free queue. Với backend thường (không RT): bài học áp dụng cho nice/cgroup weight chênh lệch lớn + lock chung — cùng một hình dạng vấn đề, mức độ nhẹ hơn.\nPhụ lục nhanh — Memory Fragmentation (bổ sung Case 5/7) RAM còn nhiều nhưng cấp phát liên tục vật lý thất bại (huge page, DMA buffer, driver): /proc/buddyinfo thấy cạn block bậc cao. Triệu chứng: THP allocation stall (app khựng khi kernel compact), page allocation failure trong dmesg ở driver. Xử lý: echo 1 \u003e /proc/sys/vm/compact_memory (tạm), giảm phụ thuộc huge page động (cấp hugetlbfs lúc boot), theo dõi /proc/pagetypeinfo. User-space fragmentation (heap allocator) → RSS cao dai dẳng: đổi allocator (jemalloc), restart định kỳ, thiết kế pool theo size-class.\nTiếp: Chương 17 — Kiến trúc thực tế: soi các cơ chế trên vào PostgreSQL, Redis, Kafka, Nginx, Go, Node.js, Docker, Kubernetes.\n","wordCount":"2748","inLanguage":"en","datePublished":"2026-02-21T23:00:00+07:00","dateModified":"2026-02-21T23:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/linux-os-for-backend/>Operating Systems cho Backend Engineer</a></div><h1 class="post-title entry-hint-parent">Chương 16 — Production Failure Cases (2): IO, Network & Concurrency</h1><div class=post-meta><span title='2026-02-21 23:00:00 +0700 +07'>February 21, 2026</span>&nbsp;·&nbsp;13 min</div></header><div class=post-content><blockquote><p>Tiếp nối khung phân tích của chương 15.</p></blockquote><hr><h2 id=case-10--file-descriptor-exhausted>Case 10 — File Descriptor Exhausted<a hidden class=anchor aria-hidden=true href=#case-10--file-descriptor-exhausted>#</a></h2><p><strong>Triệu chứng</strong>: <code>accept: too many open files</code> / <code>EMFILE</code>; connection mới bị từ chối trong khi connection cũ vẫn chạy; có thể lan cả máy (<code>ENFILE</code> — trần toàn hệ thống).</p><p><strong>Bên trong kernel</strong>: mỗi process có bảng FD (chương 04, <code>files_struct</code>) giới hạn bởi <code>RLIMIT_NOFILE</code> (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi <code>fs.file-max</code>. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — <strong>mọi thứ là FD</strong>. Cạn FD thường là <em>leak</em>: quên close socket khi lỗi giữa chừng, response body không đóng (Go <code>resp.Body.Close()</code> — bug số một của HTTP client Go), connection pool cấu hình vô hạn.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. ls /proc/&lt;pid&gt;/fd | wc -l   so với  cat /proc/&lt;pid&gt;/limits | grep files
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/linux-os-for-backend/">Operating Systems cho Backend Engineer</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 16 — Production Failure Cases (2): IO, Network &amp; Concurrency
+    </h1>
+    <div class="post-meta"><span title='2026-02-21 23:00:00 +0700 +07'>February 21, 2026</span>&nbsp;·&nbsp;13 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Tiếp nối khung phân tích của chương 15.</p></blockquote>
+<hr>
+<h2 id="case-10--file-descriptor-exhausted">Case 10 — File Descriptor Exhausted<a hidden class="anchor" aria-hidden="true" href="#case-10--file-descriptor-exhausted">#</a></h2>
+<p><strong>Triệu chứng</strong>: <code>accept: too many open files</code> / <code>EMFILE</code>; connection mới bị từ chối trong khi connection cũ vẫn chạy; có thể lan cả máy (<code>ENFILE</code> — trần toàn hệ thống).</p>
+<p><strong>Bên trong kernel</strong>: mỗi process có bảng FD (chương 04, <code>files_struct</code>) giới hạn bởi <code>RLIMIT_NOFILE</code> (mặc định soft 1024 lịch sử — quá thấp cho server!); toàn máy bởi <code>fs.file-max</code>. FD không chỉ là file: socket, pipe, epoll, timerfd, eventfd — <strong>mọi thứ là FD</strong>. Cạn FD thường là <em>leak</em>: quên close socket khi lỗi giữa chừng, response body không đóng (Go <code>resp.Body.Close()</code> — bug số một của HTTP client Go), connection pool cấu hình vô hạn.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. ls /proc/&lt;pid&gt;/fd | wc -l   so với  cat /proc/&lt;pid&gt;/limits | grep files
 2. Loại gì đang chiếm: ls -l /proc/&lt;pid&gt;/fd | awk &#39;{print $NF}&#39; | sed &#39;s/:.*//&#39; | sort | uniq -c
    → socket đa số? → ss -p | grep &lt;pid&gt; → tới đích nào, state gì
    (đống CLOSE_WAIT = phía mình quên close sau khi bên kia đóng — leak rõ ràng)
-3. Tăng theo thời gian? → leak; theo traffic? → limit thấp thật</code></pre><p><strong>Khắc phục</strong>: nâng limit (systemd <code>LimitNOFILE=65536</code>, không phải chỉ ulimit trong shell!); fix leak (defer close, timeout cho idle). <strong>Phòng tránh</strong>: metric FD count/limit mọi service (node_exporter có sẵn); lint/review pattern close; test lỗi (bên kia đóng đột ngột) trong CI.</p><hr><h2 id=case-11--disk-io-100--io-chậm>Case 11 — Disk IO 100% / IO chậm<a hidden class=anchor aria-hidden=true href=#case-11--disk-io-100--io-chậm>#</a></h2><p><strong>Triệu chứng</strong>: <code>%wa</code> cao, load cao (D-state), mọi thứ chạm disk đều chậm; app timeout lác đác.</p><p><strong>Bên trong kernel</strong> (chương 09): hàng đợi block layer dồn ứ — do (a) lượng IO vượt năng lực thiết bị (bão đọc do cache hụt, backup/compaction, thiếu index DB quét bảng); (b) thiết bị suy thoái (SSD hết over-provisioning, lỗi media, RAID rebuild, cloud volume hết burst credit — rất phổ biến trên EBS gp2/gp3!); (c) writeback storm (dirty dồn — chương 09 case mẫu).</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. iostat -x 1: await tăng so baseline? aqu-sz sâu? r/s w/s bao nhiêu?
+3. Tăng theo thời gian? → leak; theo traffic? → limit thấp thật</code></pre><p><strong>Khắc phục</strong>: nâng limit (systemd <code>LimitNOFILE=65536</code>, không phải chỉ ulimit trong shell!); fix leak (defer close, timeout cho idle). <strong>Phòng tránh</strong>: metric FD count/limit mọi service (node_exporter có sẵn); lint/review pattern close; test lỗi (bên kia đóng đột ngột) trong CI.</p>
+<hr>
+<h2 id="case-11--disk-io-100--io-chậm">Case 11 — Disk IO 100% / IO chậm<a hidden class="anchor" aria-hidden="true" href="#case-11--disk-io-100--io-chậm">#</a></h2>
+<p><strong>Triệu chứng</strong>: <code>%wa</code> cao, load cao (D-state), mọi thứ chạm disk đều chậm; app timeout lác đác.</p>
+<p><strong>Bên trong kernel</strong> (chương 09): hàng đợi block layer dồn ứ — do (a) lượng IO vượt năng lực thiết bị (bão đọc do cache hụt, backup/compaction, thiếu index DB quét bảng); (b) thiết bị suy thoái (SSD hết over-provisioning, lỗi media, RAID rebuild, cloud volume hết burst credit — rất phổ biến trên EBS gp2/gp3!); (c) writeback storm (dirty dồn — chương 09 case mẫu).</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. iostat -x 1: await tăng so baseline? aqu-sz sâu? r/s w/s bao nhiêu?
    (nhớ: %util vô nghĩa với NVMe — nhìn await + aqu-sz)
 2. AI gây: iotop -o; biosnoop-bpfcc (từng IO: pid, size, latency, sector)
 3. Kiểu IO: đọc hay ghi? tuần tự hay ngẫu nhiên (sector nhảy loạn trong biosnoop)?
 4. Cloud: dashboard volume (IOPS/throughput/burst balance) — chạm trần thuê bao?
-5. dmesg: I/O error, reset link NVMe? smartctl -a: media wearout?</code></pre><p><strong>Khắc phục</strong>: theo nguồn — thêm cache/index (giảm IO là vua), giới hạn batch job (cgroup io.max, ionice), nâng cấp volume/tách disk (WAL riêng!), fix burst credit. <strong>Phòng tránh</strong>: alert theo <em>latency</em> (await, biolatency p99) chứ không phải %util; capacity planning IOPS; tách ổ theo vai trò.</p><hr><h2 id=case-12--fsync-chậm>Case 12 — fsync chậm<a hidden class=anchor aria-hidden=true href=#case-12--fsync-chậm>#</a></h2><p><strong>Triệu chứng</strong>: p99 của <em>ghi</em> (commit DB, produce Kafka acks=all, ghi WAL) tăng vọt trong khi đọc bình thường; DB log &ldquo;checkpoint took too long&rdquo; / &ldquo;WAL flush slow&rdquo;.</p><p><strong>Bên trong kernel</strong> (chương 09): fsync = flush dirty page của file + chờ journal commit + FLUSH cache thiết bị. Chậm khi: hàng đợi disk đang ứ IO khác (fsync xếp sau — ưu tiên kém), journal của FS thành điểm tuần tự hóa (nhiều fsync đồng thời chờ nhau commit transaction chung — ext4 một journal!), thiết bị không có write cache an toàn (consumer SSD: FLUSH thật sự đắt; enterprise có PLP nên FLUSH ~rẻ), hoặc cloud volume trần IOPS.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. Đo trực tiếp: bpftrace -e &#39;kprobe:vfs_fsync { @start[tid]=nsecs; }
+5. dmesg: I/O error, reset link NVMe? smartctl -a: media wearout?</code></pre><p><strong>Khắc phục</strong>: theo nguồn — thêm cache/index (giảm IO là vua), giới hạn batch job (cgroup io.max, ionice), nâng cấp volume/tách disk (WAL riêng!), fix burst credit. <strong>Phòng tránh</strong>: alert theo <em>latency</em> (await, biolatency p99) chứ không phải %util; capacity planning IOPS; tách ổ theo vai trò.</p>
+<hr>
+<h2 id="case-12--fsync-chậm">Case 12 — fsync chậm<a hidden class="anchor" aria-hidden="true" href="#case-12--fsync-chậm">#</a></h2>
+<p><strong>Triệu chứng</strong>: p99 của <em>ghi</em> (commit DB, produce Kafka acks=all, ghi WAL) tăng vọt trong khi đọc bình thường; DB log &ldquo;checkpoint took too long&rdquo; / &ldquo;WAL flush slow&rdquo;.</p>
+<p><strong>Bên trong kernel</strong> (chương 09): fsync = flush dirty page của file + chờ journal commit + FLUSH cache thiết bị. Chậm khi: hàng đợi disk đang ứ IO khác (fsync xếp sau — ưu tiên kém), journal của FS thành điểm tuần tự hóa (nhiều fsync đồng thời chờ nhau commit transaction chung — ext4 một journal!), thiết bị không có write cache an toàn (consumer SSD: FLUSH thật sự đắt; enterprise có PLP nên FLUSH ~rẻ), hoặc cloud volume trần IOPS.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. Đo trực tiếp: bpftrace -e &#39;kprobe:vfs_fsync { @start[tid]=nsecs; }
    kretprobe:vfs_fsync /@start[tid]/ { @us=hist((nsecs-@start[tid])/1000); delete(@start[tid]); }&#39;
    → histogram latency fsync thật, theo thời gian thực
 2. ext4: cat /proc/fs/jbd2/&lt;dev&gt;-8/info → thời gian transaction journal
 3. iostat -x: disk đang bận vì ai? (Case 11) — biosnoop lọc flush (F)
-4. Phần cứng: loại SSD? PLP? cloud volume loại gì?</code></pre><p><strong>Khắc phục</strong>: tách WAL/journal sang thiết bị riêng ít tranh chấp; group commit (DB đã có — kiểm tra config <code>commit_delay</code>&mldr;); đánh giá lại mức bền cần thiết (<code>synchronous_commit=off</code> cho data chấp nhận mất 200ms? Kafka dựa replication?); phần cứng có PLP. <strong>Phòng tránh</strong>: benchmark fsync (<code>fio --fsync=1</code>) khi chọn phần cứng/volume — con số này quyết định trần commit-rate của mọi database đặt lên.</p><hr><h2 id=case-13--inode-đầy>Case 13 — inode đầy<a hidden class=anchor aria-hidden=true href=#case-13--inode-đầy>#</a></h2><p><strong>Triệu chứng</strong>: &ldquo;No space left on device&rdquo; nhưng <code>df -h</code> còn 40% trống — dòng gây bối rối kinh điển.</p><p><strong>Bên trong kernel</strong> (chương 09): ext4 cấp số inode cố định lúc mkfs (mặc định ~1 inode/16KB); hàng chục triệu file bé (session file, cache PHP, maildir, artifact CI, <strong>container layer bỏ quên</strong>) ăn hết inode trước khi hết byte. XFS cấp inode động — hiếm gặp hơn.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. df -i → IUse% 100%
+4. Phần cứng: loại SSD? PLP? cloud volume loại gì?</code></pre><p><strong>Khắc phục</strong>: tách WAL/journal sang thiết bị riêng ít tranh chấp; group commit (DB đã có — kiểm tra config <code>commit_delay</code>&hellip;); đánh giá lại mức bền cần thiết (<code>synchronous_commit=off</code> cho data chấp nhận mất 200ms? Kafka dựa replication?); phần cứng có PLP. <strong>Phòng tránh</strong>: benchmark fsync (<code>fio --fsync=1</code>) khi chọn phần cứng/volume — con số này quyết định trần commit-rate của mọi database đặt lên.</p>
+<hr>
+<h2 id="case-13--inode-đầy">Case 13 — inode đầy<a hidden class="anchor" aria-hidden="true" href="#case-13--inode-đầy">#</a></h2>
+<p><strong>Triệu chứng</strong>: &ldquo;No space left on device&rdquo; nhưng <code>df -h</code> còn 40% trống — dòng gây bối rối kinh điển.</p>
+<p><strong>Bên trong kernel</strong> (chương 09): ext4 cấp số inode cố định lúc mkfs (mặc định ~1 inode/16KB); hàng chục triệu file bé (session file, cache PHP, maildir, artifact CI, <strong>container layer bỏ quên</strong>) ăn hết inode trước khi hết byte. XFS cấp inode động — hiếm gặp hơn.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. df -i → IUse% 100%
 2. Ổ đâu ra triệu file: du --inodes -xd3 / | sort -n | tail -20
 3. Thủ phạm quen mặt: /var/lib/docker (layer/volume mồ côi), /tmp session,
-   thư mục cache của framework, log chia file theo phút</code></pre><p><strong>Khắc phục</strong>: xóa có chủ đích (<code>docker system prune</code>, dọn cache theo tuổi — cẩn thận <code>rm</code> hàng triệu file cũng là bão IO, dùng <code>find -delete</code> từng phần giờ thấp điểm); dài hạn: mkfs lại với <code>-i</code> nhỏ hơn hoặc chuyển XFS. <strong>Phòng tránh</strong>: alert <code>df -i</code> song song <code>df -h</code> (nhiều nơi chỉ có cái sau!); thiết kế tránh triệu-file-nhỏ (bucket, SQLite, object store).</p><hr><h2 id=case-14--tcp-backlog-full>Case 14 — TCP Backlog Full<a hidden class=anchor aria-hidden=true href=#case-14--tcp-backlog-full>#</a></h2><p><strong>Triệu chứng</strong>: client chập chờn &ldquo;connection timeout/refused&rdquo; khi tải cao; server &ldquo;có vẻ khỏe&rdquo; (CPU/RAM ổn).</p><p><strong>Bên trong kernel</strong> (chương 11): accept queue đầy vì app gọi <code>accept()</code> chậm hơn tốc độ connection hoàn tất handshake (GC pause, thread accept kẹt, đơn giản là tải tăng). Kernel drop ACK cuối/SYN — client kẹt hoặc retry.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. nstat -az | grep -Ei &#39;ListenOverflows|ListenDrops&#39; → tăng = chẩn đoán XONG
+   thư mục cache của framework, log chia file theo phút</code></pre><p><strong>Khắc phục</strong>: xóa có chủ đích (<code>docker system prune</code>, dọn cache theo tuổi — cẩn thận <code>rm</code> hàng triệu file cũng là bão IO, dùng <code>find -delete</code> từng phần giờ thấp điểm); dài hạn: mkfs lại với <code>-i</code> nhỏ hơn hoặc chuyển XFS. <strong>Phòng tránh</strong>: alert <code>df -i</code> song song <code>df -h</code> (nhiều nơi chỉ có cái sau!); thiết kế tránh triệu-file-nhỏ (bucket, SQLite, object store).</p>
+<hr>
+<h2 id="case-14--tcp-backlog-full">Case 14 — TCP Backlog Full<a hidden class="anchor" aria-hidden="true" href="#case-14--tcp-backlog-full">#</a></h2>
+<p><strong>Triệu chứng</strong>: client chập chờn &ldquo;connection timeout/refused&rdquo; khi tải cao; server &ldquo;có vẻ khỏe&rdquo; (CPU/RAM ổn).</p>
+<p><strong>Bên trong kernel</strong> (chương 11): accept queue đầy vì app gọi <code>accept()</code> chậm hơn tốc độ connection hoàn tất handshake (GC pause, thread accept kẹt, đơn giản là tải tăng). Kernel drop ACK cuối/SYN — client kẹt hoặc retry.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. nstat -az | grep -Ei &#39;ListenOverflows|ListenDrops&#39; → tăng = chẩn đoán XONG
 2. ss -lnt → cột Recv-Q (đang đầy) vs Send-Q (sức chứa) của listen socket
 3. Vì sao accept chậm: GC log? thread accept đang làm gì (py-spy/jstack/pprof)?
-4. somaxconn &amp; backlog app: sysctl net.core.somaxconn; giá trị listen() trong code</code></pre><p><strong>Khắc phục</strong>: nâng <code>somaxconn</code> + backlog của app (mua thời gian sống qua burst/pause); fix nguồn accept chậm; nhiều acceptor + <code>SO_REUSEPORT</code>. <strong>Phòng tránh</strong>: alert ListenOverflows > 0 (phải luôn = 0); load test có burst hình răng cưa chứ không chỉ tải phẳng.</p><hr><h2 id=case-15--syn-flood>Case 15 — SYN Flood<a hidden class=anchor aria-hidden=true href=#case-15--syn-flood>#</a></h2><p><strong>Triệu chứng</strong>: đột ngột không nhận connection mới; <code>dmesg</code>: &ldquo;possible SYN flooding on port 443&rdquo;; SYN queue đầy các entry half-open từ IP giả.</p><p><strong>Bên trong kernel</strong> (chương 11): kẻ tấn công gửi bão SYN không hoàn tất handshake → SYN queue (chứa request state chờ ACK) đầy → SYN thật bị drop. Kernel phòng vệ bằng <strong>syncookies</strong>: khi queue đầy, thay vì lưu state, mã hóa state vào chính sequence number của SYN-ACK — ACK quay lại giải mã ra state → không tốn memory cho half-open. Trả giá: mất một số TCP option (window scale bị hạn chế&mldr;) trong lúc kích hoạt.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. nstat | grep -i syn → TcpExtTCPSynRetrans? SyncookiesSent tăng = đang bị + đang chống
+4. somaxconn &amp; backlog app: sysctl net.core.somaxconn; giá trị listen() trong code</code></pre><p><strong>Khắc phục</strong>: nâng <code>somaxconn</code> + backlog của app (mua thời gian sống qua burst/pause); fix nguồn accept chậm; nhiều acceptor + <code>SO_REUSEPORT</code>. <strong>Phòng tránh</strong>: alert ListenOverflows &gt; 0 (phải luôn = 0); load test có burst hình răng cưa chứ không chỉ tải phẳng.</p>
+<hr>
+<h2 id="case-15--syn-flood">Case 15 — SYN Flood<a hidden class="anchor" aria-hidden="true" href="#case-15--syn-flood">#</a></h2>
+<p><strong>Triệu chứng</strong>: đột ngột không nhận connection mới; <code>dmesg</code>: &ldquo;possible SYN flooding on port 443&rdquo;; SYN queue đầy các entry half-open từ IP giả.</p>
+<p><strong>Bên trong kernel</strong> (chương 11): kẻ tấn công gửi bão SYN không hoàn tất handshake → SYN queue (chứa request state chờ ACK) đầy → SYN thật bị drop. Kernel phòng vệ bằng <strong>syncookies</strong>: khi queue đầy, thay vì lưu state, mã hóa state vào chính sequence number của SYN-ACK — ACK quay lại giải mã ra state → không tốn memory cho half-open. Trả giá: mất một số TCP option (window scale bị hạn chế&hellip;) trong lúc kích hoạt.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. nstat | grep -i syn → TcpExtTCPSynRetrans? SyncookiesSent tăng = đang bị + đang chống
 2. ss -ntp state syn-recv | head; đếm: ss -n state syn-recv | wc -l
 3. Nguồn: tcpdump -c 1000 &#39;tcp[13]=2&#39; → phân bố src IP (giả mạo thì vô nghĩa,
-   nhưng biết được prefix/pattern)</code></pre><p><strong>Khắc phục</strong>: xác nhận <code>net.ipv4.tcp_syncookies=1</code> (mặc định); tăng <code>tcp_max_syn_backlog</code>; chặn upstream (network ACL, XDP/eBPF drop sớm — rẻ hơn nghìn lần so với để stack xử lý, Anycast/CDN/DDoS provider cho tấn công lớn). <strong>Phòng tránh</strong>: expose qua LB/CDN có chống DDoS thay vì IP trần; alert SyncookiesSent; diễn tập.</p><hr><h2 id=case-16--epoll-bug-edge-trigger-bỏ-đói-connection>Case 16 — Epoll Bug (edge-trigger bỏ đói connection)<a hidden class=anchor aria-hidden=true href=#case-16--epoll-bug-edge-trigger-bỏ-đói-connection>#</a></h2><p><strong>Triệu chứng</strong>: một tỷ lệ nhỏ connection &ldquo;đóng băng&rdquo; — client chờ mãi trong khi server tưởng không có gì để làm; xuất hiện ngẫu nhiên, tải càng cao càng nhiều; restart hết ngay (rồi quay lại).</p><p><strong>Bên trong kernel</strong> (chương 10): ET chỉ báo khi socket <em>chuyển</em> rỗng→có-data. Bug app: đọc một phần rồi quay lại chờ (không đọc tới EAGAIN) → data còn nhưng không bao giờ có event mới → connection kẹt vĩnh viễn. Biến thể: hai thread cùng xử lý một fd (event nuốt lẫn nhau), quên đăng ký lại EPOLLONESHOT, xử lý accept với ET mà không accept-cạn.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. Nhận diện connection kẹt: ss -tmi | grep -B1 -A1 &#39;rcv_data&#39; → socket có
+   nhưng biết được prefix/pattern)</code></pre><p><strong>Khắc phục</strong>: xác nhận <code>net.ipv4.tcp_syncookies=1</code> (mặc định); tăng <code>tcp_max_syn_backlog</code>; chặn upstream (network ACL, XDP/eBPF drop sớm — rẻ hơn nghìn lần so với để stack xử lý, Anycast/CDN/DDoS provider cho tấn công lớn). <strong>Phòng tránh</strong>: expose qua LB/CDN có chống DDoS thay vì IP trần; alert SyncookiesSent; diễn tập.</p>
+<hr>
+<h2 id="case-16--epoll-bug-edge-trigger-bỏ-đói-connection">Case 16 — Epoll Bug (edge-trigger bỏ đói connection)<a hidden class="anchor" aria-hidden="true" href="#case-16--epoll-bug-edge-trigger-bỏ-đói-connection">#</a></h2>
+<p><strong>Triệu chứng</strong>: một tỷ lệ nhỏ connection &ldquo;đóng băng&rdquo; — client chờ mãi trong khi server tưởng không có gì để làm; xuất hiện ngẫu nhiên, tải càng cao càng nhiều; restart hết ngay (rồi quay lại).</p>
+<p><strong>Bên trong kernel</strong> (chương 10): ET chỉ báo khi socket <em>chuyển</em> rỗng→có-data. Bug app: đọc một phần rồi quay lại chờ (không đọc tới EAGAIN) → data còn nhưng không bao giờ có event mới → connection kẹt vĩnh viễn. Biến thể: hai thread cùng xử lý một fd (event nuốt lẫn nhau), quên đăng ký lại EPOLLONESHOT, xử lý accept với ET mà không accept-cạn.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. Nhận diện connection kẹt: ss -tmi | grep -B1 -A1 &#39;rcv_data&#39; → socket có
    Recv-Q &gt; 0 đứng yên lâu trong khi app &#34;rảnh&#34; = bằng chứng vàng
 2. App đang chờ gì: pprof/jstack → thread event loop ngủ trong epoll_wait
 3. Đọc code đường xử lý EPOLLIN: có vòng while đọc tới EAGAIN không?
-   EPOLLONESHOT có re-arm không?</code></pre><p><strong>Khắc phục</strong>: sửa handler đọc-cạn; hoặc chuyển LT (đơn giản, chấp nhận thừa wakeup). <strong>Phòng tránh</strong>: dùng thư viện event loop đã kiểm chứng (libuv, netty, Go netpoller) thay vì tự viết trừ khi là nghề của bạn; test với data lớn hơn buffer đọc một lần (điều kiện kích hoạt bug); metric &ldquo;socket Recv-Q>0 kéo dài&rdquo; như canary.</p><hr><h2 id=case-17--thread-explosion>Case 17 — Thread Explosion<a hidden class=anchor aria-hidden=true href=#case-17--thread-explosion>#</a></h2><p><strong>Triệu chứng</strong>: số thread của một process tăng từ trăm lên chục nghìn; memory tăng (kernel stack ~16KB + stack user); context switch bùng nổ (Case 3); có thể chạm <code>kernel.threads-max</code>/<code>pids.max</code> → không tạo nổi thread mới → crash dây chuyền.</p><p><strong>Bên trong kernel</strong>: mỗi thread = task_struct + kernel stack (chương 05) — kernel không ngăn bạn tự sát bằng số lượng (trừ pids cgroup). Nguồn nổ điển hình: thread-per-request không giới hạn khi downstream chậm lại (mỗi request treo giữ một thread — chậm càng chậm); thread pool &ldquo;cached/unbounded&rdquo; (Java <code>newCachedThreadPool</code> dưới tải là quả bom); Go: blocking syscall/cgo dồn dập đẻ M (chương 05).</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. cat /proc/&lt;pid&gt;/status | grep Threads — theo dõi theo thời gian
+   EPOLLONESHOT có re-arm không?</code></pre><p><strong>Khắc phục</strong>: sửa handler đọc-cạn; hoặc chuyển LT (đơn giản, chấp nhận thừa wakeup). <strong>Phòng tránh</strong>: dùng thư viện event loop đã kiểm chứng (libuv, netty, Go netpoller) thay vì tự viết trừ khi là nghề của bạn; test với data lớn hơn buffer đọc một lần (điều kiện kích hoạt bug); metric &ldquo;socket Recv-Q&gt;0 kéo dài&rdquo; như canary.</p>
+<hr>
+<h2 id="case-17--thread-explosion">Case 17 — Thread Explosion<a hidden class="anchor" aria-hidden="true" href="#case-17--thread-explosion">#</a></h2>
+<p><strong>Triệu chứng</strong>: số thread của một process tăng từ trăm lên chục nghìn; memory tăng (kernel stack ~16KB + stack user); context switch bùng nổ (Case 3); có thể chạm <code>kernel.threads-max</code>/<code>pids.max</code> → không tạo nổi thread mới → crash dây chuyền.</p>
+<p><strong>Bên trong kernel</strong>: mỗi thread = task_struct + kernel stack (chương 05) — kernel không ngăn bạn tự sát bằng số lượng (trừ pids cgroup). Nguồn nổ điển hình: thread-per-request không giới hạn khi downstream chậm lại (mỗi request treo giữ một thread — chậm càng chậm); thread pool &ldquo;cached/unbounded&rdquo; (Java <code>newCachedThreadPool</code> dưới tải là quả bom); Go: blocking syscall/cgo dồn dập đẻ M (chương 05).</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. cat /proc/&lt;pid&gt;/status | grep Threads — theo dõi theo thời gian
 2. Thread đang làm gì: eu-stack -p &lt;pid&gt; / jstack / Go: pprof goroutine +
    go_threads metric → đa số thread block ở đâu? (thường: chờ downstream)
-3. Đối chiếu timeline với latency downstream → thấy quan hệ nhân quả</code></pre><p><strong>Khắc phục</strong>: chặn nguồn (timeout cho mọi call ra ngoài! circuit breaker); giới hạn pool + hàng đợi có giới hạn + từ chối sớm (load shedding — fail fast hơn là chết chùm). <strong>Phòng tránh</strong>: nguyên tắc &ldquo;mọi tài nguyên có giới hạn tường minh&rdquo;; alert thread count; load test kịch bản <em>downstream chậm</em> (không chỉ downstream chết — chậm nguy hiểm hơn chết).</p><hr><h2 id=case-18--fork-bomb>Case 18 — Fork Bomb<a hidden class=anchor aria-hidden=true href=#case-18--fork-bomb>#</a></h2><p><strong>Triệu chứng</strong>: máy tê liệt trong vài giây; không fork nổi lệnh mới để cứu (<code>ssh</code> được nhưng <code>ps</code> fail); load số nghìn.</p><p><strong>Bên trong kernel</strong>: process đẻ theo cấp số nhân chiếm sạch PID + task_struct + run queue. Kinh điển <code>:(){ :|:& };:</code> — nhưng bản production thường <em>vô tình</em>: script retry-khi-fail tự gọi mình, supervisor restart-loop không backoff, CI runner đệ quy.</p><p><strong>Điều tra & Khắc phục</strong>:</p><pre tabindex=0><code>1. Nếu còn shell: exec ps (exec không fork!) / đọc /proc trực tiếp
+3. Đối chiếu timeline với latency downstream → thấy quan hệ nhân quả</code></pre><p><strong>Khắc phục</strong>: chặn nguồn (timeout cho mọi call ra ngoài! circuit breaker); giới hạn pool + hàng đợi có giới hạn + từ chối sớm (load shedding — fail fast hơn là chết chùm). <strong>Phòng tránh</strong>: nguyên tắc &ldquo;mọi tài nguyên có giới hạn tường minh&rdquo;; alert thread count; load test kịch bản <em>downstream chậm</em> (không chỉ downstream chết — chậm nguy hiểm hơn chết).</p>
+<hr>
+<h2 id="case-18--fork-bomb">Case 18 — Fork Bomb<a hidden class="anchor" aria-hidden="true" href="#case-18--fork-bomb">#</a></h2>
+<p><strong>Triệu chứng</strong>: máy tê liệt trong vài giây; không fork nổi lệnh mới để cứu (<code>ssh</code> được nhưng <code>ps</code> fail); load số nghìn.</p>
+<p><strong>Bên trong kernel</strong>: process đẻ theo cấp số nhân chiếm sạch PID + task_struct + run queue. Kinh điển <code>:(){ :|:&amp; };:</code> — nhưng bản production thường <em>vô tình</em>: script retry-khi-fail tự gọi mình, supervisor restart-loop không backoff, CI runner đệ quy.</p>
+<p><strong>Điều tra &amp; Khắc phục</strong>:</p>
+<pre tabindex="0"><code>1. Nếu còn shell: exec ps (exec không fork!) / đọc /proc trực tiếp
 2. Chặn: kill -STOP cả nhóm trước (SIGKILL từng con = whack-a-mole,
    chúng đẻ nhanh hơn bạn giết) → rồi kill -KILL cả session/cgroup:
    systemctl kill -s SIGKILL &lt;unit&gt; (giết theo CGROUP — đúng bài)
-3. Không vào nổi → reboot (chấp nhận), rồi phân tích nguồn từ log/audit</code></pre><p><strong>Phòng tránh</strong>: <code>pids.max</code> cho MỌI unit/pod (systemd <code>TasksMax</code>, K8s pids limit, mặc định đã có nhưng kiểm tra); user limit <code>ulimit -u</code>; restart policy có backoff; review script retry.</p><hr><h2 id=case-19--zombie-process>Case 19 — Zombie Process<a hidden class=anchor aria-hidden=true href=#case-19--zombie-process>#</a></h2><p>(Đã phân tích cơ chế đầy đủ ở chương 04 §4.4 và case cạn PID §8.) Tóm tắt tác chiến: zombie = con chết chưa được <code>wait()</code>. Vài con vô hại; tích lũy = cha bug. <code>ps -eo stat,ppid | awk '$1~/Z/{print $2}' | sort | uniq -c</code> → tìm cha; fix cha hoặc restart cha (zombie về init được reap). Container: PID 1 phải biết reap (<code>--init</code>/tini). Alert số zombie > 100. <strong>Không thể kill zombie — nó đã chết rồi.</strong></p><hr><h2 id=case-20--deadlock>Case 20 — Deadlock<a hidden class=anchor aria-hidden=true href=#case-20--deadlock>#</a></h2><p><strong>Triệu chứng</strong>: một nhóm thread/goroutine đứng im vĩnh viễn; request liên quan treo tới timeout; CPU của nhóm đó = 0 (khác livelock!); phần còn lại của service có thể vẫn chạy → sự cố &ldquo;một phần tính năng chết&rdquo; khó thấy.</p><p><strong>Bên trong kernel</strong>: kernel <em>không biết</em> app deadlock — các thread ngủ ngoan trong futex_wait như mọi thread chờ lock khác, không bao giờ được đánh thức. Bốn điều kiện Coffman hội đủ, thường là <strong>lock ordering ngược</strong>: T1 giữ A chờ B, T2 giữ B chờ A (chương 08); biến thể hiện đại: goroutine chờ channel không ai gửi, connection pool cạn + giữ connection đi xin connection nữa (self-deadlock qua pool!), lock + chờ chính worker pool đang bị mình chặn.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. Chụp stack TOÀN BỘ: Go: /debug/pprof/goroutine?debug=2 (goroutine &#34;chan
+3. Không vào nổi → reboot (chấp nhận), rồi phân tích nguồn từ log/audit</code></pre><p><strong>Phòng tránh</strong>: <code>pids.max</code> cho MỌI unit/pod (systemd <code>TasksMax</code>, K8s pids limit, mặc định đã có nhưng kiểm tra); user limit <code>ulimit -u</code>; restart policy có backoff; review script retry.</p>
+<hr>
+<h2 id="case-19--zombie-process">Case 19 — Zombie Process<a hidden class="anchor" aria-hidden="true" href="#case-19--zombie-process">#</a></h2>
+<p>(Đã phân tích cơ chế đầy đủ ở chương 04 §4.4 và case cạn PID §8.) Tóm tắt tác chiến: zombie = con chết chưa được <code>wait()</code>. Vài con vô hại; tích lũy = cha bug. <code>ps -eo stat,ppid | awk '$1~/Z/{print $2}' | sort | uniq -c</code> → tìm cha; fix cha hoặc restart cha (zombie về init được reap). Container: PID 1 phải biết reap (<code>--init</code>/tini). Alert số zombie &gt; 100. <strong>Không thể kill zombie — nó đã chết rồi.</strong></p>
+<hr>
+<h2 id="case-20--deadlock">Case 20 — Deadlock<a hidden class="anchor" aria-hidden="true" href="#case-20--deadlock">#</a></h2>
+<p><strong>Triệu chứng</strong>: một nhóm thread/goroutine đứng im vĩnh viễn; request liên quan treo tới timeout; CPU của nhóm đó = 0 (khác livelock!); phần còn lại của service có thể vẫn chạy → sự cố &ldquo;một phần tính năng chết&rdquo; khó thấy.</p>
+<p><strong>Bên trong kernel</strong>: kernel <em>không biết</em> app deadlock — các thread ngủ ngoan trong futex_wait như mọi thread chờ lock khác, không bao giờ được đánh thức. Bốn điều kiện Coffman hội đủ, thường là <strong>lock ordering ngược</strong>: T1 giữ A chờ B, T2 giữ B chờ A (chương 08); biến thể hiện đại: goroutine chờ channel không ai gửi, connection pool cạn + giữ connection đi xin connection nữa (self-deadlock qua pool!), lock + chờ chính worker pool đang bị mình chặn.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. Chụp stack TOÀN BỘ: Go: /debug/pprof/goroutine?debug=2 (goroutine &#34;chan
    receive, 47 minutes&#34; = ngay đó); Java: jstack (tự phát hiện &#34;Found one
    Java-level deadlock&#34;!); C: gdb -p → thread apply all bt
 2. Tìm chu trình: ai giữ gì chờ gì — futex thì địa chỉ lock trong frame
-3. Kernel-side hiếm hơn: task D-state mãi mãi + /proc/&lt;pid&gt;/stack (lock FS/NFS)</code></pre><p><strong>Khắc phục</strong>: restart (deadlock không tự khỏi); rồi fix: thứ tự lock toàn cục, <code>TryLock</code> + timeout, thu hẹp critical section, tách pool. <strong>Phòng tránh</strong>: quy ước lock ordering trong docs kiến trúc; Go race detector + <code>go vet</code>; timeout cho <em>mọi</em> thao tác chờ (không có &ldquo;chờ vô hạn&rdquo; trong production); test hỗn loạn concurrency.</p><hr><h2 id=case-21--livelock>Case 21 — Livelock<a hidden class=anchor aria-hidden=true href=#case-21--livelock>#</a></h2><p><strong>Triệu chứng</strong>: như deadlock nhưng <strong>CPU 100%</strong>: các bên liên tục hoạt động (retry, back-off rồi lại đụng nhau) mà không bên nào tiến triển. Ví dụ thật: hai service retry lẫn nhau tức thời khi lỗi → bão retry tự duy trì sau một trục trặc thoáng qua (retry storm = livelock phân tán — kịch bản sập dây chuyền phổ biến nhất của microservice); CAS loop nóng dưới contention cực đại; hai transaction DB deadlock-detector giết rồi retry đồng thời mãi.</p><p><strong>Điều tra</strong>: profile thấy vòng lặp retry/CAS chiếm CPU; log lỗi lặp chu kỳ; đồ thị traffic nội bộ gấp nhiều lần traffic vào (khuếch đại retry).</p><p><strong>Khắc phục & phòng tránh</strong>: <strong>exponential backoff + jitter</strong> (jitter là phần hay bị quên — không có nó mọi client đồng bộ hóa nhịp retry!); retry budget (ví dụ tối đa 20% traffic là retry); circuit breaker; ở tầng lock: hàng đợi (ticket/futex) thay vì spin tự do. Nguyên lý: hệ có retry là hệ có vòng phản hồi dương tiềm ẩn — phải thiết kế phần tử cản.</p><hr><h2 id=case-22--priority-inversion>Case 22 — Priority Inversion<a hidden class=anchor aria-hidden=true href=#case-22--priority-inversion>#</a></h2><p><strong>Triệu chứng</strong>: task ưu tiên cao (RT hoặc nice thấp) thỉnh thoảng trễ <em>rất</em> lâu một cách không thể hiểu — đúng bằng thời gian chạy của các task ưu tiên <em>trung bình</em> chẳng liên quan.</p><p><strong>Bên trong kernel</strong> (chương 06, 08): H (cao) chờ lock mà L (thấp) đang giữ; M (giữa) preempt L → L không chạy được để nhả lock → <strong>H chờ M</strong> — đảo ngược ưu tiên. Kinh điển: Mars Pathfinder 1997. Linux giải bằng <strong>priority inheritance</strong> cho futex PI (<code>pthread_mutexattr_setprotocol(PTHREAD_PRIO_INHERIT)</code>): L tạm &ldquo;mượn&rdquo; ưu tiên của H khi giữ lock H cần; rt_mutex trong kernel có PI sẵn. Nhưng: mutex thường <strong>không</strong> có PI, và PI không cứu được nếu chuỗi chờ đi qua tài nguyên không phải lock (queue, IO).</p><p><strong>Điều tra</strong>: chỉ hiện hình khi trace scheduling — <code>perf sched timehist</code> / ftrace <code>sched_switch</code> quanh thời điểm trễ: thấy H ở trạng thái chờ lock, L runnable-nhưng-không-được-chạy, M chiếm CPU.</p><p><strong>Khắc phục & phòng tránh</strong>: nếu buộc phải trộn RT + lock chia sẻ → PI mutex, giữ critical section cực ngắn, cấp CPU riêng cho RT (isolcpus/cpuset); tốt hơn: <strong>đừng chia sẻ lock giữa các mức ưu tiên khác nhau</strong> — giao tiếp qua lock-free queue. Với backend thường (không RT): bài học áp dụng cho nice/cgroup weight chênh lệch lớn + lock chung — cùng một hình dạng vấn đề, mức độ nhẹ hơn.</p><hr><h2 id=phụ-lục-nhanh--memory-fragmentation-bổ-sung-case-57>Phụ lục nhanh — Memory Fragmentation (bổ sung Case 5/7)<a hidden class=anchor aria-hidden=true href=#phụ-lục-nhanh--memory-fragmentation-bổ-sung-case-57>#</a></h2><p>RAM còn nhiều nhưng cấp phát <em>liên tục vật lý</em> thất bại (huge page, DMA buffer, driver): <code>/proc/buddyinfo</code> thấy cạn block bậc cao. Triệu chứng: THP allocation stall (app khựng khi kernel compact), <code>page allocation failure</code> trong dmesg ở driver. Xử lý: <code>echo 1 > /proc/sys/vm/compact_memory</code> (tạm), giảm phụ thuộc huge page động (cấp hugetlbfs lúc boot), theo dõi <code>/proc/pagetypeinfo</code>. User-space fragmentation (heap allocator) → RSS cao dai dẳng: đổi allocator (jemalloc), restart định kỳ, thiết kế pool theo size-class.</p><hr><p><em>Tiếp: <a href=/series/linux-os-for-backend/17-kien-truc-thuc-te/>Chương 17 — Kiến trúc thực tế</a>: soi các cơ chế trên vào PostgreSQL, Redis, Kafka, Nginx, Go, Node.js, Docker, Kubernetes.</em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/linux/>Linux</a></li><li><a href=https://thanhhv.github.io/tags/operating-system/>Operating-System</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/linux-os-for-backend/15-failure-cases-cpu-memory/><span class=title>« Prev</span><br><span>Chương 15 — Production Failure Cases (1): CPU & Memory</span>
-</a><a class=next href=https://thanhhv.github.io/series/linux-os-for-backend/17-kien-truc-thuc-te/><span class=title>Next »</span><br><span>Chương 17 — Kiến trúc thực tế: Linux dưới các hệ thống bạn chạy hằng ngày</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f&amp;hashtags=backend%2clinux%2coperating-system"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f&amp;title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;summary=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f&title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&u=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+3. Kernel-side hiếm hơn: task D-state mãi mãi + /proc/&lt;pid&gt;/stack (lock FS/NFS)</code></pre><p><strong>Khắc phục</strong>: restart (deadlock không tự khỏi); rồi fix: thứ tự lock toàn cục, <code>TryLock</code> + timeout, thu hẹp critical section, tách pool. <strong>Phòng tránh</strong>: quy ước lock ordering trong docs kiến trúc; Go race detector + <code>go vet</code>; timeout cho <em>mọi</em> thao tác chờ (không có &ldquo;chờ vô hạn&rdquo; trong production); test hỗn loạn concurrency.</p>
+<hr>
+<h2 id="case-21--livelock">Case 21 — Livelock<a hidden class="anchor" aria-hidden="true" href="#case-21--livelock">#</a></h2>
+<p><strong>Triệu chứng</strong>: như deadlock nhưng <strong>CPU 100%</strong>: các bên liên tục hoạt động (retry, back-off rồi lại đụng nhau) mà không bên nào tiến triển. Ví dụ thật: hai service retry lẫn nhau tức thời khi lỗi → bão retry tự duy trì sau một trục trặc thoáng qua (retry storm = livelock phân tán — kịch bản sập dây chuyền phổ biến nhất của microservice); CAS loop nóng dưới contention cực đại; hai transaction DB deadlock-detector giết rồi retry đồng thời mãi.</p>
+<p><strong>Điều tra</strong>: profile thấy vòng lặp retry/CAS chiếm CPU; log lỗi lặp chu kỳ; đồ thị traffic nội bộ gấp nhiều lần traffic vào (khuếch đại retry).</p>
+<p><strong>Khắc phục &amp; phòng tránh</strong>: <strong>exponential backoff + jitter</strong> (jitter là phần hay bị quên — không có nó mọi client đồng bộ hóa nhịp retry!); retry budget (ví dụ tối đa 20% traffic là retry); circuit breaker; ở tầng lock: hàng đợi (ticket/futex) thay vì spin tự do. Nguyên lý: hệ có retry là hệ có vòng phản hồi dương tiềm ẩn — phải thiết kế phần tử cản.</p>
+<hr>
+<h2 id="case-22--priority-inversion">Case 22 — Priority Inversion<a hidden class="anchor" aria-hidden="true" href="#case-22--priority-inversion">#</a></h2>
+<p><strong>Triệu chứng</strong>: task ưu tiên cao (RT hoặc nice thấp) thỉnh thoảng trễ <em>rất</em> lâu một cách không thể hiểu — đúng bằng thời gian chạy của các task ưu tiên <em>trung bình</em> chẳng liên quan.</p>
+<p><strong>Bên trong kernel</strong> (chương 06, 08): H (cao) chờ lock mà L (thấp) đang giữ; M (giữa) preempt L → L không chạy được để nhả lock → <strong>H chờ M</strong> — đảo ngược ưu tiên. Kinh điển: Mars Pathfinder 1997. Linux giải bằng <strong>priority inheritance</strong> cho futex PI (<code>pthread_mutexattr_setprotocol(PTHREAD_PRIO_INHERIT)</code>): L tạm &ldquo;mượn&rdquo; ưu tiên của H khi giữ lock H cần; rt_mutex trong kernel có PI sẵn. Nhưng: mutex thường <strong>không</strong> có PI, và PI không cứu được nếu chuỗi chờ đi qua tài nguyên không phải lock (queue, IO).</p>
+<p><strong>Điều tra</strong>: chỉ hiện hình khi trace scheduling — <code>perf sched timehist</code> / ftrace <code>sched_switch</code> quanh thời điểm trễ: thấy H ở trạng thái chờ lock, L runnable-nhưng-không-được-chạy, M chiếm CPU.</p>
+<p><strong>Khắc phục &amp; phòng tránh</strong>: nếu buộc phải trộn RT + lock chia sẻ → PI mutex, giữ critical section cực ngắn, cấp CPU riêng cho RT (isolcpus/cpuset); tốt hơn: <strong>đừng chia sẻ lock giữa các mức ưu tiên khác nhau</strong> — giao tiếp qua lock-free queue. Với backend thường (không RT): bài học áp dụng cho nice/cgroup weight chênh lệch lớn + lock chung — cùng một hình dạng vấn đề, mức độ nhẹ hơn.</p>
+<hr>
+<h2 id="phụ-lục-nhanh--memory-fragmentation-bổ-sung-case-57">Phụ lục nhanh — Memory Fragmentation (bổ sung Case 5/7)<a hidden class="anchor" aria-hidden="true" href="#phụ-lục-nhanh--memory-fragmentation-bổ-sung-case-57">#</a></h2>
+<p>RAM còn nhiều nhưng cấp phát <em>liên tục vật lý</em> thất bại (huge page, DMA buffer, driver): <code>/proc/buddyinfo</code> thấy cạn block bậc cao. Triệu chứng: THP allocation stall (app khựng khi kernel compact), <code>page allocation failure</code> trong dmesg ở driver. Xử lý: <code>echo 1 &gt; /proc/sys/vm/compact_memory</code> (tạm), giảm phụ thuộc huge page động (cấp hugetlbfs lúc boot), theo dõi <code>/proc/pagetypeinfo</code>. User-space fragmentation (heap allocator) → RSS cao dai dẳng: đổi allocator (jemalloc), restart định kỳ, thiết kế pool theo size-class.</p>
+<hr>
+<p><em>Tiếp: <a href="/series/linux-os-for-backend/17-kien-truc-thuc-te/">Chương 17 — Kiến trúc thực tế</a>: soi các cơ chế trên vào PostgreSQL, Redis, Kafka, Nginx, Go, Node.js, Docker, Kubernetes.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/linux/">Linux</a></li>
+      <li><a href="http://localhost:1313/tags/operating-system/">Operating-System</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/linux-os-for-backend/15-failure-cases-cpu-memory/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 15 — Production Failure Cases (1): CPU &amp; Memory</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/linux-os-for-backend/17-kien-truc-thuc-te/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 17 — Kiến trúc thực tế: Linux dưới các hệ thống bạn chạy hằng ngày</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f&amp;hashtags=backend%2clinux%2coperating-system">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f&amp;title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;summary=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f&title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Production Failure Cases (2): IO, Network & Concurrency on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Production%20Failure%20Cases%20%282%29%3a%20IO%2c%20Network%20%26%20Concurrency&u=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f16-failure-cases-io-network-concurrency%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

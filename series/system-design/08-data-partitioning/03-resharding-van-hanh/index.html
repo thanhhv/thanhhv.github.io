@@ -1,7 +1,124 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>8.3. Resharding & vận hành hệ đã shard | Thanh HV's Blog</title>
-<meta name=keywords content="backend,system-design"><meta name=description content="1. Problem Statement
-Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — shard key hóa ra chọn sai (8.1 §3.2). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu trên hệ đang chạy, không downtime, không mất ghi — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói &ldquo;shard key là cam kết hôn nhân&rdquo;."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/system-design/08-data-partitioning/03-resharding-van-hanh/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/system-design/08-data-partitioning/03-resharding-van-hanh/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/system-design/08-data-partitioning/03-resharding-van-hanh/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="8.3. Resharding & vận hành hệ đã shard"><meta property="og:description" content="1. Problem Statement Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — shard key hóa ra chọn sai (8.1 §3.2). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu trên hệ đang chạy, không downtime, không mất ghi — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói “shard key là cam kết hôn nhân”."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-13T12:10:00+07:00"><meta property="article:modified_time" content="2026-07-13T12:10:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="System-Design"><meta name=twitter:card content="summary"><meta name=twitter:title content="8.3. Resharding & vận hành hệ đã shard"><meta name=twitter:description content="1. Problem Statement
-Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — shard key hóa ra chọn sai (8.1 §3.2). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu trên hệ đang chạy, không downtime, không mất ghi — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói &ldquo;shard key là cam kết hôn nhân&rdquo;."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"System Design — Tư Duy Thiết Kế Hệ Thống","item":"https://thanhhv.github.io/series/system-design/"},{"@type":"ListItem","position":3,"name":"8.3. Resharding \u0026 vận hành hệ đã shard","item":"https://thanhhv.github.io/series/system-design/08-data-partitioning/03-resharding-van-hanh/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"8.3. Resharding \u0026 vận hành hệ đã shard","name":"8.3. Resharding \u0026 vận hành hệ đã shard","description":"1. Problem Statement Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — shard key hóa ra chọn sai (8.1 §3.2). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu trên hệ đang chạy, không downtime, không mất ghi — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói \u0026ldquo;shard key là cam kết hôn nhân\u0026rdquo;.\n","keywords":["backend","system-design"],"articleBody":"1. Problem Statement Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — shard key hóa ra chọn sai (8.1 §3.2). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu trên hệ đang chạy, không downtime, không mất ghi — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói “shard key là cam kết hôn nhân”.\n2. First Principles — vì sao resharding khó, và khe cửa nào để lách Resharding = di chuyển dữ liệu trong khi dữ liệu đang bị đọc/ghi. Ba ràng buộc đánh nhau: (1) dữ liệu phải đủ và đúng ở đích trước khi cắt chuyển; (2) ghi mới không được rơi vào khe hở giữa “đã copy” và “đã chuyển”; (3) hệ phải phục vụ bình thường suốt quá trình — nghĩa là không có khoảnh khắc “khóa hết để dọn nhà”.\nKhe cửa: đừng chuyển tất cả cùng lúc — chuyển từng đơn vị nhỏ, mỗi đơn vị đi qua một quy trình bốn pha có đường lùi. Đơn vị nhỏ = slot/chunk/bucket (8.2 §4 — vì sao mẫu “bucket cố định + bảng tra” quý giá): resharding trở thành chuỗi thao tác nhỏ, mỗi cái vài phút, dừng được, lùi được — thay vì một cú nhảy sinh tử.\n3. Quy trình chuẩn — bốn pha cho một đơn vị dữ liệu sequenceDiagram participant APP as App/Router participant S1 as Shard nguồn participant S2 as Shard đích Note over S1,S2: Pha 1 — BACKFILL: copy dữ liệu nền(snapshot + đuổi theo thay đổi qua CDC) S1-\u003e\u003eS2: copy snapshot + stream thay đổi Note over APP: Pha 2 — DUAL-WRITE: ghi cả hai nơi,đọc vẫn từ nguồn; so khớp liên tục APP-\u003e\u003eS1: write (nguồn sự thật) APP-\u003e\u003eS2: write (bản đuổi) Note over APP: Pha 3 — VERIFY: đối soát checksum/counttheo dải key; lệch → quay lại pha 1 cho dải đó Note over APP: Pha 4 — CUTOVER: đảo đọc sang đích,giữ dual-write một thời gian (đường lùi!),rồi tắt ghi nguồn, dọn dữ liệu cũ APP-\u003e\u003eS2: read + write (nguồn sự thật mới) Bốn điểm sống còn, nơi các sự cố resharding thực tế xảy ra:\nBackfill phải throttle: copy hết tốc độ = ăn hết I/O của shard nguồn đang phục vụ production — chính là tự gây replica lag/quá tải; tốc độ backfill là núm chỉnh theo tải thật, và tổng thời gian resharding tính bằng ngày/tuần là bình thường. Dual-write phải xử lý lệch: ghi nguồn thành công, ghi đích fail thì sao? — ghi đích qua hàng đợi bền + retry (outbox-style), hoặc chấp nhận lệch và để pha verify bắt; không bao giờ để fail đích làm fail request của user (đích đang là bản nháp). Verify là pha bị cắt xén nhiều nhất và hối hận nhiều nhất: đối soát bằng checksum theo dải + đếm theo cửa sổ thời gian, chạy máy, liên tục — “trông có vẻ đủ” không phải là verify. Cutover phải có đường lùi tức thời: đảo đọc bằng config/flag runtime (không phải deploy); giữ dual-write ngược (đích → nguồn) thêm vài ngày — phát hiện vấn đề sau cutover thì đảo cờ là về nhà cũ, dữ liệu vẫn đủ hai nơi. Cùng bộ xương này áp cho mọi biến thể: chẻ shard (split), gộp shard, chuyển tenant VIP ra shard riêng, đổi shard key (nặng nhất — thực chất là xây một “hệ shard thứ hai” theo key mới rồi migrate toàn bộ qua bốn pha), và cả migrate sang engine khác (5.7 §5). Các nền tảng trưởng thành (Vitess resharding workflow, MongoDB chunk migration, Redis slot migration) là bốn pha này được đóng gói — hiểu bộ xương để vận hành chúng có ý thức, và để biết chúng đang ở pha nào khi có chuyện.\n4. Vận hành thường nhật của hệ đã shard Ngoài resharding, hệ shard đòi một bộ kỷ luật vận hành riêng:\nCân bằng liên tục thay vì chiến dịch: balancer tự động (Mongo, Vitess) hoặc quy trình định kỳ rà độ lệch dung lượng/tải giữa shard (13.2 — max/median) và di chuyển dần từng bucket — để lệch tích tụ 2 năm rồi “làm một trận” là tự chọn chế độ khó. Schema migration × N shard: một ALTER giờ chạy N nơi — cần orchestration (chạy lần lượt, theo dõi, dừng khi shard nào lỗi) và schema các shard được phép lệch tạm thời trong lúc rollout → app phải chịu được hai version schema cùng lúc (kỷ luật quen thuộc từ 12.6 — backward compatibility, giờ áp cho DB). Query xuyên shard cho phân tích: đừng scatter-gather trên OLTP shard — CDC toàn bộ shard về một nơi tập trung (ClickHouse/warehouse) cho analytics; shard OLTP chỉ phục vụ nghiệp vụ trong-shard (12.8 — CQRS phiên bản sharded). Capacity planning theo shard nóng nhất, không theo tổng (1.4): trần thật của hệ = trần của shard đầy/nóng nhất; dashboard tăng trưởng per-shard + dự báo “shard nào chạm 70% khi nào” → resharding có kế hoạch thay vì cấp cứu — khác biệt giữa hai chế độ đó là toàn bộ chương này chạy lúc 10 giờ sáng thứ Ba hay 2 giờ sáng Chủ nhật. 5. Trade-off Quyết định Được Giá Bucket nhiều + nhỏ từ đầu (nghìn bucket) Resharding = di chuyển bucket, mịn, dừng/lùi được Metadata to hơn; per-bucket overhead Dual-write dài (thận trọng) Đường lùi rộng, verify kỹ Chi phí ghi ×2 kéo dài; code hai đường lâu Balancer tự động Không tích nợ lệch Di chuyển nền ăn I/O — phải có cửa sổ và throttle; balancer “tự tiện” giờ cao điểm là nguồn sự cố kinh điển (Mongo cho lịch balancer có lý do) Tự chế resharding ở app Kiểm soát trọn Đắt và rủi ro nhất trong mọi lựa chọn của phần này — chỉ khi không còn đường khác 6. Production Considerations Diễn tập trên staging với dữ liệu cỡ thật trước lần resharding production đầu tiên — đo thời gian từng pha, độ ăn I/O, điểm gãy — đúng nghi thức 12.10 — drill. Trong lúc resharding, quan sát như đang có sự cố: dashboard riêng cho tiến độ backfill, lệch dual-write, kết quả verify theo dải, error rate của cả hai shard; người trực biết resharding đang chạy (điều tra “vì sao I/O cao” lúc 3h sáng mà không ai ghi lịch là chuyện có thật). Mọi bước đổi routing qua config runtime có audit log — ai đảo cờ gì lúc nào; và freeze các thay đổi khác (schema, deploy lớn) trong cửa sổ cutover. Dọn dữ liệu nguồn sau cùng, sau nhiều ngày, có backup — disk rẻ hơn nhiều so với phát hiện thiếu dữ liệu sau khi đã xóa nguồn. 7. Anti-patterns Big-bang resharding (maintenance window một đêm chuyển hết) — mọi ràng buộc §2 dồn vào một khe hẹp; quá giờ là tiến thoái lưỡng nan kinh điển. Bỏ pha verify hoặc verify bằng mắt — lệch âm thầm lộ ra sau cutover hàng tuần, khi nguồn đã xóa. Cutover bằng deploy thay vì cờ runtime — đường lùi là một lần deploy nữa, dài đúng bằng khoảng thời gian tồi tệ nhất để chờ. Resharding đồng thời với thay đổi lớn khác (đổi schema + đổi key + nâng version engine một thể “cho tiện”) — ba biến số, một sự cố, không cô lập được nguyên nhân. Không có kế hoạch resharding ngay từ thiết kế sharding — chọn kiến trúc không có đường resharding (mod N cứng trong code, không bucket, không CDC) là chọn trước cách mình sẽ đau. 8. Khi nào KHÔNG nên resharding Khi bài toán thật là hot key đơn lẻ (13.2 — salting/VIP lane) — di chuyển dữ liệu không giúp key nóng nguội đi; khi lệch dung lượng còn chữa được bằng archive dữ liệu nguội (rẻ hơn mọi phương án); khi trần sắp chạm là trần đọc — replica/cache (Phần 7) trước; và khi hệ chưa shard — hãy đọc lại checklist 8.1 §7 một lần nữa trước khi bước vào thế giới mà chương này mô tả. Toàn bộ Phần 8 có thể tóm trong một câu khuyên: shard muộn nhất có thể, shard theo chủ sở hữu tự nhiên, chia bucket nhỏ từ đầu, và giữ đường lùi ở mọi bước.\nHết Phần 8. Quay lại mục lục chính.\n","wordCount":"1442","inLanguage":"en","datePublished":"2026-07-13T12:10:00+07:00","dateModified":"2026-07-13T12:10:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/system-design/08-data-partitioning/03-resharding-van-hanh/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/system-design/>System Design — Tư Duy Thiết Kế Hệ Thống</a></div><h1 class="post-title entry-hint-parent">8.3. Resharding & vận hành hệ đã shard</h1><div class=post-meta><span title='2026-07-13 12:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min</div></header><div class=post-content><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — <strong>shard key hóa ra chọn sai</strong> (<a href=/series/system-design/08-data-partitioning/01-partitioning-sharding/>8.1 §3.2</a>). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu <strong>trên hệ đang chạy, không downtime, không mất ghi</strong> — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói &ldquo;shard key là cam kết hôn nhân&rdquo;.</p><h2 id=2-first-principles--vì-sao-resharding-khó-và-khe-cửa-nào-để-lách>2. First Principles — vì sao resharding khó, và khe cửa nào để lách<a hidden class=anchor aria-hidden=true href=#2-first-principles--vì-sao-resharding-khó-và-khe-cửa-nào-để-lách>#</a></h2><p>Resharding = di chuyển dữ liệu <em>trong khi</em> dữ liệu đang bị đọc/ghi. Ba ràng buộc đánh nhau: (1) dữ liệu phải <strong>đủ và đúng</strong> ở đích trước khi cắt chuyển; (2) ghi mới <strong>không được rơi</strong> vào khe hở giữa &ldquo;đã copy&rdquo; và &ldquo;đã chuyển&rdquo;; (3) hệ phải <strong>phục vụ bình thường</strong> suốt quá trình — nghĩa là không có khoảnh khắc &ldquo;khóa hết để dọn nhà&rdquo;.</p><p>Khe cửa: <strong>đừng chuyển tất cả cùng lúc — chuyển từng đơn vị nhỏ, mỗi đơn vị đi qua một quy trình bốn pha có đường lùi.</strong> Đơn vị nhỏ = slot/chunk/bucket (<a href=/series/system-design/08-data-partitioning/02-consistent-hashing/>8.2 §4 — vì sao mẫu &ldquo;bucket cố định + bảng tra&rdquo; quý giá</a>): resharding trở thành <em>chuỗi</em> thao tác nhỏ, mỗi cái vài phút, dừng được, lùi được — thay vì một cú nhảy sinh tử.</p><h2 id=3-quy-trình-chuẩn--bốn-pha-cho-một-đơn-vị-dữ-liệu>3. Quy trình chuẩn — bốn pha cho một đơn vị dữ liệu<a hidden class=anchor aria-hidden=true href=#3-quy-trình-chuẩn--bốn-pha-cho-một-đơn-vị-dữ-liệu>#</a></h2><pre class=mermaid>sequenceDiagram
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>8.3. Resharding &amp; vận hành hệ đã shard | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, system-design">
+<meta name="description" content="1. Problem Statement
+Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — shard key hóa ra chọn sai (8.1 §3.2). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu trên hệ đang chạy, không downtime, không mất ghi — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói &ldquo;shard key là cam kết hôn nhân&rdquo;.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/system-design/08-data-partitioning/03-resharding-van-hanh/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/system-design/08-data-partitioning/03-resharding-van-hanh/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/system-design/">System Design — Tư Duy Thiết Kế Hệ Thống</a></div>
+    <h1 class="post-title entry-hint-parent">
+      8.3. Resharding &amp; vận hành hệ đã shard
+    </h1>
+    <div class="post-meta"><span title='2026-07-13 12:10:00 +0700 +07'>July 13, 2026</span>&nbsp;·&nbsp;7 min
+
+</div>
+  </header> 
+  <div class="post-content"><h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu tăng 10× (4 shard thành chật), phân bố lệch dần (một shard 80% đầy trong khi anh em 30%), tenant VIP phình vượt shard của nó, hoặc — đau nhất — <strong>shard key hóa ra chọn sai</strong> (<a href="/series/system-design/08-data-partitioning/01-partitioning-sharding/">8.1 §3.2</a>). Câu hỏi của chương này: làm sao thay đổi cách chia dữ liệu <strong>trên hệ đang chạy, không downtime, không mất ghi</strong> — bài toán được xếp vào loại khó nhất của vận hành dữ liệu, và là lý do người ta nói &ldquo;shard key là cam kết hôn nhân&rdquo;.</p>
+<h2 id="2-first-principles--vì-sao-resharding-khó-và-khe-cửa-nào-để-lách">2. First Principles — vì sao resharding khó, và khe cửa nào để lách<a hidden class="anchor" aria-hidden="true" href="#2-first-principles--vì-sao-resharding-khó-và-khe-cửa-nào-để-lách">#</a></h2>
+<p>Resharding = di chuyển dữ liệu <em>trong khi</em> dữ liệu đang bị đọc/ghi. Ba ràng buộc đánh nhau: (1) dữ liệu phải <strong>đủ và đúng</strong> ở đích trước khi cắt chuyển; (2) ghi mới <strong>không được rơi</strong> vào khe hở giữa &ldquo;đã copy&rdquo; và &ldquo;đã chuyển&rdquo;; (3) hệ phải <strong>phục vụ bình thường</strong> suốt quá trình — nghĩa là không có khoảnh khắc &ldquo;khóa hết để dọn nhà&rdquo;.</p>
+<p>Khe cửa: <strong>đừng chuyển tất cả cùng lúc — chuyển từng đơn vị nhỏ, mỗi đơn vị đi qua một quy trình bốn pha có đường lùi.</strong> Đơn vị nhỏ = slot/chunk/bucket (<a href="/series/system-design/08-data-partitioning/02-consistent-hashing/">8.2 §4 — vì sao mẫu &ldquo;bucket cố định + bảng tra&rdquo; quý giá</a>): resharding trở thành <em>chuỗi</em> thao tác nhỏ, mỗi cái vài phút, dừng được, lùi được — thay vì một cú nhảy sinh tử.</p>
+<h2 id="3-quy-trình-chuẩn--bốn-pha-cho-một-đơn-vị-dữ-liệu">3. Quy trình chuẩn — bốn pha cho một đơn vị dữ liệu<a hidden class="anchor" aria-hidden="true" href="#3-quy-trình-chuẩn--bốn-pha-cho-một-đơn-vị-dữ-liệu">#</a></h2>
+<pre class="mermaid">sequenceDiagram
     participant APP as App/Router
     participant S1 as Shard nguồn
     participant S2 as Shard đích
@@ -12,16 +129,307 @@ Mọi quyết định sharding đều sai dần theo thời gian: dữ liệu t�
     APP-&gt;&gt;S2: write (bản đuổi)
     Note over APP: Pha 3 — VERIFY: đối soát checksum/count&lt;br/&gt;theo dải key; lệch → quay lại pha 1 cho dải đó
     Note over APP: Pha 4 — CUTOVER: đảo đọc sang đích,&lt;br/&gt;giữ dual-write một thời gian (đường lùi!),&lt;br/&gt;rồi tắt ghi nguồn, dọn dữ liệu cũ
-    APP-&gt;&gt;S2: read + write (nguồn sự thật mới)</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
+    APP-&gt;&gt;S2: read + write (nguồn sự thật mới)</pre><style>
+  pre.mermaid {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+  }
+</style>
+<script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({
     startOnLoad: true,
     theme: document.body.classList.contains("dark") ? "dark" : "default",
     securityLevel: "loose",
   });
-</script><p>Bốn điểm sống còn, nơi các sự cố resharding thực tế xảy ra:</p><ol><li><strong>Backfill phải throttle:</strong> copy hết tốc độ = ăn hết I/O của shard nguồn đang phục vụ production — chính là tự gây <a href=/series/system-design/13-production-failure-cases/02-database-failures/>replica lag/quá tải</a>; tốc độ backfill là núm chỉnh theo tải thật, và tổng thời gian resharding tính bằng ngày/tuần là bình thường.</li><li><strong>Dual-write phải xử lý lệch:</strong> ghi nguồn thành công, ghi đích fail thì sao? — ghi đích qua hàng đợi bền + retry (<a href=/series/system-design/06-communication/08-outbox/>outbox-style</a>), hoặc chấp nhận lệch và để pha verify bắt; <strong>không bao giờ</strong> để fail đích làm fail request của user (đích đang là bản nháp).</li><li><strong>Verify là pha bị cắt xén nhiều nhất và hối hận nhiều nhất:</strong> đối soát bằng checksum theo dải + đếm theo cửa sổ thời gian, chạy máy, liên tục — &ldquo;trông có vẻ đủ&rdquo; không phải là verify.</li><li><strong>Cutover phải có đường lùi tức thời:</strong> đảo đọc bằng config/flag runtime (không phải deploy); giữ dual-write ngược (đích → nguồn) thêm vài ngày — phát hiện vấn đề sau cutover thì đảo cờ là về nhà cũ, dữ liệu vẫn đủ hai nơi.</li></ol><p>Cùng bộ xương này áp cho mọi biến thể: chẻ shard (split), gộp shard, chuyển tenant VIP ra shard riêng, <strong>đổi shard key</strong> (nặng nhất — thực chất là xây một &ldquo;hệ shard thứ hai&rdquo; theo key mới rồi migrate toàn bộ qua bốn pha), và cả migrate sang engine khác (<a href=/series/system-design/05-data-layer/07-so-sanh-lua-chon/>5.7 §5</a>). Các nền tảng trưởng thành (Vitess resharding workflow, MongoDB chunk migration, Redis slot migration) là bốn pha này được đóng gói — hiểu bộ xương để vận hành chúng có ý thức, và để biết chúng đang ở pha nào khi có chuyện.</p><h2 id=4-vận-hành-thường-nhật-của-hệ-đã-shard>4. Vận hành thường nhật của hệ đã shard<a hidden class=anchor aria-hidden=true href=#4-vận-hành-thường-nhật-của-hệ-đã-shard>#</a></h2><p>Ngoài resharding, hệ shard đòi một bộ kỷ luật vận hành riêng:</p><ul><li><strong>Cân bằng liên tục thay vì chiến dịch:</strong> balancer tự động (Mongo, Vitess) hoặc quy trình định kỳ rà độ lệch dung lượng/tải giữa shard (<a href=/series/system-design/13-production-failure-cases/02-database-failures/>13.2 — max/median</a>) và di chuyển dần từng bucket — để lệch tích tụ 2 năm rồi &ldquo;làm một trận&rdquo; là tự chọn chế độ khó.</li><li><strong>Schema migration × N shard:</strong> một <code>ALTER</code> giờ chạy N nơi — cần orchestration (chạy lần lượt, theo dõi, dừng khi shard nào lỗi) và schema các shard <strong>được phép lệch tạm thời</strong> trong lúc rollout → app phải chịu được hai version schema cùng lúc (kỷ luật quen thuộc từ <a href=/series/system-design/12-evolution/06-microservices/>12.6 — backward compatibility</a>, giờ áp cho DB).</li><li><strong>Query xuyên shard cho phân tích:</strong> đừng scatter-gather trên OLTP shard — CDC toàn bộ shard về một nơi tập trung (<a href=/series/system-design/05-data-layer/05-clickhouse/>ClickHouse</a>/warehouse) cho analytics; shard OLTP chỉ phục vụ nghiệp vụ trong-shard (<a href=/series/system-design/12-evolution/08-cqrs/>12.8 — CQRS</a> phiên bản sharded).</li><li><strong>Capacity planning theo shard nóng nhất, không theo tổng</strong> (<a href=/series/system-design/01-foundations/04-scale-estimation-capacity-planning/>1.4</a>): trần thật của hệ = trần của shard đầy/nóng nhất; dashboard tăng trưởng per-shard + dự báo &ldquo;shard nào chạm 70% khi nào&rdquo; → resharding <em>có kế hoạch</em> thay vì cấp cứu — khác biệt giữa hai chế độ đó là toàn bộ chương này chạy lúc 10 giờ sáng thứ Ba hay 2 giờ sáng Chủ nhật.</li></ul><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><table><thead><tr><th>Quyết định</th><th>Được</th><th>Giá</th></tr></thead><tbody><tr><td>Bucket nhiều + nhỏ từ đầu (nghìn bucket)</td><td>Resharding = di chuyển bucket, mịn, dừng/lùi được</td><td>Metadata to hơn; per-bucket overhead</td></tr><tr><td>Dual-write dài (thận trọng)</td><td>Đường lùi rộng, verify kỹ</td><td>Chi phí ghi ×2 kéo dài; code hai đường lâu</td></tr><tr><td>Balancer tự động</td><td>Không tích nợ lệch</td><td>Di chuyển nền ăn I/O — phải có cửa sổ và throttle; balancer &ldquo;tự tiện&rdquo; giờ cao điểm là nguồn sự cố kinh điển (Mongo cho lịch balancer có lý do)</td></tr><tr><td>Tự chế resharding ở app</td><td>Kiểm soát trọn</td><td>Đắt và rủi ro nhất trong mọi lựa chọn của phần này — chỉ khi không còn đường khác</td></tr></tbody></table><h2 id=6-production-considerations>6. Production Considerations<a hidden class=anchor aria-hidden=true href=#6-production-considerations>#</a></h2><ul><li><strong>Diễn tập trên staging với dữ liệu cỡ thật</strong> trước lần resharding production đầu tiên — đo thời gian từng pha, độ ăn I/O, điểm gãy — đúng nghi thức <a href=/series/system-design/12-evolution/10-disaster-recovery/>12.10 — drill</a>.</li><li>Trong lúc resharding, <strong>quan sát như đang có sự cố:</strong> dashboard riêng cho tiến độ backfill, lệch dual-write, kết quả verify theo dải, error rate của cả hai shard; người trực biết resharding đang chạy (điều tra &ldquo;vì sao I/O cao&rdquo; lúc 3h sáng mà không ai ghi lịch là chuyện có thật).</li><li>Mọi bước đổi routing qua <strong>config runtime có audit log</strong> — ai đảo cờ gì lúc nào; và freeze các thay đổi khác (schema, deploy lớn) trong cửa sổ cutover.</li><li>Dọn dữ liệu nguồn <strong>sau cùng, sau nhiều ngày, có backup</strong> — disk rẻ hơn nhiều so với phát hiện thiếu dữ liệu sau khi đã xóa nguồn.</li></ul><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li><strong>Big-bang resharding</strong> (maintenance window một đêm chuyển hết) — mọi ràng buộc §2 dồn vào một khe hẹp; quá giờ là tiến thoái lưỡng nan kinh điển.</li><li><strong>Bỏ pha verify</strong> hoặc verify bằng mắt — lệch âm thầm lộ ra sau cutover hàng tuần, khi nguồn đã xóa.</li><li><strong>Cutover bằng deploy</strong> thay vì cờ runtime — đường lùi là một lần deploy nữa, dài đúng bằng khoảng thời gian tồi tệ nhất để chờ.</li><li><strong>Resharding đồng thời với thay đổi lớn khác</strong> (đổi schema + đổi key + nâng version engine một thể &ldquo;cho tiện&rdquo;) — ba biến số, một sự cố, không cô lập được nguyên nhân.</li><li><strong>Không có kế hoạch resharding ngay từ thiết kế sharding</strong> — chọn kiến trúc không có đường resharding (mod N cứng trong code, không bucket, không CDC) là chọn trước cách mình sẽ đau.</li></ul><h2 id=8-khi-nào-không-nên-resharding>8. Khi nào KHÔNG nên resharding<a hidden class=anchor aria-hidden=true href=#8-khi-nào-không-nên-resharding>#</a></h2><p>Khi bài toán thật là <strong>hot key đơn lẻ</strong> (<a href=/series/system-design/13-production-failure-cases/02-database-failures/>13.2 — salting/VIP lane</a>) — di chuyển dữ liệu không giúp key nóng nguội đi; khi lệch dung lượng còn chữa được bằng <strong>archive dữ liệu nguội</strong> (rẻ hơn mọi phương án); khi trần sắp chạm là <strong>trần đọc</strong> — replica/cache (<a href=/series/system-design/07-caching/00-tong-quan/>Phần 7</a>) trước; và khi hệ <em>chưa</em> shard — hãy đọc lại checklist <a href=/series/system-design/08-data-partitioning/01-partitioning-sharding/>8.1 §7</a> một lần nữa trước khi bước vào thế giới mà chương này mô tả. Toàn bộ Phần 8 có thể tóm trong một câu khuyên: <strong>shard muộn nhất có thể, shard theo chủ sở hữu tự nhiên, chia bucket nhỏ từ đầu, và giữ đường lùi ở mọi bước.</strong></p><hr><p><em>Hết Phần 8. Quay lại <a href=/series/system-design/00-muc-luc/>mục lục chính</a>.</em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/system-design/>System-Design</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/system-design/08-data-partitioning/02-consistent-hashing/><span class=title>« Prev</span><br><span>8.2. Consistent Hashing — thêm bớt node mà không xáo cả thế giới</span>
-</a><a class=next href=https://thanhhv.github.io/series/system-design/09-search/00-tong-quan/><span class=title>Next »</span><br><span>Phần 9 — Search</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on x" href="https://x.com/intent/tweet/?text=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f&amp;hashtags=backend%2csystem-design"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f&amp;title=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;summary=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f&title=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on whatsapp" href="https://api.whatsapp.com/send?text=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on telegram" href="https://telegram.me/share/url?text=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on ycombinator" href="https://news.ycombinator.com/submitlink?t=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+</script><p>Bốn điểm sống còn, nơi các sự cố resharding thực tế xảy ra:</p>
+<ol>
+<li><strong>Backfill phải throttle:</strong> copy hết tốc độ = ăn hết I/O của shard nguồn đang phục vụ production — chính là tự gây <a href="/series/system-design/13-production-failure-cases/02-database-failures/">replica lag/quá tải</a>; tốc độ backfill là núm chỉnh theo tải thật, và tổng thời gian resharding tính bằng ngày/tuần là bình thường.</li>
+<li><strong>Dual-write phải xử lý lệch:</strong> ghi nguồn thành công, ghi đích fail thì sao? — ghi đích qua hàng đợi bền + retry (<a href="/series/system-design/06-communication/08-outbox/">outbox-style</a>), hoặc chấp nhận lệch và để pha verify bắt; <strong>không bao giờ</strong> để fail đích làm fail request của user (đích đang là bản nháp).</li>
+<li><strong>Verify là pha bị cắt xén nhiều nhất và hối hận nhiều nhất:</strong> đối soát bằng checksum theo dải + đếm theo cửa sổ thời gian, chạy máy, liên tục — &ldquo;trông có vẻ đủ&rdquo; không phải là verify.</li>
+<li><strong>Cutover phải có đường lùi tức thời:</strong> đảo đọc bằng config/flag runtime (không phải deploy); giữ dual-write ngược (đích → nguồn) thêm vài ngày — phát hiện vấn đề sau cutover thì đảo cờ là về nhà cũ, dữ liệu vẫn đủ hai nơi.</li>
+</ol>
+<p>Cùng bộ xương này áp cho mọi biến thể: chẻ shard (split), gộp shard, chuyển tenant VIP ra shard riêng, <strong>đổi shard key</strong> (nặng nhất — thực chất là xây một &ldquo;hệ shard thứ hai&rdquo; theo key mới rồi migrate toàn bộ qua bốn pha), và cả migrate sang engine khác (<a href="/series/system-design/05-data-layer/07-so-sanh-lua-chon/">5.7 §5</a>). Các nền tảng trưởng thành (Vitess resharding workflow, MongoDB chunk migration, Redis slot migration) là bốn pha này được đóng gói — hiểu bộ xương để vận hành chúng có ý thức, và để biết chúng đang ở pha nào khi có chuyện.</p>
+<h2 id="4-vận-hành-thường-nhật-của-hệ-đã-shard">4. Vận hành thường nhật của hệ đã shard<a hidden class="anchor" aria-hidden="true" href="#4-vận-hành-thường-nhật-của-hệ-đã-shard">#</a></h2>
+<p>Ngoài resharding, hệ shard đòi một bộ kỷ luật vận hành riêng:</p>
+<ul>
+<li><strong>Cân bằng liên tục thay vì chiến dịch:</strong> balancer tự động (Mongo, Vitess) hoặc quy trình định kỳ rà độ lệch dung lượng/tải giữa shard (<a href="/series/system-design/13-production-failure-cases/02-database-failures/">13.2 — max/median</a>) và di chuyển dần từng bucket — để lệch tích tụ 2 năm rồi &ldquo;làm một trận&rdquo; là tự chọn chế độ khó.</li>
+<li><strong>Schema migration × N shard:</strong> một <code>ALTER</code> giờ chạy N nơi — cần orchestration (chạy lần lượt, theo dõi, dừng khi shard nào lỗi) và schema các shard <strong>được phép lệch tạm thời</strong> trong lúc rollout → app phải chịu được hai version schema cùng lúc (kỷ luật quen thuộc từ <a href="/series/system-design/12-evolution/06-microservices/">12.6 — backward compatibility</a>, giờ áp cho DB).</li>
+<li><strong>Query xuyên shard cho phân tích:</strong> đừng scatter-gather trên OLTP shard — CDC toàn bộ shard về một nơi tập trung (<a href="/series/system-design/05-data-layer/05-clickhouse/">ClickHouse</a>/warehouse) cho analytics; shard OLTP chỉ phục vụ nghiệp vụ trong-shard (<a href="/series/system-design/12-evolution/08-cqrs/">12.8 — CQRS</a> phiên bản sharded).</li>
+<li><strong>Capacity planning theo shard nóng nhất, không theo tổng</strong> (<a href="/series/system-design/01-foundations/04-scale-estimation-capacity-planning/">1.4</a>): trần thật của hệ = trần của shard đầy/nóng nhất; dashboard tăng trưởng per-shard + dự báo &ldquo;shard nào chạm 70% khi nào&rdquo; → resharding <em>có kế hoạch</em> thay vì cấp cứu — khác biệt giữa hai chế độ đó là toàn bộ chương này chạy lúc 10 giờ sáng thứ Ba hay 2 giờ sáng Chủ nhật.</li>
+</ul>
+<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Quyết định</th>
+          <th>Được</th>
+          <th>Giá</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Bucket nhiều + nhỏ từ đầu (nghìn bucket)</td>
+          <td>Resharding = di chuyển bucket, mịn, dừng/lùi được</td>
+          <td>Metadata to hơn; per-bucket overhead</td>
+      </tr>
+      <tr>
+          <td>Dual-write dài (thận trọng)</td>
+          <td>Đường lùi rộng, verify kỹ</td>
+          <td>Chi phí ghi ×2 kéo dài; code hai đường lâu</td>
+      </tr>
+      <tr>
+          <td>Balancer tự động</td>
+          <td>Không tích nợ lệch</td>
+          <td>Di chuyển nền ăn I/O — phải có cửa sổ và throttle; balancer &ldquo;tự tiện&rdquo; giờ cao điểm là nguồn sự cố kinh điển (Mongo cho lịch balancer có lý do)</td>
+      </tr>
+      <tr>
+          <td>Tự chế resharding ở app</td>
+          <td>Kiểm soát trọn</td>
+          <td>Đắt và rủi ro nhất trong mọi lựa chọn của phần này — chỉ khi không còn đường khác</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="6-production-considerations">6. Production Considerations<a hidden class="anchor" aria-hidden="true" href="#6-production-considerations">#</a></h2>
+<ul>
+<li><strong>Diễn tập trên staging với dữ liệu cỡ thật</strong> trước lần resharding production đầu tiên — đo thời gian từng pha, độ ăn I/O, điểm gãy — đúng nghi thức <a href="/series/system-design/12-evolution/10-disaster-recovery/">12.10 — drill</a>.</li>
+<li>Trong lúc resharding, <strong>quan sát như đang có sự cố:</strong> dashboard riêng cho tiến độ backfill, lệch dual-write, kết quả verify theo dải, error rate của cả hai shard; người trực biết resharding đang chạy (điều tra &ldquo;vì sao I/O cao&rdquo; lúc 3h sáng mà không ai ghi lịch là chuyện có thật).</li>
+<li>Mọi bước đổi routing qua <strong>config runtime có audit log</strong> — ai đảo cờ gì lúc nào; và freeze các thay đổi khác (schema, deploy lớn) trong cửa sổ cutover.</li>
+<li>Dọn dữ liệu nguồn <strong>sau cùng, sau nhiều ngày, có backup</strong> — disk rẻ hơn nhiều so với phát hiện thiếu dữ liệu sau khi đã xóa nguồn.</li>
+</ul>
+<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
+<ul>
+<li><strong>Big-bang resharding</strong> (maintenance window một đêm chuyển hết) — mọi ràng buộc §2 dồn vào một khe hẹp; quá giờ là tiến thoái lưỡng nan kinh điển.</li>
+<li><strong>Bỏ pha verify</strong> hoặc verify bằng mắt — lệch âm thầm lộ ra sau cutover hàng tuần, khi nguồn đã xóa.</li>
+<li><strong>Cutover bằng deploy</strong> thay vì cờ runtime — đường lùi là một lần deploy nữa, dài đúng bằng khoảng thời gian tồi tệ nhất để chờ.</li>
+<li><strong>Resharding đồng thời với thay đổi lớn khác</strong> (đổi schema + đổi key + nâng version engine một thể &ldquo;cho tiện&rdquo;) — ba biến số, một sự cố, không cô lập được nguyên nhân.</li>
+<li><strong>Không có kế hoạch resharding ngay từ thiết kế sharding</strong> — chọn kiến trúc không có đường resharding (mod N cứng trong code, không bucket, không CDC) là chọn trước cách mình sẽ đau.</li>
+</ul>
+<h2 id="8-khi-nào-không-nên-resharding">8. Khi nào KHÔNG nên resharding<a hidden class="anchor" aria-hidden="true" href="#8-khi-nào-không-nên-resharding">#</a></h2>
+<p>Khi bài toán thật là <strong>hot key đơn lẻ</strong> (<a href="/series/system-design/13-production-failure-cases/02-database-failures/">13.2 — salting/VIP lane</a>) — di chuyển dữ liệu không giúp key nóng nguội đi; khi lệch dung lượng còn chữa được bằng <strong>archive dữ liệu nguội</strong> (rẻ hơn mọi phương án); khi trần sắp chạm là <strong>trần đọc</strong> — replica/cache (<a href="/series/system-design/07-caching/00-tong-quan/">Phần 7</a>) trước; và khi hệ <em>chưa</em> shard — hãy đọc lại checklist <a href="/series/system-design/08-data-partitioning/01-partitioning-sharding/">8.1 §7</a> một lần nữa trước khi bước vào thế giới mà chương này mô tả. Toàn bộ Phần 8 có thể tóm trong một câu khuyên: <strong>shard muộn nhất có thể, shard theo chủ sở hữu tự nhiên, chia bucket nhỏ từ đầu, và giữ đường lùi ở mọi bước.</strong></p>
+<hr>
+<p><em>Hết Phần 8. Quay lại <a href="/series/system-design/00-muc-luc/">mục lục chính</a>.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/system-design/">System-Design</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/system-design/08-data-partitioning/02-consistent-hashing/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>8.2. Consistent Hashing — thêm bớt node mà không xáo cả thế giới</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/system-design/09-search/00-tong-quan/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Phần 9 — Search</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on x"
+            href="https://x.com/intent/tweet/?text=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f&amp;hashtags=backend%2csystem-design">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f&amp;title=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;summary=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f&title=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on whatsapp"
+            href="https://api.whatsapp.com/send?text=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on telegram"
+            href="https://telegram.me/share/url?text=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 8.3. Resharding & vận hành hệ đã shard on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=8.3.%20Resharding%20%26%20v%e1%ba%adn%20h%c3%a0nh%20h%e1%bb%87%20%c4%91%c3%a3%20shard&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsystem-design%2f08-data-partitioning%2f03-resharding-van-hanh%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

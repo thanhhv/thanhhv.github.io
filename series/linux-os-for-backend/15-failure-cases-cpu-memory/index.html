@@ -1,61 +1,443 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 15 — Production Failure Cases (1): CPU & Memory | Thanh HV's Blog</title>
-<meta name=keywords content="backend,linux,operating-system"><meta name=description content="
-Mỗi case theo khung: Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric & Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh. Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 15 — Production Failure Cases (1): CPU &amp; Memory | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, linux, operating-system">
+<meta name="description" content="
+Mỗi case theo khung: Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric &amp; Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh. Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.
 
 Case 1 — CPU 100%
-Triệu chứng: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/linux-os-for-backend/15-failure-cases-cpu-memory/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/linux-os-for-backend/15-failure-cases-cpu-memory/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/linux-os-for-backend/15-failure-cases-cpu-memory/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 15 — Production Failure Cases (1): CPU & Memory"><meta property="og:description" content=" Mỗi case theo khung: Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric & Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh. Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.
-Case 1 — CPU 100% Triệu chứng: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-02-21T22:00:00+07:00"><meta property="article:modified_time" content="2026-02-21T22:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Linux"><meta property="article:tag" content="Operating-System"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 15 — Production Failure Cases (1): CPU & Memory"><meta name=twitter:description content="
-Mỗi case theo khung: Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric & Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh. Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.
+Triệu chứng: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/linux-os-for-backend/15-failure-cases-cpu-memory/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/linux-os-for-backend/15-failure-cases-cpu-memory/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-Case 1 — CPU 100%
-Triệu chứng: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Operating Systems cho Backend Engineer","item":"https://thanhhv.github.io/series/linux-os-for-backend/"},{"@type":"ListItem","position":3,"name":"Chương 15 — Production Failure Cases (1): CPU \u0026 Memory","item":"https://thanhhv.github.io/series/linux-os-for-backend/15-failure-cases-cpu-memory/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 15 — Production Failure Cases (1): CPU \u0026 Memory","name":"Chương 15 — Production Failure Cases (1): CPU \u0026 Memory","description":" Mỗi case theo khung: Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric \u0026amp; Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh. Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.\nCase 1 — CPU 100% Triệu chứng: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí.\n","keywords":["backend","linux","operating-system"],"articleBody":" Mỗi case theo khung: Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric \u0026 Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh. Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.\nCase 1 — CPU 100% Triệu chứng: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí.\nBên trong kernel: CPU 100% chỉ có nghĩa “luôn có task runnable”. Bốn kịch bản khác hẳn nhau: (a) user code tính toán (%us cao) — loop bug, regex độc, GC storm, crypto mining(!); (b) kernel làm việc hộ (%sy cao) — syscall storm, lock contention futex, network stack; (c) softirq (%si) — bão packet; (d) steal (%st) — hàng xóm trên hypervisor. Ngoài ra CPU “bận” có thể đang stall chờ RAM (IPC thấp — chương 02).\nĐiều tra từng bước:\n1. top → đọc cơ cấu %us/%sy/%si/%wa/%st ← quyết định hướng đi 2. pidstat 1 → process nào; top -H -p → THREAD nào 3. %us cao → perf top -p / flame graph / profiler ngôn ngữ (pprof...) 4. %sy cao → perf top (hàm kernel nào); syscount-bpfcc -p 5. %si cao → mpstat -P ALL 1 (dồn 1 core?); case network chương 11 6. Nghi stall: perf stat -p → IPC \u003c 1? cache-misses cao?Khắc phục \u0026 phòng tránh: theo nhánh (fix code, batching syscall, shard lock, RSS/RPS, đổi node). Phòng: CPU profiling liên tục (continuous profiling), alert theo cơ cấu CPU chứ không chỉ tổng %, giới hạn regex/input từ user.\nCase 2 — Load Average tăng cao Triệu chứng: load 1-5-15 phút tăng (ví dụ 85 trên máy 32 core) nhưng có khi %CPU lại thấp — gây hoảng loạn sai hướng.\nBên trong kernel: load = trung bình mũ của số task TASK_RUNNING (đang/đợi chạy) + TASK_UNINTERRUPTIBLE (D — chờ disk/NFS/lock kernel) (chương 04, 06). Vế thứ hai là đặc sản Linux: load cao ≠ CPU thiếu.\nĐiều tra:\n1. vmstat 1: cột r (runnable) vs cột b (blocked/D) r \u003e\u003e số core → thật sự thiếu CPU → sang Case 1/3 b lớn → bão D-state → đi bước 2 2. ps -eo state,pid,wchan:30,comm | awk '$1==\"D\"' → kẹt ở hàm kernel nào (wchan: io_schedule = disk; rpc_wait = NFS; ...) 3. iostat -x 1 (await? %util?), PSI: cat /proc/pressure/{cpu,io,memory} 4. Nếu NFS: nfsstat, mount option (hard mount treo vô hạn khi server mất!)Khắc phục: nguồn IO chậm (Case 11), NFS chết (remount/failover), hoặc thiếu CPU thật (scale). Phòng tránh: dashboard tách r và b (hoặc dùng PSI thay load); hiểu rằng alert “load \u003e N” thô sơ gây cả false positive lẫn false negative — PSI cpu/io/memory là bản nâng cấp đúng.\nCase 3 — Context Switch quá nhiều Triệu chứng: vmstat cột cs gấp 5-10 lần baseline; CPU tăng mà công việc hoàn thành không tăng; p99 xấu.\nBên trong kernel: mỗi switch ~1-5µs trực tiếp + đuổi cache/TLB (chương 05). 500k cs/s × 3µs ≈ 1.5 core bốc hơi chưa kể cache nguội. Nguyên nhân điển hình: quá nhiều thread runnable (thread explosion — Case 15), lock contention (ngủ-dậy liên hồi quanh futex), IO nhỏ li ti, hoặc timer/polling dày đặc.\nĐiều tra:\n1. vmstat 1 → cs baseline? (ghi baseline từ thời bình!) 2. pidstat -w 1 → process nào; cstop/voluntary vs involuntary: voluntary cao → block-wake liên tục: lock? IO nhỏ? channel ping-pong? involuntary cao → tranh CPU: quá nhiều thread / cgroup throttle 3. perf sched record -- sleep 10; perf sched latency → ai switch nhiều, chờ bao lâu 4. Lock? → mutex profile của app / futex count qua bpftrace (chương 08)Khắc phục: giảm thread về ~số core, gộp IO (buffer), sửa lock nóng, nới cgroup quota. Phòng tránh: load test đo cs khi thay đổi concurrency; quy tắc “thread pool có giới hạn, giới hạn có lý do”.\nCase 4 — OOM Killer Triệu chứng: process biến mất không log; dmesg: Out of memory: Killed process ... anon-rss:...; K8s: exit 137/OOMKilled.\nBên trong kernel (chương 07): cấp phát thất bại sau mọi nỗ lực reclaim → out_of_memory() chấm điểm oom_badness (≈ RSS + swap, hiệu chỉnh oom_score_adj) → SIGKILL nạn nhân điểm cao nhất. Trong cgroup: vượt memory.max → OOM cục bộ. Nhớ: overcommit nghĩa là malloc hầu như không bao giờ fail — nợ chỉ đòi khi chạm page.\nĐiều tra:\n1. dmesg -T | grep -i -A 20 'killed process' → nạn nhân, RSS, bảng điểm mọi task → THỦ PHẠM thường không phải NẠN NHÂN — xem task nào RSS lớn bất thường 2. Toàn máy hay cgroup? (log có \"memory cgroup out of memory\") 3. sar -r / dashboard: available giảm từ khi nào? đột ngột (job mới) hay từ từ (leak — Case 5)? 4. K8s: kubectl describe pod → limit bao nhiêu; app có ghi file lớn (page cache tính vào!) không?Khắc phục: khôi phục service; tách/giới hạn thủ phạm bằng cgroup; chỉnh oom_score_adj bảo vệ process chính. Phòng tránh: quy hoạch memory bằng cgroup cho mọi workload trên máy chung; alert available \u003c 15% + PSI memory; với K8s đặt limit dựa trên đo đạc + headroom, không đoán.\nCase 5 — Memory Leak Triệu chứng: RSS tăng đơn điệu qua ngày/tuần; kết cục là Case 4. Dạng khó: tăng chậm, chỉ thấy khi nhìn đồ thị 30 ngày.\nBên trong kernel: kernel không biết “leak” — nó chỉ thấy process chạm ngày càng nhiều page. Phân biệt 3 dạng: (a) leak thật trong app (mất tham chiếu — ngôn ngữ GC vẫn leak được: map/cache/goroutine giữ tham chiếu, listener quên gỡ); (b) allocator giữ lại (free rồi nhưng chưa trả kernel — RSS cao nhưng ổn định ở cao nguyên, không phải leak); (c) fragmentation (Case 8 phụ lục). Còn một dạng nữa: kernel memory leak qua slab (FD/socket không đóng → slabtop thấy sock_inode_cache, dentry phình).\nĐiều tra:\n1. Đồ thị RSS dài hạn: tuyến tính theo thời gian? theo traffic? cao nguyên? 2. Go: pprof heap diff 2 thời điểm; Java: heap dump + MAT; C/C++: jemalloc profiling / valgrind (staging), bpftrace uprobe malloc (production thận trọng) 3. Goroutine leak: /debug/pprof/goroutine — số goroutine tăng mãi = leak phổ biến nhất trong Go (goroutine kẹt chờ channel không ai đóng) 4. Không phải heap app? → cat /proc//smaps_rollup (vùng nào phình); slabtop (kernel object); lsof đếm FDKhắc phục: fix code; tạm thời restart định kỳ có kiểm soát (rolling) — “chữa triệu chứng” nhưng mua thời gian. Phòng tránh: đồ thị RSS + goroutine/FD count trên dashboard mặc định; leak test trong CI (chạy tải 1h, RSS phải phẳng); code review pattern giữ-tham-chiếu.\nCase 6 — Swap Thrashing Triệu chứng: hệ thống chậm toàn diện kỳ lạ; disk IO cao trên swap partition; vmstat cột si/so khác 0 liên tục; load tăng do D-state.\nBên trong kernel (chương 07): working set các process \u003e RAM → reclaim đẩy page anonymous ra swap; process chạm lại → major fault đọc từ disk → để có chỗ lại đẩy page khác ra — vòng xoáy: CPU rảnh nhưng ai cũng chờ swap-in. Độ trễ memory access nhảy từ 100ns lên 100µs-10ms (× 1.000-100.000 lần).\nĐiều tra:\n1. vmstat 1: si/so — vài trang lẻ tẻ = vô hại; hàng nghìn KB/s liên tục = thrashing 2. Ai bị swap: for p in /proc/[0-9]*/status; do grep -H VmSwap $p; done | sort -k2 -n 3. PSI: /proc/pressure/memory — full \u003e 0 kéo dài = cả hệ đứng vì memory 4. Vì sao thiếu RAM: process mới? leak (Case 5)? cấu hình cache DB quá tay?Khắc phục: giết/di dời workload ít quan trọng (đừng swapoff giữa cơn — nó ép đọc toàn bộ swap về RAM đang thiếu → tê liệt thêm); thêm RAM/scale out; sửa cấu hình ăn quá RAM. Phòng tránh: quy hoạch working set; swappiness thấp cho máy DB; alert so \u003e 0 bền vững + PSI memory some \u003e 10%; cgroup memory.low bảo vệ service chính.\nCase 7 — Page Fault Storm Triệu chứng: CPU %sy cao, service khựng từng đợt dù RAM “đủ”; sar -B minor/major fault tăng vọt.\nBên trong kernel (chương 07): ba nguồn bão — (a) major fault storm: mmap file lớn đọc ngẫu nhiên lạnh cache / swap-in (Case 6); (b) minor fault storm: app cấp phát và giải phóng vùng lớn liên tục (madvise DONTNEED rồi chạm lại — vòng lặp map/unmap; hay gặp ở runtime trả memory quá hăng: GOGC/GC tuning), mỗi lần chạm lại là fault + zero page + có thể TLB shootdown đa core; (c) COW storm sau fork (Redis BGSAVE — chương 04/07).\nĐiều tra:\n1. sar -B 1: fault/s vs majflt/s → major hay minor storm? 2. Per-process: ps -o min_flt,maj_flt -p (delta theo thời gian) 3. Major → file nào: bpftrace tracepoint:exceptions:page_fault_user + filemap fault; hoặc perf record -e major-faults -g 4. Minor + đa thread → nghi TLB shootdown: grep TLB /proc/interrupts (tăng nhanh?) 5. Mới fork/BGSAVE xong? → COW storm, xem timeline với redis INFO persistenceKhắc phục: (a) preload/pretouch (mmap + MAP_POPULATE, vmtouch warm cache), chuyển đọc ngẫu nhiên lạnh sang read() có kiểm soát; (b) tune runtime bớt trả-rồi-đòi memory, dùng pool; (c) lịch BGSAVE giờ thấp điểm / replica riêng cho persistence. Phòng tránh: warm-up sau deploy trước khi nhận traffic; theo dõi fault rate như metric hạng nhất của service mmap nhiều (database!).\nCase 8 — NUMA Imbalance Triệu chứng: máy 2+ socket: throughput thấp hơn kỳ vọng 30-50%; latency dao động không giải thích được; một nửa số core “chậm hơn” nửa kia với cùng workload.\nBên trong kernel (chương 02): first-touch đặt page ở node của thread khởi tạo; scheduler sau đó di cư thread sang node khác → truy cập chéo QPI/UPI (~1.5-2× chậm, bandwidth hẹp); hoặc một node cạn memory cục bộ → reclaim/swap cục bộ trong khi node kia còn RAM (zone reclaim). Automatic NUMA balancing của kernel di cư page/thread nhưng chính việc di cư cũng tốn (fault + copy).\nĐiều tra:\n1. numactl --hardware → topology; numastat → numa_miss/numa_foreign cao? 2. numastat -p → memory của process nằm node nào; taskset -pc → chạy node nào 3. perf stat -e node-load-misses,node-loads → tỷ lệ remote access 4. /proc/zoneinfo → node nào cạn; sự cố \"swap khi RAM còn\" → vm.zone_reclaim_mode?Khắc phục: bind cả CPU + memory (numactl --cpunodebind=0 --membind=0 — hoặc chia service thành N instance, mỗi instance một node — pattern chuẩn cho DB/proxy lớn); interleave cho workload truy cập đều (--interleave=all — khuyến nghị cũ cho một số DB); đảm bảo vm.zone_reclaim_mode=0 (mặc định hiện nay). Phòng tránh: benchmark trên đúng topology production; cân nhắc tắt automatic NUMA balancing cho DB đã bind tay; K8s: topology manager + static CPU policy cho pod nhạy.\nCase 9 — Cache Miss tăng cao Triệu chứng: cùng lượng request, CPU cao hơn hẳn sau một thay đổi “vô hại”; IPC tụt (ví dụ 1.8 → 0.6); không có gì bất thường ở mọi metric hệ thống khác — dạng sự cố “tàng hình” nhất.\nBên trong kernel/phần cứng (chương 02): các thủ phạm — cấu trúc dữ liệu đổi layout (thêm field làm struct vượt cache line, array-of-struct → struct-of-array ngược), false sharing sau khi thêm counter atomic, working set vượt L3 (thêm feature cache nội bộ), context switch tăng đuổi cache (Case 3 kéo theo), hoặc hàng xóm cùng máy chiếm L3 (noisy neighbor thật sự — L3 chia sẻ toàn socket!).\nĐiều tra:\n1. perf stat -p : IPC, cache-misses, LLC-load-misses — so BASELINE (không có baseline thì con số vô nghĩa → đo định kỳ từ thời bình) 2. perf record -e LLC-load-misses -g → miss từ code nào 3. perf c2c record/report → false sharing (cột HITM cao, hai offset cùng cache line từ hai CPU) 4. Nghi hàng xóm: đo cache miss khi neighbor bật/tắt; resctrl (Intel CAT) để chia L3 nếu phần cứng hỗ trợKhắc phục: sửa layout (padding, tách read-only khỏi read-write, gom field nóng), giảm working set hot path, cách ly CPU/L3 cho service nhạy. Phòng tránh: perf stat trong benchmark CI cho hot path quan trọng; review “thêm một atomic counter toàn cục” như review một thay đổi kiến trúc.\nTiếp: Chương 16 — Failure Cases: IO, Network \u0026 Concurrency.\n","wordCount":"2074","inLanguage":"en","datePublished":"2026-02-21T22:00:00+07:00","dateModified":"2026-02-21T22:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/linux-os-for-backend/15-failure-cases-cpu-memory/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/linux-os-for-backend/>Operating Systems cho Backend Engineer</a></div><h1 class="post-title entry-hint-parent">Chương 15 — Production Failure Cases (1): CPU & Memory</h1><div class=post-meta><span title='2026-02-21 22:00:00 +0700 +07'>February 21, 2026</span>&nbsp;·&nbsp;10 min</div></header><div class=post-content><blockquote><p>Mỗi case theo khung: <strong>Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric & Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh.</strong> Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.</p></blockquote><hr><h2 id=case-1--cpu-100>Case 1 — CPU 100%<a hidden class=anchor aria-hidden=true href=#case-1--cpu-100>#</a></h2><p><strong>Triệu chứng</strong>: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí.</p><p><strong>Bên trong kernel</strong>: CPU 100% chỉ có nghĩa &ldquo;luôn có task runnable&rdquo;. Bốn kịch bản khác hẳn nhau: (a) user code tính toán (<code>%us</code> cao) — loop bug, regex độc, GC storm, crypto mining(!); (b) kernel làm việc hộ (<code>%sy</code> cao) — syscall storm, lock contention futex, network stack; (c) softirq (<code>%si</code>) — bão packet; (d) steal (<code>%st</code>) — hàng xóm trên hypervisor. Ngoài ra CPU &ldquo;bận&rdquo; có thể đang <strong>stall chờ RAM</strong> (IPC thấp — chương 02).</p><p><strong>Điều tra từng bước</strong>:</p><pre tabindex=0><code>1. top → đọc cơ cấu %us/%sy/%si/%wa/%st  ← quyết định hướng đi
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/linux-os-for-backend/">Operating Systems cho Backend Engineer</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 15 — Production Failure Cases (1): CPU &amp; Memory
+    </h1>
+    <div class="post-meta"><span title='2026-02-21 22:00:00 +0700 +07'>February 21, 2026</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Mỗi case theo khung: <strong>Triệu chứng → Root cause phổ biến → Bên trong kernel → Metric &amp; Dashboard → Điều tra từng bước → Khắc phục → Phòng tránh.</strong> Các lệnh mặc định chạy được trên mọi máy Linux; công cụ eBPF (bcc-tools) khi có càng tốt. Kiến thức nền: chương tương ứng ghi trong ngoặc.</p></blockquote>
+<hr>
+<h2 id="case-1--cpu-100">Case 1 — CPU 100%<a hidden class="anchor" aria-hidden="true" href="#case-1--cpu-100">#</a></h2>
+<p><strong>Triệu chứng</strong>: %CPU chạm trần; latency tăng; có thể kèm autoscale bùng nổ chi phí.</p>
+<p><strong>Bên trong kernel</strong>: CPU 100% chỉ có nghĩa &ldquo;luôn có task runnable&rdquo;. Bốn kịch bản khác hẳn nhau: (a) user code tính toán (<code>%us</code> cao) — loop bug, regex độc, GC storm, crypto mining(!); (b) kernel làm việc hộ (<code>%sy</code> cao) — syscall storm, lock contention futex, network stack; (c) softirq (<code>%si</code>) — bão packet; (d) steal (<code>%st</code>) — hàng xóm trên hypervisor. Ngoài ra CPU &ldquo;bận&rdquo; có thể đang <strong>stall chờ RAM</strong> (IPC thấp — chương 02).</p>
+<p><strong>Điều tra từng bước</strong>:</p>
+<pre tabindex="0"><code>1. top → đọc cơ cấu %us/%sy/%si/%wa/%st  ← quyết định hướng đi
 2. pidstat 1 → process nào; top -H -p &lt;pid&gt; → THREAD nào
 3. %us cao → perf top -p &lt;pid&gt; / flame graph / profiler ngôn ngữ (pprof...)
 4. %sy cao → perf top (hàm kernel nào); syscount-bpfcc -p &lt;pid&gt;
 5. %si cao → mpstat -P ALL 1 (dồn 1 core?); case network chương 11
-6. Nghi stall: perf stat -p &lt;pid&gt; → IPC &lt; 1? cache-misses cao?</code></pre><p><strong>Khắc phục & phòng tránh</strong>: theo nhánh (fix code, batching syscall, shard lock, RSS/RPS, đổi node). Phòng: CPU profiling liên tục (continuous profiling), alert theo <em>cơ cấu</em> CPU chứ không chỉ tổng %, giới hạn regex/input từ user.</p><hr><h2 id=case-2--load-average-tăng-cao>Case 2 — Load Average tăng cao<a hidden class=anchor aria-hidden=true href=#case-2--load-average-tăng-cao>#</a></h2><p><strong>Triệu chứng</strong>: load 1-5-15 phút tăng (ví dụ 85 trên máy 32 core) nhưng có khi %CPU lại thấp — gây hoảng loạn sai hướng.</p><p><strong>Bên trong kernel</strong>: load = trung bình mũ của số task <strong>TASK_RUNNING (đang/đợi chạy) + TASK_UNINTERRUPTIBLE (D — chờ disk/NFS/lock kernel)</strong> (chương 04, 06). Vế thứ hai là đặc sản Linux: load cao ≠ CPU thiếu.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. vmstat 1: cột r (runnable) vs cột b (blocked/D)
+6. Nghi stall: perf stat -p &lt;pid&gt; → IPC &lt; 1? cache-misses cao?</code></pre><p><strong>Khắc phục &amp; phòng tránh</strong>: theo nhánh (fix code, batching syscall, shard lock, RSS/RPS, đổi node). Phòng: CPU profiling liên tục (continuous profiling), alert theo <em>cơ cấu</em> CPU chứ không chỉ tổng %, giới hạn regex/input từ user.</p>
+<hr>
+<h2 id="case-2--load-average-tăng-cao">Case 2 — Load Average tăng cao<a hidden class="anchor" aria-hidden="true" href="#case-2--load-average-tăng-cao">#</a></h2>
+<p><strong>Triệu chứng</strong>: load 1-5-15 phút tăng (ví dụ 85 trên máy 32 core) nhưng có khi %CPU lại thấp — gây hoảng loạn sai hướng.</p>
+<p><strong>Bên trong kernel</strong>: load = trung bình mũ của số task <strong>TASK_RUNNING (đang/đợi chạy) + TASK_UNINTERRUPTIBLE (D — chờ disk/NFS/lock kernel)</strong> (chương 04, 06). Vế thứ hai là đặc sản Linux: load cao ≠ CPU thiếu.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. vmstat 1: cột r (runnable) vs cột b (blocked/D)
    r &gt;&gt; số core → thật sự thiếu CPU → sang Case 1/3
    b lớn        → bão D-state → đi bước 2
 2. ps -eo state,pid,wchan:30,comm | awk &#39;$1==&#34;D&#34;&#39; → kẹt ở hàm kernel nào
    (wchan: io_schedule = disk; rpc_wait = NFS; ...)
 3. iostat -x 1 (await? %util?), PSI: cat /proc/pressure/{cpu,io,memory}
-4. Nếu NFS: nfsstat, mount option (hard mount treo vô hạn khi server mất!)</code></pre><p><strong>Khắc phục</strong>: nguồn IO chậm (Case 11), NFS chết (remount/failover), hoặc thiếu CPU thật (scale). <strong>Phòng tránh</strong>: dashboard tách <code>r</code> và <code>b</code> (hoặc dùng PSI thay load); hiểu rằng alert &ldquo;load > N&rdquo; thô sơ gây cả false positive lẫn false negative — PSI cpu/io/memory là bản nâng cấp đúng.</p><hr><h2 id=case-3--context-switch-quá-nhiều>Case 3 — Context Switch quá nhiều<a hidden class=anchor aria-hidden=true href=#case-3--context-switch-quá-nhiều>#</a></h2><p><strong>Triệu chứng</strong>: <code>vmstat</code> cột <code>cs</code> gấp 5-10 lần baseline; CPU tăng mà công việc hoàn thành không tăng; p99 xấu.</p><p><strong>Bên trong kernel</strong>: mỗi switch ~1-5µs trực tiếp + đuổi cache/TLB (chương 05). 500k cs/s × 3µs ≈ 1.5 core bốc hơi <em>chưa kể</em> cache nguội. Nguyên nhân điển hình: quá nhiều thread runnable (thread explosion — Case 15), lock contention (ngủ-dậy liên hồi quanh futex), IO nhỏ li ti, hoặc timer/polling dày đặc.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. vmstat 1 → cs baseline? (ghi baseline từ thời bình!)
+4. Nếu NFS: nfsstat, mount option (hard mount treo vô hạn khi server mất!)</code></pre><p><strong>Khắc phục</strong>: nguồn IO chậm (Case 11), NFS chết (remount/failover), hoặc thiếu CPU thật (scale). <strong>Phòng tránh</strong>: dashboard tách <code>r</code> và <code>b</code> (hoặc dùng PSI thay load); hiểu rằng alert &ldquo;load &gt; N&rdquo; thô sơ gây cả false positive lẫn false negative — PSI cpu/io/memory là bản nâng cấp đúng.</p>
+<hr>
+<h2 id="case-3--context-switch-quá-nhiều">Case 3 — Context Switch quá nhiều<a hidden class="anchor" aria-hidden="true" href="#case-3--context-switch-quá-nhiều">#</a></h2>
+<p><strong>Triệu chứng</strong>: <code>vmstat</code> cột <code>cs</code> gấp 5-10 lần baseline; CPU tăng mà công việc hoàn thành không tăng; p99 xấu.</p>
+<p><strong>Bên trong kernel</strong>: mỗi switch ~1-5µs trực tiếp + đuổi cache/TLB (chương 05). 500k cs/s × 3µs ≈ 1.5 core bốc hơi <em>chưa kể</em> cache nguội. Nguyên nhân điển hình: quá nhiều thread runnable (thread explosion — Case 15), lock contention (ngủ-dậy liên hồi quanh futex), IO nhỏ li ti, hoặc timer/polling dày đặc.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. vmstat 1 → cs baseline? (ghi baseline từ thời bình!)
 2. pidstat -w 1 → process nào; cstop/voluntary vs involuntary:
    voluntary cao → block-wake liên tục: lock? IO nhỏ? channel ping-pong?
    involuntary cao → tranh CPU: quá nhiều thread / cgroup throttle
 3. perf sched record -- sleep 10; perf sched latency → ai switch nhiều, chờ bao lâu
-4. Lock? → mutex profile của app / futex count qua bpftrace (chương 08)</code></pre><p><strong>Khắc phục</strong>: giảm thread về ~số core, gộp IO (buffer), sửa lock nóng, nới cgroup quota. <strong>Phòng tránh</strong>: load test đo cs khi thay đổi concurrency; quy tắc &ldquo;thread pool có giới hạn, giới hạn có lý do&rdquo;.</p><hr><h2 id=case-4--oom-killer>Case 4 — OOM Killer<a hidden class=anchor aria-hidden=true href=#case-4--oom-killer>#</a></h2><p><strong>Triệu chứng</strong>: process biến mất không log; <code>dmesg</code>: <code>Out of memory: Killed process ... anon-rss:...</code>; K8s: exit 137/OOMKilled.</p><p><strong>Bên trong kernel</strong> (chương 07): cấp phát thất bại sau mọi nỗ lực reclaim → <code>out_of_memory()</code> chấm điểm <code>oom_badness</code> (≈ RSS + swap, hiệu chỉnh <code>oom_score_adj</code>) → SIGKILL nạn nhân điểm cao nhất. Trong cgroup: vượt <code>memory.max</code> → OOM <em>cục bộ</em>. Nhớ: overcommit nghĩa là malloc hầu như không bao giờ fail — nợ chỉ đòi khi <em>chạm</em> page.</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. dmesg -T | grep -i -A 20 &#39;killed process&#39; → nạn nhân, RSS, bảng điểm mọi task
+4. Lock? → mutex profile của app / futex count qua bpftrace (chương 08)</code></pre><p><strong>Khắc phục</strong>: giảm thread về ~số core, gộp IO (buffer), sửa lock nóng, nới cgroup quota. <strong>Phòng tránh</strong>: load test đo cs khi thay đổi concurrency; quy tắc &ldquo;thread pool có giới hạn, giới hạn có lý do&rdquo;.</p>
+<hr>
+<h2 id="case-4--oom-killer">Case 4 — OOM Killer<a hidden class="anchor" aria-hidden="true" href="#case-4--oom-killer">#</a></h2>
+<p><strong>Triệu chứng</strong>: process biến mất không log; <code>dmesg</code>: <code>Out of memory: Killed process ... anon-rss:...</code>; K8s: exit 137/OOMKilled.</p>
+<p><strong>Bên trong kernel</strong> (chương 07): cấp phát thất bại sau mọi nỗ lực reclaim → <code>out_of_memory()</code> chấm điểm <code>oom_badness</code> (≈ RSS + swap, hiệu chỉnh <code>oom_score_adj</code>) → SIGKILL nạn nhân điểm cao nhất. Trong cgroup: vượt <code>memory.max</code> → OOM <em>cục bộ</em>. Nhớ: overcommit nghĩa là malloc hầu như không bao giờ fail — nợ chỉ đòi khi <em>chạm</em> page.</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. dmesg -T | grep -i -A 20 &#39;killed process&#39; → nạn nhân, RSS, bảng điểm mọi task
    → THỦ PHẠM thường không phải NẠN NHÂN — xem task nào RSS lớn bất thường
 2. Toàn máy hay cgroup? (log có &#34;memory cgroup out of memory&#34;)
 3. sar -r / dashboard: available giảm từ khi nào? đột ngột (job mới) hay
    từ từ (leak — Case 5)?
 4. K8s: kubectl describe pod → limit bao nhiêu; app có ghi file lớn
-   (page cache tính vào!) không?</code></pre><p><strong>Khắc phục</strong>: khôi phục service; tách/giới hạn thủ phạm bằng cgroup; chỉnh <code>oom_score_adj</code> bảo vệ process chính. <strong>Phòng tránh</strong>: quy hoạch memory bằng cgroup cho <em>mọi</em> workload trên máy chung; alert available &lt; 15% + PSI memory; với K8s đặt limit dựa trên đo đạc + headroom, không đoán.</p><hr><h2 id=case-5--memory-leak>Case 5 — Memory Leak<a hidden class=anchor aria-hidden=true href=#case-5--memory-leak>#</a></h2><p><strong>Triệu chứng</strong>: RSS tăng đơn điệu qua ngày/tuần; kết cục là Case 4. Dạng khó: tăng chậm, chỉ thấy khi nhìn đồ thị 30 ngày.</p><p><strong>Bên trong kernel</strong>: kernel không biết &ldquo;leak&rdquo; — nó chỉ thấy process chạm ngày càng nhiều page. Phân biệt 3 dạng: (a) leak thật trong app (mất tham chiếu — ngôn ngữ GC vẫn leak được: map/cache/goroutine giữ tham chiếu, listener quên gỡ); (b) <strong>allocator giữ lại</strong> (free rồi nhưng chưa trả kernel — RSS cao nhưng ổn định ở cao nguyên, không phải leak); (c) fragmentation (Case 8 phụ lục). Còn một dạng nữa: <strong>kernel memory leak</strong> qua slab (FD/socket không đóng → <code>slabtop</code> thấy <code>sock_inode_cache</code>, <code>dentry</code> phình).</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. Đồ thị RSS dài hạn: tuyến tính theo thời gian? theo traffic? cao nguyên?
+   (page cache tính vào!) không?</code></pre><p><strong>Khắc phục</strong>: khôi phục service; tách/giới hạn thủ phạm bằng cgroup; chỉnh <code>oom_score_adj</code> bảo vệ process chính. <strong>Phòng tránh</strong>: quy hoạch memory bằng cgroup cho <em>mọi</em> workload trên máy chung; alert available &lt; 15% + PSI memory; với K8s đặt limit dựa trên đo đạc + headroom, không đoán.</p>
+<hr>
+<h2 id="case-5--memory-leak">Case 5 — Memory Leak<a hidden class="anchor" aria-hidden="true" href="#case-5--memory-leak">#</a></h2>
+<p><strong>Triệu chứng</strong>: RSS tăng đơn điệu qua ngày/tuần; kết cục là Case 4. Dạng khó: tăng chậm, chỉ thấy khi nhìn đồ thị 30 ngày.</p>
+<p><strong>Bên trong kernel</strong>: kernel không biết &ldquo;leak&rdquo; — nó chỉ thấy process chạm ngày càng nhiều page. Phân biệt 3 dạng: (a) leak thật trong app (mất tham chiếu — ngôn ngữ GC vẫn leak được: map/cache/goroutine giữ tham chiếu, listener quên gỡ); (b) <strong>allocator giữ lại</strong> (free rồi nhưng chưa trả kernel — RSS cao nhưng ổn định ở cao nguyên, không phải leak); (c) fragmentation (Case 8 phụ lục). Còn một dạng nữa: <strong>kernel memory leak</strong> qua slab (FD/socket không đóng → <code>slabtop</code> thấy <code>sock_inode_cache</code>, <code>dentry</code> phình).</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. Đồ thị RSS dài hạn: tuyến tính theo thời gian? theo traffic? cao nguyên?
 2. Go: pprof heap diff 2 thời điểm; Java: heap dump + MAT; C/C++: jemalloc
    profiling / valgrind (staging), bpftrace uprobe malloc (production thận trọng)
 3. Goroutine leak: /debug/pprof/goroutine — số goroutine tăng mãi = leak
    phổ biến nhất trong Go (goroutine kẹt chờ channel không ai đóng)
 4. Không phải heap app? → cat /proc/&lt;pid&gt;/smaps_rollup (vùng nào phình);
-   slabtop (kernel object); lsof đếm FD</code></pre><p><strong>Khắc phục</strong>: fix code; tạm thời restart định kỳ có kiểm soát (rolling) — &ldquo;chữa triệu chứng&rdquo; nhưng mua thời gian. <strong>Phòng tránh</strong>: đồ thị RSS + goroutine/FD count trên dashboard mặc định; leak test trong CI (chạy tải 1h, RSS phải phẳng); code review pattern giữ-tham-chiếu.</p><hr><h2 id=case-6--swap-thrashing>Case 6 — Swap Thrashing<a hidden class=anchor aria-hidden=true href=#case-6--swap-thrashing>#</a></h2><p><strong>Triệu chứng</strong>: hệ thống chậm <em>toàn diện</em> kỳ lạ; disk IO cao trên swap partition; <code>vmstat</code> cột <code>si</code>/<code>so</code> khác 0 liên tục; load tăng do D-state.</p><p><strong>Bên trong kernel</strong> (chương 07): working set các process > RAM → reclaim đẩy page anonymous ra swap; process chạm lại → major fault đọc từ disk → để có chỗ lại đẩy page khác ra — <strong>vòng xoáy</strong>: CPU rảnh nhưng ai cũng chờ swap-in. Độ trễ memory access nhảy từ 100ns lên 100µs-10ms (× 1.000-100.000 lần).</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. vmstat 1: si/so — vài trang lẻ tẻ = vô hại; hàng nghìn KB/s liên tục = thrashing
+   slabtop (kernel object); lsof đếm FD</code></pre><p><strong>Khắc phục</strong>: fix code; tạm thời restart định kỳ có kiểm soát (rolling) — &ldquo;chữa triệu chứng&rdquo; nhưng mua thời gian. <strong>Phòng tránh</strong>: đồ thị RSS + goroutine/FD count trên dashboard mặc định; leak test trong CI (chạy tải 1h, RSS phải phẳng); code review pattern giữ-tham-chiếu.</p>
+<hr>
+<h2 id="case-6--swap-thrashing">Case 6 — Swap Thrashing<a hidden class="anchor" aria-hidden="true" href="#case-6--swap-thrashing">#</a></h2>
+<p><strong>Triệu chứng</strong>: hệ thống chậm <em>toàn diện</em> kỳ lạ; disk IO cao trên swap partition; <code>vmstat</code> cột <code>si</code>/<code>so</code> khác 0 liên tục; load tăng do D-state.</p>
+<p><strong>Bên trong kernel</strong> (chương 07): working set các process &gt; RAM → reclaim đẩy page anonymous ra swap; process chạm lại → major fault đọc từ disk → để có chỗ lại đẩy page khác ra — <strong>vòng xoáy</strong>: CPU rảnh nhưng ai cũng chờ swap-in. Độ trễ memory access nhảy từ 100ns lên 100µs-10ms (× 1.000-100.000 lần).</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. vmstat 1: si/so — vài trang lẻ tẻ = vô hại; hàng nghìn KB/s liên tục = thrashing
 2. Ai bị swap: for p in /proc/[0-9]*/status; do grep -H VmSwap $p; done | sort -k2 -n
 3. PSI: /proc/pressure/memory — full &gt; 0 kéo dài = cả hệ đứng vì memory
-4. Vì sao thiếu RAM: process mới? leak (Case 5)? cấu hình cache DB quá tay?</code></pre><p><strong>Khắc phục</strong>: giết/di dời workload ít quan trọng (đừng <code>swapoff</code> giữa cơn — nó ép đọc <em>toàn bộ</em> swap về RAM đang thiếu → tê liệt thêm); thêm RAM/scale out; sửa cấu hình ăn quá RAM. <strong>Phòng tránh</strong>: quy hoạch working set; swappiness thấp cho máy DB; alert <code>so > 0</code> bền vững + PSI memory some > 10%; cgroup memory.low bảo vệ service chính.</p><hr><h2 id=case-7--page-fault-storm>Case 7 — Page Fault Storm<a hidden class=anchor aria-hidden=true href=#case-7--page-fault-storm>#</a></h2><p><strong>Triệu chứng</strong>: CPU %sy cao, service khựng từng đợt dù RAM &ldquo;đủ&rdquo;; <code>sar -B</code> minor/major fault tăng vọt.</p><p><strong>Bên trong kernel</strong> (chương 07): ba nguồn bão — (a) <strong>major fault storm</strong>: mmap file lớn đọc ngẫu nhiên lạnh cache / swap-in (Case 6); (b) <strong>minor fault storm</strong>: app cấp phát và giải phóng vùng lớn liên tục (madvise DONTNEED rồi chạm lại — vòng lặp map/unmap; hay gặp ở runtime trả memory quá hăng: GOGC/GC tuning), mỗi lần chạm lại là fault + zero page + có thể TLB shootdown đa core; (c) <strong>COW storm sau fork</strong> (Redis BGSAVE — chương 04/07).</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. sar -B 1: fault/s vs majflt/s → major hay minor storm?
+4. Vì sao thiếu RAM: process mới? leak (Case 5)? cấu hình cache DB quá tay?</code></pre><p><strong>Khắc phục</strong>: giết/di dời workload ít quan trọng (đừng <code>swapoff</code> giữa cơn — nó ép đọc <em>toàn bộ</em> swap về RAM đang thiếu → tê liệt thêm); thêm RAM/scale out; sửa cấu hình ăn quá RAM. <strong>Phòng tránh</strong>: quy hoạch working set; swappiness thấp cho máy DB; alert <code>so &gt; 0</code> bền vững + PSI memory some &gt; 10%; cgroup memory.low bảo vệ service chính.</p>
+<hr>
+<h2 id="case-7--page-fault-storm">Case 7 — Page Fault Storm<a hidden class="anchor" aria-hidden="true" href="#case-7--page-fault-storm">#</a></h2>
+<p><strong>Triệu chứng</strong>: CPU %sy cao, service khựng từng đợt dù RAM &ldquo;đủ&rdquo;; <code>sar -B</code> minor/major fault tăng vọt.</p>
+<p><strong>Bên trong kernel</strong> (chương 07): ba nguồn bão — (a) <strong>major fault storm</strong>: mmap file lớn đọc ngẫu nhiên lạnh cache / swap-in (Case 6); (b) <strong>minor fault storm</strong>: app cấp phát và giải phóng vùng lớn liên tục (madvise DONTNEED rồi chạm lại — vòng lặp map/unmap; hay gặp ở runtime trả memory quá hăng: GOGC/GC tuning), mỗi lần chạm lại là fault + zero page + có thể TLB shootdown đa core; (c) <strong>COW storm sau fork</strong> (Redis BGSAVE — chương 04/07).</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. sar -B 1: fault/s vs majflt/s → major hay minor storm?
 2. Per-process: ps -o min_flt,maj_flt -p &lt;pid&gt; (delta theo thời gian)
 3. Major → file nào: bpftrace tracepoint:exceptions:page_fault_user +
    filemap fault; hoặc perf record -e major-faults -g
 4. Minor + đa thread → nghi TLB shootdown: grep TLB /proc/interrupts (tăng nhanh?)
-5. Mới fork/BGSAVE xong? → COW storm, xem timeline với redis INFO persistence</code></pre><p><strong>Khắc phục</strong>: (a) preload/pretouch (mmap + MAP_POPULATE, <code>vmtouch</code> warm cache), chuyển đọc ngẫu nhiên lạnh sang read() có kiểm soát; (b) tune runtime bớt trả-rồi-đòi memory, dùng pool; (c) lịch BGSAVE giờ thấp điểm / replica riêng cho persistence. <strong>Phòng tránh</strong>: warm-up sau deploy trước khi nhận traffic; theo dõi fault rate như metric hạng nhất của service mmap nhiều (database!).</p><hr><h2 id=case-8--numa-imbalance>Case 8 — NUMA Imbalance<a hidden class=anchor aria-hidden=true href=#case-8--numa-imbalance>#</a></h2><p><strong>Triệu chứng</strong>: máy 2+ socket: throughput thấp hơn kỳ vọng 30-50%; latency dao động không giải thích được; một nửa số core &ldquo;chậm hơn&rdquo; nửa kia với cùng workload.</p><p><strong>Bên trong kernel</strong> (chương 02): first-touch đặt page ở node của thread khởi tạo; scheduler sau đó di cư thread sang node khác → truy cập chéo QPI/UPI (~1.5-2× chậm, bandwidth hẹp); hoặc một node cạn memory cục bộ → reclaim/swap cục bộ <em>trong khi node kia còn RAM</em> (zone reclaim). Automatic NUMA balancing của kernel di cư page/thread nhưng chính việc di cư cũng tốn (fault + copy).</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. numactl --hardware → topology; numastat → numa_miss/numa_foreign cao?
+5. Mới fork/BGSAVE xong? → COW storm, xem timeline với redis INFO persistence</code></pre><p><strong>Khắc phục</strong>: (a) preload/pretouch (mmap + MAP_POPULATE, <code>vmtouch</code> warm cache), chuyển đọc ngẫu nhiên lạnh sang read() có kiểm soát; (b) tune runtime bớt trả-rồi-đòi memory, dùng pool; (c) lịch BGSAVE giờ thấp điểm / replica riêng cho persistence. <strong>Phòng tránh</strong>: warm-up sau deploy trước khi nhận traffic; theo dõi fault rate như metric hạng nhất của service mmap nhiều (database!).</p>
+<hr>
+<h2 id="case-8--numa-imbalance">Case 8 — NUMA Imbalance<a hidden class="anchor" aria-hidden="true" href="#case-8--numa-imbalance">#</a></h2>
+<p><strong>Triệu chứng</strong>: máy 2+ socket: throughput thấp hơn kỳ vọng 30-50%; latency dao động không giải thích được; một nửa số core &ldquo;chậm hơn&rdquo; nửa kia với cùng workload.</p>
+<p><strong>Bên trong kernel</strong> (chương 02): first-touch đặt page ở node của thread khởi tạo; scheduler sau đó di cư thread sang node khác → truy cập chéo QPI/UPI (~1.5-2× chậm, bandwidth hẹp); hoặc một node cạn memory cục bộ → reclaim/swap cục bộ <em>trong khi node kia còn RAM</em> (zone reclaim). Automatic NUMA balancing của kernel di cư page/thread nhưng chính việc di cư cũng tốn (fault + copy).</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. numactl --hardware → topology; numastat → numa_miss/numa_foreign cao?
 2. numastat -p &lt;pid&gt; → memory của process nằm node nào; taskset -pc &lt;pid&gt; → chạy node nào
 3. perf stat -e node-load-misses,node-loads → tỷ lệ remote access
-4. /proc/zoneinfo → node nào cạn; sự cố &#34;swap khi RAM còn&#34; → vm.zone_reclaim_mode?</code></pre><p><strong>Khắc phục</strong>: bind cả CPU + memory (<code>numactl --cpunodebind=0 --membind=0</code> — hoặc chia service thành N instance, mỗi instance một node — pattern chuẩn cho DB/proxy lớn); interleave cho workload truy cập đều (<code>--interleave=all</code> — khuyến nghị cũ cho một số DB); đảm bảo <code>vm.zone_reclaim_mode=0</code> (mặc định hiện nay). <strong>Phòng tránh</strong>: benchmark trên đúng topology production; cân nhắc tắt automatic NUMA balancing cho DB đã bind tay; K8s: topology manager + static CPU policy cho pod nhạy.</p><hr><h2 id=case-9--cache-miss-tăng-cao>Case 9 — Cache Miss tăng cao<a hidden class=anchor aria-hidden=true href=#case-9--cache-miss-tăng-cao>#</a></h2><p><strong>Triệu chứng</strong>: cùng lượng request, CPU cao hơn hẳn sau một thay đổi &ldquo;vô hại&rdquo;; IPC tụt (ví dụ 1.8 → 0.6); không có gì bất thường ở mọi metric hệ thống khác — dạng sự cố &ldquo;tàng hình&rdquo; nhất.</p><p><strong>Bên trong kernel/phần cứng</strong> (chương 02): các thủ phạm — cấu trúc dữ liệu đổi layout (thêm field làm struct vượt cache line, array-of-struct → struct-of-array ngược), false sharing sau khi thêm counter atomic, working set vượt L3 (thêm feature cache nội bộ), context switch tăng đuổi cache (Case 3 kéo theo), hoặc <em>hàng xóm cùng máy</em> chiếm L3 (noisy neighbor thật sự — L3 chia sẻ toàn socket!).</p><p><strong>Điều tra</strong>:</p><pre tabindex=0><code>1. perf stat -p &lt;pid&gt;: IPC, cache-misses, LLC-load-misses — so BASELINE
+4. /proc/zoneinfo → node nào cạn; sự cố &#34;swap khi RAM còn&#34; → vm.zone_reclaim_mode?</code></pre><p><strong>Khắc phục</strong>: bind cả CPU + memory (<code>numactl --cpunodebind=0 --membind=0</code> — hoặc chia service thành N instance, mỗi instance một node — pattern chuẩn cho DB/proxy lớn); interleave cho workload truy cập đều (<code>--interleave=all</code> — khuyến nghị cũ cho một số DB); đảm bảo <code>vm.zone_reclaim_mode=0</code> (mặc định hiện nay). <strong>Phòng tránh</strong>: benchmark trên đúng topology production; cân nhắc tắt automatic NUMA balancing cho DB đã bind tay; K8s: topology manager + static CPU policy cho pod nhạy.</p>
+<hr>
+<h2 id="case-9--cache-miss-tăng-cao">Case 9 — Cache Miss tăng cao<a hidden class="anchor" aria-hidden="true" href="#case-9--cache-miss-tăng-cao">#</a></h2>
+<p><strong>Triệu chứng</strong>: cùng lượng request, CPU cao hơn hẳn sau một thay đổi &ldquo;vô hại&rdquo;; IPC tụt (ví dụ 1.8 → 0.6); không có gì bất thường ở mọi metric hệ thống khác — dạng sự cố &ldquo;tàng hình&rdquo; nhất.</p>
+<p><strong>Bên trong kernel/phần cứng</strong> (chương 02): các thủ phạm — cấu trúc dữ liệu đổi layout (thêm field làm struct vượt cache line, array-of-struct → struct-of-array ngược), false sharing sau khi thêm counter atomic, working set vượt L3 (thêm feature cache nội bộ), context switch tăng đuổi cache (Case 3 kéo theo), hoặc <em>hàng xóm cùng máy</em> chiếm L3 (noisy neighbor thật sự — L3 chia sẻ toàn socket!).</p>
+<p><strong>Điều tra</strong>:</p>
+<pre tabindex="0"><code>1. perf stat -p &lt;pid&gt;: IPC, cache-misses, LLC-load-misses — so BASELINE
    (không có baseline thì con số vô nghĩa → đo định kỳ từ thời bình)
 2. perf record -e LLC-load-misses -g → miss từ code nào
 3. perf c2c record/report → false sharing (cột HITM cao, hai offset
    cùng cache line từ hai CPU)
 4. Nghi hàng xóm: đo cache miss khi neighbor bật/tắt; resctrl (Intel CAT)
-   để chia L3 nếu phần cứng hỗ trợ</code></pre><p><strong>Khắc phục</strong>: sửa layout (padding, tách read-only khỏi read-write, gom field nóng), giảm working set hot path, cách ly CPU/L3 cho service nhạy. <strong>Phòng tránh</strong>: perf stat trong benchmark CI cho hot path quan trọng; review &ldquo;thêm một atomic counter toàn cục&rdquo; như review một thay đổi kiến trúc.</p><hr><p><em>Tiếp: <a href=/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/>Chương 16 — Failure Cases: IO, Network & Concurrency</a>.</em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/linux/>Linux</a></li><li><a href=https://thanhhv.github.io/tags/operating-system/>Operating-System</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/linux-os-for-backend/14-security/><span class=title>« Prev</span><br><span>Chương 14 — Security: từ "root hoặc không" đến quyền chi li từng syscall</span>
-</a><a class=next href=https://thanhhv.github.io/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/><span class=title>Next »</span><br><span>Chương 16 — Production Failure Cases (2): IO, Network & Concurrency</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f&amp;hashtags=backend%2clinux%2coperating-system"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f&amp;title=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;summary=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f&title=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&u=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+   để chia L3 nếu phần cứng hỗ trợ</code></pre><p><strong>Khắc phục</strong>: sửa layout (padding, tách read-only khỏi read-write, gom field nóng), giảm working set hot path, cách ly CPU/L3 cho service nhạy. <strong>Phòng tránh</strong>: perf stat trong benchmark CI cho hot path quan trọng; review &ldquo;thêm một atomic counter toàn cục&rdquo; như review một thay đổi kiến trúc.</p>
+<hr>
+<p><em>Tiếp: <a href="/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/">Chương 16 — Failure Cases: IO, Network &amp; Concurrency</a>.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/linux/">Linux</a></li>
+      <li><a href="http://localhost:1313/tags/operating-system/">Operating-System</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/linux-os-for-backend/14-security/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 14 — Security: từ &#34;root hoặc không&#34; đến quyền chi li từng syscall</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/linux-os-for-backend/16-failure-cases-io-network-concurrency/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 16 — Production Failure Cases (2): IO, Network &amp; Concurrency</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f&amp;hashtags=backend%2clinux%2coperating-system">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f&amp;title=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;summary=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f&title=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 15 — Production Failure Cases (1): CPU & Memory on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2015%20%e2%80%94%20Production%20Failure%20Cases%20%281%29%3a%20CPU%20%26%20Memory&u=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f15-failure-cases-cpu-memory%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

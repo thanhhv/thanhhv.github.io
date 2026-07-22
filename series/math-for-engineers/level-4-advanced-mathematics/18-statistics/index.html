@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 4 – Advanced Mathematics
+Yêu cầu trước: Chương 11 (Probability), Chương 16 (Sorting, Searching &amp; Heap)
+
+1. Problem Statement
+Một buổi sáng thứ Hai, team backend nhận ticket từ customer support: &ldquo;Nhiều khách hàng phàn nàn app chậm, có người chờ 3–4 giây mới load xong trang chủ.&rdquo; Kỹ sư trực mở dashboard, nhìn vào biểu đồ latency của API gateway: average response time = 52ms, ổn định suốt tuần. Anh trả lời ticket: &ldquo;Hệ thống bình thường, có thể do mạng phía khách hàng.&rdquo;">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/18-statistics/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/18-statistics/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 10:00:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;24 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 4 – Advanced Mathematics
+Yêu cầu trước: Chương 11 (Probability), Chương 16 (Sorting, Searching &amp; Heap)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Một buổi sáng thứ Hai, team backend nhận ticket từ customer support: &ldquo;Nhiều khách hàng phàn nàn app chậm, có người chờ 3–4 giây mới load xong trang chủ.&rdquo; Kỹ sư trực mở dashboard, nhìn vào biểu đồ latency của API gateway: <strong>average response time = 52ms</strong>, ổn định suốt tuần. Anh trả lời ticket: &ldquo;Hệ thống bình thường, có thể do mạng phía khách hàng.&rdquo;</p>
+<p>Hai tuần sau, một khách hàng doanh nghiệp lớn hủy hợp đồng. Post-mortem phát hiện: một truy vấn database thiếu index khiến khoảng 2% request chậm hơn 3 giây. 98% request còn lại nhanh (~30ms) — đủ để kéo <em>trung bình</em> xuống 52ms và che giấu hoàn toàn 2% thảm họa. Mà 2% của 10 triệu request mỗi ngày là <strong>200.000 trải nghiệm tồi tệ mỗi ngày</strong> — rơi trúng những khách hàng có nhiều dữ liệu nhất, tức là những khách hàng quan trọng nhất.</p>
+<p>Dashboard không nói dối. Nó chỉ trả lời sai câu hỏi. &ldquo;Trung bình bao nhiêu?&rdquo; không phải là câu hỏi mà user đang hỏi; user hỏi &ldquo;<em>trải nghiệm tệ nhất mà tôi thường gặp là gì?</em>&rdquo;</p>
+<p>Đây là bài toán mà thống kê giải quyết cho người kỹ sư:</p>
+<p><strong>Làm sao nén hàng triệu con số đo được thành vài con số tóm tắt — mà không đánh mất sự thật quan trọng nhất?</strong></p>
+<p>Và bài toán ngược lại, khó không kém:</p>
+<p><strong>Khi hai bản đo khác nhau (bản A nhanh hơn bản B 3%), làm sao biết đó là khác biệt thật hay chỉ là nhiễu ngẫu nhiên?</strong></p>
+<p>Không có thống kê, kỹ sư chỉ còn hai lựa chọn tồi: tin vào con số tóm tắt sai (như câu chuyện trên), hoặc tin vào cảm giác (&ldquo;tôi thấy có vẻ nhanh hơn&rdquo;) — thứ còn tệ hơn.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="một-con-số-không-thể-tóm-tắt-một-phân-phối">Một con số không thể tóm tắt một phân phối<a hidden class="anchor" aria-hidden="true" href="#một-con-số-không-thể-tóm-tắt-một-phân-phối">#</a></h3>
+<p>Hãy tưởng tượng bạn phải mô tả chiều cao của dân cư một thành phố bằng đúng một con số. &ldquo;Trung bình 1m65&rdquo; nghe ổn — vì chiều cao phân bố khá đối xứng quanh giá trị giữa. Giờ mô tả <em>thu nhập</em> bằng một con số: &ldquo;trung bình 25 triệu/tháng&rdquo; — trong khi 90% dân số kiếm dưới 15 triệu và một nhóm nhỏ kiếm hàng tỷ. Con số trung bình đúng về mặt số học nhưng không mô tả <em>bất kỳ ai</em> trong thành phố.</p>
+<p>Sự khác biệt nằm ở <strong>hình dạng phân phối</strong>. Trung bình (mean) chỉ trung thực khi phân phối đối xứng và không có đuôi dài. Thu nhập, tài sản, kích thước file, số follower — và đặc biệt là <strong>latency</strong> — đều lệch phải (right-skewed): đa số giá trị nhỏ, một thiểu số cực lớn.</p>
+<pre tabindex="0"><code> số request
+    │██
+    │████
+    │██████
+    │███████
+    │████████
+    │█████████▌
+    │██████████▊
+    │███████████▍____
+    │████████████████████▂▂▂▁▁▁▁▁▁▁▁ . . . . . →  đuôi dài
+    └──┬────┬─────┬──────────┬──────────┬──── latency
+      10ms 30ms  52ms      500ms       3s
+            ↑     ↑                     ↑
+         median  mean              nơi user đau khổ
+                (bị đuôi kéo lên)</code></pre><p>Latency lệch phải vì lý do vật lý: nó bị <strong>chặn dưới</strong> (không thể nhanh hơn 0ms, thường không nhanh hơn round-trip time của mạng) nhưng <strong>không bị chặn trên</strong> (GC pause, lock contention, retry, disk seek, timeout — mọi thứ xấu đều cộng dồn về một phía). Không tồn tại request &ldquo;nhanh bất thường 3 giây&rdquo;, nhưng request &ldquo;chậm bất thường 3 giây&rdquo; xảy ra hằng ngày.</p>
+<h3 id="câu-hỏi-đúng-bao-nhiêu-phần-trăm-user-có-trải-nghiệm-tốt-hơn-x">Câu hỏi đúng: &ldquo;bao nhiêu phần trăm user có trải nghiệm tốt hơn X?&rdquo;<a hidden class="anchor" aria-hidden="true" href="#câu-hỏi-đúng-bao-nhiêu-phần-trăm-user-có-trải-nghiệm-tốt-hơn-x">#</a></h3>
+<p>Thay vì hỏi &ldquo;trung bình bao nhiêu&rdquo;, hãy hỏi: &ldquo;99% request nhanh hơn giá trị nào?&rdquo; Đó là <strong>percentile</strong> — và nó chính là ngôn ngữ mà user thực sự nói, chỉ là họ diễn đạt bằng câu &ldquo;thỉnh thoảng app lag kinh khủng&rdquo;.</p>
+<h3 id="trực-giác-thứ-hai-mọi-phép-đo-đều-là-mẫu-ngẫu-nhiên">Trực giác thứ hai: mọi phép đo đều là mẫu ngẫu nhiên<a hidden class="anchor" aria-hidden="true" href="#trực-giác-thứ-hai-mọi-phép-đo-đều-là-mẫu-ngẫu-nhiên">#</a></h3>
+<p>Chạy benchmark một lần được 105ns. Chạy lại: 98ns. Lại: 112ns. Con số nào là &ldquo;sự thật&rdquo;? Không con số nào cả — mỗi lần chạy là một <strong>mẫu (sample)</strong> rút từ một phân phối ẩn, bị nhiễu bởi scheduler, cache, nhiệt độ CPU, background process. Thống kê cho ta khung để trả lời: cần bao nhiêu mẫu, và kết luận được phép mạnh đến đâu. Đây là nửa sau của chương — và là nửa mà nhiều kỹ sư giàu kinh nghiệm vẫn làm sai.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="ba-cách-định-nghĩa-điểm-giữa--và-chúng-trả-lời-ba-câu-hỏi-khác-nhau">Ba cách định nghĩa &ldquo;điểm giữa&rdquo; — và chúng trả lời ba câu hỏi khác nhau<a hidden class="anchor" aria-hidden="true" href="#ba-cách-định-nghĩa-điểm-giữa--và-chúng-trả-lời-ba-câu-hỏi-khác-nhau">#</a></h3>
+<p>Cho tập dữ liệu x₁, x₂, &hellip;, xₙ:</p>
+<ul>
+<li><strong>Mean</strong> (trung bình cộng): x̄ = (Σxᵢ)/n. Trả lời: &ldquo;<em>nếu chia đều tổng cho mọi người thì mỗi người được bao nhiêu?</em>&rdquo; Mean gắn với <strong>tổng</strong> — nên nó là con số đúng khi thứ bạn quan tâm là tổng: tổng chi phí, tổng throughput, tổng dung lượng. Capacity planning dùng mean là hợp lý: 10⁶ request/ngày × mean 50ms CPU = tổng CPU-giây cần có.</li>
+<li><strong>Median</strong> (trung vị): giá trị đứng giữa khi sắp xếp — chính là percentile thứ 50. Trả lời: &ldquo;<em>một người điển hình trải nghiệm gì?</em>&rdquo; Median miễn nhiễm với outlier: một request 30 giây không xê dịch median dù chỉ 1ms.</li>
+<li><strong>Mode</strong> (yếu vị): giá trị xuất hiện nhiều nhất. Ít dùng với dữ liệu liên tục, nhưng đắc dụng khi phân phối <strong>đa đỉnh (multimodal)</strong>: nếu histogram latency có hai đỉnh (5ms và 80ms), gần như chắc chắn hệ thống có hai đường đi — cache hit và cache miss. Mean của phân phối hai đỉnh (~40ms) mô tả một loại request <em>không hề tồn tại</em>.</li>
+</ul>
+<p>Quy tắc nhận diện mean lừa dối: <strong>mean ≫ median → phân phối lệch phải, có đuôi</strong>. Chênh lệch giữa hai con số này là &ldquo;máy dò đuôi&rdquo; rẻ nhất mà bạn có.</p>
+<h3 id="nếu-không-có-percentile-thì-điều-gì-xảy-ra">Nếu không có percentile thì điều gì xảy ra?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-percentile-thì-điều-gì-xảy-ra">#</a></h3>
+<p>Quay lại câu chuyện mở đầu: hệ thống có 2% request thảm họa mà mọi chỉ số trung bình đều xanh. Không có percentile, cách duy nhất phát hiện là&hellip; chờ khách hàng hủy hợp đồng. Percentile tồn tại vì <strong>chất lượng dịch vụ không phải là đại lượng cộng dồn</strong> — một triệu request nhanh không &ldquo;đền bù&rdquo; được cho một request khiến user bỏ đi. Trải nghiệm không có tính chất tuyến tính; mean thì có. Đó là sự vênh nhau về bản chất.</p>
+<h3 id="nếu-không-có-kiểm-định-giả-thuyết-thì-điều-gì-xảy-ra">Nếu không có kiểm định giả thuyết thì điều gì xảy ra?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-kiểm-định-giả-thuyết-thì-điều-gì-xảy-ra">#</a></h3>
+<p>Bạn đổi thuật toán, benchmark nhanh hơn 3%, merge. Tuần sau đồng nghiệp revert một thay đổi khác, benchmark lại &ldquo;nhanh hơn 2%&rdquo;. Sự thật: cả hai lần đều là nhiễu — biến động giữa hai lần chạy trên cùng một code đã là ±5%. Không có khung thống kê, team sẽ tích lũy hàng trăm &ldquo;tối ưu hóa&rdquo; không có thật, mỗi cái kèm chi phí phức tạp rất thật.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="percentile--định-nghĩa-và-bộ-tứ-p50p95p99p999">Percentile — định nghĩa và bộ tứ p50/p95/p99/p999<a hidden class="anchor" aria-hidden="true" href="#percentile--định-nghĩa-và-bộ-tứ-p50p95p99p999">#</a></h3>
+<blockquote>
+<p>Percentile thứ k (pₖ) là giá trị v sao cho k% quan sát ≤ v.</p></blockquote>
+<p>Sắp xếp n mẫu tăng dần, p99 là phần tử ở vị trí ⌈0.99·n⌉. Bộ tứ chuẩn của SRE:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Percentile</th>
+          <th>Tên gọi</th>
+          <th>Ý nghĩa vận hành</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>p50</td>
+          <td>median</td>
+          <td>Trải nghiệm điển hình — &ldquo;hệ thống nhanh cỡ nào?&rdquo;</td>
+      </tr>
+      <tr>
+          <td>p95</td>
+          <td>tail bắt đầu</td>
+          <td>1/20 request tệ hơn mức này — user thường xuyên chạm</td>
+      </tr>
+      <tr>
+          <td>p99</td>
+          <td>tail</td>
+          <td>1/100 request — với 10⁶ req/ngày là 10.000 lần đau/ngày</td>
+      </tr>
+      <tr>
+          <td>p999</td>
+          <td>deep tail</td>
+          <td>1/1000 — mức cam kết của hệ thống tài chính, ads bidding</td>
+      </tr>
+  </tbody>
+</table>
+<p>Vì sao SLO (Service Level Objective) viết bằng percentile chứ không phải mean? Vì SLO là <strong>lời hứa về phân phối trải nghiệm</strong>: &ldquo;99% request dưới 300ms&rdquo; là cam kết kiểm chứng được và khớp với cảm nhận user. &ldquo;Mean dưới 300ms&rdquo; có thể đúng trong khi 5% user chờ 10 giây — một lời hứa vô nghĩa. Ngoài ra percentile còn có tính chất phòng thủ: muốn cải thiện p99, bạn <em>buộc</em> phải sửa đường đi chậm nhất; muốn cải thiện mean, bạn có thể chỉ cần làm đường đi nhanh&hellip; nhanh hơn nữa — tối ưu sai chỗ mà chỉ số vẫn đẹp.</p>
+<h3 id="tail-latency-amplification--vì-sao-hệ-phân-tán-khuếch-đại-đuôi">Tail latency amplification — vì sao hệ phân tán khuếch đại đuôi<a hidden class="anchor" aria-hidden="true" href="#tail-latency-amplification--vì-sao-hệ-phân-tán-khuếch-đại-đuôi">#</a></h3>
+<p>Đây là kết quả quan trọng nhất chương, vì nó biến một con số tưởng như vô hại thành quyết định kiến trúc. Giả sử một trang web fan-out gọi <strong>100 service con song song</strong> (search: query hàng trăm leaf node; trang chủ e-commerce: giá, tồn kho, recommendation, ads&hellip;), và phải chờ <em>tất cả</em> trả lời. Mỗi service có p99 = 100ms, tức xác suất một lời gọi chậm hơn 100ms chỉ là 1%.</p>
+<p>Xác suất <em>toàn bộ</em> request tổng nhanh (không chạm đuôi của bất kỳ service nào), giả định các service độc lập:</p>
+<blockquote>
+<p>P(cả 100 đều nhanh) = 0.99¹⁰⁰ ≈ e^(−100×0.01) = e⁻¹ ≈ 0.366</p></blockquote>
+<p>Vậy <strong>P(chạm đuôi của ít nhất 1 service) = 1 − 0.99¹⁰⁰ ≈ 63.4%</strong>.</p>
+<p>Đọc lại lần nữa: sự kiện &ldquo;hiếm&rdquo; 1% ở mức component trở thành sự kiện <strong>đa số</strong> ở mức hệ thống. p99 của từng service trở thành xấp xỉ <em>median</em> của request tổng. Vài mốc đáng nhớ:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Số service fan-out</th>
+          <th>P(chạm p99 của ≥1 service)</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>1</td>
+          <td>1%</td>
+      </tr>
+      <tr>
+          <td>10</td>
+          <td>≈ 9.6%</td>
+      </tr>
+      <tr>
+          <td>30</td>
+          <td>≈ 26%</td>
+      </tr>
+      <tr>
+          <td>100</td>
+          <td>≈ 63%</td>
+      </tr>
+      <tr>
+          <td>500</td>
+          <td>≈ 99.3%</td>
+      </tr>
+  </tbody>
+</table>
+<p>Hệ quả kiến trúc (theo bài &ldquo;The Tail at Scale&rdquo; của Dean &amp; Barroso):</p>
+<ul>
+<li><strong>Đuôi của component là median của hệ thống</strong> — muốn hệ lớn nhanh, phải quản trị p99/p999 của từng phần, không phải mean.</li>
+<li><strong>Hedged requests</strong>: gửi request; nếu sau p95-latency chưa có trả lời, gửi bản sao tới replica khác, lấy kết quả về trước. Chi phí: ~5% traffic thêm. Lợi ích: cắt cụt đuôi — vì xác suất <em>cả hai</em> replica cùng chậm là 0.05 × 0.05 = 0.25% (nếu độc lập). Đây là toán chương 11 (nhân xác suất sự kiện độc lập) trở thành pattern kiến trúc.</li>
+<li>Biến thể: <strong>tied requests</strong> (gửi hai bản ngay, bản nào được xử lý thì cancel bản kia), giới hạn queue, ưu tiên request đã chờ lâu.</li>
+</ul>
+<h3 id="variance-và-standard-deviation--đo-độ-phân-tán">Variance và Standard Deviation — đo độ phân tán<a hidden class="anchor" aria-hidden="true" href="#variance-và-standard-deviation--đo-độ-phân-tán">#</a></h3>
+<blockquote>
+<p>Variance: σ² = E[(X − μ)²] — trung bình của <em>bình phương</em> độ lệch khỏi mean.
+Standard deviation: σ = √σ² — kéo về cùng đơn vị với dữ liệu.</p></blockquote>
+<p>Vì sao bình phương mà không lấy trị tuyệt đối? Ba lý do thực dụng: bình phương phạt nặng độ lệch lớn (đúng với trực giác &ldquo;jitter lớn tệ hơn nhiều jitter nhỏ&rdquo;), khả vi (cần cho optimization — chương 21), và có tính chất cộng đẹp: <strong>variance của tổng các biến độc lập bằng tổng các variance</strong> — nền của Central Limit Theorem ngay dưới đây.</p>
+<p>Trong network engineering, σ của latency chính là <strong>jitter</strong>. Hai đường mạng cùng mean 50ms nhưng σ = 2ms và σ = 30ms là hai trải nghiệm hoàn toàn khác nhau với video call — codec phải giữ buffer cỡ vài σ để hấp thụ dao động. Mean nói &ldquo;nhanh bao nhiêu&rdquo;, σ nói &ldquo;<strong>đáng tin cậy bao nhiêu</strong>&rdquo;; hệ thống tốt cần cả hai, và nhiều khi σ nhỏ quý hơn mean nhỏ.</p>
+<h3 id="phân-phối-chuẩn-và-central-limit-theorem">Phân phối chuẩn và Central Limit Theorem<a hidden class="anchor" aria-hidden="true" href="#phân-phối-chuẩn-và-central-limit-theorem">#</a></h3>
+<p><strong>Central Limit Theorem (CLT)</strong>, mức trực giác: cộng nhiều biến ngẫu nhiên độc lập, cùng cỡ ảnh hưởng — bất kể từng biến phân phối ra sao — thì tổng (hay trung bình) tiến về <strong>phân phối chuẩn</strong> (hình chuông). Vì sao? Vì để tổng lệch xa kỳ vọng, <em>nhiều</em> yếu tố phải cùng lệch về <em>một phía</em> — mà các cách kết hợp &ldquo;kẻ lệch trái bù kẻ lệch phải&rdquo; nhiều hơn áp đảo (đếm tổ hợp — chương 05). Số cách triệt tiêu lấn át số cách cộng hưởng, nên khối lượng xác suất dồn về giữa, mỏng dần ra hai bên: hình chuông.</p>
+<p>CLT giải thích vì sao chiều cao, sai số đo đạc, trung bình của mẫu lớn&hellip; đều xấp xỉ chuẩn. Và nó là nền tảng cho confidence interval bên dưới: <strong>trung bình của n mẫu</strong> có phân phối xấp xỉ chuẩn quanh mean thật với độ lệch chuẩn σ/√n — căn bậc hai này chính là lý do &ldquo;muốn giảm nhiễu 10 lần phải đo 100 lần&rdquo;.</p>
+<p><strong>CẢNH BÁO dành riêng cho SRE</strong>: latency <strong>không</strong> phân phối chuẩn — nó lệch phải, đuôi dày, thường đa đỉnh. CLT không áp dụng cho <em>từng quan sát</em> latency (chỉ áp dụng cho <em>trung bình của nhiều</em> quan sát). Hệ quả: quy tắc &ldquo;mean ± 3σ chứa 99.7% dữ liệu&rdquo; chỉ đúng với phân phối chuẩn; đặt ngưỡng alert kiểu <code>mean + 3·stddev</code> trên latency sẽ vừa báo động giả (σ bị chính outlier thổi phồng làm ngưỡng nhảy loạn), vừa bỏ sót đuôi (99.7% không còn đúng). <strong>Alert trên percentile đo trực tiếp, đừng alert trên mô hình phân phối mà dữ liệu không tuân theo.</strong></p>
+<h3 id="confidence-interval--kết-quả-đo-tin-được-đến-đâu">Confidence Interval — kết quả đo tin được đến đâu<a hidden class="anchor" aria-hidden="true" href="#confidence-interval--kết-quả-đo-tin-được-đến-đâu">#</a></h3>
+<p>Chạy benchmark n = 10 lần, được mean x̄ và độ lệch chuẩn mẫu s. Khoảng tin cậy 95% cho mean thật:</p>
+<blockquote>
+<p>x̄ ± t · s/√n  (t ≈ 2.26 với n = 10, từ phân phối Student-t)</p></blockquote>
+<p>Diễn giải <strong>chính xác</strong>: nếu lặp lại toàn bộ quy trình đo nhiều lần, khoảng 95% các khoảng được dựng ra sẽ chứa giá trị thật. Diễn giải thực dụng cho kỹ sư: <strong>đó là thanh sai số của phép đo</strong>. Khi so sánh hai phiên bản code, nếu hai khoảng tin cậy chồng lên nhau đáng kể — bạn <em>chưa đo được</em> sự khác biệt, dù hai con số mean khác nhau.</p>
+<p>Đây là lý do chạy benchmark một lần là vô nghĩa: một mẫu không cho biết s, tức không cho biết thanh sai số rộng bao nhiêu. Trong Go:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>go test -bench<span style="color:#f92672">=</span>BenchmarkParse -count<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span> &gt; old.txt
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ... đổi code ...</span>
+</span></span><span style="display:flex;"><span>go test -bench<span style="color:#f92672">=</span>BenchmarkParse -count<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span> &gt; new.txt
+</span></span><span style="display:flex;"><span>benchstat old.txt new.txt
+</span></span></code></pre></div><p><code>benchstat</code> làm đúng bài toán thống kê này: ước lượng phân tán, chạy kiểm định (Mann-Whitney U — không giả định phân phối chuẩn), và chỉ in &ldquo;-5.2% (p=0.002)&rdquo; khi khác biệt có ý nghĩa; ngược lại in dấu <code>~</code> — &ldquo;không kết luận được&rdquo;. Dấu <code>~</code> đó là thống kê đang cứu bạn khỏi việc merge nhiễu.</p>
+<h3 id="hypothesis-testing-và-p-value--định-nghĩa-chính-xác">Hypothesis Testing và p-value — định nghĩa chính xác<a hidden class="anchor" aria-hidden="true" href="#hypothesis-testing-và-p-value--định-nghĩa-chính-xác">#</a></h3>
+<p>Khung suy luận: muốn chứng minh &ldquo;phiên bản B tốt hơn A&rdquo;, ta giả định điều ngược lại — <strong>null hypothesis H₀: &ldquo;không có khác biệt&rdquo;</strong> — rồi hỏi dữ liệu có đủ bất thường để bác bỏ H₀ không.</p>
+<blockquote>
+<p><strong>p-value = xác suất quan sát được dữ liệu cực đoan như (hoặc hơn) dữ liệu thực tế, GIẢ SỬ H₀ đúng.</strong></p></blockquote>
+<p>p-value nhỏ (quy ước &lt; 0.05) nghĩa là: &ldquo;nếu thật sự không có khác biệt thì dữ liệu thế này rất khó xảy ra&rdquo; → bác bỏ H₀. Cấu trúc logic giống chứng minh phản chứng (chương 03), nhưng xác suất hóa: không đạt được chắc chắn, chỉ đạt &ldquo;H₀ khó sống sót với dữ liệu này&rdquo;.</p>
+<p>Các cách hiểu <strong>SAI</strong> phổ biến — sai cả trong giới engineering lẫn khoa học:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Hiểu sai</th>
+          <th>Vì sao sai</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>&ldquo;p = 0.03 nghĩa là 97% khả năng B tốt hơn A&rdquo;</td>
+          <td>p-value là P(dữ liệu | H₀), không phải P(H₀ | dữ liệu). Đảo ngược điều kiện cần Bayes và prior (chương 11)</td>
+      </tr>
+      <tr>
+          <td>&ldquo;p &gt; 0.05 chứng minh không có khác biệt&rdquo;</td>
+          <td>Không bác bỏ được ≠ chứng minh H₀. Có thể chỉ là thiếu mẫu</td>
+      </tr>
+      <tr>
+          <td>&ldquo;p càng nhỏ, hiệu ứng càng lớn&rdquo;</td>
+          <td>p đo <em>độ chắc</em>, không đo <em>độ lớn</em>. n khổng lồ làm khác biệt 0.01% cũng có p tí hon — có ý nghĩa thống kê nhưng vô nghĩa kinh doanh. Luôn nhìn kèm effect size</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="sample-size-và-peeking-problem--gian-lận-thống-kê-vô-thức">Sample size và peeking problem — gian lận thống kê vô thức<a hidden class="anchor" aria-hidden="true" href="#sample-size-và-peeking-problem--gian-lận-thống-kê-vô-thức">#</a></h3>
+<p>A/B test cần <strong>quyết định cỡ mẫu trước khi chạy</strong> (dựa trên hiệu ứng tối thiểu muốn phát hiện và độ nhạy mong muốn). Điều cấm kỵ: nhìn kết quả mỗi ngày và <strong>dừng ngay khi p &lt; 0.05</strong>. Vì sao đây là gian lận? p-value dao động ngẫu nhiên trong quá trình thu mẫu; nếu bạn kiểm tra 20 lần và dừng ở lần đầu tiên vượt ngưỡng, xác suất <em>ít nhất một lần</em> vượt ngưỡng do may rủi lớn hơn 5% rất nhiều — cùng cấu trúc toán với tail amplification ở trên: 1 − 0.95²⁰ ≈ 64%. Kiểm tra càng nhiều lần, &ldquo;false positive&rdquo; gần như chắc chắn. Tên gọi: <strong>peeking problem</strong>. Giải pháp: cố định n trước, hoặc dùng sequential testing (ngưỡng hiệu chỉnh cho phép nhìn liên tục) — các nền tảng A/B testing nghiêm túc cài sẵn điều này.</p>
+<h3 id="correlation-vs-causation">Correlation vs Causation<a hidden class="anchor" aria-hidden="true" href="#correlation-vs-causation">#</a></h3>
+<p>Hệ số tương quan r ∈ [−1, 1] đo mức độ hai đại lượng <em>cùng biến thiên tuyến tính</em>. Tương quan <strong>không</strong> suy ra nhân quả, vì còn hai cách giải thích khác luôn phải loại trừ: <strong>biến ẩn chung</strong> và <strong>chiều ngược lại</strong>. Ví dụ vận hành kinh điển: metric &ldquo;error rate tăng ngay sau các đợt deploy&rdquo; — deploy gây lỗi? Có thể. Nhưng cũng có thể cả hai cùng bị điều khiển bởi biến ẩn: deploy diễn ra giờ hành chính, đúng lúc traffic đạt đỉnh, và chính traffic đỉnh gây lỗi. Cách duy nhất tách bạch là <strong>can thiệp có kiểm soát</strong>: deploy vào giờ thấp điểm, hoặc canary trên một phần traffic được chọn ngẫu nhiên — randomization chính là công cụ chặt đứt biến ẩn, và là lý do A/B test <em>phân bổ ngẫu nhiên</em> chứ không để user tự chọn.</p>
+<h2 id="5-thuật-toán--tính-percentile-khi-dữ-liệu-là-dòng-chảy-vô-hạn">5. Thuật toán — tính percentile khi dữ liệu là dòng chảy vô hạn<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán--tính-percentile-khi-dữ-liệu-là-dòng-chảy-vô-hạn">#</a></h2>
+<p>Tính chính xác p99 cần giữ toàn bộ mẫu và sort — O(n) bộ nhớ, bất khả thi khi n là hàng tỷ request. Ba tầng giải pháp:</p>
+<p><strong>Tầng 1 — Chính xác, offline:</strong> sort rồi lấy phần tử thứ ⌈0.99·n⌉; hoặc Quickselect O(n) average (chương 13). Dùng cho phân tích log sau sự cố.</p>
+<p><strong>Tầng 2 — Histogram bucket cố định (cách của Prometheus):</strong> chia trục latency thành các bucket định trước, mỗi bucket một counter — bộ nhớ O(số bucket), merge được giữa các máy bằng cách cộng counter (điều mà percentile tính sẵn <em>không</em> làm được: p99 của hai máy không suy ra p99 tổng!). Đổi lại, percentile phải <strong>nội suy</strong> trong bucket:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Ước lượng percentile từ histogram — chính là logic histogram_quantile của PromQL</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// buckets: biên trên mỗi bucket (tăng dần), counts: số quan sát rơi vào từng bucket</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">estimatePercentile</span>(<span style="color:#a6e22e">buckets</span> []<span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">counts</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">p</span> <span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">float64</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">total</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">counts</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">total</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">c</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">target</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">p</span> <span style="color:#f92672">*</span> float64(<span style="color:#a6e22e">total</span>) <span style="color:#75715e">// hạng (rank) của quan sát cần tìm</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cum</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">counts</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> float64(<span style="color:#a6e22e">cum</span><span style="color:#f92672">+</span><span style="color:#a6e22e">c</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">target</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">lo</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0.0</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> &gt; <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">lo</span> = <span style="color:#a6e22e">buckets</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// Nội suy tuyến tính: GIẢ ĐỊNH dữ liệu rải đều trong bucket.</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// Sai số tối đa = độ rộng bucket → bucket đặt sai chỗ = percentile sai to.</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">frac</span> <span style="color:#f92672">:=</span> (<span style="color:#a6e22e">target</span> <span style="color:#f92672">-</span> float64(<span style="color:#a6e22e">cum</span>)) <span style="color:#f92672">/</span> float64(<span style="color:#a6e22e">c</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">lo</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">frac</span><span style="color:#f92672">*</span>(<span style="color:#a6e22e">buckets</span>[<span style="color:#a6e22e">i</span>]<span style="color:#f92672">-</span><span style="color:#a6e22e">lo</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cum</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">c</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">buckets</span>[len(<span style="color:#a6e22e">buckets</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Hệ quả cần khắc cốt: nếu SLO là 300ms mà bucket gần nhất là {250ms, 500ms}, mọi giá trị p99 trong khoảng đó đều bị nội suy từ giả định &ldquo;rải đều&rdquo; — <strong>p99 báo cáo có thể lệch hàng chục phần trăm</strong>. Luôn đặt một biên bucket trùng ngưỡng SLO.</p>
+<p><strong>Tầng 3 — Cấu trúc thích nghi (mức giới thiệu):</strong> <strong>HDR Histogram</strong> dùng bucket rộng theo lũy thừa (sai số <em>tương đối</em> cố định, ví dụ ±1% ở mọi thang từ 1µs đến 1h); <strong>t-digest</strong> tự co giãn cluster — dày đặc ở hai đuôi nơi percentile cần chính xác, thưa ở giữa. Cả hai: bộ nhớ hằng số (vài KB), merge được, sai số có kiểm soát — cùng triết lý &ldquo;đổi độ chính xác lấy bộ nhớ&rdquo; của chương 23.</p>
+<p>Còn median trên stream với độ chính xác tuyệt đối? Hai heap (mục 8) — O(n) bộ nhớ nhưng O(log n) mỗi phần tử.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Mean vs Percentile.</strong> Percentile trung thực với trải nghiệm nhưng <em>không cộng được</em>: không thể lấy mean của các p99, không thể cộng p99 hai service nối tiếp để ra p99 tổng (phải đo end-to-end hoặc giữ histogram và convolve). Mean thì cộng, nhân, hợp thành thoải mái — nên capacity planning, cost model vẫn thuộc về mean. Dùng đúng việc: <strong>percentile cho chất lượng, mean cho tài nguyên</strong>.</p>
+<p><strong>Độ chính xác vs bộ nhớ vs khả năng merge.</strong> Sort chính xác tuyệt đối nhưng O(n) và không merge; Prometheus histogram O(k) và merge tốt nhưng sai số phụ thuộc tay người đặt bucket; t-digest/HDR tự thích nghi nhưng cấu trúc phức tạp hơn. Không có lựa chọn trội tuyệt đối — chỉ có lựa chọn khớp với câu hỏi cần trả lời.</p>
+<p><strong>Độ nhạy thống kê vs tốc độ ra quyết định.</strong> Muốn phát hiện khác biệt 1% cần mẫu lớn gấp ~100 lần so với phát hiện khác biệt 10% (sai số co theo 1/√n → hiệu ứng nhỏ 10 lần cần n lớn 100 lần). Chờ đủ mẫu thì chậm ship; dừng sớm thì peeking. Sequential testing là điểm giữa có kỷ luật — trả giá bằng ngưỡng khắt khe hơn.</p>
+<p><strong>False positive vs false negative trong alerting.</strong> Ngưỡng alert nhạy → đánh thức on-call vì nhiễu, dẫn tới alert fatigue và bỏ sót sự cố thật (chi phí của false positive là <em>mất lòng tin</em>). Ngưỡng trễ → sự cố cháy 20 phút mới báo. Thống kê không xóa được trade-off này, chỉ giúp đặt nó ở vị trí có chủ đích: alert trên p99 kéo dài qua cửa sổ thời gian (ví dụ &ldquo;p99 &gt; 500ms liên tục 5 phút&rdquo;) thay vì trên từng điểm dữ liệu.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>Prometheus histogram + <code>histogram_quantile</code>.</strong> Ứng dụng ghi mỗi quan sát vào bucket counter (<code>http_request_duration_seconds_bucket{le=&quot;0.3&quot;}</code>); server tính <code>histogram_quantile(0.99, rate(...[5m]))</code> bằng đúng phép nội suy ở mục 5. Toán nằm ở: chọn biên bucket (quyết định sai số percentile), tính chất cộng được của counter (cho phép aggregate ngang qua hàng nghìn pod), và nội suy tuyến tính trong bucket. Native histogram (bucket theo cấp số nhân, từ Prometheus 2.40) chính là ý tưởng HDR đưa vào chuẩn.</p>
+<p><strong>Grafana/Alertmanager alert trên p99.</strong> Rule kiểu <code>p99 &gt; SLO trong 5 phút</code> là quyết định thống kê được mã hóa: percentile (chống mean lừa dối) + cửa sổ thời gian (giảm phương sai của ước lượng — chính là lấy trung bình nhiều mẫu để co nhiễu theo 1/√n).</p>
+<p><strong>A/B testing platform</strong> (nội bộ các công ty lớn, hoặc GrowthBook/Statsig): phân bổ ngẫu nhiên bằng hash(user_id) — randomization chặt biến ẩn; engine tính p-value, confidence interval, và chống peeking bằng sequential testing. Toán của mục 4 chạy trên mọi quyết định sản phẩm.</p>
+<p><strong>Go <code>benchstat</code></strong>: Mann-Whitney U test trên các lần chạy benchmark — kiểm định phi tham số, không giả định phân phối chuẩn (đúng đắn, vì thời gian chạy benchmark cũng lệch phải!).</p>
+<p><strong>Canary analysis</strong> (Kayenta của Netflix/Spinnaker): so sánh phân phối metric giữa canary và baseline bằng kiểm định thống kê thay vì ngưỡng cứng — &ldquo;error rate canary có <em>khác một cách có ý nghĩa</em> so với baseline không?&rdquo; là một hypothesis test tự động, chạy trước mỗi lần rollout tiếp.</p>
+<p><strong>HDR Histogram / t-digest trong thực địa</strong>: Elasticsearch percentiles aggregation dùng t-digest mặc định, HDR khi cần; Cassandra, Kafka client metrics dùng HDR-style reservoir. Mỗi lần bạn nhìn thấy chữ &ldquo;p99&rdquo; trên dashboard của các hệ này, phía sau là một trong hai cấu trúc đó.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p><strong>System design — thiết kế monitoring/SLO</strong> là nơi thống kê xuất hiện đậm nhất: &ldquo;Thiết kế hệ thống theo dõi latency cho API 1 triệu RPS.&rdquo; Bộ khung trả lời: (1) vì sao không lưu raw mà lưu histogram (bộ nhớ, merge); (2) chọn bucket quanh ngưỡng SLO; (3) alert trên percentile qua cửa sổ thời gian, không trên mean; (4) nhắc tail amplification nếu có fan-out — nói được con số 1 − 0.99¹⁰⁰ ≈ 63% và pattern hedged request là tín hiệu senior rõ rệt.</p>
+<p><strong>Median from Data Stream</strong> (LeetCode 295): giữ hai heap — max-heap cho nửa dưới, min-heap cho nửa trên, cân bằng kích thước sau mỗi lần thêm; median là top của heap (chương 16). Insert O(log n), query O(1). Câu hỏi mở rộng nhà tuyển dụng thích: &ldquo;nếu chỉ cần <em>xấp xỉ</em> p50 trên hàng tỷ phần tử?&rdquo; — chuyển sang histogram/t-digest, đổi chính xác lấy bộ nhớ. Trả lời được cả hai tầng cho thấy bạn phân biệt bài toán phỏng vấn và bài toán production.</p>
+<p><strong>Random Pick with Weight</strong> (LeetCode 528): prefix sum + binary search trên giá trị ngẫu nhiên — chính là lấy mẫu từ phân phối rời rạc bằng CDF nghịch đảo. Liên hệ thẳng tới weighted load balancing.</p>
+<p><strong>Câu behavioral-technical &ldquo;bạn benchmark thế nào cho đúng?&rdquo;</strong> — nghe mềm nhưng là bẫy phân loại. Câu trả lời điểm cao: chạy nhiều lần (<code>-count=10</code>), máy tĩnh (tắt turbo/background), so sánh bằng benchstat và chỉ tin khi p nhỏ, cảnh giác với micro-benchmark bị compiler optimize mất (dùng <code>b.Loop()</code> hoặc sink kết quả), và đo cả allocation chứ không riêng ns/op. Kể một lần bạn <em>tưởng</em> nhanh hơn nhưng benchstat in dấu <code>~</code> — đó là câu chuyện đáng giá hơn mọi lý thuyết.</p>
+<p><strong>Lỗi tư duy thường gặp:</strong> tin một lần chạy benchmark; nói &ldquo;p-value là xác suất giả thuyết đúng&rdquo;; đề xuất alert mean ± 3σ cho latency (nhầm phân phối); quên rằng percentile không cộng được khi aggregate nhiều máy; và trong bài hai heap — quên xử lý trường hợp n chẵn/lẻ khi cân bằng heap.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Dashboard chỉ có mean.</strong> Chính là câu chuyện mở đầu. Mọi dashboard latency phải có tối thiểu p50/p95/p99 — mean chỉ để đối chiếu độ lệch (mean ≫ p50 nghĩa là đuôi đang phình).</p>
+<p><strong>Tính &ldquo;p99 trung bình&rdquo; hoặc cộng p99.</strong> <code>avg(p99)</code> qua các instance là phép toán không có ý nghĩa thống kê; p99 của chuỗi hai service không phải tổng hai p99. Aggregate đúng: cộng histogram rồi mới tính percentile.</p>
+<p><strong>Alert mean ± 3σ trên latency.</strong> Quy tắc 3-sigma chỉ đúng cho phân phối chuẩn; latency lệch phải và đuôi dày làm ngưỡng vừa nhảy loạn vừa mù đuôi. Đo percentile trực tiếp.</p>
+<p><strong>Peeking A/B test.</strong> Nhìn kết quả mỗi sáng, dừng khi &ldquo;đã significant&rdquo; — false positive phi mã như đã tính ở mục 4. Cùng họ tội: chạy 20 metric và báo cáo metric duy nhất &ldquo;có ý nghĩa&rdquo; (multiple comparisons — 1 − 0.95²⁰ ≈ 64% có ít nhất một false positive).</p>
+<p><strong>Suy nhân quả từ tương quan trên dashboard.</strong> &ldquo;Memory tăng cùng lúc error tăng → memory gây lỗi&rdquo; — có thể cả hai cùng do traffic. Khi chưa can thiệp có kiểm soát (canary, rollback thử), tương quan chỉ là <em>gợi ý điều tra</em>, không phải kết luận.</p>
+<p><strong>Benchmark trên laptop rồi kết luận cho server.</strong> Thermal throttling, CPU khác thế hệ, noisy neighbor — mẫu rút từ phân phối khác thì kết luận không chuyển giao. Benchmark so sánh A/B phải cùng máy, cùng phiên, xen kẽ.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Nhìn phân phối trước, con số tóm tắt sau: một histogram nói thật hơn mười con số. Nghi ngờ ngay khi mean và median tách xa nhau.</li>
+<li>Định nghĩa SLO bằng percentile gắn với trải nghiệm (&ldquo;99% request &lt; 300ms trong cửa sổ 30 ngày&rdquo;) và đặt biên bucket Prometheus trùng ngưỡng SLO.</li>
+<li>Với fan-out lớn: đo và quản trị p99 của <em>từng</em> dependency; cân nhắc hedged requests khi đuôi là vấn đề, và nhớ chi phí của nó (traffic thêm, yêu cầu idempotency).</li>
+<li>Benchmark: <code>-count=10</code> trở lên + <code>benchstat</code>; A/B test: cố định cỡ mẫu hoặc sequential testing; mọi so sánh phải kèm thanh sai số.</li>
+<li>Khi nghi ngờ nhân quả: can thiệp có kiểm soát (canary với phân bổ ngẫu nhiên) thay vì hồi tưởng trên dashboard.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không cam kết SLA bằng mean; không aggregate percentile bằng phép trung bình.</li>
+<li>Không dùng mô hình phân phối chuẩn cho đại lượng lệch phải bị chặn dưới (latency, kích thước file, duration).</li>
+<li>Không kết luận từ một lần đo, và không dừng thí nghiệm tại thời điểm kết quả &ldquo;đẹp&rdquo;.</li>
+<li>Không nhầm &ldquo;có ý nghĩa thống kê&rdquo; với &ldquo;đáng để làm&rdquo; — luôn hỏi kèm effect size.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Vì sao fan-out 100 service biến p99 của component thành xấp xỉ median của hệ thống, và hedged request phá vỡ phép tính đó ở điểm nào?</li>
+<li>Prometheus lưu histogram thay vì lưu thẳng giá trị p99 đã tính — điều gì sẽ hỏng nếu làm ngược lại khi aggregate 1.000 pod?</li>
+<li>Một A/B test đạt p = 0.04 sau khi bạn kiểm tra kết quả mỗi ngày trong 3 tuần và dừng hôm nay. Con số 0.04 đó còn mang ý nghĩa gì không, và vì sao?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-4-advanced-mathematics/19-number-theory/">19 — Number Theory</a>, rời thế giới liên tục của dữ liệu đo đạc để về thế giới rời rạc tuyệt đối của số nguyên — nơi overflow không phải là bug mà là số học modular, và các số nguyên tố canh giữ toàn bộ mật mã hiện đại.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/17-linear-algebra/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 17 — Linear Algebra: Ngôn ngữ của AI và không gian nhiều chiều</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-4-advanced-mathematics/19-number-theory/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 19 — Number Theory: Số học của máy tính và mật mã</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2018%20%e2%80%94%20Statistics%3a%20%c4%90%e1%bb%8dc%20hi%e1%bb%83u%20h%e1%bb%87%20th%e1%bb%91ng%20qua%20d%e1%bb%af%20li%e1%bb%87u&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f&amp;title=Ch%c6%b0%c6%a1ng%2018%20%e2%80%94%20Statistics%3a%20%c4%90%e1%bb%8dc%20hi%e1%bb%83u%20h%e1%bb%87%20th%e1%bb%91ng%20qua%20d%e1%bb%af%20li%e1%bb%87u&amp;summary=Ch%c6%b0%c6%a1ng%2018%20%e2%80%94%20Statistics%3a%20%c4%90%e1%bb%8dc%20hi%e1%bb%83u%20h%e1%bb%87%20th%e1%bb%91ng%20qua%20d%e1%bb%af%20li%e1%bb%87u&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f&title=Ch%c6%b0%c6%a1ng%2018%20%e2%80%94%20Statistics%3a%20%c4%90%e1%bb%8dc%20hi%e1%bb%83u%20h%e1%bb%87%20th%e1%bb%91ng%20qua%20d%e1%bb%af%20li%e1%bb%87u">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2018%20%e2%80%94%20Statistics%3a%20%c4%90%e1%bb%8dc%20hi%e1%bb%83u%20h%e1%bb%87%20th%e1%bb%91ng%20qua%20d%e1%bb%af%20li%e1%bb%87u%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2018%20%e2%80%94%20Statistics%3a%20%c4%90%e1%bb%8dc%20hi%e1%bb%83u%20h%e1%bb%87%20th%e1%bb%91ng%20qua%20d%e1%bb%af%20li%e1%bb%87u&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 18 — Statistics: Đọc hiểu hệ thống qua dữ liệu on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2018%20%e2%80%94%20Statistics%3a%20%c4%90%e1%bb%8dc%20hi%e1%bb%83u%20h%e1%bb%87%20th%e1%bb%91ng%20qua%20d%e1%bb%af%20li%e1%bb%87u&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-4-advanced-mathematics%2f18-statistics%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

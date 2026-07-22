@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 05 — Counting &amp; Combinatorics: Đếm mà không cần liệt kê | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 2 – Discrete Mathematics
+Yêu cầu trước: Chương 01 (Logic), Chương 02 (Set Theory, Functions &amp; Relations)
+
+1. Problem Statement
+Một team platform chuẩn bị release tính năng mới đứng sau 12 feature flags. QA lead hỏi câu tưởng chừng đơn giản: &ldquo;Chúng ta có cần test mọi tổ hợp bật/tắt không?&rdquo; Một kỹ sư mở laptop định viết script liệt kê tất cả các tổ hợp ra file để đếm. Script chạy được vài giây thì anh dừng lại và làm phép tính nhẩm: mỗi flag có 2 trạng thái, 12 flags → 2¹² = 4.096 tổ hợp. Nếu thêm 3 môi trường deploy và 4 tier khách hàng, con số thành 4.096 × 3 × 4 = 49.152 kịch bản test. Với 5 phút mỗi kịch bản, đó là 6 tháng làm việc liên tục.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-2-discrete-mathematics/05-counting-combinatorics/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-2-discrete-mathematics/05-counting-combinatorics/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 05 — Counting &amp; Combinatorics: Đếm mà không cần liệt kê
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 07:50:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;23 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 2 – Discrete Mathematics
+Yêu cầu trước: Chương 01 (Logic), Chương 02 (Set Theory, Functions &amp; Relations)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Một team platform chuẩn bị release tính năng mới đứng sau 12 feature flags. QA lead hỏi câu tưởng chừng đơn giản: &ldquo;Chúng ta có cần test mọi tổ hợp bật/tắt không?&rdquo; Một kỹ sư mở laptop định viết script liệt kê tất cả các tổ hợp ra file để đếm. Script chạy được vài giây thì anh dừng lại và làm phép tính nhẩm: mỗi flag có 2 trạng thái, 12 flags → 2¹² = 4.096 tổ hợp. Nếu thêm 3 môi trường deploy và 4 tier khách hàng, con số thành 4.096 × 3 × 4 = <strong>49.152 kịch bản test</strong>. Với 5 phút mỗi kịch bản, đó là 6 tháng làm việc liên tục.</p>
+<p>Điều đáng chú ý không phải là con số, mà là <strong>cách có được con số</strong>: không cần liệt kê một kịch bản nào. Chỉ cần nhân vài số với nhau, team biết ngay &ldquo;test hết mọi tổ hợp&rdquo; là bất khả thi và phải chuyển sang chiến lược khác (pairwise testing — sẽ quay lại ở mục 7).</p>
+<p>Đây chính là bài toán của Combinatorics:</p>
+<p><strong>Làm sao biết một tập hợp có bao nhiêu phần tử, mà không cần — và thường là không thể — liệt kê chúng?</strong></p>
+<p>Nếu không có công cụ này, kỹ sư mất khả năng trả lời hàng loạt câu hỏi thiết kế: brute force bài này có chạy nổi không? Hash table với chừng này bucket thì collision có tránh được không? Bao nhiêu cách gán replica lên broker? State space của hệ thống lớn cỡ nào — tức là có bao nhiêu &ldquo;trạng thái có thể xảy ra&rdquo; mà ta phải reasoning về chúng? Tất cả đều là câu hỏi <strong>đếm</strong>, và tất cả đều có tập cần đếm lớn đến mức việc liệt kê là vô vọng.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="hai-phép-toán-nền-tảng-hoặc-thì-cộng-rồi-thì-nhân">Hai phép toán nền tảng: &ldquo;hoặc&rdquo; thì cộng, &ldquo;rồi&rdquo; thì nhân<a hidden class="anchor" aria-hidden="true" href="#hai-phép-toán-nền-tảng-hoặc-thì-cộng-rồi-thì-nhân">#</a></h3>
+<p>Toàn bộ combinatorics đứng trên hai quy tắc mà bạn đã dùng từ tiểu học mà không gọi tên:</p>
+<p><strong>Rule of Sum</strong> — nếu một việc có thể làm theo cách A <em>hoặc</em> cách B, và hai nhóm cách không trùng nhau, thì tổng số cách là |A| + |B|. Đi từ nhà đến công ty bằng 3 tuyến bus hoặc 2 tuyến metro → 5 lựa chọn.</p>
+<p><strong>Rule of Product</strong> — nếu một việc gồm bước 1 <em>rồi đến</em> bước 2, và số lựa chọn ở bước 2 không phụ thuộc vào việc bước 1 chọn gì, thì tổng số cách là |bước 1| × |bước 2|. Mỗi flag có 2 trạng thái, 12 flags độc lập → 2¹².</p>
+<p>Nghe tầm thường, nhưng để ý điều kiện in nghiêng: <em>không trùng nhau</em> và <em>không phụ thuộc</em>. Hầu hết lỗi đếm trong thực tế — từ ước lượng sai selectivity trong database đến ước lượng sai effort test — đều do áp dụng hai quy tắc này khi điều kiện của chúng không thỏa. Cộng hai tập giao nhau thì đếm trùng; nhân hai lựa chọn phụ thuộc nhau thì đếm khống. Toàn bộ phần còn lại của chương là công cụ xử lý khi điều kiện đẹp đẽ đó bị vi phạm.</p>
+<h3 id="đếm-là-ánh-xạ-không-phải-liệt-kê">Đếm là ánh xạ, không phải liệt kê<a hidden class="anchor" aria-hidden="true" href="#đếm-là-ánh-xạ-không-phải-liệt-kê">#</a></h3>
+<p>Trực giác quan trọng thứ hai: đếm một tập khó thực chất là <strong>tìm một song ánh (bijection — chương 02) sang một tập dễ</strong>. Ta không đếm 49.152 kịch bản test; ta nhận ra mỗi kịch bản tương ứng 1-1 với một bộ (12 bit, môi trường, tier), và tập các bộ đó thì đếm được bằng rule of product. Kỹ năng combinatorics không phải là nhớ công thức — mà là nhìn ra &ldquo;tập này thực chất là tập kia mặc áo khác&rdquo;.</p>
+<h3 id="khi-nào-trực-giác-thất-bại">Khi nào trực giác thất bại?<a hidden class="anchor" aria-hidden="true" href="#khi-nào-trực-giác-thất-bại">#</a></h3>
+<p>Trực giác con người ước lượng số tổ hợp <strong>tệ một cách hệ thống</strong> — luôn đoán thấp. Bao nhiêu cách xáo trộn một bộ bài 52 lá? Đáp án là 52! ≈ 8 × 10⁶⁷ — lớn hơn số nguyên tử của Trái Đất. Mỗi lần bạn xáo bài tử tế, gần như chắc chắn tạo ra một thứ tự <strong>chưa từng tồn tại trong lịch sử loài người</strong>. Không ai đoán được điều đó bằng cảm giác. Đây cũng chính là lý do brute force chết nhanh hơn lập trình viên tưởng: state space nổ theo giai thừa và lũy thừa, còn trực giác thì nội suy tuyến tính.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="xây-mọi-thứ-từ-rule-of-product">Xây mọi thứ từ rule of product<a hidden class="anchor" aria-hidden="true" href="#xây-mọi-thứ-từ-rule-of-product">#</a></h3>
+<p>Hãy dẫn xuất các công thức thay vì chấp nhận chúng — vì cách dẫn xuất mới là thứ dùng được khi gặp bài toán lạ.</p>
+<p><strong>Permutation — chọn k phần tử có thứ tự từ n phần tử.</strong> Tưởng tượng xếp k người vào k ghế đánh số. Ghế 1 có n lựa chọn, ghế 2 còn n−1 (một người đã ngồi), &hellip; ghế k còn n−k+1. Rule of product:</p>
+<blockquote>
+<p>P(n, k) = n × (n−1) × &hellip; × (n−k+1) = n! / (n−k)!</p></blockquote>
+<p><strong>Combination — chọn k phần tử không quan tâm thứ tự.</strong> Đây là chỗ đáng dừng lại lâu nhất. C(n, k) không phải là một công thức mới — nó là P(n, k) <strong>sau khi sửa lỗi đếm trùng</strong>. Khi đếm P(n, k), mỗi <em>nhóm</em> k người bị đếm đi đếm lại một lần cho mỗi cách xếp thứ tự nội bộ của nhóm — tức k! lần. Muốn đếm nhóm (không thứ tự), ta chia cho số lần đếm trùng:</p>
+<blockquote>
+<p>C(n, k) = P(n, k) / k! = n! / (k!(n−k)!)</p></blockquote>
+<p>Phép chia k! không phải là chi tiết kỹ thuật — nó là <strong>nguyên lý tổng quát</strong>: <em>khi mỗi đối tượng cần đếm bị đếm trùng đúng m lần, hãy đếm bản dễ rồi chia m</em>. Nguyên lý này giải được vô số bài không có công thức sẵn: đếm chuỗi vòng (chia cho số phép xoay), đếm cách chia đội không đánh số (chia cho số hoán vị của các đội).</p>
+<h3 id="lập-luận-combinatorial-chứng-minh-bằng-cách-kể-chuyện-đếm">Lập luận combinatorial: chứng minh bằng cách kể chuyện đếm<a hidden class="anchor" aria-hidden="true" href="#lập-luận-combinatorial-chứng-minh-bằng-cách-kể-chuyện-đếm">#</a></h3>
+<p>Đẳng thức C(n, k) = C(n−1, k−1) + C(n−1, k) có thể chứng minh bằng biến đổi đại số nhàm chán. Hoặc bằng một câu chuyện: chọn k người từ n người, hãy nhìn vào người cuối cùng — <strong>hoặc</strong> cô ấy được chọn (còn phải chọn k−1 từ n−1 người), <strong>hoặc</strong> không (chọn đủ k từ n−1 người). Rule of sum cho ngay đẳng thức. Không một dòng đại số.</p>
+<p>Kiểu lập luận này — gọi là <strong>combinatorial argument</strong> hay &ldquo;double counting&rdquo; — đáng giá hơn công thức vì hai lý do. Thứ nhất, nó cho hiểu biết thay vì ký hiệu. Thứ hai, nó chính là <strong>cấu trúc của lời giải Dynamic Programming</strong>: &ldquo;hoặc chọn phần tử này, hoặc không&rdquo; là câu thần chú của Knapsack, Subsets, và hàng chục bài DP khác (chương 14). Ai quen lập luận combinatorial thì nhìn bài DP ra ngay recurrence.</p>
+<h3 id="nếu-không-có-các-khái-niệm-này-thì-sao">Nếu không có các khái niệm này thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-các-khái-niệm-này-thì-sao">#</a></h3>
+<p>Mọi câu hỏi về kích thước state space chỉ còn trả lời được bằng cách&hellip; chạy thử và đợi. &ldquo;Brute force có nổi không&rdquo; trở thành câu hỏi thực nghiệm tốn hàng giờ thay vì phép nhân 5 giây. Và những khẳng định dạng &ldquo;chắc chắn xảy ra&rdquo; (mục Pigeonhole dưới đây) hoàn toàn không thể chứng minh bằng thực nghiệm — bạn không thể thử hết mọi trường hợp để biết collision là <em>tất yếu</em>.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="pigeonhole-principle-nguyên-lý-một-dòng-hệ-quả-khắp-hệ-thống">Pigeonhole Principle: nguyên lý một dòng, hệ quả khắp hệ thống<a hidden class="anchor" aria-hidden="true" href="#pigeonhole-principle-nguyên-lý-một-dòng-hệ-quả-khắp-hệ-thống">#</a></h3>
+<blockquote>
+<p>Nếu đặt n vật vào m hộp với n &gt; m, thì <strong>ít nhất một hộp chứa từ 2 vật trở lên</strong>. Dạng tổng quát: có ít nhất một hộp chứa <strong>≥ ⌈n/m⌉</strong> vật.</p></blockquote>
+<p>Chứng minh bằng phản chứng (chương 03): nếu mọi hộp chứa ≤ 1 vật thì tổng ≤ m &lt; n — mâu thuẫn. Tầm thường về mặt toán, nhưng sức mạnh nằm ở chữ &ldquo;<strong>chắc chắn</strong>&rdquo;: không phải &ldquo;có thể&rdquo;, không phải &ldquo;xác suất cao&rdquo; — mà là <em>không tồn tại cách nào tránh được</em>. Ba hệ quả trực tiếp cho kỹ sư:</p>
+<p><strong>Hash collision là tất yếu, không phải rủi ro.</strong> Hash function ánh xạ không gian key (ví dụ mọi chuỗi UTF-8 — vô hạn) vào không gian giá trị hữu hạn (2⁶⁴ với hash 64-bit, hay số bucket của hash table). Số key &gt; số bucket → theo pigeonhole, <strong>tồn tại</strong> hai key khác nhau cùng bucket. Vì vậy mọi hash table đều <em>phải</em> có cơ chế xử lý collision (chaining, open addressing — chương 12); &ldquo;chọn hash function tốt để không bao giờ collision&rdquo; là mục tiêu bất khả thi về mặt toán học, không phải về mặt kỹ thuật. Hash function tốt chỉ làm collision <em>hiếm và đều</em>, không làm nó biến mất.</p>
+<p><strong>Trong 367 người, chắc chắn có 2 người trùng ngày sinh.</strong> Có tối đa 366 ngày sinh khả dĩ (kể cả 29/2); 367 người vào 366 &ldquo;hộp&rdquo; → có hộp chứa ≥ 2. Lưu ý sự tương phản với <strong>birthday paradox</strong> (chương 12): để trùng <em>chắc chắn</em> cần 367 người, nhưng để trùng <em>với xác suất &gt; 50%</em> chỉ cần 23. Pigeonhole cho ngưỡng chắc chắn; xác suất cho ngưỡng thực dụng — hai công cụ khác nhau cho hai câu hỏi khác nhau.</p>
+<p><strong>Load balancing: luôn có server nhận ≥ trung bình.</strong> Phân phối n request vào m server, theo dạng tổng quát của pigeonhole, ít nhất một server nhận ≥ ⌈n/m⌉ request. Nghe hiển nhiên, nhưng hệ quả thiết kế thì không: <strong>capacity planning không được phép dựa trên tải trung bình</strong>. &ldquo;Mỗi server chịu trung bình 1.000 RPS&rdquo; không cứu bạn khi một server nhận 3.000 — và pigeonhole bảo đảm luôn có server nhận ít nhất mức trung bình, còn thực tế (hot key, hash không đều) đẩy con số vượt xa trung bình. Đây là nền của bài toán &ldquo;power of two choices&rdquo; và consistent hashing (chương 25).</p>
+<h3 id="inclusion-exclusion-sửa-lỗi-đếm-trùng-khi-các-tập-giao-nhau">Inclusion-Exclusion: sửa lỗi đếm trùng khi các tập giao nhau<a hidden class="anchor" aria-hidden="true" href="#inclusion-exclusion-sửa-lỗi-đếm-trùng-khi-các-tập-giao-nhau">#</a></h3>
+<p>Rule of sum đòi hỏi các tập rời nhau. Khi chúng giao nhau, cộng thô sẽ đếm phần giao hai lần. Nguyên lý bù trừ sửa lại:</p>
+<blockquote>
+<p>|A ∪ B| = |A| + |B| − |A ∩ B|
+|A ∪ B ∪ C| = |A| + |B| + |C| − |A∩B| − |A∩C| − |B∩C| + |A∩B∩C|</p></blockquote>
+<p>Trực giác: cộng hết (phần giao bị đếm 2 lần) → trừ các phần giao đôi (phần giao ba giờ bị trừ quá tay) → cộng lại phần giao ba. Cứ thế đan xen cộng-trừ với nhiều tập hơn.</p>
+<pre tabindex="0"><code>   ┌───────────┐
+   │ A         │        Đếm |A| + |B|:
+   │      ┌────┼──────┐  vùng giữa (A∩B)
+   │      │ ▒▒ │      │  bị đếm 2 lần
+   │      │ ▒▒ │  B   │  → trừ đi 1 lần
+   └──────┼────┘      │
+          └───────────┘</code></pre><p>Với kỹ sư backend, đây chính là bài toán &ldquo;đếm bản ghi thỏa <strong>ít nhất một</strong> điều kiện&rdquo;: <code>WHERE status = 'failed' OR retries &gt; 3</code>. Query planner không thể cộng thô số dòng thỏa từng điều kiện — có những dòng thỏa cả hai. PostgreSQL ước lượng selectivity của mệnh đề OR chính xác theo công thức bù trừ: <code>sel(A OR B) = sel(A) + sel(B) − sel(A)·sel(B)</code>, trong đó phần giao được <em>xấp xỉ</em> bằng tích vì planner giả định hai điều kiện độc lập (giả định này khi sai sẽ gây thảm họa — xem mục 7).</p>
+<h3 id="binomial-theorem-vì-sao-cn-k-xuất-hiện-khắp-nơi">Binomial theorem: vì sao C(n, k) xuất hiện khắp nơi<a hidden class="anchor" aria-hidden="true" href="#binomial-theorem-vì-sao-cn-k-xuất-hiện-khắp-nơi">#</a></h3>
+<blockquote>
+<p>(x + y)ⁿ = Σₖ C(n, k) · xᵏ · yⁿ⁻ᵏ</p></blockquote>
+<p>Không cần khai triển đại số — hãy nhìn bằng mắt đếm. (x+y)ⁿ là tích của n cặp ngoặc; khai triển nghĩa là <strong>từ mỗi ngoặc chọn x hoặc y</strong> rồi nhân lại. Số cách tạo ra số hạng xᵏyⁿ⁻ᵏ = số cách chọn ra k ngoặc đóng góp x = C(n, k). Định lý nhị thức chỉ là rule of product + combination kể lại bằng ký hiệu đa thức.</p>
+<p>Hệ quả đáng nhớ nhất: đặt x = y = 1 được <strong>Σₖ C(n, k) = 2ⁿ</strong> — tổng số tập con của n phần tử. Hai cách đếm cùng một thứ: đếm theo kích thước tập con (vế trái), hay đếm theo chuỗi n quyết định chọn/không (vế phải). Và hình dạng của dãy C(n, k) — phình to ở giữa, C(n, n/2) ≈ 2ⁿ/√n — chính là lý do phân phối nhị thức dồn về trung tâm, nền tảng cho các ước lượng xác suất ở chương 11.</p>
+<h3 id="đếm-state-space-công-cụ-ước-lượng-feasibility">Đếm state space: công cụ ước lượng feasibility<a hidden class="anchor" aria-hidden="true" href="#đếm-state-space-công-cụ-ước-lượng-feasibility">#</a></h3>
+<p>Ghép tất cả lại thành bảng tra dùng hằng ngày:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Câu hỏi</th>
+          <th>Cấu trúc đếm</th>
+          <th>Kích thước</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Tổ hợp của n feature flags</td>
+          <td>mỗi flag chọn/không</td>
+          <td>2ⁿ</td>
+      </tr>
+      <tr>
+          <td>Tập con của n phần tử</td>
+          <td>như trên</td>
+          <td>2ⁿ</td>
+      </tr>
+      <tr>
+          <td>Thứ tự xử lý n task</td>
+          <td>hoán vị</td>
+          <td>n!</td>
+      </tr>
+      <tr>
+          <td>Chọn k server từ n</td>
+          <td>combination</td>
+          <td>C(n, k)</td>
+      </tr>
+      <tr>
+          <td>Chuỗi dài k trên bảng chữ cái m ký tự</td>
+          <td>product</td>
+          <td>mᵏ</td>
+      </tr>
+      <tr>
+          <td>Gán n request vào m server</td>
+          <td>mỗi request chọn server</td>
+          <td>mⁿ</td>
+      </tr>
+  </tbody>
+</table>
+<p>Kết hợp với bảng ngưỡng &ldquo;10⁸ phép toán/giây&rdquo; ở chương 10: n! vượt 10⁸ ngay tại n = 12; 2ⁿ tại n = 27. Đọc ràng buộc đề bài hay spec hệ thống, nhân vài con số, và bạn biết ngay biên giới giữa &ldquo;duyệt hết được&rdquo; và &ldquo;phải thông minh hơn&rdquo;.</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<p>Tính C(n, k) trong code có một cái bẫy kinh điển: <code>n! / (k! * (n-k)!)</code> tràn số ngay lập tức — 21! đã vượt int64. Hai cách đúng:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Cách 1: Tính nhân dần, chia sớm — C(n,k) = C(n,k-1) * (n-k+1) / k</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Kết quả trung gian luôn là một hệ số nhị thức, nên phép chia luôn chẵn</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// và giá trị trung gian không phình to hơn kết quả cuối.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">binomial</span>(<span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">k</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">k</span> &lt; <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">k</span> &gt; <span style="color:#a6e22e">n</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">k</span> &gt; <span style="color:#a6e22e">n</span><span style="color:#f92672">-</span><span style="color:#a6e22e">k</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">k</span> = <span style="color:#a6e22e">n</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">k</span> <span style="color:#75715e">// tận dụng đối xứng C(n,k) = C(n,n-k), giảm số vòng lặp</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">k</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">result</span> = <span style="color:#a6e22e">result</span> <span style="color:#f92672">*</span> (<span style="color:#a6e22e">n</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">k</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">i</span>) <span style="color:#f92672">/</span> <span style="color:#a6e22e">i</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">result</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cách 2: Tam giác Pascal — dùng khi cần NHIỀU giá trị C(n,k),</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// hoặc khi tính theo modulo (phép chia không còn dùng được trực tiếp).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Chính là đẳng thức C(n,k) = C(n-1,k-1) + C(n-1,k) đã chứng minh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// bằng lập luận combinatorial ở mục 3 — mã hóa thành DP.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">pascalTriangle</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>) [][]<span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> make([][]<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">n</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span>] = make([]<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span>][<span style="color:#ae81ff">0</span>], <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span>][<span style="color:#a6e22e">i</span>] = <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">j</span> &lt; <span style="color:#a6e22e">i</span>; <span style="color:#a6e22e">j</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span>][<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>][<span style="color:#a6e22e">j</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">+</span> <span style="color:#a6e22e">c</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>][<span style="color:#a6e22e">j</span>] <span style="color:#75715e">// &#34;chọn hay không chọn phần tử cuối&#34;</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Điểm đáng suy ngẫm: tam giác Pascal là ví dụ đầu tiên trong tài liệu này về việc <strong>một chứng minh combinatorial trở thành một thuật toán DP</strong>. Đẳng thức đếm là recurrence; bảng DP là cách điền recurrence. Mối liên hệ này sẽ trở thành chủ đề trung tâm ở chương 14.</p>
+<p>Còn khi cần <em>liệt kê</em> (không chỉ đếm) — sinh mọi tập con bằng bitmask:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Duyệt mọi tập con của n phần tử — chỉ khả thi khi n ≤ ~25 (2^25 ≈ 3×10^7).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Chính phép đếm 2^n cho ta biết TRƯỚC KHI VIẾT CODE là hàm này chạy nổi hay không.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">enumerateSubsets</span>(<span style="color:#a6e22e">items</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">visit</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">subset</span> []<span style="color:#66d9ef">string</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> len(<span style="color:#a6e22e">items</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">mask</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">mask</span> &lt; <span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">mask</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">subset</span> []<span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">mask</span><span style="color:#f92672">&amp;</span>(<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#a6e22e">i</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> { <span style="color:#75715e">// bit i bật = phần tử i được chọn</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">subset</span> = append(<span style="color:#a6e22e">subset</span>, <span style="color:#a6e22e">items</span>[<span style="color:#a6e22e">i</span>])
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">visit</span>(<span style="color:#a6e22e">subset</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Song ánh {tập con} ↔ {số nguyên 0..2ⁿ−1} không chỉ để đếm — nó là <em>cách biểu diễn</em>: mỗi tập con nén thành một int, so sánh và lưu trữ bằng phép toán bit. Đếm và mã hóa là hai mặt của cùng một song ánh.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Đếm chính xác vs ước lượng.</strong> Công thức đóng cho kết quả chính xác nhưng chỉ tồn tại khi cấu trúc bài toán &ldquo;đẹp&rdquo; (độc lập, đối xứng). Thực tế thường xuyên không đẹp: đếm số dòng thỏa <code>WHERE</code> phức tạp trên dữ liệu tương quan không có công thức đóng. Khi đó hệ thống thật chuyển sang <strong>ước lượng bằng mẫu</strong> (sampling, histogram, sketch — chương 18, 23), chấp nhận sai số để đổi lấy tính khả thi. Combinatorics cho biên chính xác; thống kê cho con số gần đúng nhanh — kỹ sư giỏi biết mình đang cần cái nào.</p>
+<p><strong>Công thức vs DP vs liệt kê.</strong> Cùng tính C(n, k): công thức nhân O(k) nhưng cần cẩn thận overflow; tam giác Pascal O(n²) bộ nhớ nhưng an toàn với modulo; liệt kê O(2ⁿ) nhưng là lựa chọn duy nhất khi cần <em>xem</em> từng cấu hình chứ không chỉ đếm. Không có lựa chọn đúng tuyệt đối — có lựa chọn đúng cho từng câu hỏi.</p>
+<p><strong>Khi nào KHÔNG dùng rule of product?</strong> Khi các lựa chọn phụ thuộc nhau. Số cách cấu hình 12 flags là 2¹² <em>chỉ khi</em> mọi tổ hợp đều hợp lệ; nếu flag A bật đòi hỏi flag B bật, con số thật nhỏ hơn và phải đếm bằng cấu trúc khác (thường là DP trên đồ thị ràng buộc). Nhân bừa các lựa chọn phụ thuộc cho ước lượng <strong>quá cao</strong>; ngược lại, giả định độc lập trong ước lượng xác suất thường cho kết quả <strong>quá thấp</strong> ở phần giao. Câu hỏi đầu tiên trước mọi phép nhân: <em>các lựa chọn này có thật sự độc lập không?</em></p>
+<p><strong>Pigeonhole cho biết tồn tại, không cho biết ở đâu.</strong> Nguyên lý bảo đảm có hai key trùng bucket nhưng không chỉ ra cặp nào; bảo đảm có server quá tải nhưng không nói server nào. Nó là công cụ <strong>thiết kế</strong> (buộc bạn chuẩn bị cơ chế xử lý) chứ không phải công cụ <strong>vận hành</strong> (không thay được monitoring).</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>PostgreSQL selectivity estimation</strong> — combinatorics và giả định độc lập chạy trong mọi query plan. Với <code>WHERE city = 'Hanoi' AND age &gt; 30</code>, planner ước lượng selectivity từng điều kiện từ histogram rồi <strong>nhân với nhau</strong> — đúng rule of product trên xác suất, hợp lệ chỉ khi hai cột độc lập. Khi dữ liệu tương quan (<code>city = 'Hanoi' AND country = 'VN'</code> — điều kiện sau gần như bao hàm điều kiện trước), phép nhân cho ước lượng thấp hơn thực tế hàng nghìn lần, planner chọn nested loop join thay vì hash join, và query chạy chậm 100 lần. Đây là một trong những nguyên nhân phổ biến nhất của &ldquo;query đột nhiên chậm&rdquo; trong thực tế, và là lý do PostgreSQL 10+ thêm <code>CREATE STATISTICS</code> — cho phép khai báo &ldquo;hai cột này phụ thuộc nhau, đừng nhân bừa&rdquo;. Với mệnh đề <code>OR</code>, planner áp dụng đúng công thức inclusion-exclusion như mục 4. Hiểu đếm trùng và tính độc lập nghĩa là đọc được <code>EXPLAIN</code> sâu hơn 90% người dùng.</p>
+<p><strong>Kafka partition và replica assignment.</strong> Một topic 100 partition, mỗi partition 3 replica, đặt lên 10 broker: mỗi partition có C(10, 3) = 120 cách chọn bộ broker chứa replica. Không gian gán toàn cục là 120¹⁰⁰ — vô vọng cho tìm kiếm tối ưu toàn cục, và đó là lý do Kafka dùng thuật toán gán round-robin có xáo trộn thay vì &ldquo;tìm phương án tối ưu&rdquo;. Đồng thời, pigeonhole cho một khẳng định cứng: 100 partition lên 10 broker thì có broker gánh ≥ 10 partition — nếu partition có hot key, sự chênh lệch tải là chắc chắn có, chỉ chưa biết ở đâu. Chọn số partition chia hết cho số broker và chọn partition key phân bố đều — cả hai đều là quyết định combinatorial.</p>
+<p><strong>Ước lượng số test case và pairwise testing.</strong> Quay lại câu chuyện mở đầu: 49.152 tổ hợp không test hết được. Lối thoát cũng đến từ combinatorics: thống kê thực nghiệm cho thấy phần lớn bug do <em>tương tác của tối đa 2 tham số</em>. Thay vì phủ mọi tổ hợp đầy đủ, chỉ cần bộ test phủ <strong>mọi cặp giá trị của mọi cặp tham số</strong> — bài toán covering design kinh điển, giảm từ hàng chục nghìn xuống vài chục test case. Công cụ như <code>pict</code> (Microsoft) làm đúng việc này. Không biết đếm thì không biết mình đang bỏ sót gì và tiết kiệm được gì.</p>
+<p><strong>Cardinality và sizing khắp nơi:</strong> số shard × số replica trong Elasticsearch quyết định số shard vật lý phải phân bổ (và pigeonhole lại xuất hiện: nhiều shard hơn node thì có node gánh nhiều shard); số tổ hợp label trong Prometheus là tích số giá trị mỗi label — lý do &ldquo;label có cardinality cao&rdquo; làm nổ tung bộ nhớ TSDB: thêm một label <code>user_id</code> với 10⁶ giá trị nghĩa là <em>nhân</em> số time series lên 10⁶ lần, đúng theo rule of product.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p>Các bài đếm trong phỏng vấn kiểm tra đúng một kỹ năng: <strong>nhận diện &ldquo;bài này đang đếm cái gì&rdquo;</strong> trước khi viết bất cứ dòng code nào.</p>
+<p><strong>Unique Paths (LeetCode 62).</strong> Robot đi từ góc trên-trái đến góc dưới-phải lưới m×n, chỉ đi phải hoặc xuống. Cách nhìn combinatorial: mọi đường đi đều gồm đúng (m−1) bước xuống và (n−1) bước phải — tổng m+n−2 bước, và một đường đi được xác định <em>hoàn toàn</em> bởi việc chọn vị trí các bước xuống trong chuỗi. Đó là song ánh sang bài chọn: đáp án = C(m+n−2, m−1), tính được trong O(m+n) bằng hàm <code>binomial</code> ở mục 5. Lời giải DP O(m·n) cũng đúng — và chính bảng DP đó <em>là</em> tam giác Pascal bị bóp méo. Nói được cả hai cách và mối liên hệ giữa chúng là điểm khác biệt giữa &ldquo;giải được&rdquo; và &ldquo;hiểu&rdquo;.</p>
+<p><strong>Subsets (LeetCode 78) và Permutations (LeetCode 46).</strong> Trước khi code, hãy đếm output: 2ⁿ tập con, n! hoán vị. Phép đếm này trả lời ngay câu hỏi interviewer chắc chắn sẽ hỏi — &ldquo;độ phức tạp bao nhiêu?&rdquo;: không lời giải nào tốt hơn O(2ⁿ) / O(n!·n), vì <strong>riêng việc ghi output đã tốn chừng đó</strong>. Đây là một dạng lower bound argument mà rất nhiều ứng viên bỏ lỡ: độ phức tạp bị chặn dưới bởi kích thước output, và kích thước output là một bài toán đếm.</p>
+<p><strong>Lỗi tư duy thường gặp:</strong></p>
+<ul>
+<li>Không phân biệt &ldquo;có thứ tự hay không&rdquo; — câu hỏi đầu tiên phải tự hỏi với mọi bài đếm. Chọn 3 người vào một <em>nhóm</em> là C(n,3); vào ba <em>vai trò khác nhau</em> là P(n,3).</li>
+<li>Đếm trùng mà không biết: sinh tổ hợp bằng đệ quy nhưng cho phép chọn lại phần tử đứng trước → mỗi tập con xuất hiện k! lần. Fix chuẩn (chỉ chọn phần tử có index lớn hơn phần tử vừa chọn) chính là cách <em>ép một thứ tự chuẩn hóa</em> để mỗi tập được sinh đúng một lần — tư duy &ldquo;chia cho số lần đếm trùng&rdquo; thể hiện trong code.</li>
+<li>Áp công thức mà không kiểm tra điều kiện: Unique Paths có chướng ngại vật (LeetCode 63) thì song ánh sang C(m+n−2, m−1) sụp đổ — phải quay về DP. Biết <em>vì sao</em> công thức đúng thì biết ngay <em>khi nào</em> nó hết đúng.</li>
+</ul>
+<p><strong>Cách phân tích thay vì học thuộc:</strong> với mọi bài đếm, hỏi tuần tự: (1) một đối tượng cần đếm được xác định bởi <em>chuỗi quyết định</em> nào? (2) các quyết định có độc lập không — nhân được không? (3) thứ tự có nghĩa không — có đang đếm trùng không, trùng bao nhiêu lần? (4) có tách được thành các trường hợp rời nhau để cộng không? Bốn câu hỏi này giải quyết đại đa số bài đếm mà không cần nhớ công thức nào ngoài P và C.</p>
+<p><strong>Từ phỏng vấn sang production:</strong> &ldquo;Subsets&rdquo; chính là bài toán liệt kê tổ hợp feature flags; &ldquo;đếm trước khi liệt kê&rdquo; chính là kỹ năng ước lượng feasibility trước khi viết batch job. Bài toán giống nhau, chỉ khác quy mô và tên biến.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Nhân các lựa chọn phụ thuộc nhau.</strong> &ldquo;Hệ thống có 10 service, mỗi service 3 phiên bản → 3¹⁰ = 59.049 tổ hợp deploy cần test tương thích.&rdquo; Nghe logic, nhưng nếu contract giữa các service được version hóa và kiểm tra độc lập từng cặp, con số thật là tổng theo từng cặp tương tác — nhỏ hơn nhiều bậc. Ước lượng quá cao cũng nguy hiểm như quá thấp: nó dẫn đến quyết định &ldquo;không thể test được, thôi bỏ&rdquo; trong khi bài toán thật hoàn toàn khả thi.</p>
+<p><strong>Thiết kế như thể collision không tồn tại.</strong> Sinh ID ngẫu nhiên 8 ký tự rồi <code>INSERT</code> không có unique constraint và không có retry — vì &ldquo;8 ký tự là nhiều lắm rồi&rdquo;. Pigeonhole (và birthday paradox, chương 12) nói collision là chuyện <em>khi nào</em> chứ không phải <em>có hay không</em>. Mọi ánh xạ từ tập lớn vào tập nhỏ đều cần đường xử lý va chạm, ngay từ thiết kế.</p>
+<p><strong>Capacity planning bằng số trung bình.</strong> &ldquo;1 triệu request/ngày chia 10 server = 100k/server, mỗi server chịu được 150k → ổn.&rdquo; Pigeonhole đảm bảo có server nhận ≥ trung bình; phân bố thực tế (giờ cao điểm, hot tenant, hash lệch) đẩy max vượt xa mức đó. Thiết kế phải dựa trên phân phối và đuôi của nó (chương 18), không phải trên phép chia đều lý tưởng.</p>
+<p><strong>Liệt kê để đếm.</strong> Viết script sinh toàn bộ tổ hợp chỉ để lấy <code>len()</code> — chính là khoảnh khắc mở đầu chương. Với n nhỏ thì vô hại; thành thói quen thì có ngày script chạy mãi không xong và bạn không hiểu vì sao. Đếm trước, liệt kê sau, và chỉ liệt kê khi phép đếm nói rằng làm thế là khả thi.</p>
+<p><strong>Tin giả định độc lập mà không kiểm chứng.</strong> Bài học từ PostgreSQL ở mục 7 áp dụng cho chính code của bạn: mọi ước lượng dạng &ldquo;xác suất cả hai cùng xảy ra = tích hai xác suất&rdquo; đều đứng trên giả định độc lập. Hai service cùng phụ thuộc một database thì downtime của chúng <em>không</em> độc lập — và ước lượng availability bằng phép nhân sẽ lạc quan một cách nguy hiểm (chương 11).</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Trước mọi lời giải brute force, backtracking hay batch job tổ hợp: <strong>đếm kích thước state space trước, viết code sau.</strong> So với ngưỡng ~10⁸ phép toán/giây để kết luận khả thi hay không trong 30 giây.</li>
+<li>Với mọi phép nhân trong ước lượng, tự hỏi thành tiếng: &ldquo;các lựa chọn/sự kiện này có độc lập không?&rdquo; Với mọi phép cộng: &ldquo;các trường hợp có rời nhau không?&rdquo; Hai câu hỏi này chặn được đa số lỗi đếm.</li>
+<li>Ưu tiên lập luận combinatorial (&ldquo;chọn hay không chọn&rdquo;, &ldquo;nhìn vào phần tử cuối&rdquo;) hơn biến đổi công thức — nó vừa khó sai hơn, vừa dẫn thẳng đến recurrence khi cần chuyển sang DP.</li>
+<li>Dùng pigeonhole như checklist thiết kế: mọi ánh xạ nhiều-vào-ít trong hệ thống (hash, partition, load balancer, cache key) đều cần câu trả lời cho &ldquo;chuyện gì xảy ra khi va chạm / khi lệch tải&rdquo;.</li>
+<li>Khi tính C(n, k) trong code: nhân dần chia sớm hoặc tam giác Pascal — không bao giờ tính n! trực tiếp.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không kết luận &ldquo;không thể xảy ra&rdquo; cho bất kỳ sự kiện nào mà phép đếm cho thấy là tất yếu hoặc có xác suất tích lũy đáng kể theo thời gian.</li>
+<li>Không dùng số trung bình làm số thiết kế khi pigeonhole đã bảo đảm có phần tử vượt trung bình.</li>
+<li>Không học thuộc công thức đếm cho từng dạng bài — học bốn câu hỏi phân tích ở mục 8; công thức nào cũng dẫn xuất lại được từ rule of sum/product trong một phút.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Vì sao C(n, k) phải chia cho k!, và nguyên lý &ldquo;chia cho số lần đếm trùng&rdquo; áp dụng thế nào khi đếm số cách chia 2n người thành n cặp (không đánh số cặp)?</li>
+<li>Pigeonhole và birthday paradox cùng nói về collision — mỗi cái trả lời câu hỏi gì, và khi thiết kế hệ thống sinh ID bạn cần cái nào?</li>
+<li>Query <code>WHERE a = 1 AND b = 2</code> bị PostgreSQL ước lượng sai 1000 lần — giả định toán học nào đã đổ vỡ, và công cụ nào của PostgreSQL sửa nó?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-2-discrete-mathematics/06-recurrence/">06 — Recurrence Relations</a>, nơi đẳng thức Pascal C(n,k) = C(n−1,k−1) + C(n−1,k) — một quan hệ truy hồi — được nghiên cứu như một đối tượng độc lập: ngôn ngữ mô tả mọi thuật toán đệ quy và chi phí của chúng.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-1-mathematical-thinking/04-mathematical-modeling/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 04 — Mathematical Modeling: Từ bài toán thực tế đến mô hình toán</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-2-discrete-mathematics/06-recurrence/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 06 — Recurrence Relations: Ngôn ngữ của đệ quy</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 05 — Counting & Combinatorics: Đếm mà không cần liệt kê on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2005%20%e2%80%94%20Counting%20%26%20Combinatorics%3a%20%c4%90%e1%ba%bfm%20m%c3%a0%20kh%c3%b4ng%20c%e1%ba%a7n%20li%e1%bb%87t%20k%c3%aa&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 05 — Counting & Combinatorics: Đếm mà không cần liệt kê on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f&amp;title=Ch%c6%b0%c6%a1ng%2005%20%e2%80%94%20Counting%20%26%20Combinatorics%3a%20%c4%90%e1%ba%bfm%20m%c3%a0%20kh%c3%b4ng%20c%e1%ba%a7n%20li%e1%bb%87t%20k%c3%aa&amp;summary=Ch%c6%b0%c6%a1ng%2005%20%e2%80%94%20Counting%20%26%20Combinatorics%3a%20%c4%90%e1%ba%bfm%20m%c3%a0%20kh%c3%b4ng%20c%e1%ba%a7n%20li%e1%bb%87t%20k%c3%aa&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 05 — Counting & Combinatorics: Đếm mà không cần liệt kê on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f&title=Ch%c6%b0%c6%a1ng%2005%20%e2%80%94%20Counting%20%26%20Combinatorics%3a%20%c4%90%e1%ba%bfm%20m%c3%a0%20kh%c3%b4ng%20c%e1%ba%a7n%20li%e1%bb%87t%20k%c3%aa">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 05 — Counting & Combinatorics: Đếm mà không cần liệt kê on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 05 — Counting & Combinatorics: Đếm mà không cần liệt kê on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2005%20%e2%80%94%20Counting%20%26%20Combinatorics%3a%20%c4%90%e1%ba%bfm%20m%c3%a0%20kh%c3%b4ng%20c%e1%ba%a7n%20li%e1%bb%87t%20k%c3%aa%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 05 — Counting & Combinatorics: Đếm mà không cần liệt kê on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2005%20%e2%80%94%20Counting%20%26%20Combinatorics%3a%20%c4%90%e1%ba%bfm%20m%c3%a0%20kh%c3%b4ng%20c%e1%ba%a7n%20li%e1%bb%87t%20k%c3%aa&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 05 — Counting & Combinatorics: Đếm mà không cần liệt kê on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2005%20%e2%80%94%20Counting%20%26%20Combinatorics%3a%20%c4%90%e1%ba%bfm%20m%c3%a0%20kh%c3%b4ng%20c%e1%ba%a7n%20li%e1%bb%87t%20k%c3%aa&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-2-discrete-mathematics%2f05-counting-combinatorics%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

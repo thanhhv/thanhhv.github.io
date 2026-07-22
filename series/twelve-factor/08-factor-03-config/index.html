@@ -1,157 +1,595 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 8 — Factor 3: Config | Thanh HV's Blog</title>
-<meta name=keywords content="backend,twelve-factor,cloud-native"><meta name=description content="
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 8 — Factor 3: Config | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, twelve-factor, cloud-native">
+<meta name="description" content="
 &ldquo;Store config in the environment&rdquo; — Lưu config trong môi trường (triển khai).
 Phần 2 – The Twelve Factors | Nhóm: Configurable | Chương trước: Dependencies | Chương sau: Backing Services
 Đây là factor được trích dẫn nhiều nhất, bị hiểu máy móc nhiều nhất, và có nhiều cập nhật hiện đại nhất. Đọc kỹ mục Trade-off.
 
 1. Problem Statement
-Config là gì? Định nghĩa của 12-Factor rất chính xác: config là mọi thứ thay đổi giữa các deploy (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port)."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/twelve-factor/08-factor-03-config/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/twelve-factor/08-factor-03-config/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/twelve-factor/08-factor-03-config/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 8 — Factor 3: Config"><meta property="og:description" content=" “Store config in the environment” — Lưu config trong môi trường (triển khai).
-Phần 2 – The Twelve Factors | Nhóm: Configurable | Chương trước: Dependencies | Chương sau: Backing Services
-Đây là factor được trích dẫn nhiều nhất, bị hiểu máy móc nhiều nhất, và có nhiều cập nhật hiện đại nhất. Đọc kỹ mục Trade-off.
-1. Problem Statement Config là gì? Định nghĩa của 12-Factor rất chính xác: config là mọi thứ thay đổi giữa các deploy (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port)."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-10T09:00:00+07:00"><meta property="article:modified_time" content="2026-07-10T09:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Twelve-Factor"><meta property="article:tag" content="Cloud-Native"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 8 — Factor 3: Config"><meta name=twitter:description content="
-&ldquo;Store config in the environment&rdquo; — Lưu config trong môi trường (triển khai).
-Phần 2 – The Twelve Factors | Nhóm: Configurable | Chương trước: Dependencies | Chương sau: Backing Services
-Đây là factor được trích dẫn nhiều nhất, bị hiểu máy móc nhiều nhất, và có nhiều cập nhật hiện đại nhất. Đọc kỹ mục Trade-off.
+Config là gì? Định nghĩa của 12-Factor rất chính xác: config là mọi thứ thay đổi giữa các deploy (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port).">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/twelve-factor/08-factor-03-config/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/twelve-factor/08-factor-03-config/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Problem Statement
-Config là gì? Định nghĩa của 12-Factor rất chính xác: config là mọi thứ thay đổi giữa các deploy (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port)."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"The Twelve-Factor App","item":"https://thanhhv.github.io/series/twelve-factor/"},{"@type":"ListItem","position":3,"name":"Chương 8 — Factor 3: Config","item":"https://thanhhv.github.io/series/twelve-factor/08-factor-03-config/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 8 — Factor 3: Config","name":"Chương 8 — Factor 3: Config","description":" \u0026ldquo;Store config in the environment\u0026rdquo; — Lưu config trong môi trường (triển khai).\nPhần 2 – The Twelve Factors | Nhóm: Configurable | Chương trước: Dependencies | Chương sau: Backing Services\nĐây là factor được trích dẫn nhiều nhất, bị hiểu máy móc nhiều nhất, và có nhiều cập nhật hiện đại nhất. Đọc kỹ mục Trade-off.\n1. Problem Statement Config là gì? Định nghĩa của 12-Factor rất chính xác: config là mọi thứ thay đổi giữa các deploy (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port).\n","keywords":["backend","twelve-factor","cloud-native"],"articleBody":" “Store config in the environment” — Lưu config trong môi trường (triển khai).\nPhần 2 – The Twelve Factors | Nhóm: Configurable | Chương trước: Dependencies | Chương sau: Backing Services\nĐây là factor được trích dẫn nhiều nhất, bị hiểu máy móc nhiều nhất, và có nhiều cập nhật hiện đại nhất. Đọc kỹ mục Trade-off.\n1. Problem Statement Config là gì? Định nghĩa của 12-Factor rất chính xác: config là mọi thứ thay đổi giữa các deploy (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port).\nConfig KHÔNG phải là: cấu hình nội tại của app không đổi theo môi trường (routing, DI wiring, hằng số nghiệp vụ như “phí ship 25k”) — những thứ đó là code, cứ để trong code.\nBài toán: cùng một artifact (Factor 5) phải chạy được ở mọi môi trường. Nếu config nằm trong code:\nĐổi môi trường = sửa code + build lại → mỗi môi trường một binary khác nhau → thứ bạn test không phải thứ bạn chạy. Secret nằm trong Git — sự cố bảo mật phổ biến bậc nhất ngành. GitGuardian báo cáo ~23.8 triệu secret mới bị lộ trên GitHub công khai chỉ trong năm 2024. Một credential AWS lộ trong commit có thể bị bot quét và khai thác trong vài phút. Git history là vĩnh viễn: xóa secret ở commit sau không thu hồi được nó khỏi lịch sử — buộc phải rotate. Bài kiểm tra gốc của 12factor.net vẫn là chuẩn vàng: “Bạn có thể open-source codebase ngay bây giờ mà không lộ bất kỳ credential nào không?”\n2. Tại sao nguyên lý này tồn tại Deployment: một artifact → n môi trường chỉ khả thi khi khác biệt được bơm từ ngoài vào lúc chạy. Security: tách secret khỏi code là ranh giới bảo mật căn bản; quyền đọc code ≠ quyền truy cập production. Operational: đổi endpoint/log level phải là thao tác vận hành (nhanh, không cần build), không phải thao tác phát triển. Business/Compliance: SOC2, PCI-DSS đều yêu cầu kiểm soát và audit truy cập secret — bất khả thi nếu secret rải trong source. 3. Bản chất Tách một phép nhân ra khỏi phép cộng:\nKHÔNG tách config: Tách config: n môi trường × m phiên bản m artifact + n bộ config = n × m tổ hợp build artifact ⊗ config lúc RUN (mỗi tổ hợp một binary riêng, (một binary duy nhất được test không cái nào được test đầy đủ) rồi chạy khắp nơi)Chú ý mệnh đề quan trọng của tài liệu gốc thường bị bỏ qua: config nên là các biến độc lập (granular), không phải “profile” (ENV=production rồi app tự tra cứu bó config theo tên). Profile tạo ra tổ hợp bùng nổ (“staging nhưng DB của dev”, “prod nhưng log debug”) và các nhánh if env == \"production\" trong code — chính là config lẻn ngược vào code. App chỉ nên biết DATABASE_URL, không nên biết “mình đang ở staging”.\nĐiều gì xảy ra nếu vi phạm? Nhẹ: mỗi lần đổi config là một lần build + deploy đầy đủ, chu kỳ vận hành chậm đi hàng chục lần. Nặng: secret vào Git → rotate toàn bộ credential, điều tra truy cập, có thể là sự cố công khai. Rất nặng: “một binary cho staging, một binary cho prod” → bug chỉ có ở binary prod, mọi tầng test mất giá trị.\n4. Cách áp dụng với Go 4.1. Load config từ environment — fail fast, có kiểu, có validate Nguyên tắc: đọc một lần lúc khởi động, validate ngay, crash ngay nếu thiếu — đừng để thiếu config lộ ra ở request thứ 1000 lúc 2h sáng.\n// internal/config/config.go package config import ( \"fmt\" \"time\" \"github.com/caarlos0/env/v11\" ) type Config struct { // Server Port int `env:\"PORT\" envDefault:\"8080\"` ShutdownTimeout time.Duration `env:\"SHUTDOWN_TIMEOUT\" envDefault:\"15s\"` // Backing services (F4): mỗi resource một URL — đổi resource không đổi code DatabaseURL string `env:\"DATABASE_URL,required\"` RedisURL string `env:\"REDIS_URL,required\"` // Secret: hỗ trợ cả file (K8s mounted secret) — xem 4.3 PaymentAPIKey string `env:\"PAYMENT_API_KEY,required,file,unset\"` // `file` → giá trị env var là ĐƯỜNG DẪN, thư viện đọc nội dung file // `unset` → xóa env var sau khi đọc, giảm rủi ro rò rỉ qua /proc, child process // Observability LogLevel string `env:\"LOG_LEVEL\" envDefault:\"info\"` } func Load() (*Config, error) { cfg := \u0026Config{} if err := env.Parse(cfg); err != nil { return nil, fmt.Errorf(\"parse config: %w\", err) } if err := cfg.validate(); err != nil { return nil, fmt.Errorf(\"invalid config: %w\", err) } return cfg, nil } func (c *Config) validate() error { if c.Port \u003c 1 || c.Port \u003e 65535 { return fmt.Errorf(\"PORT %d ngoài khoảng hợp lệ\", c.Port) } switch c.LogLevel { case \"debug\", \"info\", \"warn\", \"error\": default: return fmt.Errorf(\"LOG_LEVEL %q không hợp lệ\", c.LogLevel) } return nil } // cmd/server/main.go (trích) func main() { cfg, err := config.Load() if err != nil { // Fail fast: chết ngay lúc khởi động với thông điệp rõ ràng. // K8s sẽ thấy pod crash → không đưa traffic vào (F9 + readiness). log.Fatalf(\"config error: %v\", err) } // LƯU Ý: không bao giờ log giá trị config chứa secret. slog.Info(\"config loaded\", \"port\", cfg.Port, \"log_level\", cfg.LogLevel) // ... } Hai quy tắc code đi kèm: (1) chỉ đọc os.Getenv ở tầng config lúc khởi động — cấm rải os.Getenv khắp codebase (thành dependency ngầm không ai liệt kê nổi); (2) truyền *Config (hoặc các trường cần thiết) xuống qua constructor — testable, tường minh.\n4.2. Docker \u0026 docker-compose # Chạy local — cùng image với production, khác mỗi env docker run --rm -p 8080:8080 \\ -e DATABASE_URL=\"postgres://app:dev@host.docker.internal:5432/app?sslmode=disable\" \\ -e REDIS_URL=\"redis://host.docker.internal:6379/0\" \\ -e PAYMENT_API_KEY_FILE=/run/secrets/payment_key \\ registry.example.com/myapp:9f8e7d6 # docker-compose.yml — môi trường dev services: app: build: . ports: [\"8080:8080\"] environment: DATABASE_URL: postgres://app:dev@db:5432/app?sslmode=disable REDIS_URL: redis://redis:6379/0 LOG_LEVEL: debug env_file: .env.local # KHÔNG commit; commit file .env.example làm mẫu depends_on: [db, redis] db: image: postgres:17-alpine environment: POSTGRES_USER: app POSTGRES_PASSWORD: dev POSTGRES_DB: app redis: image: redis:7-alpine .gitignore phải có .env* (trừ .env.example). File .env.example liệt kê tên mọi biến với giá trị giả — nó chính là tài liệu sống của config.\n4.3. Kubernetes — ConfigMap cho config thường, Secret mount file cho secret # configmap.yaml — config KHÔNG nhạy cảm apiVersion: v1 kind: ConfigMap metadata: name: myapp-config data: LOG_LEVEL: \"info\" SHUTDOWN_TIMEOUT: \"15s\" --- # secret.yaml — thực tế nên tạo bằng External Secrets Operator / SealedSecrets, # KHÔNG commit secret thô vào Git (xem chương 21 - GitOps) apiVersion: v1 kind: Secret metadata: name: myapp-secrets stringData: DATABASE_URL: postgres://app:S3cr3t@db.prod.internal:5432/app payment_api_key: pk_live_xxx --- # deployment.yaml (trích) spec: template: spec: containers: - name: server image: registry.example.com/myapp:9f8e7d6 envFrom: - configMapRef: { name: myapp-config } env: - name: DATABASE_URL valueFrom: secretKeyRef: { name: myapp-secrets, key: DATABASE_URL } # Secret dạng FILE cho key nhạy cảm nhất: - name: PAYMENT_API_KEY_FILE value: /var/run/secrets/app/payment_api_key volumeMounts: - name: app-secrets mountPath: /var/run/secrets/app readOnly: true volumes: - name: app-secrets secret: secretName: myapp-secrets items: [{ key: payment_api_key, path: payment_api_key }] Vì sao secret quan trọng nên mount file thay vì env var? Env var dễ rò rỉ theo các đường mà bạn không kiểm soát: kubectl describe pod (với env từ literal), crash dump, panic handler in os.Environ(), process con thừa hưởng toàn bộ env, một số framework in env khi khởi động debug. File mount có quyền đọc rõ ràng, không thừa hưởng, và cập nhật được khi secret rotate (kubelet sync lại file mà không cần restart pod — nếu app hỗ trợ reload).\n5. Trade-off — Env var vs Config file vs Secret manager Tiêu chí Env var Config file (mount) Secret manager (Vault, ASM) Đơn giản, phổ cập ✅ mọi ngôn ngữ/OS ✅ ❌ thêm hạ tầng Cấu trúc phức tạp (nested, list) ❌ chỉ chuỗi phẳng ✅ YAML/JSON ✅ Rủi ro rò rỉ Trung bình (kế thừa, /proc, log) Thấp hơn Thấp nhất + audit log Rotate không restart ❌ env bất biến sau khi process start ✅ (file được sync lại) ✅ (lease, TTL) Audit “ai đọc lúc nào” ❌ ❌ ✅ Phù hợp Config thường, non-secret Secret mức K8s, config phức tạp Secret ở tổ chức có yêu cầu cao Khuyến nghị thực dụng (2026): env var cho config không nhạy cảm (đúng tinh thần F3 nguyên bản), mounted file hoặc secret manager cho secret (cập nhật hiện đại của F3 — nguyên tắc “tách khỏi code” giữ nguyên, cơ chế nâng cấp). Đỉnh cao là loại bỏ hẳn secret bằng workload identity: pod nhận IAM role (IRSA trên EKS, Workload Identity trên GKE) → gọi AWS/GCP không cần key nào tồn tại để mà lộ.\nTrade-off còn lại: fail-fast lúc start vs reload nóng. Đọc một lần lúc start đơn giản và dễ suy luận (config của process là bất biến — cùng triết lý immutable); reload nóng (feature flags, log level) tiện vận hành nhưng thêm độ phức tạp đồng bộ. Khuyến nghị: mặc định bất biến; thứ cần đổi thường xuyên lúc runtime → tách sang hệ feature-flag chuyên dụng, đừng biến toàn bộ config thành mutable.\n6. Best Practices Một bảng config duy nhất (struct Config), validate đủ, fail fast; .env.example làm tài liệu. Không log secret; cân nhắc kiểu redacted string (String() trả \"[REDACTED]\") cho trường nhạy cảm. Secret không vào Git dưới mọi hình thức — kể cả repo private; bật secret scanning (gitleaks, GitHub secret scanning) trong CI. Rotate được là thiết kế, không phải may mắn: app đọc secret qua file/manager, hạ tầng rotate định kỳ. Phân biệt 3 loại giá trị: hằng số nghiệp vụ → code; thay đổi theo deploy → config; thay đổi lúc runtime theo quyết định business → feature flag. ConfigMap/Secret đổi tên theo nội dung (hash suffix) hoặc dùng tool như Reloader để pod tự restart khi config đổi — tránh trạng thái “ConfigMap đã đổi nhưng pod cũ vẫn chạy config cũ” âm thầm. 7. Anti-patterns config_prod.go, config_staging.go compile theo build tag — mỗi môi trường một binary: phá F5, thứ chạy prod không phải thứ đã test. if os.Getenv(\"ENV\") == \"production\" {...} rải trong business logic — config profile lẻn vào code; hành vi app phân nhánh theo tên môi trường là nguồn bug “chỉ xảy ra trên prod” kinh điển. Secret trong Git — kể cả “tạm thời”, kể cả base64 (không phải mã hóa!), kể cả trong values.yaml của Helm chart nội bộ. os.Getenv rải rác khắp nơi, đọc lazy lúc request — thiếu config phát nổ lúc runtime thay vì lúc start; không ai liệt kê nổi app cần biến gì. Default “an toàn giả”: envDefault trỏ vào DB dev cho biến bắt buộc — quên set trên prod là app chạy được nhưng ghi vào DB dev. Thiếu thì phải chết, không được đoán. In toàn bộ env ra log lúc khởi động để “dễ debug” — dump secret vào hệ thống log, nơi quyền đọc rộng hơn quyền đọc secret rất nhiều. 8. Khi nào KHÔNG cần áp dụng đầy đủ CLI tool cho end-user: config file trong ~/.config/ là UX đúng; env var chỉ là override. Ứng dụng desktop/mobile: config đi cùng bản phân phối; khái niệm “deploy environment” mờ. Script một lần: hardcode một đường dẫn có thể chấp nhận — nhưng hardcode credential thì không bao giờ, vì script hay bị copy/commit hơn ta tưởng. App nội bộ đơn giản có thể dùng config file thay vì env — miễn giữ hai nguyên tắc bất khả xâm phạm: file config nằm ngoài Git nếu chứa secret, và không build riêng binary theo môi trường. Tóm tắt Config = những gì thay đổi giữa các deploy; hằng số nghiệp vụ không phải config. Bài test: “open-source repo ngay bây giờ có lộ credential không?” Mục tiêu bất biến: một artifact ⊗ n bộ config lúc run. Cơ chế hiện đại: env var cho non-secret, mounted file / secret manager / workload identity cho secret. Trong Go: đọc env một lần lúc start vào struct có validate, fail fast; cấm os.Getenv rải rác; không log secret. Config là biến độc lập, không phải profile — app không nên biết “mình đang ở môi trường nào”. ","wordCount":"2035","inLanguage":"en","datePublished":"2026-07-10T09:00:00+07:00","dateModified":"2026-07-10T09:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/twelve-factor/08-factor-03-config/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/twelve-factor/>The Twelve-Factor App</a></div><h1 class="post-title entry-hint-parent">Chương 8 — Factor 3: Config</h1><div class=post-meta><span title='2026-07-10 09:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;10 min</div></header><div class=post-content><blockquote><p><em>&ldquo;Store config in the environment&rdquo;</em> — Lưu config trong môi trường (triển khai).</p><p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Configurable</strong> | Chương trước: <a href=/series/twelve-factor/07-factor-02-dependencies/>Dependencies</a> | Chương sau: <a href=/series/twelve-factor/09-factor-04-backing-services/>Backing Services</a></p></blockquote><p>Đây là factor được trích dẫn nhiều nhất, bị hiểu máy móc nhiều nhất, và có nhiều cập nhật hiện đại nhất. Đọc kỹ mục Trade-off.</p><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p><strong>Config là gì?</strong> Định nghĩa của 12-Factor rất chính xác: config là <strong>mọi thứ thay đổi giữa các deploy</strong> (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port).</p><p><strong>Config KHÔNG phải là</strong>: cấu hình nội tại của app không đổi theo môi trường (routing, DI wiring, hằng số nghiệp vụ như &ldquo;phí ship 25k&rdquo;) — những thứ đó là code, cứ để trong code.</p><p>Bài toán: cùng một artifact (Factor 5) phải chạy được ở mọi môi trường. Nếu config nằm trong code:</p><ul><li>Đổi môi trường = sửa code + build lại → mỗi môi trường một binary khác nhau → thứ bạn test không phải thứ bạn chạy.</li><li><strong>Secret nằm trong Git</strong> — sự cố bảo mật phổ biến bậc nhất ngành. GitGuardian báo cáo ~23.8 triệu secret mới bị lộ trên GitHub công khai chỉ trong năm 2024. Một credential AWS lộ trong commit có thể bị bot quét và khai thác trong <strong>vài phút</strong>.</li><li>Git history là vĩnh viễn: xóa secret ở commit sau không thu hồi được nó khỏi lịch sử — buộc phải rotate.</li></ul><p>Bài kiểm tra gốc của 12factor.net vẫn là chuẩn vàng: <strong>&ldquo;Bạn có thể open-source codebase ngay bây giờ mà không lộ bất kỳ credential nào không?&rdquo;</strong></p><h2 id=2-tại-sao-nguyên-lý-này-tồn-tại>2. Tại sao nguyên lý này tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-nguyên-lý-này-tồn-tại>#</a></h2><ul><li><strong>Deployment</strong>: một artifact → n môi trường chỉ khả thi khi khác biệt được bơm từ ngoài vào lúc chạy.</li><li><strong>Security</strong>: tách secret khỏi code là ranh giới bảo mật căn bản; quyền đọc code ≠ quyền truy cập production.</li><li><strong>Operational</strong>: đổi endpoint/log level phải là thao tác vận hành (nhanh, không cần build), không phải thao tác phát triển.</li><li><strong>Business/Compliance</strong>: SOC2, PCI-DSS đều yêu cầu kiểm soát và audit truy cập secret — bất khả thi nếu secret rải trong source.</li></ul><h2 id=3-bản-chất>3. Bản chất<a hidden class=anchor aria-hidden=true href=#3-bản-chất>#</a></h2><p>Tách một phép nhân ra khỏi phép cộng:</p><pre tabindex=0><code>  KHÔNG tách config:                       Tách config:
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/twelve-factor/">The Twelve-Factor App</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 8 — Factor 3: Config
+    </h1>
+    <div class="post-meta"><span title='2026-07-10 09:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p><em>&ldquo;Store config in the environment&rdquo;</em> — Lưu config trong môi trường (triển khai).</p>
+<p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Configurable</strong> | Chương trước: <a href="/series/twelve-factor/07-factor-02-dependencies/">Dependencies</a> | Chương sau: <a href="/series/twelve-factor/09-factor-04-backing-services/">Backing Services</a></p></blockquote>
+<p>Đây là factor được trích dẫn nhiều nhất, bị hiểu máy móc nhiều nhất, và có nhiều cập nhật hiện đại nhất. Đọc kỹ mục Trade-off.</p>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p><strong>Config là gì?</strong> Định nghĩa của 12-Factor rất chính xác: config là <strong>mọi thứ thay đổi giữa các deploy</strong> (dev/staging/production): URL và credential của database, cache, message broker; credential của dịch vụ ngoài (S3, payment gateway); giá trị theo môi trường (hostname, log level, port).</p>
+<p><strong>Config KHÔNG phải là</strong>: cấu hình nội tại của app không đổi theo môi trường (routing, DI wiring, hằng số nghiệp vụ như &ldquo;phí ship 25k&rdquo;) — những thứ đó là code, cứ để trong code.</p>
+<p>Bài toán: cùng một artifact (Factor 5) phải chạy được ở mọi môi trường. Nếu config nằm trong code:</p>
+<ul>
+<li>Đổi môi trường = sửa code + build lại → mỗi môi trường một binary khác nhau → thứ bạn test không phải thứ bạn chạy.</li>
+<li><strong>Secret nằm trong Git</strong> — sự cố bảo mật phổ biến bậc nhất ngành. GitGuardian báo cáo ~23.8 triệu secret mới bị lộ trên GitHub công khai chỉ trong năm 2024. Một credential AWS lộ trong commit có thể bị bot quét và khai thác trong <strong>vài phút</strong>.</li>
+<li>Git history là vĩnh viễn: xóa secret ở commit sau không thu hồi được nó khỏi lịch sử — buộc phải rotate.</li>
+</ul>
+<p>Bài kiểm tra gốc của 12factor.net vẫn là chuẩn vàng: <strong>&ldquo;Bạn có thể open-source codebase ngay bây giờ mà không lộ bất kỳ credential nào không?&rdquo;</strong></p>
+<h2 id="2-tại-sao-nguyên-lý-này-tồn-tại">2. Tại sao nguyên lý này tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-nguyên-lý-này-tồn-tại">#</a></h2>
+<ul>
+<li><strong>Deployment</strong>: một artifact → n môi trường chỉ khả thi khi khác biệt được bơm từ ngoài vào lúc chạy.</li>
+<li><strong>Security</strong>: tách secret khỏi code là ranh giới bảo mật căn bản; quyền đọc code ≠ quyền truy cập production.</li>
+<li><strong>Operational</strong>: đổi endpoint/log level phải là thao tác vận hành (nhanh, không cần build), không phải thao tác phát triển.</li>
+<li><strong>Business/Compliance</strong>: SOC2, PCI-DSS đều yêu cầu kiểm soát và audit truy cập secret — bất khả thi nếu secret rải trong source.</li>
+</ul>
+<h2 id="3-bản-chất">3. Bản chất<a hidden class="anchor" aria-hidden="true" href="#3-bản-chất">#</a></h2>
+<p>Tách một phép nhân ra khỏi phép cộng:</p>
+<pre tabindex="0"><code>  KHÔNG tách config:                       Tách config:
   n môi trường × m phiên bản               m artifact  +  n bộ config
   = n × m tổ hợp build                     artifact ⊗ config lúc RUN
   (mỗi tổ hợp một binary riêng,            (một binary duy nhất được test
-   không cái nào được test đầy đủ)          rồi chạy khắp nơi)</code></pre><p>Chú ý mệnh đề quan trọng của tài liệu gốc thường bị bỏ qua: config nên là các <strong>biến độc lập (granular)</strong>, không phải &ldquo;profile&rdquo; (<code>ENV=production</code> rồi app tự tra cứu bó config theo tên). Profile tạo ra tổ hợp bùng nổ (&ldquo;staging nhưng DB của dev&rdquo;, &ldquo;prod nhưng log debug&rdquo;) và các nhánh <code>if env == "production"</code> trong code — chính là config lẻn ngược vào code. App chỉ nên biết <code>DATABASE_URL</code>, không nên biết &ldquo;mình đang ở staging&rdquo;.</p><p><strong>Điều gì xảy ra nếu vi phạm?</strong> Nhẹ: mỗi lần đổi config là một lần build + deploy đầy đủ, chu kỳ vận hành chậm đi hàng chục lần. Nặng: secret vào Git → rotate toàn bộ credential, điều tra truy cập, có thể là sự cố công khai. Rất nặng: &ldquo;một binary cho staging, một binary cho prod&rdquo; → bug chỉ có ở binary prod, mọi tầng test mất giá trị.</p><h2 id=4-cách-áp-dụng-với-go>4. Cách áp dụng với Go<a hidden class=anchor aria-hidden=true href=#4-cách-áp-dụng-với-go>#</a></h2><h3 id=41-load-config-từ-environment--fail-fast-có-kiểu-có-validate>4.1. Load config từ environment — fail fast, có kiểu, có validate<a hidden class=anchor aria-hidden=true href=#41-load-config-từ-environment--fail-fast-có-kiểu-có-validate>#</a></h3><p>Nguyên tắc: đọc <strong>một lần lúc khởi động</strong>, validate ngay, crash ngay nếu thiếu — đừng để thiếu config lộ ra ở request thứ 1000 lúc 2h sáng.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/config/config.go</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>config</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;time&#34;</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;github.com/caarlos0/env/v11&#34;</span>
-</span></span><span style=display:flex><span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Config</span> <span style=color:#66d9ef>struct</span> {
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// Server</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Port</span>            <span style=color:#66d9ef>int</span>           <span style=color:#e6db74>`env:&#34;PORT&#34; envDefault:&#34;8080&#34;`</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>ShutdownTimeout</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Duration</span> <span style=color:#e6db74>`env:&#34;SHUTDOWN_TIMEOUT&#34; envDefault:&#34;15s&#34;`</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// Backing services (F4): mỗi resource một URL — đổi resource không đổi code</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>DatabaseURL</span> <span style=color:#66d9ef>string</span> <span style=color:#e6db74>`env:&#34;DATABASE_URL,required&#34;`</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>RedisURL</span>    <span style=color:#66d9ef>string</span> <span style=color:#e6db74>`env:&#34;REDIS_URL,required&#34;`</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// Secret: hỗ trợ cả file (K8s mounted secret) — xem 4.3</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>PaymentAPIKey</span> <span style=color:#66d9ef>string</span> <span style=color:#e6db74>`env:&#34;PAYMENT_API_KEY,required,file,unset&#34;`</span>
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// `file`  → giá trị env var là ĐƯỜNG DẪN, thư viện đọc nội dung file</span>
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// `unset` → xóa env var sau khi đọc, giảm rủi ro rò rỉ qua /proc, child process</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// Observability</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>LogLevel</span> <span style=color:#66d9ef>string</span> <span style=color:#e6db74>`env:&#34;LOG_LEVEL&#34; envDefault:&#34;info&#34;`</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Load</span>() (<span style=color:#f92672>*</span><span style=color:#a6e22e>Config</span>, <span style=color:#66d9ef>error</span>) {
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>cfg</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Config</span>{}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>env</span>.<span style=color:#a6e22e>Parse</span>(<span style=color:#a6e22e>cfg</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;parse config: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>cfg</span>.<span style=color:#a6e22e>validate</span>(); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;invalid config: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>cfg</span>, <span style=color:#66d9ef>nil</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>c</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Config</span>) <span style=color:#a6e22e>validate</span>() <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>Port</span> &lt; <span style=color:#ae81ff>1</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>Port</span> &gt; <span style=color:#ae81ff>65535</span> {
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;PORT %d ngoài khoảng hợp lệ&#34;</span>, <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>Port</span>)
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>switch</span> <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>LogLevel</span> {
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#34;debug&#34;</span>, <span style=color:#e6db74>&#34;info&#34;</span>, <span style=color:#e6db74>&#34;warn&#34;</span>, <span style=color:#e6db74>&#34;error&#34;</span>:
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>default</span>:
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;LOG_LEVEL %q không hợp lệ&#34;</span>, <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>LogLevel</span>)
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// cmd/server/main.go (trích)</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>cfg</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>config</span>.<span style=color:#a6e22e>Load</span>()
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>		<span style=color:#75715e>// Fail fast: chết ngay lúc khởi động với thông điệp rõ ràng.</span>
-</span></span><span style=display:flex><span>		<span style=color:#75715e>// K8s sẽ thấy pod crash → không đưa traffic vào (F9 + readiness).</span>
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;config error: %v&#34;</span>, <span style=color:#a6e22e>err</span>)
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// LƯU Ý: không bao giờ log giá trị config chứa secret.</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>Info</span>(<span style=color:#e6db74>&#34;config loaded&#34;</span>, <span style=color:#e6db74>&#34;port&#34;</span>, <span style=color:#a6e22e>cfg</span>.<span style=color:#a6e22e>Port</span>, <span style=color:#e6db74>&#34;log_level&#34;</span>, <span style=color:#a6e22e>cfg</span>.<span style=color:#a6e22e>LogLevel</span>)
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// ...</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Hai quy tắc code đi kèm: <strong>(1)</strong> chỉ đọc <code>os.Getenv</code> ở tầng config lúc khởi động — cấm rải <code>os.Getenv</code> khắp codebase (thành dependency ngầm không ai liệt kê nổi); <strong>(2)</strong> truyền <code>*Config</code> (hoặc các trường cần thiết) xuống qua constructor — testable, tường minh.</p><h3 id=42-docker--docker-compose>4.2. Docker & docker-compose<a hidden class=anchor aria-hidden=true href=#42-docker--docker-compose>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Chạy local — cùng image với production, khác mỗi env</span>
-</span></span><span style=display:flex><span>docker run --rm -p 8080:8080 <span style=color:#ae81ff>\
-</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  -e DATABASE_URL<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;postgres://app:dev@host.docker.internal:5432/app?sslmode=disable&#34;</span> <span style=color:#ae81ff>\
-</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  -e REDIS_URL<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;redis://host.docker.internal:6379/0&#34;</span> <span style=color:#ae81ff>\
-</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  -e PAYMENT_API_KEY_FILE<span style=color:#f92672>=</span>/run/secrets/payment_key <span style=color:#ae81ff>\
-</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  registry.example.com/myapp:9f8e7d6
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># docker-compose.yml — môi trường dev</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>services</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>app</span>:
-</span></span><span style=display:flex><span>    <span style=color:#f92672>build</span>: <span style=color:#ae81ff>.</span>
-</span></span><span style=display:flex><span>    <span style=color:#f92672>ports</span>: [<span style=color:#e6db74>&#34;8080:8080&#34;</span>]
-</span></span><span style=display:flex><span>    <span style=color:#f92672>environment</span>:
-</span></span><span style=display:flex><span>      <span style=color:#f92672>DATABASE_URL</span>: <span style=color:#ae81ff>postgres://app:dev@db:5432/app?sslmode=disable</span>
-</span></span><span style=display:flex><span>      <span style=color:#f92672>REDIS_URL</span>: <span style=color:#ae81ff>redis://redis:6379/0</span>
-</span></span><span style=display:flex><span>      <span style=color:#f92672>LOG_LEVEL</span>: <span style=color:#ae81ff>debug</span>
-</span></span><span style=display:flex><span>    <span style=color:#f92672>env_file</span>: <span style=color:#ae81ff>.env.local       </span> <span style=color:#75715e># KHÔNG commit; commit file .env.example làm mẫu</span>
-</span></span><span style=display:flex><span>    <span style=color:#f92672>depends_on</span>: [<span style=color:#ae81ff>db, redis]</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>db</span>:
-</span></span><span style=display:flex><span>    <span style=color:#f92672>image</span>: <span style=color:#ae81ff>postgres:17-alpine</span>
-</span></span><span style=display:flex><span>    <span style=color:#f92672>environment</span>:
-</span></span><span style=display:flex><span>      <span style=color:#f92672>POSTGRES_USER</span>: <span style=color:#ae81ff>app</span>
-</span></span><span style=display:flex><span>      <span style=color:#f92672>POSTGRES_PASSWORD</span>: <span style=color:#ae81ff>dev</span>
-</span></span><span style=display:flex><span>      <span style=color:#f92672>POSTGRES_DB</span>: <span style=color:#ae81ff>app</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>redis</span>:
-</span></span><span style=display:flex><span>    <span style=color:#f92672>image</span>: <span style=color:#ae81ff>redis:7-alpine</span>
-</span></span></code></pre></div><p><code>.gitignore</code> phải có <code>.env*</code> (trừ <code>.env.example</code>). File <code>.env.example</code> liệt kê <strong>tên</strong> mọi biến với giá trị giả — nó chính là tài liệu sống của config.</p><h3 id=43-kubernetes--configmap-cho-config-thường-secret-mount-file-cho-secret>4.3. Kubernetes — ConfigMap cho config thường, Secret mount file cho secret<a hidden class=anchor aria-hidden=true href=#43-kubernetes--configmap-cho-config-thường-secret-mount-file-cho-secret>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># configmap.yaml — config KHÔNG nhạy cảm</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>kind</span>: <span style=color:#ae81ff>ConfigMap</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>metadata</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-config</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>data</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>LOG_LEVEL</span>: <span style=color:#e6db74>&#34;info&#34;</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>SHUTDOWN_TIMEOUT</span>: <span style=color:#e6db74>&#34;15s&#34;</span>
-</span></span><span style=display:flex><span>---
-</span></span><span style=display:flex><span><span style=color:#75715e># secret.yaml — thực tế nên tạo bằng External Secrets Operator / SealedSecrets,</span>
-</span></span><span style=display:flex><span><span style=color:#75715e># KHÔNG commit secret thô vào Git (xem chương 21 - GitOps)</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Secret</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>metadata</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-secrets</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>stringData</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>DATABASE_URL</span>: <span style=color:#ae81ff>postgres://app:S3cr3t@db.prod.internal:5432/app</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>payment_api_key</span>: <span style=color:#ae81ff>pk_live_xxx</span>
-</span></span><span style=display:flex><span>---
-</span></span><span style=display:flex><span><span style=color:#75715e># deployment.yaml (trích)</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>template</span>:
-</span></span><span style=display:flex><span>    <span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>      <span style=color:#f92672>containers</span>:
-</span></span><span style=display:flex><span>        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>server</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>registry.example.com/myapp:9f8e7d6</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>envFrom</span>:
-</span></span><span style=display:flex><span>            - <span style=color:#f92672>configMapRef</span>: { <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-config }</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>env</span>:
-</span></span><span style=display:flex><span>            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>DATABASE_URL</span>
-</span></span><span style=display:flex><span>              <span style=color:#f92672>valueFrom</span>:
-</span></span><span style=display:flex><span>                <span style=color:#f92672>secretKeyRef</span>: { <span style=color:#f92672>name: myapp-secrets, key</span>: <span style=color:#ae81ff>DATABASE_URL }</span>
-</span></span><span style=display:flex><span>            <span style=color:#75715e># Secret dạng FILE cho key nhạy cảm nhất:</span>
-</span></span><span style=display:flex><span>            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>PAYMENT_API_KEY_FILE</span>
-</span></span><span style=display:flex><span>              <span style=color:#f92672>value</span>: <span style=color:#ae81ff>/var/run/secrets/app/payment_api_key</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>volumeMounts</span>:
-</span></span><span style=display:flex><span>            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>app-secrets</span>
-</span></span><span style=display:flex><span>              <span style=color:#f92672>mountPath</span>: <span style=color:#ae81ff>/var/run/secrets/app</span>
-</span></span><span style=display:flex><span>              <span style=color:#f92672>readOnly</span>: <span style=color:#66d9ef>true</span>
-</span></span><span style=display:flex><span>      <span style=color:#f92672>volumes</span>:
-</span></span><span style=display:flex><span>        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>app-secrets</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>secret</span>:
-</span></span><span style=display:flex><span>            <span style=color:#f92672>secretName</span>: <span style=color:#ae81ff>myapp-secrets</span>
-</span></span><span style=display:flex><span>            <span style=color:#f92672>items</span>: [{ <span style=color:#f92672>key: payment_api_key, path</span>: <span style=color:#ae81ff>payment_api_key }]</span>
-</span></span></code></pre></div><p>Vì sao secret quan trọng nên mount <strong>file</strong> thay vì env var? Env var dễ rò rỉ theo các đường mà bạn không kiểm soát: <code>kubectl describe pod</code> (với env từ literal), crash dump, panic handler in <code>os.Environ()</code>, process con thừa hưởng toàn bộ env, một số framework in env khi khởi động debug. File mount có quyền đọc rõ ràng, không thừa hưởng, và cập nhật được khi secret rotate (kubelet sync lại file mà không cần restart pod — nếu app hỗ trợ reload).</p><h2 id=5-trade-off--env-var-vs-config-file-vs-secret-manager>5. Trade-off — Env var vs Config file vs Secret manager<a hidden class=anchor aria-hidden=true href=#5-trade-off--env-var-vs-config-file-vs-secret-manager>#</a></h2><table><thead><tr><th>Tiêu chí</th><th>Env var</th><th>Config file (mount)</th><th>Secret manager (Vault, ASM)</th></tr></thead><tbody><tr><td>Đơn giản, phổ cập</td><td>✅ mọi ngôn ngữ/OS</td><td>✅</td><td>❌ thêm hạ tầng</td></tr><tr><td>Cấu trúc phức tạp (nested, list)</td><td>❌ chỉ chuỗi phẳng</td><td>✅ YAML/JSON</td><td>✅</td></tr><tr><td>Rủi ro rò rỉ</td><td>Trung bình (kế thừa, /proc, log)</td><td>Thấp hơn</td><td>Thấp nhất + audit log</td></tr><tr><td>Rotate không restart</td><td>❌ env bất biến sau khi process start</td><td>✅ (file được sync lại)</td><td>✅ (lease, TTL)</td></tr><tr><td>Audit &ldquo;ai đọc lúc nào&rdquo;</td><td>❌</td><td>❌</td><td>✅</td></tr><tr><td>Phù hợp</td><td>Config thường, non-secret</td><td>Secret mức K8s, config phức tạp</td><td>Secret ở tổ chức có yêu cầu cao</td></tr></tbody></table><p>Khuyến nghị thực dụng (2026): <strong>env var cho config không nhạy cảm</strong> (đúng tinh thần F3 nguyên bản), <strong>mounted file hoặc secret manager cho secret</strong> (cập nhật hiện đại của F3 — nguyên tắc &ldquo;tách khỏi code&rdquo; giữ nguyên, cơ chế nâng cấp). Đỉnh cao là <strong>loại bỏ hẳn secret</strong> bằng workload identity: pod nhận IAM role (IRSA trên EKS, Workload Identity trên GKE) → gọi AWS/GCP không cần key nào tồn tại để mà lộ.</p><p>Trade-off còn lại: <strong>fail-fast lúc start vs reload nóng</strong>. Đọc một lần lúc start đơn giản và dễ suy luận (config của process là bất biến — cùng triết lý immutable); reload nóng (feature flags, log level) tiện vận hành nhưng thêm độ phức tạp đồng bộ. Khuyến nghị: mặc định bất biến; thứ cần đổi thường xuyên lúc runtime → tách sang hệ feature-flag chuyên dụng, đừng biến toàn bộ config thành mutable.</p><h2 id=6-best-practices>6. Best Practices<a hidden class=anchor aria-hidden=true href=#6-best-practices>#</a></h2><ul><li>Một bảng config duy nhất (struct <code>Config</code>), validate đủ, fail fast; <code>.env.example</code> làm tài liệu.</li><li>Không log secret; cân nhắc kiểu <code>redacted string</code> (String() trả <code>"[REDACTED]"</code>) cho trường nhạy cảm.</li><li>Secret không vào Git dưới mọi hình thức — kể cả repo private; bật secret scanning (gitleaks, GitHub secret scanning) trong CI.</li><li>Rotate được là thiết kế, không phải may mắn: app đọc secret qua file/manager, hạ tầng rotate định kỳ.</li><li>Phân biệt 3 loại giá trị: hằng số nghiệp vụ → code; thay đổi theo deploy → config; thay đổi lúc runtime theo quyết định business → feature flag.</li><li>ConfigMap/Secret đổi tên theo nội dung (hash suffix) hoặc dùng tool như Reloader để pod tự restart khi config đổi — tránh trạng thái &ldquo;ConfigMap đã đổi nhưng pod cũ vẫn chạy config cũ&rdquo; âm thầm.</li></ul><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li><strong><code>config_prod.go</code>, <code>config_staging.go</code> compile theo build tag</strong> — mỗi môi trường một binary: phá F5, thứ chạy prod không phải thứ đã test.</li><li><strong><code>if os.Getenv("ENV") == "production" {...}</code> rải trong business logic</strong> — config profile lẻn vào code; hành vi app phân nhánh theo tên môi trường là nguồn bug &ldquo;chỉ xảy ra trên prod&rdquo; kinh điển.</li><li><strong>Secret trong Git</strong> — kể cả &ldquo;tạm thời&rdquo;, kể cả base64 (không phải mã hóa!), kể cả trong <code>values.yaml</code> của Helm chart nội bộ.</li><li><strong><code>os.Getenv</code> rải rác khắp nơi, đọc lazy lúc request</strong> — thiếu config phát nổ lúc runtime thay vì lúc start; không ai liệt kê nổi app cần biến gì.</li><li><strong>Default &ldquo;an toàn giả&rdquo;</strong>: <code>envDefault</code> trỏ vào DB dev cho biến bắt buộc — quên set trên prod là app <em>chạy được</em> nhưng ghi vào DB dev. Thiếu thì phải chết, không được đoán.</li><li><strong>In toàn bộ env ra log lúc khởi động</strong> để &ldquo;dễ debug&rdquo; — dump secret vào hệ thống log, nơi quyền đọc rộng hơn quyền đọc secret rất nhiều.</li></ul><h2 id=8-khi-nào-không-cần-áp-dụng-đầy-đủ>8. Khi nào KHÔNG cần áp dụng đầy đủ<a hidden class=anchor aria-hidden=true href=#8-khi-nào-không-cần-áp-dụng-đầy-đủ>#</a></h2><ul><li><strong>CLI tool cho end-user</strong>: config file trong <code>~/.config/</code> là UX đúng; env var chỉ là override.</li><li><strong>Ứng dụng desktop/mobile</strong>: config đi cùng bản phân phối; khái niệm &ldquo;deploy environment&rdquo; mờ.</li><li><strong>Script một lần</strong>: hardcode một đường dẫn có thể chấp nhận — nhưng hardcode <em>credential</em> thì không bao giờ, vì script hay bị copy/commit hơn ta tưởng.</li><li>App nội bộ đơn giản có thể dùng config file thay vì env — miễn giữ hai nguyên tắc bất khả xâm phạm: <strong>file config nằm ngoài Git nếu chứa secret</strong>, và <strong>không build riêng binary theo môi trường</strong>.</li></ul><hr><h2 id=tóm-tắt>Tóm tắt<a hidden class=anchor aria-hidden=true href=#tóm-tắt>#</a></h2><ul><li>Config = những gì <strong>thay đổi giữa các deploy</strong>; hằng số nghiệp vụ không phải config. Bài test: <em>&ldquo;open-source repo ngay bây giờ có lộ credential không?&rdquo;</em></li><li>Mục tiêu bất biến: một artifact ⊗ n bộ config lúc run. Cơ chế hiện đại: env var cho non-secret, mounted file / secret manager / workload identity cho secret.</li><li>Trong Go: đọc env <strong>một lần</strong> lúc start vào struct có validate, fail fast; cấm <code>os.Getenv</code> rải rác; không log secret.</li><li>Config là biến độc lập, không phải profile — app không nên biết &ldquo;mình đang ở môi trường nào&rdquo;.</li></ul></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/twelve-factor/>Twelve-Factor</a></li><li><a href=https://thanhhv.github.io/tags/cloud-native/>Cloud-Native</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/twelve-factor/07-factor-02-dependencies/><span class=title>« Prev</span><br><span>Chương 7 — Factor 2: Dependencies</span>
-</a><a class=next href=https://thanhhv.github.io/series/twelve-factor/09-factor-04-backing-services/><span class=title>Next »</span><br><span>Chương 9 — Factor 4: Backing Services</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f&amp;title=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;summary=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f&title=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f08-factor-03-config%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+   không cái nào được test đầy đủ)          rồi chạy khắp nơi)</code></pre><p>Chú ý mệnh đề quan trọng của tài liệu gốc thường bị bỏ qua: config nên là các <strong>biến độc lập (granular)</strong>, không phải &ldquo;profile&rdquo; (<code>ENV=production</code> rồi app tự tra cứu bó config theo tên). Profile tạo ra tổ hợp bùng nổ (&ldquo;staging nhưng DB của dev&rdquo;, &ldquo;prod nhưng log debug&rdquo;) và các nhánh <code>if env == &quot;production&quot;</code> trong code — chính là config lẻn ngược vào code. App chỉ nên biết <code>DATABASE_URL</code>, không nên biết &ldquo;mình đang ở staging&rdquo;.</p>
+<p><strong>Điều gì xảy ra nếu vi phạm?</strong> Nhẹ: mỗi lần đổi config là một lần build + deploy đầy đủ, chu kỳ vận hành chậm đi hàng chục lần. Nặng: secret vào Git → rotate toàn bộ credential, điều tra truy cập, có thể là sự cố công khai. Rất nặng: &ldquo;một binary cho staging, một binary cho prod&rdquo; → bug chỉ có ở binary prod, mọi tầng test mất giá trị.</p>
+<h2 id="4-cách-áp-dụng-với-go">4. Cách áp dụng với Go<a hidden class="anchor" aria-hidden="true" href="#4-cách-áp-dụng-với-go">#</a></h2>
+<h3 id="41-load-config-từ-environment--fail-fast-có-kiểu-có-validate">4.1. Load config từ environment — fail fast, có kiểu, có validate<a hidden class="anchor" aria-hidden="true" href="#41-load-config-từ-environment--fail-fast-có-kiểu-có-validate">#</a></h3>
+<p>Nguyên tắc: đọc <strong>một lần lúc khởi động</strong>, validate ngay, crash ngay nếu thiếu — đừng để thiếu config lộ ra ở request thứ 1000 lúc 2h sáng.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/config/config.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">config</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/caarlos0/env/v11&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Config</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Server</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Port</span>            <span style="color:#66d9ef">int</span>           <span style="color:#e6db74">`env:&#34;PORT&#34; envDefault:&#34;8080&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ShutdownTimeout</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span> <span style="color:#e6db74">`env:&#34;SHUTDOWN_TIMEOUT&#34; envDefault:&#34;15s&#34;`</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Backing services (F4): mỗi resource một URL — đổi resource không đổi code</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">DatabaseURL</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`env:&#34;DATABASE_URL,required&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">RedisURL</span>    <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`env:&#34;REDIS_URL,required&#34;`</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Secret: hỗ trợ cả file (K8s mounted secret) — xem 4.3</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">PaymentAPIKey</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`env:&#34;PAYMENT_API_KEY,required,file,unset&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// `file`  → giá trị env var là ĐƯỜNG DẪN, thư viện đọc nội dung file</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// `unset` → xóa env var sau khi đọc, giảm rủi ro rò rỉ qua /proc, child process</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Observability</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">LogLevel</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`env:&#34;LOG_LEVEL&#34; envDefault:&#34;info&#34;`</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Load</span>() (<span style="color:#f92672">*</span><span style="color:#a6e22e">Config</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cfg</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Config</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">Parse</span>(<span style="color:#a6e22e">cfg</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;parse config: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cfg</span>.<span style="color:#a6e22e">validate</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;invalid config: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">cfg</span>, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Config</span>) <span style="color:#a6e22e">validate</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Port</span> &lt; <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Port</span> &gt; <span style="color:#ae81ff">65535</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;PORT %d ngoài khoảng hợp lệ&#34;</span>, <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Port</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">LogLevel</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;debug&#34;</span>, <span style="color:#e6db74">&#34;info&#34;</span>, <span style="color:#e6db74">&#34;warn&#34;</span>, <span style="color:#e6db74">&#34;error&#34;</span>:
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;LOG_LEVEL %q không hợp lệ&#34;</span>, <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">LogLevel</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// cmd/server/main.go (trích)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cfg</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">Load</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Fail fast: chết ngay lúc khởi động với thông điệp rõ ràng.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// K8s sẽ thấy pod crash → không đưa traffic vào (F9 + readiness).</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;config error: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// LƯU Ý: không bao giờ log giá trị config chứa secret.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;config loaded&#34;</span>, <span style="color:#e6db74">&#34;port&#34;</span>, <span style="color:#a6e22e">cfg</span>.<span style="color:#a6e22e">Port</span>, <span style="color:#e6db74">&#34;log_level&#34;</span>, <span style="color:#a6e22e">cfg</span>.<span style="color:#a6e22e">LogLevel</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Hai quy tắc code đi kèm: <strong>(1)</strong> chỉ đọc <code>os.Getenv</code> ở tầng config lúc khởi động — cấm rải <code>os.Getenv</code> khắp codebase (thành dependency ngầm không ai liệt kê nổi); <strong>(2)</strong> truyền <code>*Config</code> (hoặc các trường cần thiết) xuống qua constructor — testable, tường minh.</p>
+<h3 id="42-docker--docker-compose">4.2. Docker &amp; docker-compose<a hidden class="anchor" aria-hidden="true" href="#42-docker--docker-compose">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Chạy local — cùng image với production, khác mỗi env</span>
+</span></span><span style="display:flex;"><span>docker run --rm -p 8080:8080 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e DATABASE_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;postgres://app:dev@host.docker.internal:5432/app?sslmode=disable&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e REDIS_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;redis://host.docker.internal:6379/0&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e PAYMENT_API_KEY_FILE<span style="color:#f92672">=</span>/run/secrets/payment_key <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  registry.example.com/myapp:9f8e7d6
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># docker-compose.yml — môi trường dev</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">services</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">app</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">build</span>: <span style="color:#ae81ff">.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">ports</span>: [<span style="color:#e6db74">&#34;8080:8080&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">environment</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">DATABASE_URL</span>: <span style="color:#ae81ff">postgres://app:dev@db:5432/app?sslmode=disable</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">REDIS_URL</span>: <span style="color:#ae81ff">redis://redis:6379/0</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">LOG_LEVEL</span>: <span style="color:#ae81ff">debug</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">env_file</span>: <span style="color:#ae81ff">.env.local       </span> <span style="color:#75715e"># KHÔNG commit; commit file .env.example làm mẫu</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">depends_on</span>: [<span style="color:#ae81ff">db, redis]</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">db</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">postgres:17-alpine</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">environment</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">POSTGRES_USER</span>: <span style="color:#ae81ff">app</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">POSTGRES_PASSWORD</span>: <span style="color:#ae81ff">dev</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">POSTGRES_DB</span>: <span style="color:#ae81ff">app</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">redis</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">image</span>: <span style="color:#ae81ff">redis:7-alpine</span>
+</span></span></code></pre></div><p><code>.gitignore</code> phải có <code>.env*</code> (trừ <code>.env.example</code>). File <code>.env.example</code> liệt kê <strong>tên</strong> mọi biến với giá trị giả — nó chính là tài liệu sống của config.</p>
+<h3 id="43-kubernetes--configmap-cho-config-thường-secret-mount-file-cho-secret">4.3. Kubernetes — ConfigMap cho config thường, Secret mount file cho secret<a hidden class="anchor" aria-hidden="true" href="#43-kubernetes--configmap-cho-config-thường-secret-mount-file-cho-secret">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># configmap.yaml — config KHÔNG nhạy cảm</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">ConfigMap</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-config</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">data</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">LOG_LEVEL</span>: <span style="color:#e6db74">&#34;info&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">SHUTDOWN_TIMEOUT</span>: <span style="color:#e6db74">&#34;15s&#34;</span>
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># secret.yaml — thực tế nên tạo bằng External Secrets Operator / SealedSecrets,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># KHÔNG commit secret thô vào Git (xem chương 21 - GitOps)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Secret</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-secrets</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">stringData</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">DATABASE_URL</span>: <span style="color:#ae81ff">postgres://app:S3cr3t@db.prod.internal:5432/app</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">payment_api_key</span>: <span style="color:#ae81ff">pk_live_xxx</span>
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># deployment.yaml (trích)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">template</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">server</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.example.com/myapp:9f8e7d6</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">envFrom</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">configMapRef</span>: { <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-config }</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">env</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">DATABASE_URL</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">valueFrom</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">secretKeyRef</span>: { <span style="color:#f92672">name: myapp-secrets, key</span>: <span style="color:#ae81ff">DATABASE_URL }</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># Secret dạng FILE cho key nhạy cảm nhất:</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">PAYMENT_API_KEY_FILE</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">value</span>: <span style="color:#ae81ff">/var/run/secrets/app/payment_api_key</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">volumeMounts</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">app-secrets</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">mountPath</span>: <span style="color:#ae81ff">/var/run/secrets/app</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">readOnly</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">volumes</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">app-secrets</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">secret</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">secretName</span>: <span style="color:#ae81ff">myapp-secrets</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">items</span>: [{ <span style="color:#f92672">key: payment_api_key, path</span>: <span style="color:#ae81ff">payment_api_key }]</span>
+</span></span></code></pre></div><p>Vì sao secret quan trọng nên mount <strong>file</strong> thay vì env var? Env var dễ rò rỉ theo các đường mà bạn không kiểm soát: <code>kubectl describe pod</code> (với env từ literal), crash dump, panic handler in <code>os.Environ()</code>, process con thừa hưởng toàn bộ env, một số framework in env khi khởi động debug. File mount có quyền đọc rõ ràng, không thừa hưởng, và cập nhật được khi secret rotate (kubelet sync lại file mà không cần restart pod — nếu app hỗ trợ reload).</p>
+<h2 id="5-trade-off--env-var-vs-config-file-vs-secret-manager">5. Trade-off — Env var vs Config file vs Secret manager<a hidden class="anchor" aria-hidden="true" href="#5-trade-off--env-var-vs-config-file-vs-secret-manager">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Tiêu chí</th>
+          <th>Env var</th>
+          <th>Config file (mount)</th>
+          <th>Secret manager (Vault, ASM)</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Đơn giản, phổ cập</td>
+          <td>✅ mọi ngôn ngữ/OS</td>
+          <td>✅</td>
+          <td>❌ thêm hạ tầng</td>
+      </tr>
+      <tr>
+          <td>Cấu trúc phức tạp (nested, list)</td>
+          <td>❌ chỉ chuỗi phẳng</td>
+          <td>✅ YAML/JSON</td>
+          <td>✅</td>
+      </tr>
+      <tr>
+          <td>Rủi ro rò rỉ</td>
+          <td>Trung bình (kế thừa, /proc, log)</td>
+          <td>Thấp hơn</td>
+          <td>Thấp nhất + audit log</td>
+      </tr>
+      <tr>
+          <td>Rotate không restart</td>
+          <td>❌ env bất biến sau khi process start</td>
+          <td>✅ (file được sync lại)</td>
+          <td>✅ (lease, TTL)</td>
+      </tr>
+      <tr>
+          <td>Audit &ldquo;ai đọc lúc nào&rdquo;</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>✅</td>
+      </tr>
+      <tr>
+          <td>Phù hợp</td>
+          <td>Config thường, non-secret</td>
+          <td>Secret mức K8s, config phức tạp</td>
+          <td>Secret ở tổ chức có yêu cầu cao</td>
+      </tr>
+  </tbody>
+</table>
+<p>Khuyến nghị thực dụng (2026): <strong>env var cho config không nhạy cảm</strong> (đúng tinh thần F3 nguyên bản), <strong>mounted file hoặc secret manager cho secret</strong> (cập nhật hiện đại của F3 — nguyên tắc &ldquo;tách khỏi code&rdquo; giữ nguyên, cơ chế nâng cấp). Đỉnh cao là <strong>loại bỏ hẳn secret</strong> bằng workload identity: pod nhận IAM role (IRSA trên EKS, Workload Identity trên GKE) → gọi AWS/GCP không cần key nào tồn tại để mà lộ.</p>
+<p>Trade-off còn lại: <strong>fail-fast lúc start vs reload nóng</strong>. Đọc một lần lúc start đơn giản và dễ suy luận (config của process là bất biến — cùng triết lý immutable); reload nóng (feature flags, log level) tiện vận hành nhưng thêm độ phức tạp đồng bộ. Khuyến nghị: mặc định bất biến; thứ cần đổi thường xuyên lúc runtime → tách sang hệ feature-flag chuyên dụng, đừng biến toàn bộ config thành mutable.</p>
+<h2 id="6-best-practices">6. Best Practices<a hidden class="anchor" aria-hidden="true" href="#6-best-practices">#</a></h2>
+<ul>
+<li>Một bảng config duy nhất (struct <code>Config</code>), validate đủ, fail fast; <code>.env.example</code> làm tài liệu.</li>
+<li>Không log secret; cân nhắc kiểu <code>redacted string</code> (String() trả <code>&quot;[REDACTED]&quot;</code>) cho trường nhạy cảm.</li>
+<li>Secret không vào Git dưới mọi hình thức — kể cả repo private; bật secret scanning (gitleaks, GitHub secret scanning) trong CI.</li>
+<li>Rotate được là thiết kế, không phải may mắn: app đọc secret qua file/manager, hạ tầng rotate định kỳ.</li>
+<li>Phân biệt 3 loại giá trị: hằng số nghiệp vụ → code; thay đổi theo deploy → config; thay đổi lúc runtime theo quyết định business → feature flag.</li>
+<li>ConfigMap/Secret đổi tên theo nội dung (hash suffix) hoặc dùng tool như Reloader để pod tự restart khi config đổi — tránh trạng thái &ldquo;ConfigMap đã đổi nhưng pod cũ vẫn chạy config cũ&rdquo; âm thầm.</li>
+</ul>
+<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
+<ul>
+<li><strong><code>config_prod.go</code>, <code>config_staging.go</code> compile theo build tag</strong> — mỗi môi trường một binary: phá F5, thứ chạy prod không phải thứ đã test.</li>
+<li><strong><code>if os.Getenv(&quot;ENV&quot;) == &quot;production&quot; {...}</code> rải trong business logic</strong> — config profile lẻn vào code; hành vi app phân nhánh theo tên môi trường là nguồn bug &ldquo;chỉ xảy ra trên prod&rdquo; kinh điển.</li>
+<li><strong>Secret trong Git</strong> — kể cả &ldquo;tạm thời&rdquo;, kể cả base64 (không phải mã hóa!), kể cả trong <code>values.yaml</code> của Helm chart nội bộ.</li>
+<li><strong><code>os.Getenv</code> rải rác khắp nơi, đọc lazy lúc request</strong> — thiếu config phát nổ lúc runtime thay vì lúc start; không ai liệt kê nổi app cần biến gì.</li>
+<li><strong>Default &ldquo;an toàn giả&rdquo;</strong>: <code>envDefault</code> trỏ vào DB dev cho biến bắt buộc — quên set trên prod là app <em>chạy được</em> nhưng ghi vào DB dev. Thiếu thì phải chết, không được đoán.</li>
+<li><strong>In toàn bộ env ra log lúc khởi động</strong> để &ldquo;dễ debug&rdquo; — dump secret vào hệ thống log, nơi quyền đọc rộng hơn quyền đọc secret rất nhiều.</li>
+</ul>
+<h2 id="8-khi-nào-không-cần-áp-dụng-đầy-đủ">8. Khi nào KHÔNG cần áp dụng đầy đủ<a hidden class="anchor" aria-hidden="true" href="#8-khi-nào-không-cần-áp-dụng-đầy-đủ">#</a></h2>
+<ul>
+<li><strong>CLI tool cho end-user</strong>: config file trong <code>~/.config/</code> là UX đúng; env var chỉ là override.</li>
+<li><strong>Ứng dụng desktop/mobile</strong>: config đi cùng bản phân phối; khái niệm &ldquo;deploy environment&rdquo; mờ.</li>
+<li><strong>Script một lần</strong>: hardcode một đường dẫn có thể chấp nhận — nhưng hardcode <em>credential</em> thì không bao giờ, vì script hay bị copy/commit hơn ta tưởng.</li>
+<li>App nội bộ đơn giản có thể dùng config file thay vì env — miễn giữ hai nguyên tắc bất khả xâm phạm: <strong>file config nằm ngoài Git nếu chứa secret</strong>, và <strong>không build riêng binary theo môi trường</strong>.</li>
+</ul>
+<hr>
+<h2 id="tóm-tắt">Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt">#</a></h2>
+<ul>
+<li>Config = những gì <strong>thay đổi giữa các deploy</strong>; hằng số nghiệp vụ không phải config. Bài test: <em>&ldquo;open-source repo ngay bây giờ có lộ credential không?&rdquo;</em></li>
+<li>Mục tiêu bất biến: một artifact ⊗ n bộ config lúc run. Cơ chế hiện đại: env var cho non-secret, mounted file / secret manager / workload identity cho secret.</li>
+<li>Trong Go: đọc env <strong>một lần</strong> lúc start vào struct có validate, fail fast; cấm <code>os.Getenv</code> rải rác; không log secret.</li>
+<li>Config là biến độc lập, không phải profile — app không nên biết &ldquo;mình đang ở môi trường nào&rdquo;.</li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/twelve-factor/">Twelve-Factor</a></li>
+      <li><a href="http://localhost:1313/tags/cloud-native/">Cloud-Native</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/twelve-factor/07-factor-02-dependencies/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 7 — Factor 2: Dependencies</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/twelve-factor/09-factor-04-backing-services/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 9 — Factor 4: Backing Services</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f&amp;title=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;summary=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f&title=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 8 — Factor 3: Config on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%208%20%e2%80%94%20Factor%203%3a%20Config&u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f08-factor-03-config%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

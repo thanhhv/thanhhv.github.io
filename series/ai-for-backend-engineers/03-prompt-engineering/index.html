@@ -1,38 +1,189 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 03 — Prompt Engineering & Structured Output | Thanh HV's Blog</title>
-<meta name=keywords content="backend,ai,llm"><meta name=description content='1. Problem Statement
-Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: "Trích xuất thông tin từ email sau: ...". Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào &ldquo;Chắc chắn rồi! Đây là thông tin&mldr;&rdquo;, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.
-Prompt Engineering giải quyết bài toán: biến một model xác suất thành component có hành vi đủ ổn định để lập trình được. Structured Output giải quyết nửa còn lại: đầu ra phải là dữ liệu có schema, không phải văn bản tự do.'><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/ai-for-backend-engineers/03-prompt-engineering/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/ai-for-backend-engineers/03-prompt-engineering/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/ai-for-backend-engineers/03-prompt-engineering/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 03 — Prompt Engineering & Structured Output"><meta property="og:description" content='1. Problem Statement Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: "Trích xuất thông tin từ email sau: ...". Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào “Chắc chắn rồi! Đây là thông tin…”, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.
-Prompt Engineering giải quyết bài toán: biến một model xác suất thành component có hành vi đủ ổn định để lập trình được. Structured Output giải quyết nửa còn lại: đầu ra phải là dữ liệu có schema, không phải văn bản tự do.'><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-18T07:30:00+07:00"><meta property="article:modified_time" content="2026-07-18T07:30:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Ai"><meta property="article:tag" content="Llm"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 03 — Prompt Engineering & Structured Output"><meta name=twitter:description content='1. Problem Statement
-Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: "Trích xuất thông tin từ email sau: ...". Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào &ldquo;Chắc chắn rồi! Đây là thông tin&mldr;&rdquo;, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.
-Prompt Engineering giải quyết bài toán: biến một model xác suất thành component có hành vi đủ ổn định để lập trình được. Structured Output giải quyết nửa còn lại: đầu ra phải là dữ liệu có schema, không phải văn bản tự do.'><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"AI cho Backend Engineer","item":"https://thanhhv.github.io/series/ai-for-backend-engineers/"},{"@type":"ListItem","position":3,"name":"Chương 03 — Prompt Engineering \u0026 Structured Output","item":"https://thanhhv.github.io/series/ai-for-backend-engineers/03-prompt-engineering/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 03 — Prompt Engineering \u0026 Structured Output","name":"Chương 03 — Prompt Engineering \u0026 Structured Output","description":"1. Problem Statement Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: \u0026quot;Trích xuất thông tin từ email sau: ...\u0026quot;. Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào \u0026ldquo;Chắc chắn rồi! Đây là thông tin\u0026hellip;\u0026rdquo;, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.\nPrompt Engineering giải quyết bài toán: biến một model xác suất thành component có hành vi đủ ổn định để lập trình được. Structured Output giải quyết nửa còn lại: đầu ra phải là dữ liệu có schema, không phải văn bản tự do.\n","keywords":["backend","ai","llm"],"articleBody":"1. Problem Statement Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: \"Trích xuất thông tin từ email sau: ...\". Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào “Chắc chắn rồi! Đây là thông tin…”, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.\nPrompt Engineering giải quyết bài toán: biến một model xác suất thành component có hành vi đủ ổn định để lập trình được. Structured Output giải quyết nửa còn lại: đầu ra phải là dữ liệu có schema, không phải văn bản tự do.\n2. Tại sao nó tồn tại Business Problem: cùng một model, prompt tốt và prompt tệ tạo ra chênh lệch chất lượng lớn hơn chênh lệch giữa 2 thế hệ model — prompt là đòn bẩy rẻ nhất. Engineering Problem: hệ thống downstream cần contract (schema, type) — văn bản tự do không tích hợp được vào pipeline. AI Problem: LLM được train để “tiếp nối văn bản một cách hợp lý” — nó cần được định hướng để hiểu vai trò, ràng buộc và định dạng mong muốn. 3. First Principles Prompt không phải “câu thần chú”. Prompt là cấu hình runtime của model — nó thiết lập: vai trò (role), ngữ cảnh (context), nhiệm vụ (task), ràng buộc (constraints), định dạng đầu ra (format), và ví dụ (examples). Model tiếp nối văn bản; prompt tạo ra một “văn bản mồi” sao cho phần tiếp nối hợp lý nhất chính là kết quả bạn muốn.\n3.1. Cấu trúc prompt chuẩn [SYSTEM PROMPT] 1. Role — \"Bạn là hệ thống trích xuất dữ liệu đơn hàng.\" 2. Context — Bối cảnh nghiệp vụ, dữ liệu tham chiếu 3. Task — Nhiệm vụ cụ thể, từng bước nếu cần 4. Constraints — Điều được/không được làm, xử lý edge case 5. Format — Schema đầu ra, ví dụ minh họa [USER MESSAGE] 6. Input thực tế (đặt trong delimiter rõ ràng)Nguyên tắc nền tảng:\nRõ ràng thắng khéo léo: viết cho model như viết spec cho một junior engineer mới vào — cụ thể, không giả định ngầm. Delimiter tách data khỏi instruction: bọc input người dùng trong ... hoặc \"\"\"...\"\"\". Đây vừa là kỹ thuật chất lượng vừa là lớp phòng thủ prompt injection đầu tiên (Chương 12). Nói điều cần làm thay vì điều cấm: “Chỉ trả lời dựa trên tài liệu được cung cấp” tốt hơn “Đừng bịa”. Xử lý trường hợp thiếu thông tin một cách tường minh: “Nếu không tìm thấy, trả về null” — nếu không dặn, model sẽ đoán. 3.2. Few-shot: dạy bằng ví dụ Đưa 2–5 cặp input/output mẫu vào prompt. Few-shot hiệu quả đặc biệt khi: format phức tạp, task có quy ước riêng của domain, hoặc cần model bắt chước giọng điệu. Trade-off: mỗi ví dụ tốn token trên mọi request — 5 ví dụ × 200 token × 1M request/tháng = 1 tỷ token chỉ để “dạy lại từ đầu” mỗi lần. Chọn ví dụ đắt giá nhất (bao phủ edge case) chứ không phải nhiều nhất; dùng prompt caching nếu provider hỗ trợ (Chương 08).\n3.3. Chain of Thought (CoT) — mức khái niệm Yêu cầu model “suy nghĩ từng bước trước khi trả lời” cải thiện đáng kể các task suy luận nhiều bước (phân tích, so sánh, toán logic). Bản chất: model sinh token tuần tự — cho nó “không gian” sinh các bước trung gian nghĩa là cho nó thêm tính toán trước khi chốt đáp án.\nTrade-off production: CoT tăng output token (chi phí + latency) đáng kể. Với model thế hệ mới có “extended thinking/reasoning” tích hợp, CoT thủ công trong prompt ít cần thiết hơn — nhưng nguyên lý “cho model suy luận trước, kết luận sau” vẫn đúng. Mẹo tích hợp: yêu cầu model xuất phần suy luận vào field riêng (\"reasoning\": \"...\") rồi backend bỏ field đó đi, chỉ dùng kết quả — được chất lượng của CoT mà downstream vẫn sạch.\n3.4. Prompt Template — prompt là code Prompt production không phải chuỗi nối tay trong controller. Nó là template có version, có biến, có test:\n// prompts/extract-order/v3.ts export const extractOrderPrompt = { id: \"extract-order\", version: 3, model: \"claude-sonnet-4-5\", temperature: 0, maxTokens: 1024, system: `Bạn là hệ thống trích xuất dữ liệu đơn hàng từ email tiếng Việt. Chỉ sử dụng thông tin có trong email. Field không tìm thấy → null. Trả về JSON đúng schema, không thêm bất kỳ văn bản nào khác.`, buildUser: (email: string) =\u003e `\\n${email}\\n`, }; Version hóa prompt là điều kiện tiên quyết cho A/B testing và rollback (Chương 11).\n4. Internal Architecture — Structured Output 4.1. Ba cấp độ ép format, từ yếu đến mạnh flowchart TB A[\"Cấp 1 — Prompt-based:'Hãy trả về JSON theo schema...'\"] --\u003e|\"model vẫn có thể lệch\"| B[\"Cấp 2 — JSON Mode:provider đảm bảo output là JSON hợp lệ(nhưng không đảm bảo đúng schema)\"] B --\u003e|\"đúng cú pháp, có thể sai cấu trúc\"| C[\"Cấp 3 — Schema-constrained:Structured Outputs / Tool Schema:provider ép từng token theo JSON Schema\"] Cấp 1 phù hợp prototype. Cấp 3 (OpenAI Structured Outputs, hoặc dùng tool/function schema của Anthropic như một cơ chế ép schema) là chuẩn production: constraint được áp ở tầng sampling — model không thể sinh token vi phạm schema. Dù ở cấp nào, backend vẫn phải validate bằng schema validator (Zod/ajv/go-playground) — vì schema đúng không có nghĩa giá trị đúng (model có thể trả \"total\": 0 cho email không có giá). 4.2. Request flow production sequenceDiagram participant S as Service participant P as Prompt Registry participant L as LLM Provider participant V as Validator (Zod/ajv) S-\u003e\u003eP: get(\"extract-order\", version=3) P--\u003e\u003eS: template + config (temp=0, schema) S-\u003e\u003eS: render template với input (trong delimiter) S-\u003e\u003eL: call với response_format=json_schema L--\u003e\u003eS: JSON string S-\u003e\u003eV: parse + validate schema alt Hợp lệ V--\u003e\u003eS: typed object → downstream else Không hợp lệ S-\u003e\u003eL: retry 1 lần (kèm lỗi validate trong prompt) L--\u003e\u003eS: JSON string (lần 2) S-\u003e\u003eV: validate lại alt Vẫn lỗi S-\u003e\u003eS: ghi dead-letter queue + fallback/manual review end endPattern “retry kèm error feedback” (gửi lại lỗi validate cho model tự sửa) giải quyết phần lớn lỗi lần 1 — nhưng phải giới hạn 1–2 lần, có circuit breaker, vì retry là nhân chi phí.\n4.3. Ví dụ hoàn chỉnh (Node.js/TypeScript) import Anthropic from \"@anthropic-ai/sdk\"; import { z } from \"zod\"; const OrderSchema = z.object({ customer_name: z.string().nullable(), items: z.array(z.object({ name: z.string(), quantity: z.number() })), total_vnd: z.number().nullable(), urgency: z.enum([\"low\", \"normal\", \"high\"]), }); type Order = z.infer\u003ctypeof OrderSchema\u003e; const client = new Anthropic({ timeout: 30_000 }); export async function extractOrder(email: string): Promise\u003cOrder\u003e { const resp = await client.messages.create({ model: \"claude-sonnet-4-5\", max_tokens: 1024, temperature: 0, system: extractOrderPrompt.system, // Dùng tool schema như cơ chế ép structured output tools: [{ name: \"save_order\", description: \"Lưu thông tin đơn hàng đã trích xuất\", input_schema: { type: \"object\", properties: { customer_name: { type: [\"string\", \"null\"] }, items: { type: \"array\", items: { type: \"object\", properties: { name: { type: \"string\" }, quantity: { type: \"number\" } }, required: [\"name\", \"quantity\"] } }, total_vnd: { type: [\"number\", \"null\"] }, urgency: { enum: [\"low\", \"normal\", \"high\"] }, }, required: [\"customer_name\", \"items\", \"total_vnd\", \"urgency\"], }, }], tool_choice: { type: \"tool\", name: \"save_order\" }, // ép model luôn dùng tool messages: [{ role: \"user\", content: `\\n${email}\\n` }], }); const toolUse = resp.content.find(b =\u003e b.type === \"tool_use\"); if (!toolUse) throw new Error(\"no structured output\"); return OrderSchema.parse(toolUse.input); // validate lần cuối — luôn luôn } 5. Trade-off Fine-tuning vs Prompt Engineering: fine-tuning dạy model hành vi/giọng điệu/format qua dữ liệu train; prompt dạy qua chỉ dẫn mỗi request. Prompt: ship trong giờ, đổi trong phút, không cần data pipeline. Fine-tuning: tốn dataset + chi phí train + vận hành model riêng, và đóng băng hành vi. Quy tắc: vắt kiệt prompt engineering (kèm few-shot, kèm RAG) trước; chỉ fine-tune khi (a) cần format/giọng điệu rất đặc thù ở volume lớn, (b) muốn model nhỏ bắt chước model lớn để giảm chi phí. Prompt dài (nhiều chỉ dẫn, nhiều ví dụ) vs chi phí: mỗi chỉ dẫn thêm vào system prompt là chi phí trên mọi request mãi mãi. Đo lường: nếu bỏ một đoạn mà eval không giảm — bỏ hẳn. Ép schema chặt vs độ linh hoạt: schema càng chặt càng dễ tích hợp, nhưng field enum quá hẹp khiến model nhét sai giá trị gần nhất thay vì báo không xác định. Luôn có lối thoát: giá trị \"other\", field null, hoặc field confidence. 6. Production Considerations Prompt là artifact deploy được: lưu trong repo hoặc prompt registry, có version, có changelog, có eval chạy trước khi release (Chương 11). Đổi 1 câu trong system prompt có thể đổi hành vi toàn hệ thống — đối xử như đổi code. Log cặp (prompt_version, input_hash, output): không log được thì không debug được “vì sao hôm qua đúng hôm nay sai”. Timeout + retry có phân loại: lỗi schema → retry kèm feedback (tối đa 2); lỗi 429/5xx → backoff; lỗi content filter → không retry, ghi nhận. Cache: task extraction với input trùng lặp (email template, tài liệu chuẩn) → cache theo hash(input + prompt_version) tiết kiệm đáng kể. Security: input người dùng luôn nằm trong delimiter, không bao giờ nối thẳng vào system prompt (Chương 12). 7. Anti-patterns Prompt khổng lồ chữa mọi bệnh: mỗi lần gặp lỗi lại đắp thêm một câu “đừng làm X” → system prompt 3.000 token mâu thuẫn nội tại, không ai dám sửa. Chữa đúng: eval + tách task nhỏ. Nối chuỗi tay trong business logic: prompt rải rác khắp codebase, không version, sửa một chỗ quên chỗ khác. Tin JSON mode là đủ: JSON hợp lệ ≠ schema đúng ≠ giá trị đúng. Ba tầng kiểm tra khác nhau. Parse output bằng regex/string split: vỡ ngay khi model đổi cách diễn đạt. Dùng structured output + validator. Một prompt làm 5 việc: trích xuất + phân loại + tóm tắt + dịch + đánh giá trong một call → chất lượng từng việc đều giảm, không đo được việc nào hỏng. Tách pipeline. 8. Best Practices Chuẩn hóa “Prompt Definition” trong codebase: id, version, model, sampling config, schema đầu ra, template — một object duy nhất, một nơi duy nhất. Mỗi prompt có bộ test case (input mẫu → output kỳ vọng hoặc tiêu chí chấm) chạy trong CI như unit test. Task quan trọng: thêm field confidence hoặc \"insufficient_information\": true để backend route các case model không chắc sang người xử lý. Viết prompt bằng ngôn ngữ có nhiều dữ liệu train nhất cho chỉ dẫn (tiếng Anh thường ổn định hơn), giữ dữ liệu và output bằng tiếng Việt — pattern phổ biến cho ứng dụng Việt: system prompt tiếng Anh, yêu cầu “respond in Vietnamese”. Định kỳ chạy lại eval khi provider cập nhật model — prompt tối ưu cho model cũ có thể kém trên model mới. 9. Khi nào KHÔNG nên dùng Input có cấu trúc sẵn (form, JSON, CSV chuẩn) → parser thường, đúng 100%, chi phí 0. Phân loại với tập nhãn nhỏ, dữ liệu huấn luyện dồi dào, volume cực lớn → classifier nhỏ tự host rẻ hơn LLM hàng trăm lần. Yêu cầu extraction đúng 100% cho nghiệp vụ tài chính/pháp lý → LLM chỉ được làm bước gợi ý, con người duyệt; hoặc không dùng. Template hóa văn bản với biến cố định (“Chào {name}, đơn {id} đã giao”) → string template, không cần model. Chương tiếp theo: 04 — Function Calling, Tool Calling \u0026 MCP — cho LLM khả năng hành động lên hệ thống thay vì chỉ nói.\n","wordCount":"1942","inLanguage":"en","datePublished":"2026-07-18T07:30:00+07:00","dateModified":"2026-07-18T07:30:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/ai-for-backend-engineers/03-prompt-engineering/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/ai-for-backend-engineers/>AI cho Backend Engineer</a></div><h1 class="post-title entry-hint-parent">Chương 03 — Prompt Engineering & Structured Output</h1><div class=post-meta><span title='2026-07-18 07:30:00 +0700 +07'>July 18, 2026</span>&nbsp;·&nbsp;10 min</div></header><div class=post-content><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: <code>"Trích xuất thông tin từ email sau: ..."</code>. Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào &ldquo;Chắc chắn rồi! Đây là thông tin&mldr;&rdquo;, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.</p><p>Prompt Engineering giải quyết bài toán: <strong>biến một model xác suất thành component có hành vi đủ ổn định để lập trình được</strong>. Structured Output giải quyết nửa còn lại: <strong>đầu ra phải là dữ liệu có schema, không phải văn bản tự do</strong>.</p><h2 id=2-tại-sao-nó-tồn-tại>2. Tại sao nó tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-nó-tồn-tại>#</a></h2><ul><li><strong>Business Problem</strong>: cùng một model, prompt tốt và prompt tệ tạo ra chênh lệch chất lượng lớn hơn chênh lệch giữa 2 thế hệ model — prompt là đòn bẩy rẻ nhất.</li><li><strong>Engineering Problem</strong>: hệ thống downstream cần contract (schema, type) — văn bản tự do không tích hợp được vào pipeline.</li><li><strong>AI Problem</strong>: LLM được train để &ldquo;tiếp nối văn bản một cách hợp lý&rdquo; — nó cần được <strong>định hướng</strong> để hiểu vai trò, ràng buộc và định dạng mong muốn.</li></ul><h2 id=3-first-principles>3. First Principles<a hidden class=anchor aria-hidden=true href=#3-first-principles>#</a></h2><p>Prompt không phải &ldquo;câu thần chú&rdquo;. Prompt là <strong>cấu hình runtime của model</strong> — nó thiết lập: vai trò (role), ngữ cảnh (context), nhiệm vụ (task), ràng buộc (constraints), định dạng đầu ra (format), và ví dụ (examples). Model tiếp nối văn bản; prompt tạo ra một &ldquo;văn bản mồi&rdquo; sao cho phần tiếp nối hợp lý nhất chính là kết quả bạn muốn.</p><h3 id=31-cấu-trúc-prompt-chuẩn>3.1. Cấu trúc prompt chuẩn<a hidden class=anchor aria-hidden=true href=#31-cấu-trúc-prompt-chuẩn>#</a></h3><pre tabindex=0><code>[SYSTEM PROMPT]
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 03 — Prompt Engineering &amp; Structured Output | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, ai, llm">
+<meta name="description" content="1. Problem Statement
+Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: &quot;Trích xuất thông tin từ email sau: ...&quot;. Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào &ldquo;Chắc chắn rồi! Đây là thông tin&hellip;&rdquo;, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.
+Prompt Engineering giải quyết bài toán: biến một model xác suất thành component có hành vi đủ ổn định để lập trình được. Structured Output giải quyết nửa còn lại: đầu ra phải là dữ liệu có schema, không phải văn bản tự do.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/ai-for-backend-engineers/03-prompt-engineering/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/ai-for-backend-engineers/03-prompt-engineering/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/ai-for-backend-engineers/">AI cho Backend Engineer</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 03 — Prompt Engineering &amp; Structured Output
+    </h1>
+    <div class="post-meta"><span title='2026-07-18 07:30:00 +0700 +07'>July 18, 2026</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Backend cần LLM trích xuất thông tin đơn hàng từ email khách. Dev viết: <code>&quot;Trích xuất thông tin từ email sau: ...&quot;</code>. Kết quả: lúc trả JSON, lúc trả văn xuôi, lúc thêm lời chào &ldquo;Chắc chắn rồi! Đây là thông tin&hellip;&rdquo;, lúc bịa field không tồn tại. Code parse downstream vỡ liên tục.</p>
+<p>Prompt Engineering giải quyết bài toán: <strong>biến một model xác suất thành component có hành vi đủ ổn định để lập trình được</strong>. Structured Output giải quyết nửa còn lại: <strong>đầu ra phải là dữ liệu có schema, không phải văn bản tự do</strong>.</p>
+<h2 id="2-tại-sao-nó-tồn-tại">2. Tại sao nó tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-nó-tồn-tại">#</a></h2>
+<ul>
+<li><strong>Business Problem</strong>: cùng một model, prompt tốt và prompt tệ tạo ra chênh lệch chất lượng lớn hơn chênh lệch giữa 2 thế hệ model — prompt là đòn bẩy rẻ nhất.</li>
+<li><strong>Engineering Problem</strong>: hệ thống downstream cần contract (schema, type) — văn bản tự do không tích hợp được vào pipeline.</li>
+<li><strong>AI Problem</strong>: LLM được train để &ldquo;tiếp nối văn bản một cách hợp lý&rdquo; — nó cần được <strong>định hướng</strong> để hiểu vai trò, ràng buộc và định dạng mong muốn.</li>
+</ul>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<p>Prompt không phải &ldquo;câu thần chú&rdquo;. Prompt là <strong>cấu hình runtime của model</strong> — nó thiết lập: vai trò (role), ngữ cảnh (context), nhiệm vụ (task), ràng buộc (constraints), định dạng đầu ra (format), và ví dụ (examples). Model tiếp nối văn bản; prompt tạo ra một &ldquo;văn bản mồi&rdquo; sao cho phần tiếp nối hợp lý nhất chính là kết quả bạn muốn.</p>
+<h3 id="31-cấu-trúc-prompt-chuẩn">3.1. Cấu trúc prompt chuẩn<a hidden class="anchor" aria-hidden="true" href="#31-cấu-trúc-prompt-chuẩn">#</a></h3>
+<pre tabindex="0"><code>[SYSTEM PROMPT]
 1. Role        — &#34;Bạn là hệ thống trích xuất dữ liệu đơn hàng.&#34;
 2. Context     — Bối cảnh nghiệp vụ, dữ liệu tham chiếu
 3. Task        — Nhiệm vụ cụ thể, từng bước nếu cần
 4. Constraints — Điều được/không được làm, xử lý edge case
 5. Format      — Schema đầu ra, ví dụ minh họa
 [USER MESSAGE]
-6. Input thực tế (đặt trong delimiter rõ ràng)</code></pre><p>Nguyên tắc nền tảng:</p><ul><li><strong>Rõ ràng thắng khéo léo</strong>: viết cho model như viết spec cho một junior engineer mới vào — cụ thể, không giả định ngầm.</li><li><strong>Delimiter tách data khỏi instruction</strong>: bọc input người dùng trong <code>&lt;input>...&lt;/input></code> hoặc <code>"""..."""</code>. Đây vừa là kỹ thuật chất lượng vừa là lớp phòng thủ prompt injection đầu tiên (Chương 12).</li><li><strong>Nói điều cần làm thay vì điều cấm</strong>: &ldquo;Chỉ trả lời dựa trên tài liệu được cung cấp&rdquo; tốt hơn &ldquo;Đừng bịa&rdquo;.</li><li><strong>Xử lý trường hợp thiếu thông tin một cách tường minh</strong>: &ldquo;Nếu không tìm thấy, trả về <code>null</code>&rdquo; — nếu không dặn, model sẽ đoán.</li></ul><h3 id=32-few-shot-dạy-bằng-ví-dụ>3.2. Few-shot: dạy bằng ví dụ<a hidden class=anchor aria-hidden=true href=#32-few-shot-dạy-bằng-ví-dụ>#</a></h3><p>Đưa 2–5 cặp input/output mẫu vào prompt. Few-shot hiệu quả đặc biệt khi: format phức tạp, task có quy ước riêng của domain, hoặc cần model bắt chước giọng điệu. Trade-off: mỗi ví dụ tốn token <strong>trên mọi request</strong> — 5 ví dụ × 200 token × 1M request/tháng = 1 tỷ token chỉ để &ldquo;dạy lại từ đầu&rdquo; mỗi lần. Chọn ví dụ đắt giá nhất (bao phủ edge case) chứ không phải nhiều nhất; dùng prompt caching nếu provider hỗ trợ (Chương 08).</p><h3 id=33-chain-of-thought-cot--mức-khái-niệm>3.3. Chain of Thought (CoT) — mức khái niệm<a hidden class=anchor aria-hidden=true href=#33-chain-of-thought-cot--mức-khái-niệm>#</a></h3><p>Yêu cầu model &ldquo;suy nghĩ từng bước trước khi trả lời&rdquo; cải thiện đáng kể các task suy luận nhiều bước (phân tích, so sánh, toán logic). Bản chất: model sinh token tuần tự — cho nó &ldquo;không gian&rdquo; sinh các bước trung gian nghĩa là cho nó thêm tính toán trước khi chốt đáp án.</p><p>Trade-off production: CoT tăng output token (chi phí + latency) đáng kể. Với model thế hệ mới có &ldquo;extended thinking/reasoning&rdquo; tích hợp, CoT thủ công trong prompt ít cần thiết hơn — nhưng nguyên lý &ldquo;cho model suy luận trước, kết luận sau&rdquo; vẫn đúng. Mẹo tích hợp: yêu cầu model xuất phần suy luận vào field riêng (<code>"reasoning": "..."</code>) rồi backend <strong>bỏ field đó đi</strong>, chỉ dùng kết quả — được chất lượng của CoT mà downstream vẫn sạch.</p><h3 id=34-prompt-template--prompt-là-code>3.4. Prompt Template — prompt là code<a hidden class=anchor aria-hidden=true href=#34-prompt-template--prompt-là-code>#</a></h3><p>Prompt production không phải chuỗi nối tay trong controller. Nó là <strong>template có version, có biến, có test</strong>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=display:flex><span><span style=color:#75715e>// prompts/extract-order/v3.ts
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>export</span> <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>extractOrderPrompt</span> <span style=color:#f92672>=</span> {
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>id</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;extract-order&#34;</span>,
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>version</span>: <span style=color:#66d9ef>3</span>,
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>model</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;claude-sonnet-4-5&#34;</span>,
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>temperature</span>: <span style=color:#66d9ef>0</span>,
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>maxTokens</span>: <span style=color:#66d9ef>1024</span>,
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>system</span><span style=color:#f92672>:</span> <span style=color:#e6db74>`Bạn là hệ thống trích xuất dữ liệu đơn hàng từ email tiếng Việt.
-</span></span></span><span style=display:flex><span><span style=color:#e6db74>Chỉ sử dụng thông tin có trong email. Field không tìm thấy → null.
-</span></span></span><span style=display:flex><span><span style=color:#e6db74>Trả về JSON đúng schema, không thêm bất kỳ văn bản nào khác.`</span>,
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>buildUser</span><span style=color:#f92672>:</span> (<span style=color:#a6e22e>email</span>: <span style=color:#66d9ef>string</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#e6db74>`&lt;email&gt;</span><span style=color:#960050;background-color:#1e0010>\</span><span style=color:#e6db74>n</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>email</span><span style=color:#e6db74>}</span><span style=color:#960050;background-color:#1e0010>\</span><span style=color:#e6db74>n&lt;/email&gt;`</span>,
-</span></span><span style=display:flex><span>};
-</span></span></code></pre></div><p>Version hóa prompt là điều kiện tiên quyết cho A/B testing và rollback (Chương 11).</p><h2 id=4-internal-architecture--structured-output>4. Internal Architecture — Structured Output<a hidden class=anchor aria-hidden=true href=#4-internal-architecture--structured-output>#</a></h2><h3 id=41-ba-cấp-độ-ép-format-từ-yếu-đến-mạnh>4.1. Ba cấp độ ép format, từ yếu đến mạnh<a hidden class=anchor aria-hidden=true href=#41-ba-cấp-độ-ép-format-từ-yếu-đến-mạnh>#</a></h3><pre class=mermaid>flowchart TB
+6. Input thực tế (đặt trong delimiter rõ ràng)</code></pre><p>Nguyên tắc nền tảng:</p>
+<ul>
+<li><strong>Rõ ràng thắng khéo léo</strong>: viết cho model như viết spec cho một junior engineer mới vào — cụ thể, không giả định ngầm.</li>
+<li><strong>Delimiter tách data khỏi instruction</strong>: bọc input người dùng trong <code>&lt;input&gt;...&lt;/input&gt;</code> hoặc <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code>. Đây vừa là kỹ thuật chất lượng vừa là lớp phòng thủ prompt injection đầu tiên (Chương 12).</li>
+<li><strong>Nói điều cần làm thay vì điều cấm</strong>: &ldquo;Chỉ trả lời dựa trên tài liệu được cung cấp&rdquo; tốt hơn &ldquo;Đừng bịa&rdquo;.</li>
+<li><strong>Xử lý trường hợp thiếu thông tin một cách tường minh</strong>: &ldquo;Nếu không tìm thấy, trả về <code>null</code>&rdquo; — nếu không dặn, model sẽ đoán.</li>
+</ul>
+<h3 id="32-few-shot-dạy-bằng-ví-dụ">3.2. Few-shot: dạy bằng ví dụ<a hidden class="anchor" aria-hidden="true" href="#32-few-shot-dạy-bằng-ví-dụ">#</a></h3>
+<p>Đưa 2–5 cặp input/output mẫu vào prompt. Few-shot hiệu quả đặc biệt khi: format phức tạp, task có quy ước riêng của domain, hoặc cần model bắt chước giọng điệu. Trade-off: mỗi ví dụ tốn token <strong>trên mọi request</strong> — 5 ví dụ × 200 token × 1M request/tháng = 1 tỷ token chỉ để &ldquo;dạy lại từ đầu&rdquo; mỗi lần. Chọn ví dụ đắt giá nhất (bao phủ edge case) chứ không phải nhiều nhất; dùng prompt caching nếu provider hỗ trợ (Chương 08).</p>
+<h3 id="33-chain-of-thought-cot--mức-khái-niệm">3.3. Chain of Thought (CoT) — mức khái niệm<a hidden class="anchor" aria-hidden="true" href="#33-chain-of-thought-cot--mức-khái-niệm">#</a></h3>
+<p>Yêu cầu model &ldquo;suy nghĩ từng bước trước khi trả lời&rdquo; cải thiện đáng kể các task suy luận nhiều bước (phân tích, so sánh, toán logic). Bản chất: model sinh token tuần tự — cho nó &ldquo;không gian&rdquo; sinh các bước trung gian nghĩa là cho nó thêm tính toán trước khi chốt đáp án.</p>
+<p>Trade-off production: CoT tăng output token (chi phí + latency) đáng kể. Với model thế hệ mới có &ldquo;extended thinking/reasoning&rdquo; tích hợp, CoT thủ công trong prompt ít cần thiết hơn — nhưng nguyên lý &ldquo;cho model suy luận trước, kết luận sau&rdquo; vẫn đúng. Mẹo tích hợp: yêu cầu model xuất phần suy luận vào field riêng (<code>&quot;reasoning&quot;: &quot;...&quot;</code>) rồi backend <strong>bỏ field đó đi</strong>, chỉ dùng kết quả — được chất lượng của CoT mà downstream vẫn sạch.</p>
+<h3 id="34-prompt-template--prompt-là-code">3.4. Prompt Template — prompt là code<a hidden class="anchor" aria-hidden="true" href="#34-prompt-template--prompt-là-code">#</a></h3>
+<p>Prompt production không phải chuỗi nối tay trong controller. Nó là <strong>template có version, có biến, có test</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// prompts/extract-order/v3.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">extractOrderPrompt</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">id</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;extract-order&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">version</span>: <span style="color:#66d9ef">3</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">model</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;claude-sonnet-4-5&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">temperature</span>: <span style="color:#66d9ef">0</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">maxTokens</span>: <span style="color:#66d9ef">1024</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">system</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`Bạn là hệ thống trích xuất dữ liệu đơn hàng từ email tiếng Việt.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Chỉ sử dụng thông tin có trong email. Field không tìm thấy → null.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Trả về JSON đúng schema, không thêm bất kỳ văn bản nào khác.`</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">buildUser</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">email</span>: <span style="color:#66d9ef">string</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#e6db74">`&lt;email&gt;</span><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#e6db74">n</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">email</span><span style="color:#e6db74">}</span><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#e6db74">n&lt;/email&gt;`</span>,
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>Version hóa prompt là điều kiện tiên quyết cho A/B testing và rollback (Chương 11).</p>
+<h2 id="4-internal-architecture--structured-output">4. Internal Architecture — Structured Output<a hidden class="anchor" aria-hidden="true" href="#4-internal-architecture--structured-output">#</a></h2>
+<h3 id="41-ba-cấp-độ-ép-format-từ-yếu-đến-mạnh">4.1. Ba cấp độ ép format, từ yếu đến mạnh<a hidden class="anchor" aria-hidden="true" href="#41-ba-cấp-độ-ép-format-từ-yếu-đến-mạnh">#</a></h3>
+<pre class="mermaid">flowchart TB
     A[&#34;Cấp 1 — Prompt-based:&lt;br/&gt;&#39;Hãy trả về JSON theo schema...&#39;&#34;] --&gt;|&#34;model vẫn có thể lệch&#34;| B[&#34;Cấp 2 — JSON Mode:&lt;br/&gt;provider đảm bảo output là JSON hợp lệ&lt;br/&gt;(nhưng không đảm bảo đúng schema)&#34;]
-    B --&gt;|&#34;đúng cú pháp, có thể sai cấu trúc&#34;| C[&#34;Cấp 3 — Schema-constrained:&lt;br/&gt;Structured Outputs / Tool Schema:&lt;br/&gt;provider ép từng token theo JSON Schema&#34;]</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
+    B --&gt;|&#34;đúng cú pháp, có thể sai cấu trúc&#34;| C[&#34;Cấp 3 — Schema-constrained:&lt;br/&gt;Structured Outputs / Tool Schema:&lt;br/&gt;provider ép từng token theo JSON Schema&#34;]</pre><style>
+  pre.mermaid {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+  }
+</style>
+<script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({
     startOnLoad: true,
     theme: document.body.classList.contains("dark") ? "dark" : "default",
     securityLevel: "loose",
   });
-</script><ul><li><strong>Cấp 1</strong> phù hợp prototype. <strong>Cấp 3</strong> (OpenAI Structured Outputs, hoặc dùng tool/function schema của Anthropic như một cơ chế ép schema) là chuẩn production: constraint được áp ở tầng sampling — model <strong>không thể</strong> sinh token vi phạm schema.</li><li>Dù ở cấp nào, backend <strong>vẫn phải validate</strong> bằng schema validator (Zod/ajv/go-playground) — vì schema đúng không có nghĩa giá trị đúng (model có thể trả <code>"total": 0</code> cho email không có giá).</li></ul><h3 id=42-request-flow-production>4.2. Request flow production<a hidden class=anchor aria-hidden=true href=#42-request-flow-production>#</a></h3><pre class=mermaid>sequenceDiagram
+</script><ul>
+<li><strong>Cấp 1</strong> phù hợp prototype. <strong>Cấp 3</strong> (OpenAI Structured Outputs, hoặc dùng tool/function schema của Anthropic như một cơ chế ép schema) là chuẩn production: constraint được áp ở tầng sampling — model <strong>không thể</strong> sinh token vi phạm schema.</li>
+<li>Dù ở cấp nào, backend <strong>vẫn phải validate</strong> bằng schema validator (Zod/ajv/go-playground) — vì schema đúng không có nghĩa giá trị đúng (model có thể trả <code>&quot;total&quot;: 0</code> cho email không có giá).</li>
+</ul>
+<h3 id="42-request-flow-production">4.2. Request flow production<a hidden class="anchor" aria-hidden="true" href="#42-request-flow-production">#</a></h3>
+<pre class="mermaid">sequenceDiagram
     participant S as Service
     participant P as Prompt Registry
     participant L as LLM Provider
@@ -53,53 +204,311 @@ Prompt Engineering giải quyết bài toán: biến một model xác suất th�
         alt Vẫn lỗi
             S-&gt;&gt;S: ghi dead-letter queue + fallback/manual review
         end
-    end</pre><p>Pattern &ldquo;retry kèm error feedback&rdquo; (gửi lại lỗi validate cho model tự sửa) giải quyết phần lớn lỗi lần 1 — nhưng phải giới hạn 1–2 lần, có circuit breaker, vì retry là nhân chi phí.</p><h3 id=43-ví-dụ-hoàn-chỉnh-nodejstypescript>4.3. Ví dụ hoàn chỉnh (Node.js/TypeScript)<a hidden class=anchor aria-hidden=true href=#43-ví-dụ-hoàn-chỉnh-nodejstypescript>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=display:flex><span><span style=color:#66d9ef>import</span> <span style=color:#a6e22e>Anthropic</span> <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#34;@anthropic-ai/sdk&#34;</span>;
-</span></span><span style=display:flex><span><span style=color:#66d9ef>import</span> { <span style=color:#a6e22e>z</span> } <span style=color:#66d9ef>from</span> <span style=color:#e6db74>&#34;zod&#34;</span>;
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>OrderSchema</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>z</span>.<span style=color:#66d9ef>object</span>({
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>customer_name</span>: <span style=color:#66d9ef>z.string</span>().<span style=color:#a6e22e>nullable</span>(),
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>items</span>: <span style=color:#66d9ef>z.array</span>(<span style=color:#a6e22e>z</span>.<span style=color:#66d9ef>object</span>({ <span style=color:#a6e22e>name</span>: <span style=color:#66d9ef>z.string</span>(), <span style=color:#a6e22e>quantity</span>: <span style=color:#66d9ef>z.number</span>() })),
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>total_vnd</span>: <span style=color:#66d9ef>z.number</span>().<span style=color:#a6e22e>nullable</span>(),
-</span></span><span style=display:flex><span>  <span style=color:#a6e22e>urgency</span>: <span style=color:#66d9ef>z.enum</span>([<span style=color:#e6db74>&#34;low&#34;</span>, <span style=color:#e6db74>&#34;normal&#34;</span>, <span style=color:#e6db74>&#34;high&#34;</span>]),
-</span></span><span style=display:flex><span>});
-</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Order</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>z</span>.<span style=color:#66d9ef>infer</span>&lt;<span style=color:#f92672>typeof</span> <span style=color:#a6e22e>OrderSchema</span>&gt;;
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>client</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>Anthropic</span>({ <span style=color:#a6e22e>timeout</span>: <span style=color:#66d9ef>30_000</span> });
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>export</span> <span style=color:#66d9ef>async</span> <span style=color:#66d9ef>function</span> <span style=color:#a6e22e>extractOrder</span>(<span style=color:#a6e22e>email</span>: <span style=color:#66d9ef>string</span>)<span style=color:#f92672>:</span> <span style=color:#a6e22e>Promise</span>&lt;<span style=color:#f92672>Order</span>&gt; {
-</span></span><span style=display:flex><span>  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>resp</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>await</span> <span style=color:#a6e22e>client</span>.<span style=color:#a6e22e>messages</span>.<span style=color:#a6e22e>create</span>({
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>model</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;claude-sonnet-4-5&#34;</span>,
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>max_tokens</span>: <span style=color:#66d9ef>1024</span>,
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>temperature</span>: <span style=color:#66d9ef>0</span>,
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>system</span>: <span style=color:#66d9ef>extractOrderPrompt.system</span>,
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// Dùng tool schema như cơ chế ép structured output
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>tools</span><span style=color:#f92672>:</span> [{
-</span></span><span style=display:flex><span>      <span style=color:#a6e22e>name</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;save_order&#34;</span>,
-</span></span><span style=display:flex><span>      <span style=color:#a6e22e>description</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;Lưu thông tin đơn hàng đã trích xuất&#34;</span>,
-</span></span><span style=display:flex><span>      <span style=color:#a6e22e>input_schema</span><span style=color:#f92672>:</span> {
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;object&#34;</span>,
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>properties</span><span style=color:#f92672>:</span> {
-</span></span><span style=display:flex><span>          <span style=color:#a6e22e>customer_name</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> [<span style=color:#e6db74>&#34;string&#34;</span>, <span style=color:#e6db74>&#34;null&#34;</span>] },
-</span></span><span style=display:flex><span>          <span style=color:#a6e22e>items</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;array&#34;</span>, <span style=color:#a6e22e>items</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;object&#34;</span>,
-</span></span><span style=display:flex><span>            <span style=color:#a6e22e>properties</span><span style=color:#f92672>:</span> { <span style=color:#a6e22e>name</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;string&#34;</span> }, <span style=color:#a6e22e>quantity</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;number&#34;</span> } },
-</span></span><span style=display:flex><span>            <span style=color:#a6e22e>required</span><span style=color:#f92672>:</span> [<span style=color:#e6db74>&#34;name&#34;</span>, <span style=color:#e6db74>&#34;quantity&#34;</span>] } },
-</span></span><span style=display:flex><span>          <span style=color:#a6e22e>total_vnd</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> [<span style=color:#e6db74>&#34;number&#34;</span>, <span style=color:#e6db74>&#34;null&#34;</span>] },
-</span></span><span style=display:flex><span>          <span style=color:#a6e22e>urgency</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>enum</span><span style=color:#f92672>:</span> [<span style=color:#e6db74>&#34;low&#34;</span>, <span style=color:#e6db74>&#34;normal&#34;</span>, <span style=color:#e6db74>&#34;high&#34;</span>] },
-</span></span><span style=display:flex><span>        },
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>required</span><span style=color:#f92672>:</span> [<span style=color:#e6db74>&#34;customer_name&#34;</span>, <span style=color:#e6db74>&#34;items&#34;</span>, <span style=color:#e6db74>&#34;total_vnd&#34;</span>, <span style=color:#e6db74>&#34;urgency&#34;</span>],
-</span></span><span style=display:flex><span>      },
-</span></span><span style=display:flex><span>    }],
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>tool_choice</span><span style=color:#f92672>:</span> { <span style=color:#66d9ef>type</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;tool&#34;</span>, <span style=color:#a6e22e>name</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;save_order&#34;</span> }, <span style=color:#75715e>// ép model luôn dùng tool
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>messages</span><span style=color:#f92672>:</span> [{ <span style=color:#a6e22e>role</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;user&#34;</span>, <span style=color:#a6e22e>content</span><span style=color:#f92672>:</span> <span style=color:#e6db74>`&lt;email&gt;</span><span style=color:#960050;background-color:#1e0010>\</span><span style=color:#e6db74>n</span><span style=color:#e6db74>${</span><span style=color:#a6e22e>email</span><span style=color:#e6db74>}</span><span style=color:#960050;background-color:#1e0010>\</span><span style=color:#e6db74>n&lt;/email&gt;`</span> }],
-</span></span><span style=display:flex><span>  });
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>toolUse</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>resp</span>.<span style=color:#a6e22e>content</span>.<span style=color:#a6e22e>find</span>(<span style=color:#a6e22e>b</span> <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>b</span>.<span style=color:#66d9ef>type</span> <span style=color:#f92672>===</span> <span style=color:#e6db74>&#34;tool_use&#34;</span>);
-</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span><span style=color:#a6e22e>toolUse</span>) <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> Error(<span style=color:#e6db74>&#34;no structured output&#34;</span>);
-</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>OrderSchema</span>.<span style=color:#a6e22e>parse</span>(<span style=color:#a6e22e>toolUse</span>.<span style=color:#a6e22e>input</span>); <span style=color:#75715e>// validate lần cuối — luôn luôn
-</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
-</span></span></code></pre></div><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><ul><li><strong>Fine-tuning vs Prompt Engineering</strong>: fine-tuning dạy model <em>hành vi/giọng điệu/format</em> qua dữ liệu train; prompt dạy qua chỉ dẫn mỗi request. Prompt: ship trong giờ, đổi trong phút, không cần data pipeline. Fine-tuning: tốn dataset + chi phí train + vận hành model riêng, và <strong>đóng băng</strong> hành vi. Quy tắc: vắt kiệt prompt engineering (kèm few-shot, kèm RAG) trước; chỉ fine-tune khi (a) cần format/giọng điệu rất đặc thù ở volume lớn, (b) muốn model nhỏ bắt chước model lớn để giảm chi phí.</li><li><strong>Prompt dài (nhiều chỉ dẫn, nhiều ví dụ) vs chi phí</strong>: mỗi chỉ dẫn thêm vào system prompt là chi phí trên mọi request mãi mãi. Đo lường: nếu bỏ một đoạn mà eval không giảm — bỏ hẳn.</li><li><strong>Ép schema chặt vs độ linh hoạt</strong>: schema càng chặt càng dễ tích hợp, nhưng field <code>enum</code> quá hẹp khiến model nhét sai giá trị gần nhất thay vì báo không xác định. Luôn có lối thoát: giá trị <code>"other"</code>, field <code>null</code>, hoặc field <code>confidence</code>.</li></ul><h2 id=6-production-considerations>6. Production Considerations<a hidden class=anchor aria-hidden=true href=#6-production-considerations>#</a></h2><ul><li><strong>Prompt là artifact deploy được</strong>: lưu trong repo hoặc prompt registry, có version, có changelog, có eval chạy trước khi release (Chương 11). Đổi 1 câu trong system prompt có thể đổi hành vi toàn hệ thống — đối xử như đổi code.</li><li><strong>Log cặp (prompt_version, input_hash, output)</strong>: không log được thì không debug được &ldquo;vì sao hôm qua đúng hôm nay sai&rdquo;.</li><li><strong>Timeout + retry có phân loại</strong>: lỗi schema → retry kèm feedback (tối đa 2); lỗi 429/5xx → backoff; lỗi content filter → không retry, ghi nhận.</li><li><strong>Cache</strong>: task extraction với input trùng lặp (email template, tài liệu chuẩn) → cache theo hash(input + prompt_version) tiết kiệm đáng kể.</li><li><strong>Security</strong>: input người dùng luôn nằm trong delimiter, không bao giờ nối thẳng vào system prompt (Chương 12).</li></ul><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li><strong>Prompt khổng lồ chữa mọi bệnh</strong>: mỗi lần gặp lỗi lại đắp thêm một câu &ldquo;đừng làm X&rdquo; → system prompt 3.000 token mâu thuẫn nội tại, không ai dám sửa. Chữa đúng: eval + tách task nhỏ.</li><li><strong>Nối chuỗi tay trong business logic</strong>: prompt rải rác khắp codebase, không version, sửa một chỗ quên chỗ khác.</li><li><strong>Tin JSON mode là đủ</strong>: JSON hợp lệ ≠ schema đúng ≠ giá trị đúng. Ba tầng kiểm tra khác nhau.</li><li><strong>Parse output bằng regex/string split</strong>: vỡ ngay khi model đổi cách diễn đạt. Dùng structured output + validator.</li><li><strong>Một prompt làm 5 việc</strong>: trích xuất + phân loại + tóm tắt + dịch + đánh giá trong một call → chất lượng từng việc đều giảm, không đo được việc nào hỏng. Tách pipeline.</li></ul><h2 id=8-best-practices>8. Best Practices<a hidden class=anchor aria-hidden=true href=#8-best-practices>#</a></h2><ul><li>Chuẩn hóa &ldquo;Prompt Definition&rdquo; trong codebase: id, version, model, sampling config, schema đầu ra, template — một object duy nhất, một nơi duy nhất.</li><li>Mỗi prompt có <strong>bộ test case</strong> (input mẫu → output kỳ vọng hoặc tiêu chí chấm) chạy trong CI như unit test.</li><li>Task quan trọng: thêm field <code>confidence</code> hoặc <code>"insufficient_information": true</code> để backend route các case model không chắc sang người xử lý.</li><li>Viết prompt bằng ngôn ngữ có nhiều dữ liệu train nhất cho <em>chỉ dẫn</em> (tiếng Anh thường ổn định hơn), giữ <em>dữ liệu và output</em> bằng tiếng Việt — pattern phổ biến cho ứng dụng Việt: system prompt tiếng Anh, yêu cầu &ldquo;respond in Vietnamese&rdquo;.</li><li>Định kỳ chạy lại eval khi provider cập nhật model — prompt tối ưu cho model cũ có thể kém trên model mới.</li></ul><h2 id=9-khi-nào-không-nên-dùng>9. Khi nào KHÔNG nên dùng<a hidden class=anchor aria-hidden=true href=#9-khi-nào-không-nên-dùng>#</a></h2><ul><li>Input có cấu trúc sẵn (form, JSON, CSV chuẩn) → parser thường, đúng 100%, chi phí 0.</li><li>Phân loại với tập nhãn nhỏ, dữ liệu huấn luyện dồi dào, volume cực lớn → classifier nhỏ tự host rẻ hơn LLM hàng trăm lần.</li><li>Yêu cầu extraction đúng 100% cho nghiệp vụ tài chính/pháp lý → LLM chỉ được làm bước gợi ý, con người duyệt; hoặc không dùng.</li><li>Template hóa văn bản với biến cố định (&ldquo;Chào {name}, đơn {id} đã giao&rdquo;) → string template, không cần model.</li></ul><hr><p><strong>Chương tiếp theo</strong>: <a href=/series/ai-for-backend-engineers/04-function-calling-mcp/>04 — Function Calling, Tool Calling & MCP</a> — cho LLM khả năng <em>hành động</em> lên hệ thống thay vì chỉ <em>nói</em>.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/ai/>Ai</a></li><li><a href=https://thanhhv.github.io/tags/llm/>Llm</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/ai-for-backend-engineers/02-llm-fundamentals/><span class=title>« Prev</span><br><span>Chương 02 — LLM Fundamentals: Token, Context, Embedding, Sampling</span>
-</a><a class=next href=https://thanhhv.github.io/series/ai-for-backend-engineers/04-function-calling-mcp/><span class=title>Next »</span><br><span>Chương 04 — Function Calling, Tool Calling & MCP</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f&amp;hashtags=backend%2cai%2cllm"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f&amp;title=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;summary=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f&title=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+    end</pre><p>Pattern &ldquo;retry kèm error feedback&rdquo; (gửi lại lỗi validate cho model tự sửa) giải quyết phần lớn lỗi lần 1 — nhưng phải giới hạn 1–2 lần, có circuit breaker, vì retry là nhân chi phí.</p>
+<h3 id="43-ví-dụ-hoàn-chỉnh-nodejstypescript">4.3. Ví dụ hoàn chỉnh (Node.js/TypeScript)<a hidden class="anchor" aria-hidden="true" href="#43-ví-dụ-hoàn-chỉnh-nodejstypescript">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Anthropic</span> <span style="color:#66d9ef">from</span> <span style="color:#e6db74">&#34;@anthropic-ai/sdk&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">z</span> } <span style="color:#66d9ef">from</span> <span style="color:#e6db74">&#34;zod&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">OrderSchema</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">z</span>.<span style="color:#66d9ef">object</span>({
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">customer_name</span>: <span style="color:#66d9ef">z.string</span>().<span style="color:#a6e22e">nullable</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">items</span>: <span style="color:#66d9ef">z.array</span>(<span style="color:#a6e22e">z</span>.<span style="color:#66d9ef">object</span>({ <span style="color:#a6e22e">name</span>: <span style="color:#66d9ef">z.string</span>(), <span style="color:#a6e22e">quantity</span>: <span style="color:#66d9ef">z.number</span>() })),
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">total_vnd</span>: <span style="color:#66d9ef">z.number</span>().<span style="color:#a6e22e">nullable</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">urgency</span>: <span style="color:#66d9ef">z.enum</span>([<span style="color:#e6db74">&#34;low&#34;</span>, <span style="color:#e6db74">&#34;normal&#34;</span>, <span style="color:#e6db74">&#34;high&#34;</span>]),
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Order</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">z</span>.<span style="color:#66d9ef">infer</span>&lt;<span style="color:#f92672">typeof</span> <span style="color:#a6e22e">OrderSchema</span>&gt;;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Anthropic</span>({ <span style="color:#a6e22e">timeout</span>: <span style="color:#66d9ef">30_000</span> });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">extractOrder</span>(<span style="color:#a6e22e">email</span>: <span style="color:#66d9ef">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Promise</span>&lt;<span style="color:#f92672">Order</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">resp</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">messages</span>.<span style="color:#a6e22e">create</span>({
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">model</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;claude-sonnet-4-5&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">max_tokens</span>: <span style="color:#66d9ef">1024</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">temperature</span>: <span style="color:#66d9ef">0</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>: <span style="color:#66d9ef">extractOrderPrompt.system</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Dùng tool schema như cơ chế ép structured output
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">tools</span><span style="color:#f92672">:</span> [{
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;save_order&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">description</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Lưu thông tin đơn hàng đã trích xuất&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">input_schema</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;object&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">properties</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">customer_name</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#34;string&#34;</span>, <span style="color:#e6db74">&#34;null&#34;</span>] },
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">items</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;array&#34;</span>, <span style="color:#a6e22e">items</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;object&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">properties</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;string&#34;</span> }, <span style="color:#a6e22e">quantity</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;number&#34;</span> } },
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">required</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#34;name&#34;</span>, <span style="color:#e6db74">&#34;quantity&#34;</span>] } },
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">total_vnd</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#34;number&#34;</span>, <span style="color:#e6db74">&#34;null&#34;</span>] },
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">urgency</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">enum</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#34;low&#34;</span>, <span style="color:#e6db74">&#34;normal&#34;</span>, <span style="color:#e6db74">&#34;high&#34;</span>] },
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">required</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#34;customer_name&#34;</span>, <span style="color:#e6db74">&#34;items&#34;</span>, <span style="color:#e6db74">&#34;total_vnd&#34;</span>, <span style="color:#e6db74">&#34;urgency&#34;</span>],
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>    }],
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">tool_choice</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;tool&#34;</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;save_order&#34;</span> }, <span style="color:#75715e">// ép model luôn dùng tool
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">messages</span><span style="color:#f92672">:</span> [{ <span style="color:#a6e22e">role</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;user&#34;</span>, <span style="color:#a6e22e">content</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`&lt;email&gt;</span><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#e6db74">n</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">email</span><span style="color:#e6db74">}</span><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#e6db74">n&lt;/email&gt;`</span> }],
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">toolUse</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">find</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">b</span>.<span style="color:#66d9ef">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;tool_use&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">toolUse</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#34;no structured output&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">OrderSchema</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">toolUse</span>.<span style="color:#a6e22e">input</span>); <span style="color:#75715e">// validate lần cuối — luôn luôn
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
+<ul>
+<li><strong>Fine-tuning vs Prompt Engineering</strong>: fine-tuning dạy model <em>hành vi/giọng điệu/format</em> qua dữ liệu train; prompt dạy qua chỉ dẫn mỗi request. Prompt: ship trong giờ, đổi trong phút, không cần data pipeline. Fine-tuning: tốn dataset + chi phí train + vận hành model riêng, và <strong>đóng băng</strong> hành vi. Quy tắc: vắt kiệt prompt engineering (kèm few-shot, kèm RAG) trước; chỉ fine-tune khi (a) cần format/giọng điệu rất đặc thù ở volume lớn, (b) muốn model nhỏ bắt chước model lớn để giảm chi phí.</li>
+<li><strong>Prompt dài (nhiều chỉ dẫn, nhiều ví dụ) vs chi phí</strong>: mỗi chỉ dẫn thêm vào system prompt là chi phí trên mọi request mãi mãi. Đo lường: nếu bỏ một đoạn mà eval không giảm — bỏ hẳn.</li>
+<li><strong>Ép schema chặt vs độ linh hoạt</strong>: schema càng chặt càng dễ tích hợp, nhưng field <code>enum</code> quá hẹp khiến model nhét sai giá trị gần nhất thay vì báo không xác định. Luôn có lối thoát: giá trị <code>&quot;other&quot;</code>, field <code>null</code>, hoặc field <code>confidence</code>.</li>
+</ul>
+<h2 id="6-production-considerations">6. Production Considerations<a hidden class="anchor" aria-hidden="true" href="#6-production-considerations">#</a></h2>
+<ul>
+<li><strong>Prompt là artifact deploy được</strong>: lưu trong repo hoặc prompt registry, có version, có changelog, có eval chạy trước khi release (Chương 11). Đổi 1 câu trong system prompt có thể đổi hành vi toàn hệ thống — đối xử như đổi code.</li>
+<li><strong>Log cặp (prompt_version, input_hash, output)</strong>: không log được thì không debug được &ldquo;vì sao hôm qua đúng hôm nay sai&rdquo;.</li>
+<li><strong>Timeout + retry có phân loại</strong>: lỗi schema → retry kèm feedback (tối đa 2); lỗi 429/5xx → backoff; lỗi content filter → không retry, ghi nhận.</li>
+<li><strong>Cache</strong>: task extraction với input trùng lặp (email template, tài liệu chuẩn) → cache theo hash(input + prompt_version) tiết kiệm đáng kể.</li>
+<li><strong>Security</strong>: input người dùng luôn nằm trong delimiter, không bao giờ nối thẳng vào system prompt (Chương 12).</li>
+</ul>
+<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
+<ul>
+<li><strong>Prompt khổng lồ chữa mọi bệnh</strong>: mỗi lần gặp lỗi lại đắp thêm một câu &ldquo;đừng làm X&rdquo; → system prompt 3.000 token mâu thuẫn nội tại, không ai dám sửa. Chữa đúng: eval + tách task nhỏ.</li>
+<li><strong>Nối chuỗi tay trong business logic</strong>: prompt rải rác khắp codebase, không version, sửa một chỗ quên chỗ khác.</li>
+<li><strong>Tin JSON mode là đủ</strong>: JSON hợp lệ ≠ schema đúng ≠ giá trị đúng. Ba tầng kiểm tra khác nhau.</li>
+<li><strong>Parse output bằng regex/string split</strong>: vỡ ngay khi model đổi cách diễn đạt. Dùng structured output + validator.</li>
+<li><strong>Một prompt làm 5 việc</strong>: trích xuất + phân loại + tóm tắt + dịch + đánh giá trong một call → chất lượng từng việc đều giảm, không đo được việc nào hỏng. Tách pipeline.</li>
+</ul>
+<h2 id="8-best-practices">8. Best Practices<a hidden class="anchor" aria-hidden="true" href="#8-best-practices">#</a></h2>
+<ul>
+<li>Chuẩn hóa &ldquo;Prompt Definition&rdquo; trong codebase: id, version, model, sampling config, schema đầu ra, template — một object duy nhất, một nơi duy nhất.</li>
+<li>Mỗi prompt có <strong>bộ test case</strong> (input mẫu → output kỳ vọng hoặc tiêu chí chấm) chạy trong CI như unit test.</li>
+<li>Task quan trọng: thêm field <code>confidence</code> hoặc <code>&quot;insufficient_information&quot;: true</code> để backend route các case model không chắc sang người xử lý.</li>
+<li>Viết prompt bằng ngôn ngữ có nhiều dữ liệu train nhất cho <em>chỉ dẫn</em> (tiếng Anh thường ổn định hơn), giữ <em>dữ liệu và output</em> bằng tiếng Việt — pattern phổ biến cho ứng dụng Việt: system prompt tiếng Anh, yêu cầu &ldquo;respond in Vietnamese&rdquo;.</li>
+<li>Định kỳ chạy lại eval khi provider cập nhật model — prompt tối ưu cho model cũ có thể kém trên model mới.</li>
+</ul>
+<h2 id="9-khi-nào-không-nên-dùng">9. Khi nào KHÔNG nên dùng<a hidden class="anchor" aria-hidden="true" href="#9-khi-nào-không-nên-dùng">#</a></h2>
+<ul>
+<li>Input có cấu trúc sẵn (form, JSON, CSV chuẩn) → parser thường, đúng 100%, chi phí 0.</li>
+<li>Phân loại với tập nhãn nhỏ, dữ liệu huấn luyện dồi dào, volume cực lớn → classifier nhỏ tự host rẻ hơn LLM hàng trăm lần.</li>
+<li>Yêu cầu extraction đúng 100% cho nghiệp vụ tài chính/pháp lý → LLM chỉ được làm bước gợi ý, con người duyệt; hoặc không dùng.</li>
+<li>Template hóa văn bản với biến cố định (&ldquo;Chào {name}, đơn {id} đã giao&rdquo;) → string template, không cần model.</li>
+</ul>
+<hr>
+<p><strong>Chương tiếp theo</strong>: <a href="/series/ai-for-backend-engineers/04-function-calling-mcp/">04 — Function Calling, Tool Calling &amp; MCP</a> — cho LLM khả năng <em>hành động</em> lên hệ thống thay vì chỉ <em>nói</em>.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/ai/">Ai</a></li>
+      <li><a href="http://localhost:1313/tags/llm/">Llm</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/ai-for-backend-engineers/02-llm-fundamentals/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 02 — LLM Fundamentals: Token, Context, Embedding, Sampling</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/ai-for-backend-engineers/04-function-calling-mcp/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 04 — Function Calling, Tool Calling &amp; MCP</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f&amp;hashtags=backend%2cai%2cllm">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f&amp;title=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;summary=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f&title=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 03 — Prompt Engineering & Structured Output on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2003%20%e2%80%94%20Prompt%20Engineering%20%26%20Structured%20Output&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f03-prompt-engineering%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

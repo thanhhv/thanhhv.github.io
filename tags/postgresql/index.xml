@@ -1,113 +1,236 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Postgresql on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/postgresql/</link><description>Recent content in Postgresql on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Sat, 11 Jul 2026 20:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/postgresql/index.xml" rel="self" type="application/rss+xml"/><item><title>Chương 13 — Anti-pattern &amp; Khi nào PostgreSQL không phù hợp</title><link>https://thanhhv.github.io/series/postgres-internal/13-antipatterns-limits/</link><pubDate>Sat, 11 Jul 2026 20:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/13-antipatterns-limits/</guid><description>&lt;blockquote>
-&lt;p>Level 5. Chương kết. Phần một: các cách dùng sai lặp đi lặp lại — mỗi cái là một
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Postgresql on Thanh HV&#39;s Blog</title>
+    <link>http://localhost:1313/tags/postgresql/</link>
+    <description>Recent content in Postgresql on Thanh HV&#39;s Blog</description>
+    <generator>Hugo -- 0.146.7</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 11 Jul 2026 20:00:00 +0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/postgresql/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Chương 13 — Anti-pattern &amp; Khi nào PostgreSQL không phù hợp</title>
+      <link>http://localhost:1313/series/postgres-internal/13-antipatterns-limits/</link>
+      <pubDate>Sat, 11 Jul 2026 20:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/13-antipatterns-limits/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 5. Chương kết. Phần một: các cách dùng sai lặp đi lặp lại — mỗi cái là một
 chương lý thuyết bị vi phạm. Phần hai: ranh giới kiến trúc thật sự của PostgreSQL —
-nơi vấn đề không phải &amp;ldquo;dùng sai&amp;rdquo; mà là &amp;ldquo;chọn sai công cụ&amp;rdquo;.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="phần-1--anti-patterns">Phần 1 — Anti-patterns&lt;/h2>
-&lt;p>Mỗi anti-pattern dưới đây đều có chung cấu trúc: &lt;em>tiện trước mắt → vi phạm một cơ chế nội tại → trả giá trễ và trả bằng lãi kép&lt;/em>.&lt;/p></description></item><item><title>Chương 12 — Production Failure Cases: 21 hồ sơ sự cố</title><link>https://thanhhv.github.io/series/postgres-internal/12-production-failure-cases/</link><pubDate>Sat, 11 Jul 2026 19:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/12-production-failure-cases/</guid><description>&lt;blockquote>
-&lt;p>Level 5. Mỗi case theo khuôn: Triệu chứng → Root cause → Bên trong PostgreSQL →
+nơi vấn đề không phải &amp;ldquo;dùng sai&amp;rdquo; mà là &amp;ldquo;chọn sai công cụ&amp;rdquo;.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;phần-1--anti-patterns&#34;&gt;Phần 1 — Anti-patterns&lt;/h2&gt;
+&lt;p&gt;Mỗi anti-pattern dưới đây đều có chung cấu trúc: &lt;em&gt;tiện trước mắt → vi phạm một cơ chế nội tại → trả giá trễ và trả bằng lãi kép&lt;/em&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 12 — Production Failure Cases: 21 hồ sơ sự cố</title>
+      <link>http://localhost:1313/series/postgres-internal/12-production-failure-cases/</link>
+      <pubDate>Sat, 11 Jul 2026 19:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/12-production-failure-cases/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 5. Mỗi case theo khuôn: Triệu chứng → Root cause → Bên trong PostgreSQL →
 Điều tra (metric/log/lệnh) → Khắc phục → Phòng tránh. Các case tham chiếu ngược
-về chương lý thuyết tương ứng — chương này đồng thời là bài tổng ôn.&lt;/p>&lt;/blockquote>
-&lt;p>&lt;strong>Dashboard nền khuyến nghị&lt;/strong> (dùng chung cho mọi case): wait events theo thời gian (pg_stat_activity), TPS + p99 latency, connections theo state, dead tuples + last_(auto)vacuum các bảng top, WAL bytes/s + checkpoint timeline, replication lag byte, disk %util + fsync latency, cache hit ratio, &lt;code>max(age(datfrozenxid))&lt;/code>.&lt;/p></description></item><item><title>Chương 11 — Checkpoint, Recovery, Replication</title><link>https://thanhhv.github.io/series/postgres-internal/11-recovery-replication/</link><pubDate>Sat, 11 Jul 2026 18:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/11-recovery-replication/</guid><description>&lt;blockquote>
-&lt;p>Level 3–5. Chương 5 hứa: &amp;ldquo;crash không mất gì, WAL dựng lại được&amp;rdquo;. Chương này
+về chương lý thuyết tương ứng — chương này đồng thời là bài tổng ôn.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Dashboard nền khuyến nghị&lt;/strong&gt; (dùng chung cho mọi case): wait events theo thời gian (pg_stat_activity), TPS + p99 latency, connections theo state, dead tuples + last_(auto)vacuum các bảng top, WAL bytes/s + checkpoint timeline, replication lag byte, disk %util + fsync latency, cache hit ratio, &lt;code&gt;max(age(datfrozenxid))&lt;/code&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 11 — Checkpoint, Recovery, Replication</title>
+      <link>http://localhost:1313/series/postgres-internal/11-recovery-replication/</link>
+      <pubDate>Sat, 11 Jul 2026 18:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/11-recovery-replication/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 3–5. Chương 5 hứa: &amp;ldquo;crash không mất gì, WAL dựng lại được&amp;rdquo;. Chương này
 trả nghĩa vụ chứng minh — và mở rộng cùng cơ chế đó thành PITR và replication:
-ba tính năng, một nền tảng duy nhất là WAL replay.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;ul>
-&lt;li>&lt;strong>Crash recovery:&lt;/strong> sau mất điện, dựng lại trạng thái đã commit — tự động, không thao tác tay, thời gian đoán được.&lt;/li>
-&lt;li>&lt;strong>Backup/PITR:&lt;/strong> &amp;ldquo;khôi phục về 14:59, ngay trước câu DELETE nhầm lúc 15:00&amp;rdquo; — backup định kỳ thuần túy không làm nổi.&lt;/li>
-&lt;li>&lt;strong>Replication:&lt;/strong> bản sao nóng, trễ mili giây, đọc được — và failover khi primary chết.&lt;/li>
-&lt;/ul>
-&lt;p>Cả ba là cùng một bài toán: &lt;strong>tái tạo trạng thái từ (một ảnh chụp cũ) + (dòng WAL)&lt;/strong>. Ai kiểm soát điểm dừng replay, người đó có tính năng tương ứng: dừng ở cuối WAL = crash recovery; dừng ở timestamp = PITR; không bao giờ dừng = replica.&lt;/p></description></item><item><title>Chương 10 — VACUUM, HOT, Freeze, Wraparound</title><link>https://thanhhv.github.io/series/postgres-internal/10-vacuum-hot-freeze/</link><pubDate>Sat, 11 Jul 2026 17:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/10-vacuum-hot-freeze/</guid><description>&lt;blockquote>
-&lt;p>Level 3–5. MVCC vay nợ: mỗi UPDATE/DELETE để lại rác, mỗi transaction đốt một XID hữu hạn.
+ba tính năng, một nền tảng duy nhất là WAL replay.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Crash recovery:&lt;/strong&gt; sau mất điện, dựng lại trạng thái đã commit — tự động, không thao tác tay, thời gian đoán được.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Backup/PITR:&lt;/strong&gt; &amp;ldquo;khôi phục về 14:59, ngay trước câu DELETE nhầm lúc 15:00&amp;rdquo; — backup định kỳ thuần túy không làm nổi.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Replication:&lt;/strong&gt; bản sao nóng, trễ mili giây, đọc được — và failover khi primary chết.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Cả ba là cùng một bài toán: &lt;strong&gt;tái tạo trạng thái từ (một ảnh chụp cũ) + (dòng WAL)&lt;/strong&gt;. Ai kiểm soát điểm dừng replay, người đó có tính năng tương ứng: dừng ở cuối WAL = crash recovery; dừng ở timestamp = PITR; không bao giờ dừng = replica.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 10 — VACUUM, HOT, Freeze, Wraparound</title>
+      <link>http://localhost:1313/series/postgres-internal/10-vacuum-hot-freeze/</link>
+      <pubDate>Sat, 11 Jul 2026 17:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/10-vacuum-hot-freeze/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 3–5. MVCC vay nợ: mỗi UPDATE/DELETE để lại rác, mỗi transaction đốt một XID hữu hạn.
 VACUUM là bộ máy trả nợ. Vận hành PostgreSQL nghiêm túc = vận hành VACUUM nghiêm túc.
-Chương này là chương &amp;ldquo;đáng tiền&amp;rdquo; nhất với người trực production.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement--ba-món-nợ-của-mvcc">1. Problem Statement — ba món nợ của MVCC&lt;/h2>
-&lt;ol>
-&lt;li>&lt;strong>Dead tuple:&lt;/strong> version cũ không còn snapshot nào cần (Chương 6). Không dọn → bảng/index phình, cache loãng, scan chậm.&lt;/li>
-&lt;li>&lt;strong>Không gian XID hữu hạn:&lt;/strong> XID 32 bit so sánh vòng tròn. Tuple mang xmin quá già (cách hiện tại &amp;gt;2³¹) sẽ bị phép so sánh hiểu ngược thành &amp;ldquo;tương lai&amp;rdquo; → &lt;strong>dữ liệu committed biến mất&lt;/strong>. Phải &amp;ldquo;đóng băng&amp;rdquo; (freeze) tuple già trước khi điều đó xảy ra.&lt;/li>
-&lt;li>&lt;strong>Thống kê &amp;amp; Visibility Map lạc hậu:&lt;/strong> planner cần ANALYZE; index-only scan cần VM được cập nhật.&lt;/li>
-&lt;/ol>
-&lt;p>VACUUM giải cả ba. &lt;strong>Nếu bỏ VACUUM?&lt;/strong> — không phải &amp;ldquo;chậm dần&amp;rdquo; mà là &lt;strong>dừng hẳn&lt;/strong>: đầy disk vì bloat, rồi trước cả đó, cluster tự khóa ghi để chống wraparound. Không có lựa chọn &amp;ldquo;không vacuum&amp;rdquo;, chỉ có &amp;ldquo;vacuum có kiểm soát&amp;rdquo; hoặc &amp;ldquo;vacuum lúc 3h sáng theo lệnh của PostgreSQL&amp;rdquo;.&lt;/p></description></item><item><title>Chương 9 — Index Internals: B-tree, Hash, GIN, GiST, BRIN</title><link>https://thanhhv.github.io/series/postgres-internal/09-index-internals/</link><pubDate>Sat, 11 Jul 2026 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/09-index-internals/</guid><description>&lt;blockquote>
-&lt;p>Level 4. Index là cấu trúc dữ liệu trên disk — nghĩa là mọi thiết kế của nó
-bị chi phối bởi page 8KB, WAL, MVCC và concurrency. Chương này mở nắp từng loại.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>Heap không có thứ tự (Chương 3): tìm &lt;code>WHERE email='x@y.vn'&lt;/code> = đọc toàn bộ bảng, O(N) page. Bảng 100GB → ~13 giây chỉ riêng I/O tuần tự, mỗi query. Cần cấu trúc phụ ánh xạ &lt;code>giá trị → ctid&lt;/code> với chi phí tra cứu ~O(log N) &lt;strong>tính bằng số page&lt;/strong> (không phải số phần tử — mỗi page là một lần I/O tiềm năng).&lt;/p></description></item><item><title>Chương 8 — Query Processing: từ SQL text đến thao tác trên Page</title><link>https://thanhhv.github.io/series/postgres-internal/08-query-processing/</link><pubDate>Sat, 11 Jul 2026 15:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/08-query-processing/</guid><description>&lt;blockquote>
-&lt;p>Level 4. SQL là ngôn ngữ khai báo: bạn nói &lt;em>cần gì&lt;/em>, không nói &lt;em>làm thế nào&lt;/em>.
+Chương này là chương &amp;ldquo;đáng tiền&amp;rdquo; nhất với người trực production.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement--ba-món-nợ-của-mvcc&#34;&gt;1. Problem Statement — ba món nợ của MVCC&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Dead tuple:&lt;/strong&gt; version cũ không còn snapshot nào cần (Chương 6). Không dọn → bảng/index phình, cache loãng, scan chậm.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Không gian XID hữu hạn:&lt;/strong&gt; XID 32 bit so sánh vòng tròn. Tuple mang xmin quá già (cách hiện tại &amp;gt;2³¹) sẽ bị phép so sánh hiểu ngược thành &amp;ldquo;tương lai&amp;rdquo; → &lt;strong&gt;dữ liệu committed biến mất&lt;/strong&gt;. Phải &amp;ldquo;đóng băng&amp;rdquo; (freeze) tuple già trước khi điều đó xảy ra.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Thống kê &amp;amp; Visibility Map lạc hậu:&lt;/strong&gt; planner cần ANALYZE; index-only scan cần VM được cập nhật.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;VACUUM giải cả ba. &lt;strong&gt;Nếu bỏ VACUUM?&lt;/strong&gt; — không phải &amp;ldquo;chậm dần&amp;rdquo; mà là &lt;strong&gt;dừng hẳn&lt;/strong&gt;: đầy disk vì bloat, rồi trước cả đó, cluster tự khóa ghi để chống wraparound. Không có lựa chọn &amp;ldquo;không vacuum&amp;rdquo;, chỉ có &amp;ldquo;vacuum có kiểm soát&amp;rdquo; hoặc &amp;ldquo;vacuum lúc 3h sáng theo lệnh của PostgreSQL&amp;rdquo;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 9 — Index Internals: B-tree, Hash, GIN, GiST, BRIN</title>
+      <link>http://localhost:1313/series/postgres-internal/09-index-internals/</link>
+      <pubDate>Sat, 11 Jul 2026 16:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/09-index-internals/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 4. Index là cấu trúc dữ liệu trên disk — nghĩa là mọi thiết kế của nó
+bị chi phối bởi page 8KB, WAL, MVCC và concurrency. Chương này mở nắp từng loại.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;Heap không có thứ tự (Chương 3): tìm &lt;code&gt;WHERE email=&#39;x@y.vn&#39;&lt;/code&gt; = đọc toàn bộ bảng, O(N) page. Bảng 100GB → ~13 giây chỉ riêng I/O tuần tự, mỗi query. Cần cấu trúc phụ ánh xạ &lt;code&gt;giá trị → ctid&lt;/code&gt; với chi phí tra cứu ~O(log N) &lt;strong&gt;tính bằng số page&lt;/strong&gt; (không phải số phần tử — mỗi page là một lần I/O tiềm năng).&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 8 — Query Processing: từ SQL text đến thao tác trên Page</title>
+      <link>http://localhost:1313/series/postgres-internal/08-query-processing/</link>
+      <pubDate>Sat, 11 Jul 2026 15:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/08-query-processing/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 4. SQL là ngôn ngữ khai báo: bạn nói &lt;em&gt;cần gì&lt;/em&gt;, không nói &lt;em&gt;làm thế nào&lt;/em&gt;.
 Toàn bộ chương này là câu chuyện PostgreSQL biến &amp;ldquo;cần gì&amp;rdquo; thành &amp;ldquo;làm thế nào&amp;rdquo; —
-và tại sao đôi khi nó chọn sai.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sql" data-lang="sql">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">SELECT&lt;/span> &lt;span style="color:#66d9ef">c&lt;/span>.name, &lt;span style="color:#66d9ef">sum&lt;/span>(o.amount)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">FROM&lt;/span> customers &lt;span style="color:#66d9ef">c&lt;/span> &lt;span style="color:#66d9ef">JOIN&lt;/span> orders o &lt;span style="color:#66d9ef">ON&lt;/span> o.customer_id &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">c&lt;/span>.id
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">WHERE&lt;/span> &lt;span style="color:#66d9ef">c&lt;/span>.region &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;APAC&amp;#39;&lt;/span> &lt;span style="color:#66d9ef">AND&lt;/span> o.created_at &lt;span style="color:#f92672">&amp;gt;&lt;/span> now() &lt;span style="color:#f92672">-&lt;/span> interval &lt;span style="color:#e6db74">&amp;#39;30 days&amp;#39;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">GROUP&lt;/span> &lt;span style="color:#66d9ef">BY&lt;/span> &lt;span style="color:#66d9ef">c&lt;/span>.name;
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Câu này có thể thực thi theo hàng nghìn cách: quét bảng nào trước, dùng index nào, join bằng thuật toán nào, group bằng hash hay sort. Chênh lệch giữa plan tốt nhất và tệ nhất trên dữ liệu lớn: &lt;strong>10⁴–10⁶ lần&lt;/strong>. Không tầng nào khác của database tạo ra chênh lệch hiệu năng lớn như planner.&lt;/p></description></item><item><title>Chương 7 — Lock Manager</title><link>https://thanhhv.github.io/series/postgres-internal/07-lock-manager/</link><pubDate>Sat, 11 Jul 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/07-lock-manager/</guid><description>&lt;blockquote>
-&lt;p>Level 3. MVCC loại bỏ xung đột reader–writer. Phần còn lại — writer–writer,
+và tại sao đôi khi nó chọn sai.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;c&lt;/span&gt;.name, &lt;span style=&#34;color:#66d9ef&#34;&gt;sum&lt;/span&gt;(o.amount)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; customers &lt;span style=&#34;color:#66d9ef&#34;&gt;c&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;JOIN&lt;/span&gt; orders o &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; o.customer_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;c&lt;/span&gt;.id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;c&lt;/span&gt;.region &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;APAC&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; o.created_at &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; now() &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; interval &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;30 days&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;GROUP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;BY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;c&lt;/span&gt;.name;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Câu này có thể thực thi theo hàng nghìn cách: quét bảng nào trước, dùng index nào, join bằng thuật toán nào, group bằng hash hay sort. Chênh lệch giữa plan tốt nhất và tệ nhất trên dữ liệu lớn: &lt;strong&gt;10⁴–10⁶ lần&lt;/strong&gt;. Không tầng nào khác của database tạo ra chênh lệch hiệu năng lớn như planner.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 7 — Lock Manager</title>
+      <link>http://localhost:1313/series/postgres-internal/07-lock-manager/</link>
+      <pubDate>Sat, 11 Jul 2026 14:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/07-lock-manager/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 3. MVCC loại bỏ xung đột reader–writer. Phần còn lại — writer–writer,
 DDL, và bảo vệ cấu trúc trong bộ nhớ — thuộc về ba tầng lock của PostgreSQL.
-Đa số sự cố &amp;ldquo;database treo&amp;rdquo; trong production là sự cố lock, không phải sự cố I/O.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>Ba lớp bài toán tranh chấp khác nhau về bản chất và thang thời gian:&lt;/p>
-&lt;ol>
-&lt;li>&lt;strong>Micro (nanô giây):&lt;/strong> hai CPU cùng sửa một biến trong shared memory (refcount của buffer). Cần loại trừ trong vài chục chu kỳ CPU.&lt;/li>
-&lt;li>&lt;strong>Meso (micro giây):&lt;/strong> một backend sửa nội dung page trong khi backend khác đọc. Cần read/write lock ngắn.&lt;/li>
-&lt;li>&lt;strong>Macro (mili giây → giờ):&lt;/strong> hai transaction cùng UPDATE một row; ALTER TABLE trong khi query đang chạy. Cần lock theo ngữ nghĩa transaction: có hàng đợi, có phát hiện deadlock, tự nhả khi commit.&lt;/li>
-&lt;/ol>
-&lt;p>Một cơ chế duy nhất không phục vụ nổi cả ba (lock có hàng đợi + deadlock detection quá đắt cho việc tăng một biến đếm). PostgreSQL xây ba tầng:&lt;/p></description></item><item><title>Chương 6 — Transaction Engine: MVCC, Snapshot, Visibility</title><link>https://thanhhv.github.io/series/postgres-internal/06-mvcc-transactions/</link><pubDate>Sat, 11 Jul 2026 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/06-mvcc-transactions/</guid><description>&lt;blockquote>
-&lt;p>Level 3. MVCC là quyết định thiết kế trung tâm của PostgreSQL. Hiểu nó là hiểu được:
+Đa số sự cố &amp;ldquo;database treo&amp;rdquo; trong production là sự cố lock, không phải sự cố I/O.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;Ba lớp bài toán tranh chấp khác nhau về bản chất và thang thời gian:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Micro (nanô giây):&lt;/strong&gt; hai CPU cùng sửa một biến trong shared memory (refcount của buffer). Cần loại trừ trong vài chục chu kỳ CPU.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Meso (micro giây):&lt;/strong&gt; một backend sửa nội dung page trong khi backend khác đọc. Cần read/write lock ngắn.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Macro (mili giây → giờ):&lt;/strong&gt; hai transaction cùng UPDATE một row; ALTER TABLE trong khi query đang chạy. Cần lock theo ngữ nghĩa transaction: có hàng đợi, có phát hiện deadlock, tự nhả khi commit.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Một cơ chế duy nhất không phục vụ nổi cả ba (lock có hàng đợi + deadlock detection quá đắt cho việc tăng một biến đếm). PostgreSQL xây ba tầng:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 6 — Transaction Engine: MVCC, Snapshot, Visibility</title>
+      <link>http://localhost:1313/series/postgres-internal/06-mvcc-transactions/</link>
+      <pubDate>Sat, 11 Jul 2026 13:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/06-mvcc-transactions/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 3. MVCC là quyết định thiết kế trung tâm của PostgreSQL. Hiểu nó là hiểu được:
 tại sao reader không block writer, tại sao có dead tuple, tại sao có VACUUM,
-tại sao &amp;ldquo;idle in transaction&amp;rdquo; là kẻ giết hệ thống thầm lặng.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>1.000 transaction đồng thời trên cùng bảng. Yêu cầu Isolation: mỗi transaction thấy database như một ảnh chụp nhất quán, không thấy thay đổi dở dang của người khác.&lt;/p></description></item><item><title>Chương 5 — WAL: Write-Ahead Log</title><link>https://thanhhv.github.io/series/postgres-internal/05-wal/</link><pubDate>Sat, 11 Jul 2026 12:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/05-wal/</guid><description>&lt;blockquote>
-&lt;p>Level 3. WAL là phát minh quan trọng nhất của ngành database (ARIES, 1992).
+tại sao &amp;ldquo;idle in transaction&amp;rdquo; là kẻ giết hệ thống thầm lặng.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;1.000 transaction đồng thời trên cùng bảng. Yêu cầu Isolation: mỗi transaction thấy database như một ảnh chụp nhất quán, không thấy thay đổi dở dang của người khác.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 5 — WAL: Write-Ahead Log</title>
+      <link>http://localhost:1313/series/postgres-internal/05-wal/</link>
+      <pubDate>Sat, 11 Jul 2026 12:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/05-wal/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 3. WAL là phát minh quan trọng nhất của ngành database (ARIES, 1992).
 Nó là lý do PostgreSQL dám giữ dirty page trong RAM, là nền của recovery,
-replication, PITR — và là nguồn của một nửa số sự cố production về disk.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>Chương 1 xác lập hai sự thật vật lý mâu thuẫn nhau:&lt;/p>
-&lt;ul>
-&lt;li>Durability đòi hỏi fsync trước khi báo commit — mà fsync đắt (~0.1–1ms NVMe, ~10ms HDD).&lt;/li>
-&lt;li>Thay đổi của một transaction rải rác trên nhiều page (heap, nhiều index, toast) — fsync tất cả các page đó mỗi commit = nhiều random write + nhiều fsync → vài chục ms mỗi commit → throughput chết.&lt;/li>
-&lt;/ul>
-&lt;p>Thêm bài toán thứ ba: page 8KB &amp;gt; sector atomic 4KB → crash giữa lúc ghi page tạo &lt;strong>torn page&lt;/strong> — nửa mới nửa cũ, checksum sai, không dùng được.&lt;/p></description></item><item><title>Chương 4 — Buffer Manager</title><link>https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/</link><pubDate>Sat, 11 Jul 2026 11:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/04-buffer-manager/</guid><description>&lt;blockquote>
-&lt;p>Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định
-PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều &lt;code>read()&lt;/code>/&lt;code>write()&lt;/code> xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.&lt;/p></description></item><item><title>Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map</title><link>https://thanhhv.github.io/series/postgres-internal/03-physical-storage/</link><pubDate>Sat, 11 Jul 2026 10:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/03-physical-storage/</guid><description>&lt;blockquote>
-&lt;p>Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page
-là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>Bảng &lt;code>orders&lt;/code> 200GB phải nằm trên disk sao cho:&lt;/p>
-&lt;ul>
-&lt;li>Tìm một order theo con trỏ mất đúng 1 lần đọc disk.&lt;/li>
-&lt;li>Thêm order mới không phải dịch chuyển dữ liệu cũ.&lt;/li>
-&lt;li>Nhiều version của một row (MVCC) cùng tồn tại được.&lt;/li>
-&lt;li>Crash giữa chừng không phá cấu trúc.&lt;/li>
-&lt;li>Cột &lt;code>note&lt;/code> dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh.&lt;/li>
-&lt;/ul>
-&lt;p>Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.&lt;/p></description></item><item><title>Chương 2 — Kiến trúc tổng thể: Process &amp; Shared Memory</title><link>https://thanhhv.github.io/series/postgres-internal/02-architecture-process-memory/</link><pubDate>Sat, 11 Jul 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/02-architecture-process-memory/</guid><description>&lt;blockquote>
-&lt;p>Level 1–2. PostgreSQL là một &amp;ldquo;hệ điều hành thu nhỏ&amp;rdquo;: có process quản lý, có bộ nhớ chia sẻ,
-có scheduler nền, có cơ chế phục hồi. Chương này vẽ bản đồ toàn bộ hệ thống đó.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>Một database server phải đồng thời: phục vụ hàng trăm connection, ghi dữ liệu nền, dọn rác, đồng bộ replica, thu thập thống kê — mà một thành phần chết không được kéo sập dữ liệu. Bài toán: &lt;strong>tổ chức các đơn vị thực thi (process/thread) và bộ nhớ chung như thế nào để vừa cô lập lỗi, vừa chia sẻ trạng thái hiệu quả?&lt;/strong>&lt;/p></description></item><item><title>Chương 1 — Database Fundamentals: từ First Principles</title><link>https://thanhhv.github.io/series/postgres-internal/01-database-fundamentals/</link><pubDate>Sat, 11 Jul 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/01-database-fundamentals/</guid><description>&lt;blockquote>
-&lt;p>Level 1. Trước khi nói về PostgreSQL, phải trả lời câu hỏi gốc:
-&lt;strong>tại sao phần mềm quản lý dữ liệu lại khó đến mức cần một engine hàng triệu dòng code?&lt;/strong>&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>Mọi hệ thống phần mềm đều quy về một bài toán: &lt;strong>nhận dữ liệu, lưu dữ liệu, trả lại dữ liệu đúng&lt;/strong>.&lt;/p>
-&lt;p>Một hệ thống thanh toán nhận lệnh chuyển 500.000đ từ tài khoản A sang B. Yêu cầu nghe đơn giản:&lt;/p></description></item><item><title>PostgreSQL Internals — Bên dưới lớp SQL</title><link>https://thanhhv.github.io/series/postgres-internal/00-muc-luc/</link><pubDate>Sat, 11 Jul 2026 07:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/postgres-internal/00-muc-luc/</guid><description>&lt;blockquote>
-&lt;p>Bộ tài liệu chuyên sâu về cách PostgreSQL hoạt động bên dưới lớp SQL và Storage,
-viết cho Backend Engineer, Database Engineer và Software Architect.&lt;/p>&lt;/blockquote>
-&lt;h2 id="tài-liệu-này-không-phải-là-gì">Tài liệu này KHÔNG phải là gì&lt;/h2>
-&lt;p>Đây không phải tài liệu dạy SQL. Không có &lt;code>CREATE TABLE&lt;/code> ở chương mở đầu. Không giải thích cú pháp.&lt;/p>
-&lt;p>Đây là tài liệu giúp bạn hiểu PostgreSQL như một &lt;strong>hệ điều hành thu nhỏ dành cho dữ liệu&lt;/strong>: cách nó tổ chức bộ nhớ, quản lý page, lưu tuple, điều phối transaction, ghi WAL, phục hồi sau sự cố, tối ưu truy vấn, và phối hợp với OS để đạt hiệu năng và độ tin cậy.&lt;/p></description></item><item><title>4 Nguyên Tắc Vàng Khi Dùng Index Mà Mình Ước Gì Biết Sớm Hơn</title><link>https://thanhhv.github.io/posts/database-index/</link><pubDate>Fri, 01 May 2026 20:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/database-index/</guid><description>&lt;p>Chào mọi người, trong quá trình làm việc với database, mình thấy rất nhiều trường hợp không hiểu rõ bản chất của index dẫn đến không sử dụng index một cách hiệu quả. Hôm nay, tranh thủ dịp lễ 1/5 không được đi chơi, ở nhà thôi thì ngồi viết một bài blog về vấn đề này vậy. (Lưu ý: Bài viết mình có tham khảo AI sau khi viết để chỉnh chu lại văn phong và ngữ pháp cũng như là verify lại kiến thức của mình nhé, nào gét gô)&lt;/p></description></item><item><title>PostgreSQL xử lý câu lệnh DML như thế nào?</title><link>https://thanhhv.github.io/posts/postgresql-fundamental/</link><pubDate>Sun, 07 Sep 2025 23:00:00 +0700</pubDate><guid>https://thanhhv.github.io/posts/postgresql-fundamental/</guid><description>&lt;p>Khi làm việc với database chắc hẳn chúng ta đã quen với các câu lệnh như &lt;code>SELECT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>INSERT&lt;/code>, &lt;code>DELETE&lt;/code>,&amp;hellip;&lt;br>
-Giả sử khi chạy một câu lệnh &lt;code>INSERT INTO ...&lt;/code> để thêm record vào DB thì bên trong cơ sở dữ liệu sẽ làm những gì để xử lý?&lt;br>
-Trong bài viết này, hãy cùng mình tìm hiểu đằng sau một câu lệnh SQL khi thực thi sẽ đi qua những bước gì nhé.&lt;/p></description></item></channel></rss>
+replication, PITR — và là nguồn của một nửa số sự cố production về disk.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;Chương 1 xác lập hai sự thật vật lý mâu thuẫn nhau:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Durability đòi hỏi fsync trước khi báo commit — mà fsync đắt (~0.1–1ms NVMe, ~10ms HDD).&lt;/li&gt;
+&lt;li&gt;Thay đổi của một transaction rải rác trên nhiều page (heap, nhiều index, toast) — fsync tất cả các page đó mỗi commit = nhiều random write + nhiều fsync → vài chục ms mỗi commit → throughput chết.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Thêm bài toán thứ ba: page 8KB &amp;gt; sector atomic 4KB → crash giữa lúc ghi page tạo &lt;strong&gt;torn page&lt;/strong&gt; — nửa mới nửa cũ, checksum sai, không dùng được.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 4 — Buffer Manager</title>
+      <link>http://localhost:1313/series/postgres-internal/04-buffer-manager/</link>
+      <pubDate>Sat, 11 Jul 2026 11:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/04-buffer-manager/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 2. Disk chậm hơn RAM ~1000 lần. Buffer Manager là tầng quyết định
+PostgreSQL chạy ở tốc độ RAM hay tốc độ disk — tức là quyết định 90% cảm nhận hiệu năng.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;Mỗi thao tác đọc/ghi tuple đều cần page 8KB tương ứng. Nếu mỗi lần đều &lt;code&gt;read()&lt;/code&gt;/&lt;code&gt;write()&lt;/code&gt; xuống disk: một query đọc 1 triệu tuple rải trên 100k page × ~100µs/lần đọc NVMe = 10 giây thuần I/O — trong khi từ RAM mất ~50ms.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 3 — Physical Storage: Page, Tuple, TOAST, FSM, Visibility Map</title>
+      <link>http://localhost:1313/series/postgres-internal/03-physical-storage/</link>
+      <pubDate>Sat, 11 Jul 2026 10:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/03-physical-storage/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 2. Đây là chương nền tảng nhất của bộ tài liệu. Hiểu từng byte của heap page
+là hiểu được một nửa PostgreSQL: MVCC, VACUUM, HOT, bloat, index — tất cả đều quy về đây.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;Bảng &lt;code&gt;orders&lt;/code&gt; 200GB phải nằm trên disk sao cho:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Tìm một order theo con trỏ mất đúng 1 lần đọc disk.&lt;/li&gt;
+&lt;li&gt;Thêm order mới không phải dịch chuyển dữ liệu cũ.&lt;/li&gt;
+&lt;li&gt;Nhiều version của một row (MVCC) cùng tồn tại được.&lt;/li&gt;
+&lt;li&gt;Crash giữa chừng không phá cấu trúc.&lt;/li&gt;
+&lt;li&gt;Cột &lt;code&gt;note&lt;/code&gt; dài 1MB không làm hỏng hiệu quả của các cột 8 byte bên cạnh.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Nếu tổ chức sai tầng này: mọi thao tác đọc thành O(n), UPDATE phải rewrite file, crash để lại file rác. Toàn bộ chương này là câu trả lời của PostgreSQL cho bài toán đó.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 2 — Kiến trúc tổng thể: Process &amp; Shared Memory</title>
+      <link>http://localhost:1313/series/postgres-internal/02-architecture-process-memory/</link>
+      <pubDate>Sat, 11 Jul 2026 09:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/02-architecture-process-memory/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 1–2. PostgreSQL là một &amp;ldquo;hệ điều hành thu nhỏ&amp;rdquo;: có process quản lý, có bộ nhớ chia sẻ,
+có scheduler nền, có cơ chế phục hồi. Chương này vẽ bản đồ toàn bộ hệ thống đó.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;Một database server phải đồng thời: phục vụ hàng trăm connection, ghi dữ liệu nền, dọn rác, đồng bộ replica, thu thập thống kê — mà một thành phần chết không được kéo sập dữ liệu. Bài toán: &lt;strong&gt;tổ chức các đơn vị thực thi (process/thread) và bộ nhớ chung như thế nào để vừa cô lập lỗi, vừa chia sẻ trạng thái hiệu quả?&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 1 — Database Fundamentals: từ First Principles</title>
+      <link>http://localhost:1313/series/postgres-internal/01-database-fundamentals/</link>
+      <pubDate>Sat, 11 Jul 2026 08:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/01-database-fundamentals/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Level 1. Trước khi nói về PostgreSQL, phải trả lời câu hỏi gốc:
+&lt;strong&gt;tại sao phần mềm quản lý dữ liệu lại khó đến mức cần một engine hàng triệu dòng code?&lt;/strong&gt;&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;Mọi hệ thống phần mềm đều quy về một bài toán: &lt;strong&gt;nhận dữ liệu, lưu dữ liệu, trả lại dữ liệu đúng&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Một hệ thống thanh toán nhận lệnh chuyển 500.000đ từ tài khoản A sang B. Yêu cầu nghe đơn giản:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>PostgreSQL Internals — Bên dưới lớp SQL</title>
+      <link>http://localhost:1313/series/postgres-internal/00-muc-luc/</link>
+      <pubDate>Sat, 11 Jul 2026 07:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/postgres-internal/00-muc-luc/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;Bộ tài liệu chuyên sâu về cách PostgreSQL hoạt động bên dưới lớp SQL và Storage,
+viết cho Backend Engineer, Database Engineer và Software Architect.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;h2 id=&#34;tài-liệu-này-không-phải-là-gì&#34;&gt;Tài liệu này KHÔNG phải là gì&lt;/h2&gt;
+&lt;p&gt;Đây không phải tài liệu dạy SQL. Không có &lt;code&gt;CREATE TABLE&lt;/code&gt; ở chương mở đầu. Không giải thích cú pháp.&lt;/p&gt;
+&lt;p&gt;Đây là tài liệu giúp bạn hiểu PostgreSQL như một &lt;strong&gt;hệ điều hành thu nhỏ dành cho dữ liệu&lt;/strong&gt;: cách nó tổ chức bộ nhớ, quản lý page, lưu tuple, điều phối transaction, ghi WAL, phục hồi sau sự cố, tối ưu truy vấn, và phối hợp với OS để đạt hiệu năng và độ tin cậy.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>4 Nguyên Tắc Vàng Khi Dùng Index Mà Mình Ước Gì Biết Sớm Hơn</title>
+      <link>http://localhost:1313/posts/database-index/</link>
+      <pubDate>Fri, 01 May 2026 20:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/posts/database-index/</guid>
+      <description>&lt;p&gt;Chào mọi người, trong quá trình làm việc với database, mình thấy rất nhiều trường hợp không hiểu rõ bản chất của index dẫn đến không sử dụng index một cách hiệu quả. Hôm nay, tranh thủ dịp lễ 1/5 không được đi chơi, ở nhà thôi thì ngồi viết một bài blog về vấn đề này vậy. (Lưu ý: Bài viết mình có tham khảo AI sau khi viết để chỉnh chu lại văn phong và ngữ pháp cũng như là verify lại kiến thức của mình nhé, nào gét gô)&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>PostgreSQL xử lý câu lệnh DML như thế nào?</title>
+      <link>http://localhost:1313/posts/postgresql-fundamental/</link>
+      <pubDate>Sun, 07 Sep 2025 23:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/posts/postgresql-fundamental/</guid>
+      <description>&lt;p&gt;Khi làm việc với database chắc hẳn chúng ta đã quen với các câu lệnh như &lt;code&gt;SELECT&lt;/code&gt;, &lt;code&gt;UPDATE&lt;/code&gt;, &lt;code&gt;INSERT&lt;/code&gt;, &lt;code&gt;DELETE&lt;/code&gt;,&amp;hellip;&lt;br&gt;
+Giả sử khi chạy một câu lệnh &lt;code&gt;INSERT INTO ...&lt;/code&gt; để thêm record vào DB thì bên trong cơ sở dữ liệu sẽ làm những gì để xử lý?&lt;br&gt;
+Trong bài viết này, hãy cùng mình tìm hiểu đằng sau một câu lệnh SQL khi thực thi sẽ đi qua những bước gì nhé.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

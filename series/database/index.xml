@@ -1,150 +1,210 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Database Thực Chiến on Thanh HV's Blog</title><link>https://thanhhv.github.io/series/database/</link><description>Recent content in Database Thực Chiến on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Thu, 02 Jul 2026 14:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/series/database/index.xml" rel="self" type="application/rss+xml"/><item><title>Bài 6 — Kiến Trúc Thực Tế</title><link>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</link><pubDate>Thu, 02 Jul 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/06-kien-truc-thuc-te/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Cách đọc:&lt;/strong> mỗi mục trả lời năm câu hỏi — chọn gì, vì sao, vì sao KHÔNG chọn phương án khác, scale/chi phí dự kiến, và rủi ro chính. Các con số là mức định cỡ (order of magnitude) để lập luận, không phải cam kết hiệu năng.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="61-e-commerce">6.1. E-commerce&lt;/h2>
-&lt;p>&lt;strong>Phân rã workload:&lt;/strong> đơn hàng/thanh toán/tồn kho (transactional, bất biến chặt) · catalog sản phẩm (schema đa dạng, đọc nhiều) · hành vi người dùng + funnel (event, tỷ row) · giỏ hàng/session (nóng, TTL).&lt;/p></description></item><item><title>Bài 5 — So Sánh PostgreSQL, MongoDB &amp; ClickHouse</title><link>https://thanhhv.github.io/series/database/05-so-sanh/</link><pubDate>Thu, 02 Jul 2026 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/05-so-sanh/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Nguyên tắc đọc chương này:&lt;/strong> ba hệ không cùng hạng cân trên cùng một trục. So sánh đúng nghĩa là &lt;em>ánh xạ workload → điểm mạnh cấu trúc&lt;/em>, không phải tìm &amp;ldquo;database tốt nhất&amp;rdquo;. Mỗi ô dưới đây là hệ quả của kiến trúc đã phân tích ở Chương 2–4; khi nghi ngờ, quay lại chương tương ứng để xem &amp;ldquo;vì sao&amp;rdquo;.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="51-bảng-so-sánh-tổng-hợp">5.1. Bảng so sánh tổng hợp&lt;/h2>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>Tiêu chí&lt;/th>
-&lt;th>PostgreSQL&lt;/th>
-&lt;th>MongoDB&lt;/th>
-&lt;th>ClickHouse&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>&lt;strong>Data Model&lt;/strong>&lt;/td>
-&lt;td>Quan hệ (bảng, JOIN, constraint) + JSONB làm van linh hoạt&lt;/td>
-&lt;td>Document (BSON), embed/reference, schema-on-read&lt;/td>
-&lt;td>Bảng phẳng columnar, denormalize có chủ đích, không quan hệ&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Transaction&lt;/strong>&lt;/td>
-&lt;td>ACID đầy đủ, Serializable thật, transactional DDL — chuẩn vàng&lt;/td>
-&lt;td>ACID trong 1 document (luôn); đa document từ 4.0 — dùng như ngoại lệ, không hàng ngày&lt;/td>
-&lt;td>Gần như không (atomic theo block insert; không đa statement) — theo thiết kế&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Query Capability&lt;/strong>&lt;/td>
-&lt;td>Giàu nhất: SQL đầy đủ, CTE, window, lateral, geo, full-text, vector&lt;/td>
-&lt;td>Giàu theo trục document: CRUD + aggregation pipeline; JOIN yếu&lt;/td>
-&lt;td>SQL analytics rất mạnh (aggregate, window, hàm xấp xỉ); JOIN lớn hạn chế; không tối ưu cho OLTP query&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Read Performance&lt;/strong>&lt;/td>
-&lt;td>Point lookup/OLTP xuất sắc (B+Tree + buffer pool); analytics lớn kém&lt;/td>
-&lt;td>Point/one-trục xuất sắc khi có index + đủ RAM; analytics lớn kém&lt;/td>
-&lt;td>Point lookup kém (cấu trúc); scan/aggregate hàng tỷ row: nhanh hơn 2 hệ kia 10–1000×&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Write Performance&lt;/strong>&lt;/td>
-&lt;td>Tốt (chục nghìn TPS đơn giản/máy tốt); trần = 1 máy; update-heavy chịu thuế vacuum&lt;/td>
-&lt;td>Tốt + scale-out ghi qua sharding; per-document atomic rẻ&lt;/td>
-&lt;td>Ingest batch cực cao (triệu row/s/node); ghi lẻ tẻ = sự cố; update/delete đắt&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Analytics&lt;/strong>&lt;/td>
-&lt;td>Đủ cho báo cáo vừa (parallel query, partition); đuối từ trăm triệu row&lt;/td>
-&lt;td>Aggregation operational tốt; analytical toàn dataset yếu&lt;/td>
-&lt;td>Sinh ra để làm việc này&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Horizontal Scaling&lt;/strong>&lt;/td>
-&lt;td>Read replica dễ; sharding không tích hợp (Citus/app-level)&lt;/td>
-&lt;td>Tích hợp, trưởng thành (mongos, balancer, reshard 5.0+)&lt;/td>
-&lt;td>Tích hợp (Distributed table) nhưng thủ công hơn Mongo; Cloud tách compute/storage&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Compression&lt;/strong>&lt;/td>
-&lt;td>Khiêm tốn (TOAST cho giá trị lớn; không nén page mặc định)&lt;/td>
-&lt;td>Tốt (block compression WiredTiger, prefix index)&lt;/td>
-&lt;td>Xuất sắc (5–20×, codec chuyên dụng theo cột)&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Storage Efficiency&lt;/strong>&lt;/td>
-&lt;td>Trung bình; bloat nếu vacuum không theo kịp&lt;/td>
-&lt;td>Khá; thuế tên field lặp, bù bằng nén&lt;/td>
-&lt;td>Tốt nhất cho analytics; part immutable + TTL/tiered&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Consistency&lt;/strong>&lt;/td>
-&lt;td>Mạnh mặc định; single-leader rõ ràng&lt;/td>
-&lt;td>Tunable per-operation (w/readConcern) — mạnh khi cấu hình đúng&lt;/td>
-&lt;td>Eventual giữa replica; đủ cho analytics, không cho nghiệp vụ&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Availability&lt;/strong>&lt;/td>
-&lt;td>Cao nhưng failover cần tầng ngoài (Patroni/managed)&lt;/td>
-&lt;td>Cao, failover tự động tích hợp (~10–30s)&lt;/td>
-&lt;td>Cao cho đọc (multi-replica); ghi cần thiết kế ingest chịu lỗi&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Operational Complexity&lt;/strong>&lt;/td>
-&lt;td>Thấp–vừa (1 node/RS); vacuum + pooler là hai môn bắt buộc&lt;/td>
-&lt;td>Vừa (replica set dễ); sharded cluster = bậc phức tạp mới&lt;/td>
-&lt;td>Vừa–cao tự quản (Keeper, merge, ingest pipeline); thấp nếu Cloud&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Cost&lt;/strong>&lt;/td>
-&lt;td>Rẻ nhất ở quy mô nhỏ–vừa; đắt khi ép làm analytics lớn (máy khủng)&lt;/td>
-&lt;td>Hạ tầng RAM-heavy; Atlas tiện nhưng đắt ở scale&lt;/td>
-&lt;td>Chi phí/TB analytics thấp nhất (nén + máy thường); tốn đầu tư ingest&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Learning Curve&lt;/strong>&lt;/td>
-&lt;td>SQL phổ cập; nội tạng (vacuum, planner) cần thời gian&lt;/td>
-&lt;td>Bắt đầu dễ nhất; modeling ĐÚNG khó hơn vẻ ngoài nhiều&lt;/td>
-&lt;td>SQL quen; tư duy OLAP (batch, ORDER BY key, denormalize) phải học lại&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Best Use Cases&lt;/strong>&lt;/td>
-&lt;td>Hệ giao dịch, tiền, tồn kho, SaaS core, dữ liệu quan hệ bất kỳ&lt;/td>
-&lt;td>Catalog/profile/content đa dạng schema, IoT theo thiết bị, scale-out một-trục&lt;/td>
-&lt;td>Event/log/metric/clickstream, dashboard real-time, time-series lớn&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;strong>Worst Use Cases&lt;/strong>&lt;/td>
-&lt;td>Analytics tỷ row; write scale-out; queue tần suất cực cao&lt;/td>
-&lt;td>Quan hệ chặt + bất biến phức tạp; BI toàn dataset&lt;/td>
-&lt;td>OLTP bất kỳ; dữ liệu nhỏ; update thường xuyên&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;hr>
-&lt;h2 id="52-ba-trục-phân-tích-sâu">5.2. Ba trục phân tích sâu&lt;/h2>
-&lt;h3 id="trục-1--mô-hình-dữ-liệu-quyết-định-80-quyết-định">Trục 1 — Mô hình dữ liệu quyết định 80% quyết định&lt;/h3>
-&lt;p>Ba câu hỏi theo thứ tự:&lt;/p></description></item><item><title>Bài 4 — ClickHouse</title><link>https://thanhhv.github.io/series/database/04-clickhouse/</link><pubDate>Thu, 02 Jul 2026 12:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/04-clickhouse/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Tiền đề:&lt;/strong> Chương 1 (columnar vs row, LSM, vectorized execution) và các chương PostgreSQL/MongoDB để đối chiếu.
-&lt;strong>Chủ đề trung tâm của chương:&lt;/strong> ClickHouse nhanh không phải vì &amp;ldquo;code giỏi hơn&amp;rdquo;, mà vì nó &lt;strong>từ bỏ một cách có chủ đích&lt;/strong> những thứ OLAP không cần.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>&lt;strong>Bài toán:&lt;/strong> trả lời câu hỏi phân tích (aggregation, group by, filter) trên &lt;strong>hàng tỷ đến hàng nghìn tỷ row&lt;/strong> trong &lt;strong>dưới một giây&lt;/strong>, với dữ liệu mới đến liên tục.&lt;/p></description></item><item><title>Bài 3 — MongoDB</title><link>https://thanhhv.github.io/series/database/03-mongodb/</link><pubDate>Thu, 02 Jul 2026 11:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/03-mongodb/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Tiền đề:&lt;/strong> Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC).
-&lt;strong>Góc nhìn:&lt;/strong> từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>&lt;strong>MongoDB giải bài toán gì?&lt;/strong> Hai bài toán mà RDBMS đầu những năm 2000 giải kém:&lt;/p>
-&lt;ol>
-&lt;li>&lt;strong>Impedance mismatch:&lt;/strong> đối tượng trong ứng dụng (nested, mảng, đa hình) phải &amp;ldquo;băm&amp;rdquo; ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại.&lt;/li>
-&lt;li>&lt;strong>Scale-out:&lt;/strong> RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding).&lt;/li>
-&lt;/ol>
-&lt;p>&lt;strong>Nếu không có nó thì sao?&lt;/strong> Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: &lt;strong>document model giàu query + sharding tích hợp&lt;/strong>.&lt;/p></description></item><item><title>Bài 2 — PostgreSQL</title><link>https://thanhhv.github.io/series/database/02-postgresql/</link><pubDate>Thu, 02 Jul 2026 10:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/02-postgresql/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Tiền đề:&lt;/strong> đã đọc Chương 1 (WAL, MVCC, B+Tree, buffer pool, replication).
-&lt;strong>Góc nhìn:&lt;/strong> từ vị trí người thiết kế engine, không phải người dùng API.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
-&lt;p>&lt;strong>PostgreSQL giải bài toán gì?&lt;/strong> Lưu trữ dữ liệu quan hệ với &lt;strong>tính đúng đắn tuyệt đối&lt;/strong> dưới concurrency cao: transaction ACID đầy đủ, constraint được thực thi nghiêm ngặt, SQL chuẩn và giàu tính năng, mở rộng được (extension), trong khi vẫn đủ nhanh cho đại đa số workload OLTP.&lt;/p></description></item><item><title>Bài 1 — Database Fundamentals</title><link>https://thanhhv.github.io/series/database/01-database-fundamentals/</link><pubDate>Thu, 02 Jul 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/01-database-fundamentals/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Đối tượng:&lt;/strong> Software Engineer → Software Architect
-&lt;strong>Mục tiêu:&lt;/strong> Hiểu bản chất vật lý và logic của mọi database engine, làm nền tảng để hiểu sâu PostgreSQL, MongoDB và ClickHouse ở các chương sau.&lt;/p>&lt;/blockquote>
-&lt;hr>
-&lt;h2 id="11-problem-statement-vì-sao-database-là-bài-toán-khó">1.1. Problem Statement: Vì sao database là bài toán khó?&lt;/h2>
-&lt;p>Về mặt bề ngoài, một database chỉ làm hai việc: &lt;strong>ghi dữ liệu xuống&lt;/strong> và &lt;strong>đọc dữ liệu lên&lt;/strong>. Vậy tại sao nhân loại cần hàng chục năm và hàng trăm engine khác nhau để giải bài toán này?&lt;/p></description></item><item><title>Bài 0 — Giới Thiệu Series</title><link>https://thanhhv.github.io/series/database/00-introduction/</link><pubDate>Thu, 02 Jul 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/database/00-introduction/</guid><description>&lt;p>&lt;strong>Database Engineering — từ First Principles đến quyết định kiến trúc production&lt;/strong>&lt;/p>
-&lt;p>Dành cho Software Engineer, Backend Engineer, Senior Engineer, Tech Lead, Solution Architect và Software Architect. Viết theo tinh thần Principal Engineer hướng dẫn Senior Engineer: mọi kết luận đều trả lời &lt;em>tại sao&lt;/em>, &lt;em>đánh đổi điều gì&lt;/em>, và &lt;em>điều gì xảy ra nếu làm ngược lại&lt;/em>.&lt;/p>
-&lt;hr>
-&lt;h2 id="mục-lục">Mục lục&lt;/h2>
-&lt;h3 id="chương-1--database-fundamentals">&lt;a href="https://thanhhv.github.io/series/database/01-database-fundamentals/">Chương 1 — Database Fundamentals&lt;/a>&lt;/h3>
-&lt;p>Nền tảng bắt buộc trước khi đọc các chương sau: Disk vs Memory, Page, Buffer Pool, WAL, Transaction &amp;amp; ACID, Isolation Levels, MVCC, B+Tree vs LSM Tree, Query Execution &amp;amp; Optimizer, Replication, Partitioning vs Sharding, CAP &amp;amp; PACELC, Distributed Systems Fundamentals. Kết chương bằng bản đồ tư duy đối chiếu ba database.&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Database Thực Chiến on Thanh HV&#39;s Blog</title>
+    <link>http://localhost:1313/series/database/</link>
+    <description>Recent content in Database Thực Chiến on Thanh HV&#39;s Blog</description>
+    <generator>Hugo -- 0.146.7</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 02 Jul 2026 14:00:00 +0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/series/database/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Bài 6 — Kiến Trúc Thực Tế</title>
+      <link>http://localhost:1313/series/database/06-kien-truc-thuc-te/</link>
+      <pubDate>Thu, 02 Jul 2026 14:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/database/06-kien-truc-thuc-te/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Cách đọc:&lt;/strong&gt; mỗi mục trả lời năm câu hỏi — chọn gì, vì sao, vì sao KHÔNG chọn phương án khác, scale/chi phí dự kiến, và rủi ro chính. Các con số là mức định cỡ (order of magnitude) để lập luận, không phải cam kết hiệu năng.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;61-e-commerce&#34;&gt;6.1. E-commerce&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Phân rã workload:&lt;/strong&gt; đơn hàng/thanh toán/tồn kho (transactional, bất biến chặt) · catalog sản phẩm (schema đa dạng, đọc nhiều) · hành vi người dùng + funnel (event, tỷ row) · giỏ hàng/session (nóng, TTL).&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bài 5 — So Sánh PostgreSQL, MongoDB &amp; ClickHouse</title>
+      <link>http://localhost:1313/series/database/05-so-sanh/</link>
+      <pubDate>Thu, 02 Jul 2026 13:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/database/05-so-sanh/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Nguyên tắc đọc chương này:&lt;/strong&gt; ba hệ không cùng hạng cân trên cùng một trục. So sánh đúng nghĩa là &lt;em&gt;ánh xạ workload → điểm mạnh cấu trúc&lt;/em&gt;, không phải tìm &amp;ldquo;database tốt nhất&amp;rdquo;. Mỗi ô dưới đây là hệ quả của kiến trúc đã phân tích ở Chương 2–4; khi nghi ngờ, quay lại chương tương ứng để xem &amp;ldquo;vì sao&amp;rdquo;.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;51-bảng-so-sánh-tổng-hợp&#34;&gt;5.1. Bảng so sánh tổng hợp&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;Tiêu chí&lt;/th&gt;
+          &lt;th&gt;PostgreSQL&lt;/th&gt;
+          &lt;th&gt;MongoDB&lt;/th&gt;
+          &lt;th&gt;ClickHouse&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Data Model&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Quan hệ (bảng, JOIN, constraint) + JSONB làm van linh hoạt&lt;/td&gt;
+          &lt;td&gt;Document (BSON), embed/reference, schema-on-read&lt;/td&gt;
+          &lt;td&gt;Bảng phẳng columnar, denormalize có chủ đích, không quan hệ&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Transaction&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;ACID đầy đủ, Serializable thật, transactional DDL — chuẩn vàng&lt;/td&gt;
+          &lt;td&gt;ACID trong 1 document (luôn); đa document từ 4.0 — dùng như ngoại lệ, không hàng ngày&lt;/td&gt;
+          &lt;td&gt;Gần như không (atomic theo block insert; không đa statement) — theo thiết kế&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Query Capability&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Giàu nhất: SQL đầy đủ, CTE, window, lateral, geo, full-text, vector&lt;/td&gt;
+          &lt;td&gt;Giàu theo trục document: CRUD + aggregation pipeline; JOIN yếu&lt;/td&gt;
+          &lt;td&gt;SQL analytics rất mạnh (aggregate, window, hàm xấp xỉ); JOIN lớn hạn chế; không tối ưu cho OLTP query&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Read Performance&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Point lookup/OLTP xuất sắc (B+Tree + buffer pool); analytics lớn kém&lt;/td&gt;
+          &lt;td&gt;Point/one-trục xuất sắc khi có index + đủ RAM; analytics lớn kém&lt;/td&gt;
+          &lt;td&gt;Point lookup kém (cấu trúc); scan/aggregate hàng tỷ row: nhanh hơn 2 hệ kia 10–1000×&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Write Performance&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Tốt (chục nghìn TPS đơn giản/máy tốt); trần = 1 máy; update-heavy chịu thuế vacuum&lt;/td&gt;
+          &lt;td&gt;Tốt + scale-out ghi qua sharding; per-document atomic rẻ&lt;/td&gt;
+          &lt;td&gt;Ingest batch cực cao (triệu row/s/node); ghi lẻ tẻ = sự cố; update/delete đắt&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Analytics&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Đủ cho báo cáo vừa (parallel query, partition); đuối từ trăm triệu row&lt;/td&gt;
+          &lt;td&gt;Aggregation operational tốt; analytical toàn dataset yếu&lt;/td&gt;
+          &lt;td&gt;Sinh ra để làm việc này&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Horizontal Scaling&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Read replica dễ; sharding không tích hợp (Citus/app-level)&lt;/td&gt;
+          &lt;td&gt;Tích hợp, trưởng thành (mongos, balancer, reshard 5.0+)&lt;/td&gt;
+          &lt;td&gt;Tích hợp (Distributed table) nhưng thủ công hơn Mongo; Cloud tách compute/storage&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Compression&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Khiêm tốn (TOAST cho giá trị lớn; không nén page mặc định)&lt;/td&gt;
+          &lt;td&gt;Tốt (block compression WiredTiger, prefix index)&lt;/td&gt;
+          &lt;td&gt;Xuất sắc (5–20×, codec chuyên dụng theo cột)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Storage Efficiency&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Trung bình; bloat nếu vacuum không theo kịp&lt;/td&gt;
+          &lt;td&gt;Khá; thuế tên field lặp, bù bằng nén&lt;/td&gt;
+          &lt;td&gt;Tốt nhất cho analytics; part immutable + TTL/tiered&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Consistency&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Mạnh mặc định; single-leader rõ ràng&lt;/td&gt;
+          &lt;td&gt;Tunable per-operation (w/readConcern) — mạnh khi cấu hình đúng&lt;/td&gt;
+          &lt;td&gt;Eventual giữa replica; đủ cho analytics, không cho nghiệp vụ&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Availability&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Cao nhưng failover cần tầng ngoài (Patroni/managed)&lt;/td&gt;
+          &lt;td&gt;Cao, failover tự động tích hợp (~10–30s)&lt;/td&gt;
+          &lt;td&gt;Cao cho đọc (multi-replica); ghi cần thiết kế ingest chịu lỗi&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Operational Complexity&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Thấp–vừa (1 node/RS); vacuum + pooler là hai môn bắt buộc&lt;/td&gt;
+          &lt;td&gt;Vừa (replica set dễ); sharded cluster = bậc phức tạp mới&lt;/td&gt;
+          &lt;td&gt;Vừa–cao tự quản (Keeper, merge, ingest pipeline); thấp nếu Cloud&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Cost&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Rẻ nhất ở quy mô nhỏ–vừa; đắt khi ép làm analytics lớn (máy khủng)&lt;/td&gt;
+          &lt;td&gt;Hạ tầng RAM-heavy; Atlas tiện nhưng đắt ở scale&lt;/td&gt;
+          &lt;td&gt;Chi phí/TB analytics thấp nhất (nén + máy thường); tốn đầu tư ingest&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Learning Curve&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;SQL phổ cập; nội tạng (vacuum, planner) cần thời gian&lt;/td&gt;
+          &lt;td&gt;Bắt đầu dễ nhất; modeling ĐÚNG khó hơn vẻ ngoài nhiều&lt;/td&gt;
+          &lt;td&gt;SQL quen; tư duy OLAP (batch, ORDER BY key, denormalize) phải học lại&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Best Use Cases&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Hệ giao dịch, tiền, tồn kho, SaaS core, dữ liệu quan hệ bất kỳ&lt;/td&gt;
+          &lt;td&gt;Catalog/profile/content đa dạng schema, IoT theo thiết bị, scale-out một-trục&lt;/td&gt;
+          &lt;td&gt;Event/log/metric/clickstream, dashboard real-time, time-series lớn&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Worst Use Cases&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;Analytics tỷ row; write scale-out; queue tần suất cực cao&lt;/td&gt;
+          &lt;td&gt;Quan hệ chặt + bất biến phức tạp; BI toàn dataset&lt;/td&gt;
+          &lt;td&gt;OLTP bất kỳ; dữ liệu nhỏ; update thường xuyên&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;52-ba-trục-phân-tích-sâu&#34;&gt;5.2. Ba trục phân tích sâu&lt;/h2&gt;
+&lt;h3 id=&#34;trục-1--mô-hình-dữ-liệu-quyết-định-80-quyết-định&#34;&gt;Trục 1 — Mô hình dữ liệu quyết định 80% quyết định&lt;/h3&gt;
+&lt;p&gt;Ba câu hỏi theo thứ tự:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bài 4 — ClickHouse</title>
+      <link>http://localhost:1313/series/database/04-clickhouse/</link>
+      <pubDate>Thu, 02 Jul 2026 12:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/database/04-clickhouse/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tiền đề:&lt;/strong&gt; Chương 1 (columnar vs row, LSM, vectorized execution) và các chương PostgreSQL/MongoDB để đối chiếu.
+&lt;strong&gt;Chủ đề trung tâm của chương:&lt;/strong&gt; ClickHouse nhanh không phải vì &amp;ldquo;code giỏi hơn&amp;rdquo;, mà vì nó &lt;strong&gt;từ bỏ một cách có chủ đích&lt;/strong&gt; những thứ OLAP không cần.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Bài toán:&lt;/strong&gt; trả lời câu hỏi phân tích (aggregation, group by, filter) trên &lt;strong&gt;hàng tỷ đến hàng nghìn tỷ row&lt;/strong&gt; trong &lt;strong&gt;dưới một giây&lt;/strong&gt;, với dữ liệu mới đến liên tục.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bài 3 — MongoDB</title>
+      <link>http://localhost:1313/series/database/03-mongodb/</link>
+      <pubDate>Thu, 02 Jul 2026 11:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/database/03-mongodb/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tiền đề:&lt;/strong&gt; Chương 1 (LSM/B+Tree, replication, sharding, CAP/PACELC).
+&lt;strong&gt;Góc nhìn:&lt;/strong&gt; từ người thiết kế engine — WiredTiger, oplog, Replica Set, sharding — không phải từ tutorial CRUD.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;MongoDB giải bài toán gì?&lt;/strong&gt; Hai bài toán mà RDBMS đầu những năm 2000 giải kém:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Impedance mismatch:&lt;/strong&gt; đối tượng trong ứng dụng (nested, mảng, đa hình) phải &amp;ldquo;băm&amp;rdquo; ra hàng chục bảng chuẩn hóa rồi JOIN lại. Mỗi thay đổi cấu trúc là một cuộc migration. Tốc độ phát triển sản phẩm bị schema ghì lại.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Scale-out:&lt;/strong&gt; RDBMS thời đó scale ghi bằng cách mua máy to hơn; sharding phải tự chế ở tầng ứng dụng (như Facebook/YouTube từng làm với MySQL — tốn cả đội ngũ chỉ để vận hành sharding).&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;Nếu không có nó thì sao?&lt;/strong&gt; Hoặc chịu ma sát schema + tự shard bằng tay, hoặc dùng key-value store thuần (mất khả năng query phong phú). MongoDB đặt cược vào điểm giữa: &lt;strong&gt;document model giàu query + sharding tích hợp&lt;/strong&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bài 2 — PostgreSQL</title>
+      <link>http://localhost:1313/series/database/02-postgresql/</link>
+      <pubDate>Thu, 02 Jul 2026 10:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/database/02-postgresql/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tiền đề:&lt;/strong&gt; đã đọc Chương 1 (WAL, MVCC, B+Tree, buffer pool, replication).
+&lt;strong&gt;Góc nhìn:&lt;/strong&gt; từ vị trí người thiết kế engine, không phải người dùng API.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;PostgreSQL giải bài toán gì?&lt;/strong&gt; Lưu trữ dữ liệu quan hệ với &lt;strong&gt;tính đúng đắn tuyệt đối&lt;/strong&gt; dưới concurrency cao: transaction ACID đầy đủ, constraint được thực thi nghiêm ngặt, SQL chuẩn và giàu tính năng, mở rộng được (extension), trong khi vẫn đủ nhanh cho đại đa số workload OLTP.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bài 1 — Database Fundamentals</title>
+      <link>http://localhost:1313/series/database/01-database-fundamentals/</link>
+      <pubDate>Thu, 02 Jul 2026 09:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/database/01-database-fundamentals/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Đối tượng:&lt;/strong&gt; Software Engineer → Software Architect
+&lt;strong&gt;Mục tiêu:&lt;/strong&gt; Hiểu bản chất vật lý và logic của mọi database engine, làm nền tảng để hiểu sâu PostgreSQL, MongoDB và ClickHouse ở các chương sau.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;11-problem-statement-vì-sao-database-là-bài-toán-khó&#34;&gt;1.1. Problem Statement: Vì sao database là bài toán khó?&lt;/h2&gt;
+&lt;p&gt;Về mặt bề ngoài, một database chỉ làm hai việc: &lt;strong&gt;ghi dữ liệu xuống&lt;/strong&gt; và &lt;strong&gt;đọc dữ liệu lên&lt;/strong&gt;. Vậy tại sao nhân loại cần hàng chục năm và hàng trăm engine khác nhau để giải bài toán này?&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Bài 0 — Giới Thiệu Series</title>
+      <link>http://localhost:1313/series/database/00-introduction/</link>
+      <pubDate>Thu, 02 Jul 2026 08:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/database/00-introduction/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;Database Engineering — từ First Principles đến quyết định kiến trúc production&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Dành cho Software Engineer, Backend Engineer, Senior Engineer, Tech Lead, Solution Architect và Software Architect. Viết theo tinh thần Principal Engineer hướng dẫn Senior Engineer: mọi kết luận đều trả lời &lt;em&gt;tại sao&lt;/em&gt;, &lt;em&gt;đánh đổi điều gì&lt;/em&gt;, và &lt;em&gt;điều gì xảy ra nếu làm ngược lại&lt;/em&gt;.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id=&#34;mục-lục&#34;&gt;Mục lục&lt;/h2&gt;
+&lt;h3 id=&#34;chương-1--database-fundamentals&#34;&gt;&lt;a href=&#34;http://localhost:1313/series/database/01-database-fundamentals/&#34;&gt;Chương 1 — Database Fundamentals&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Nền tảng bắt buộc trước khi đọc các chương sau: Disk vs Memory, Page, Buffer Pool, WAL, Transaction &amp;amp; ACID, Isolation Levels, MVCC, B+Tree vs LSM Tree, Query Execution &amp;amp; Optimizer, Replication, Partitioning vs Sharding, CAP &amp;amp; PACELC, Distributed Systems Fundamentals. Kết chương bằng bản đồ tư duy đối chiếu ba database.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

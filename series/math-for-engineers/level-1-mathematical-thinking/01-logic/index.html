@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 01 — Logic: Nền tảng của mọi dòng code | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 1 – Mathematical Thinking
+Yêu cầu trước: Không — đây là chương mở đầu của toàn bộ tài liệu
+
+1. Problem Statement
+Một team backend nhận ticket: &ldquo;Tìm tất cả khách hàng chưa từng đặt hàng để gửi email khuyến mãi&rdquo;. Kỹ sư viết câu SQL trông hoàn toàn hợp lý:
+SELECT * FROM customers
+WHERE id NOT IN (SELECT customer_id FROM orders);
+Query chạy không lỗi, trả về&hellip; 0 dòng. Trong khi ai cũng biết có hàng nghìn khách hàng chưa đặt hàng. Không exception, không warning, không log. Nguyên nhân: bảng orders có một dòng với customer_id IS NULL (đơn hàng của khách vãng lai). Và trong logic ba giá trị của SQL, x NOT IN (1, 2, NULL) không bao giờ là TRUE — với mọi x.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-1-mathematical-thinking/01-logic/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-1-mathematical-thinking/01-logic/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 01 — Logic: Nền tảng của mọi dòng code
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 07:10:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;23 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 1 – Mathematical Thinking
+Yêu cầu trước: Không — đây là chương mở đầu của toàn bộ tài liệu</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Một team backend nhận ticket: &ldquo;Tìm tất cả khách hàng chưa từng đặt hàng để gửi email khuyến mãi&rdquo;. Kỹ sư viết câu SQL trông hoàn toàn hợp lý:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> customers
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">WHERE</span> id <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">IN</span> (<span style="color:#66d9ef">SELECT</span> customer_id <span style="color:#66d9ef">FROM</span> orders);
+</span></span></code></pre></div><p>Query chạy không lỗi, trả về&hellip; <strong>0 dòng</strong>. Trong khi ai cũng biết có hàng nghìn khách hàng chưa đặt hàng. Không exception, không warning, không log. Nguyên nhân: bảng <code>orders</code> có <em>một</em> dòng với <code>customer_id IS NULL</code> (đơn hàng của khách vãng lai). Và trong logic ba giá trị của SQL, <code>x NOT IN (1, 2, NULL)</code> không bao giờ là TRUE — với <em>mọi</em> x.</p>
+<p>Đây không phải là bug của SQL. Đây là bug của <strong>lập trình viên không nắm vững logic</strong> — cụ thể là không biết hệ logic mình đang đứng trong đó có hai giá trị hay ba giá trị, và phép phủ định hoạt động thế nào trong hệ đó.</p>
+<p>Bài toán của chương này:</p>
+<p><strong>Làm sao suy luận chính xác về điều kiện — thứ xuất hiện trong mọi câu <code>if</code>, mọi mệnh đề <code>WHERE</code>, mọi guard clause — để code làm đúng điều ta nghĩ, chứ không phải điều ta viết?</strong></p>
+<p>Nếu không có logic hình thức, lập trình viên chỉ còn cách &ldquo;đọc điều kiện và cảm nhận&rdquo;. Với điều kiện 2 biến thì cảm nhận đủ dùng. Với điều kiện 5 biến lồng phủ định — kiểu <code>!(a &amp;&amp; (!b || c)) || (d &amp;&amp; !e)</code> — cảm nhận là con đường ngắn nhất đến bug production lúc 3 giờ sáng.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="logic-là-gì-dưới-góc-nhìn-của-kỹ-sư">Logic là gì, dưới góc nhìn của kỹ sư?<a hidden class="anchor" aria-hidden="true" href="#logic-là-gì-dưới-góc-nhìn-của-kỹ-sư">#</a></h3>
+<p>Logic là môn học về <strong>các câu khẳng định và cách kết hợp chúng mà vẫn giữ được tính đúng/sai</strong>. Với lập trình viên, nó không trừu tượng chút nào: mỗi biểu thức boolean trong code là một câu khẳng định, và compiler/runtime là cỗ máy đánh giá tính đúng sai của câu đó hàng tỷ lần mỗi giây.</p>
+<p>Một <strong>mệnh đề (proposition)</strong> là câu khẳng định có giá trị đúng hoặc sai xác định: &ldquo;user đã đăng nhập&rdquo;, &ldquo;số dư ≥ 0&rdquo;, &ldquo;x &gt; 10&rdquo;. Câu &ldquo;hãy đăng nhập đi&rdquo; hay &ldquo;x có lớn không?&rdquo; không phải mệnh đề. Trong code, mệnh đề chính là biểu thức kiểu <code>bool</code>.</p>
+<p>Ba phép kết hợp cơ bản ai cũng dùng hằng ngày:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Toán học</th>
+          <th>Go</th>
+          <th>Đọc là</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>p ∧ q</td>
+          <td><code>p &amp;&amp; q</code></td>
+          <td>p VÀ q</td>
+      </tr>
+      <tr>
+          <td>p ∨ q</td>
+          <td><code>p || q</code></td>
+          <td>p HOẶC q (hoặc cả hai!)</td>
+      </tr>
+      <tr>
+          <td>¬p</td>
+          <td><code>!p</code></td>
+          <td>KHÔNG p</td>
+      </tr>
+  </tbody>
+</table>
+<p>Chú ý ngay một cái bẫy trực giác: <strong>OR trong logic là &ldquo;hoặc bao gồm&rdquo; (inclusive or)</strong> — <code>p || q</code> đúng khi cả hai cùng đúng. Trong tiếng Việt (và tiếng Anh) đời thường, &ldquo;hoặc&rdquo; thường mang nghĩa loại trừ: &ldquo;trà hoặc cà phê&rdquo; ngụ ý chọn một. Sự lệch pha giữa ngôn ngữ tự nhiên và logic hình thức chính là nguồn gốc của rất nhiều điều kiện viết sai — khi PM nói &ldquo;hoặc&rdquo;, việc đầu tiên là hỏi lại: <em>có được phép cả hai không?</em></p>
+<h3 id="implication--phép-toán-bị-hiểu-sai-nhiều-nhất">Implication — phép toán bị hiểu sai nhiều nhất<a hidden class="anchor" aria-hidden="true" href="#implication--phép-toán-bị-hiểu-sai-nhiều-nhất">#</a></h3>
+<p>Phần lớn lập trình viên thuộc lòng AND/OR/NOT nhưng lúng túng với <strong>implication</strong>: p → q, đọc là &ldquo;nếu p thì q&rdquo;. Bảng chân trị của nó gây bối rối:</p>
+<table>
+  <thead>
+      <tr>
+          <th>p</th>
+          <th>q</th>
+          <th>p → q</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>T</td>
+          <td>T</td>
+          <td><strong>T</strong></td>
+      </tr>
+      <tr>
+          <td>T</td>
+          <td>F</td>
+          <td><strong>F</strong></td>
+      </tr>
+      <tr>
+          <td>F</td>
+          <td>T</td>
+          <td><strong>T</strong> ← khó chịu ở đây</td>
+      </tr>
+      <tr>
+          <td>F</td>
+          <td>F</td>
+          <td><strong>T</strong> ← và ở đây</td>
+      </tr>
+  </tbody>
+</table>
+<p>Vì sao &ldquo;p sai&rdquo; lại khiến cả mệnh đề đúng? Hãy nghĩ implication như một <strong>lời hứa</strong>, không phải quan hệ nhân quả. &ldquo;Nếu trời mưa, tôi sẽ mang ô&rdquo; — lời hứa này chỉ <em>bị phá vỡ</em> trong đúng một tình huống: trời mưa mà tôi không mang ô. Trời không mưa? Tôi mang ô hay không đều không phá vỡ lời hứa. Lời hứa chưa bị phá vỡ = mệnh đề đúng.</p>
+<p>Với kỹ sư, cách nhìn hữu ích nhất: <strong>p → q tương đương với ¬p ∨ q</strong>. Đây chính là guard clause:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// &#34;Nếu req không nil thì xử lý&#34; — implication trong code</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">handle</span>(<span style="color:#a6e22e">req</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Request</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">req</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span> <span style="color:#75715e">// p sai → cả cam kết vẫn &#34;đúng&#34;, thoát sớm</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">process</span>(<span style="color:#a6e22e">req</span>) <span style="color:#75715e">// chỉ khi p đúng, q mới phải được thực hiện</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Contract kiểu &ldquo;nếu input hợp lệ thì output đúng đắn&rdquo; là một implication. Nó <strong>không hứa gì cả</strong> khi input không hợp lệ — hiểu điều này giúp bạn đọc đúng documentation: hàm ghi &ldquo;nếu slice đã sort, trả về vị trí phần tử&rdquo; hoàn toàn được phép trả rác khi slice chưa sort, và đó không phải bug.</p>
+<h3 id="converse-và-contrapositive--chỗ-suy-luận-trượt-chân">Converse và Contrapositive — chỗ suy luận trượt chân<a hidden class="anchor" aria-hidden="true" href="#converse-và-contrapositive--chỗ-suy-luận-trượt-chân">#</a></h3>
+<p>Từ p → q, có ba biến thể, và chỉ <strong>một</strong> trong số đó tương đương với gốc:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Tên</th>
+          <th>Dạng</th>
+          <th>Tương đương với p → q?</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Converse (đảo)</td>
+          <td>q → p</td>
+          <td><strong>KHÔNG</strong></td>
+      </tr>
+      <tr>
+          <td>Inverse (phản)</td>
+          <td>¬p → ¬q</td>
+          <td><strong>KHÔNG</strong></td>
+      </tr>
+      <tr>
+          <td>Contrapositive (phản đảo)</td>
+          <td>¬q → ¬p</td>
+          <td><strong>CÓ</strong></td>
+      </tr>
+  </tbody>
+</table>
+<p>Lỗi suy luận kinh điển là dùng converse: &ldquo;Nếu code có bug thì test fail. Test pass, vậy code không có bug.&rdquo; — sai. Mệnh đề gốc là <code>bug → test fail</code>; từ <code>test pass</code> (¬(test fail)), theo contrapositive ta chỉ suy ra được&hellip; ơ không, đúng ra được ¬bug? Không! Cẩn thận: mệnh đề gốc thực tế trong đời là &ldquo;nếu test fail thì có bug&rdquo; (<code>test fail → bug</code>). Test pass là ¬p, và từ ¬p không suy ra được gì về q. <strong>Test pass không chứng minh không có bug</strong> — đây chính là câu nói nổi tiếng của Dijkstra mà chương 03 sẽ quay lại.</p>
+<p>Contrapositive thì hợp lệ và cực kỳ hữu ích trong debugging: &ldquo;Nếu config đúng thì service khởi động được. Service không khởi động được → config sai <em>hoặc mệnh đề của tôi thiếu điều kiện</em>&rdquo;. Debug giỏi phần lớn là kỹ năng áp contrapositive một cách kỷ luật: từ triệu chứng (¬q) truy ngược về phủ định của nguyên nhân giả định (¬p).</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<h3 id="vì-sao-chỉ-cần-đúngsai-là-đủ-xây-mọi-thứ">Vì sao chỉ cần đúng/sai là đủ xây mọi thứ?<a hidden class="anchor" aria-hidden="true" href="#vì-sao-chỉ-cần-đúngsai-là-đủ-xây-mọi-thứ">#</a></h3>
+<p>Toàn bộ logic mệnh đề đứng trên một quyết định trừu tượng hóa táo bạo: <strong>mọi câu khẳng định quy về đúng một bit</strong>. Ta vứt bỏ sắc thái, ngữ cảnh, mức độ — đổi lấy khả năng <em>tính toán được</em> trên các câu khẳng định. Giống Big-O vứt hằng số để được tính bất biến, logic vứt sắc thái để được tính cơ giới: máy móc kiểm tra được, biến đổi được, chứng minh được.</p>
+<p>Từ hai giá trị và vài phép nối, ta được một <strong>đại số</strong> — nghĩa là các biểu thức biến đổi được theo luật, giống hệt biến đổi phương trình số học:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Luật</th>
+          <th>Dạng</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Giao hoán</td>
+          <td>p ∧ q ≡ q ∧ p</td>
+      </tr>
+      <tr>
+          <td>Kết hợp</td>
+          <td>(p ∧ q) ∧ r ≡ p ∧ (q ∧ r)</td>
+      </tr>
+      <tr>
+          <td>Phân phối</td>
+          <td>p ∧ (q ∨ r) ≡ (p ∧ q) ∨ (p ∧ r)</td>
+      </tr>
+      <tr>
+          <td><strong>De Morgan</strong></td>
+          <td>¬(p ∧ q) ≡ ¬p ∨ ¬q</td>
+      </tr>
+      <tr>
+          <td><strong>De Morgan</strong></td>
+          <td>¬(p ∨ q) ≡ ¬p ∧ ¬q</td>
+      </tr>
+      <tr>
+          <td>Phủ định kép</td>
+          <td>¬¬p ≡ p</td>
+      </tr>
+  </tbody>
+</table>
+<p>Chữ ≡ nghĩa là hai biểu thức có cùng giá trị với <strong>mọi</strong> cách gán đúng/sai cho các biến — kiểm chứng được bằng truth table. Đây là điểm then chốt: hai đoạn code điều kiện tương đương logic thì <strong>thay thế được cho nhau một cách an toàn tuyệt đối</strong>, không cần test, không cần &ldquo;chắc là đúng&rdquo;. Refactor điều kiện là một trong số ít chỗ trong nghề mà ta có được sự chắc chắn toán học.</p>
+<h3 id="de-morgan--luật-đáng-giá-nhất-cho-việc-đọc-code">De Morgan — luật đáng giá nhất cho việc đọc code<a hidden class="anchor" aria-hidden="true" href="#de-morgan--luật-đáng-giá-nhất-cho-việc-đọc-code">#</a></h3>
+<p>Trực giác của De Morgan: phủ định của &ldquo;cả hai&rdquo; là &ldquo;ít nhất một cái không&rdquo;; phủ định của &ldquo;ít nhất một&rdquo; là &ldquo;cả hai đều không&rdquo;. Phủ định đi <em>xuyên qua</em> ngoặc và <strong>lật AND thành OR</strong> (và ngược lại).</p>
+<p>Xem một điều kiện thật thường gặp trong review:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Trước: đọc 3 lần vẫn chưa chắc hiểu đúng</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> !(<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">IsActive</span> <span style="color:#f92672">&amp;&amp;</span> !<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">IsBanned</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ErrAccessDenied</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Áp De Morgan: !(A &amp;&amp; !B) ≡ !A || B</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">IsActive</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">IsBanned</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ErrAccessDenied</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Giờ đọc thành lời được ngay: &#34;chưa active HOẶC đã bị ban thì chặn&#34;</span>
+</span></span></code></pre></div><p>Quy tắc thực dụng rút ra: <strong>đẩy phủ định vào sát biến</strong> (inward), vì <code>!user.IsActive</code> đọc hiểu ngay còn <code>!(...)</code> bắt não người đọc tự chạy De Morgan trong đầu — và não người chạy De Morgan sai với tỷ lệ đáng báo động khi có hơn hai toán hạng. Nhiều linter (như <code>staticcheck</code> của Go) có rule tự động gợi ý biến đổi này.</p>
+<h3 id="nếu-không-có-logic-hình-thức-thì-sao">Nếu không có logic hình thức thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-logic-hình-thức-thì-sao">#</a></h3>
+<p>Không có khái niệm &ldquo;tương đương logic&rdquo;, mọi refactor điều kiện đều là canh bạc: đổi <code>!(a &amp;&amp; b)</code> thành <code>!a &amp;&amp; !b</code> (sai!) và chỉ phát hiện khi khách hàng phàn nàn. Không có khái niệm implication, ta đọc sai contract của thư viện. Không có quantifier (ngay dưới đây), ta không thể nói chính xác những câu như &ldquo;mọi request đều được authenticate&rdquo; — mà nói không chính xác được thì cũng không kiểm tra được.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="predicate-và-quantifier--khi-mệnh-đề-có-biến">Predicate và Quantifier — khi mệnh đề có biến<a hidden class="anchor" aria-hidden="true" href="#predicate-và-quantifier--khi-mệnh-đề-có-biến">#</a></h3>
+<p>Mệnh đề &ldquo;x &gt; 10&rdquo; chưa đúng chưa sai — nó phụ thuộc x. Đó là một <strong>predicate</strong>: hàm từ giá trị sang đúng/sai. Trong Go, predicate là <code>func(T) bool</code>. Trong SQL, mọi thứ sau <code>WHERE</code> là predicate trên từng dòng.</p>
+<p>Predicate trở thành mệnh đề khi ta <strong>lượng hóa (quantify)</strong> nó trên một tập:</p>
+<blockquote>
+<p><strong>∀x ∈ S: P(x)</strong> — &ldquo;với mọi x trong S, P(x) đúng&rdquo; (universal quantifier)
+<strong>∃x ∈ S: P(x)</strong> — &ldquo;tồn tại ít nhất một x trong S sao cho P(x) đúng&rdquo; (existential quantifier)</p></blockquote>
+<p>Lập trình viên dùng chúng hằng ngày mà không gọi tên:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Toán</th>
+          <th>Go / SQL</th>
+          <th>Bản chất</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>∀x: P(x)</td>
+          <td><code>all(...)</code>, vòng lặp + return false sớm</td>
+          <td>AND trên cả tập</td>
+      </tr>
+      <tr>
+          <td>∃x: P(x)</td>
+          <td><code>any(...)</code>, <code>slices.ContainsFunc</code>, SQL <code>EXISTS</code></td>
+          <td>OR trên cả tập</td>
+      </tr>
+      <tr>
+          <td>¬∃x: P(x)</td>
+          <td><code>NOT EXISTS</code></td>
+          <td>phủ định của OR</td>
+      </tr>
+  </tbody>
+</table>
+<p>Và De Morgan tổng quát hóa lên quantifier một cách đẹp đẽ:</p>
+<blockquote>
+<p><strong>¬(∀x: P(x)) ≡ ∃x: ¬P(x)</strong> — &ldquo;không phải ai cũng đúng&rdquo; = &ldquo;có ít nhất một người sai&rdquo;
+<strong>¬(∃x: P(x)) ≡ ∀x: ¬P(x)</strong> — &ldquo;không ai đúng cả&rdquo; = &ldquo;tất cả đều sai&rdquo;</p></blockquote>
+<p>Đây chính là lý do <code>NOT EXISTS</code> thường là cách <em>đúng</em> để viết query &ldquo;khách hàng chưa từng đặt hàng&rdquo; — nó là dạng ∀ được biểu diễn qua ¬∃, và không dính bẫy NULL của <code>NOT IN</code> (phân tích ở mục 7).</p>
+<p>Một điểm tinh tế sống còn: <strong>thứ tự quantifier quan trọng</strong>. &ldquo;∀ user ∃ server phục vụ user đó&rdquo; (mỗi user có server nào đó — có thể khác nhau) khác hẳn &ldquo;∃ server ∀ user&rdquo; (một server duy nhất phục vụ tất cả). Trong thiết kế hệ thống, nhầm hai câu này là nhầm giữa &ldquo;có replica&rdquo; và &ldquo;có single point of failure&rdquo;.</p>
+<h3 id="vacuous-truth--sự-thật-rỗng">Vacuous truth — sự thật rỗng<a hidden class="anchor" aria-hidden="true" href="#vacuous-truth--sự-thật-rỗng">#</a></h3>
+<p>∀x ∈ ∅: P(x) — &ldquo;mọi phần tử của tập rỗng đều thỏa P&rdquo; — có giá trị gì? Toán học trả lời dứt khoát: <strong>TRUE</strong>, với mọi P. Vì để mệnh đề ∀ sai, phải <em>tồn tại</em> một phần tử vi phạm — tập rỗng không có phần tử nào để vi phạm.</p>
+<p>Điều này không phải là quy ước tùy tiện mà là hệ quả bắt buộc để đại số nhất quán: ∀ là AND trên cả tập, và AND của không toán hạng nào phải là phần tử trung hòa của AND, tức TRUE (giống tổng của dãy rỗng là 0, tích của dãy rỗng là 1).</p>
+<p>Code phản ánh trung thực điều này:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// allPositive trả về true với slice RỖNG — và đó là hành vi đúng</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">allPositive</span>(<span style="color:#a6e22e">nums</span> []<span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">nums</span> { <span style="color:#75715e">// slice rỗng: thân vòng lặp không chạy</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span> <span style="color:#75715e">// vacuous truth</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Hệ quả thực tế: &ldquo;mọi test đều pass&rdquo; khi <strong>không có test nào</strong> là true — CI xanh trên project chưa viết test. &ldquo;Mọi replica đều ack&rdquo; khi danh sách replica rỗng là true — quorum check viết ngây thơ sẽ cho commit khi cluster mất hết replica. Vacuous truth không phải bug của logic; <strong>quên kiểm tra tập rỗng mới là bug của kỹ sư</strong>. Khi viết điều kiện dạng ∀, luôn tự hỏi: tập rỗng thì hành vi này có phải điều tôi muốn không?</p>
+<h3 id="truth-table--công-cụ-kiểm-chứng-cơ-giới">Truth table — công cụ kiểm chứng cơ giới<a hidden class="anchor" aria-hidden="true" href="#truth-table--công-cụ-kiểm-chứng-cơ-giới">#</a></h3>
+<p>Khi nghi ngờ hai điều kiện có tương đương không, đừng cãi nhau bằng lời: liệt kê. Với n biến có 2ⁿ dòng — n ≤ 4 thì làm tay được, và trong thực tế điều kiện if hiếm khi quá 4 biến độc lập:</p>
+<pre tabindex="0"><code>p q | !(p &amp;&amp; q) | !p || !q
+T T |    F      |    F      ✓
+T F |    T      |    T      ✓
+F T |    T      |    T      ✓
+F F |    T      |    T      ✓  → tương đương, refactor an toàn</code></pre><p>Truth table cũng là nền của <strong>exhaustive testing cho logic thuần</strong>: một hàm chỉ nhận vài biến bool có thể được test <em>toàn bộ</em> không gian input — một trong những nơi hiếm hoi test thực sự chứng minh được tính đúng (vì nó duyệt hết mọi trường hợp, không phải lấy mẫu).</p>
+<h2 id="5-thuật-toán--đơn-giản-hóa-điều-kiện-một-cách-có-kỷ-luật">5. Thuật toán — đơn giản hóa điều kiện một cách có kỷ luật<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán--đơn-giản-hóa-điều-kiện-một-cách-có-kỷ-luật">#</a></h2>
+<p>Gặp một điều kiện phức tạp cần refactor, quy trình cơ giới gồm bốn bước:</p>
+<p><strong>Bước 1 — Đặt tên mệnh đề.</strong> Gán mỗi biểu thức con nguyên tử một chữ cái: <code>a = user.IsActive</code>, <code>b = user.IsBanned</code>, <code>c = req.IsInternal</code>. Điều kiện dài một dòng rưỡi giờ thành công thức 5 ký tự.</p>
+<p><strong>Bước 2 — Đẩy phủ định vào trong</strong> bằng De Morgan và khử phủ định kép, đến khi ¬ chỉ còn đứng cạnh biến.</p>
+<p><strong>Bước 3 — Rút gọn bằng luật hấp thụ và phân phối:</strong> p ∨ (p ∧ q) ≡ p; (p ∧ q) ∨ (p ∧ ¬q) ≡ p. Với biểu thức rối, viết truth table và đọc ra dạng tối giản (bài bản hơn có Karnaugh map / Quine–McCluskey — chương 09 Boolean Algebra).</p>
+<p><strong>Bước 4 — Dịch ngược ra code, cân nhắc tách hàm đặt tên.</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Trước — điều kiện thật từ một codebase thật (đã đổi tên):</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> !(<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Status</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;cancelled&#34;</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Total</span> &gt; <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> !<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">IsFree</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">skip</span>(<span style="color:#a6e22e">order</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Bước 1: a = (status == &#34;cancelled&#34;), b = (total &gt; 0), c = order.IsFree</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Điều kiện: !( !a &amp;&amp; (b || !c) )</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Bước 2 (De Morgan): a || !(b || !c) ≡ a || (!b &amp;&amp; c)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Bước 4: dịch ngược —</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Status</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;cancelled&#34;</span> <span style="color:#f92672">||</span> (<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Total</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">IsFree</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">skip</span>(<span style="color:#a6e22e">order</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Đọc được thành lời: &#34;đơn đã hủy, hoặc đơn miễn phí không có giá trị&#34;</span>
+</span></span></code></pre></div><p>Lưu ý bước dịch <code>!b</code>: phủ định của <code>total &gt; 0</code> là <code>total &lt;= 0</code>, <strong>không phải</strong> <code>total &lt; 0</code> — lỗi lật dấu so sánh thiếu dấu bằng là anh em song sinh của lỗi De Morgan.</p>
+<h3 id="short-circuit-evaluation--logic-gặp-thứ-tự-thực-thi">Short-circuit evaluation — logic gặp thứ tự thực thi<a hidden class="anchor" aria-hidden="true" href="#short-circuit-evaluation--logic-gặp-thứ-tự-thực-thi">#</a></h3>
+<p>Go (như hầu hết ngôn ngữ) đánh giá <code>&amp;&amp;</code>/<code>||</code> kiểu <strong>short-circuit</strong>: <code>p &amp;&amp; q</code> không đánh giá q nếu p đã false. Đây vừa là tính năng an toàn:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Idiom kinh điển: kiểm tra nil TRƯỚC khi dereference — thứ tự là sống còn</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">IsAdmin</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>vừa là điểm khiến <code>&amp;&amp;</code> trong code <strong>không hoàn toàn là ∧ trong toán</strong>: ∧ giao hoán, nhưng <code>user.IsAdmin &amp;&amp; user != nil</code> panic. Khi toán hạng có side effect hoặc có thể panic, thứ tự mang ngữ nghĩa. Bài học kép: (1) sắp toán hạng theo thứ tự guard trước — rẻ trước — đắt sau; (2) đừng giấu side effect trong biểu thức điều kiện, vì nó phá vỡ quyền tự do biến đổi đại số mà logic hứa hẹn.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>Điều kiện gộp vs guard clause.</strong> Cùng một logic viết được hai kiểu: một biểu thức boolean lớn, hoặc chuỗi <code>if ... return</code> sớm. Biểu thức gộp gần đại số hơn — dễ kiểm chứng tương đương; guard clause dễ đọc tuần tự hơn và cho phép trả về lỗi <em>khác nhau</em> cho từng nhánh. Kinh nghiệm chung: logic quyết định thuần (cho ra bool) thì gộp và rút gọn; logic validate (cho ra error cụ thể) thì guard clause.</p>
+<p><strong>Rút gọn tối đa vs giữ cấu trúc nghiệp vụ.</strong> Dạng logic tối giản không phải lúc nào cũng là dạng dễ bảo trì. <code>(isVIP &amp;&amp; overLimit) || (isVIP &amp;&amp; flagged)</code> rút gọn được thành <code>isVIP &amp;&amp; (overLimit || flagged)</code> — thường tốt. Nhưng đôi khi hai vế phản ánh hai <em>quy tắc nghiệp vụ độc lập</em> sẽ tiến hóa khác nhau; gộp chúng là tối ưu hóa sớm về mặt cấu trúc. Logic cho bạn <em>quyền</em> biến đổi; nghiệp vụ quyết định <em>có nên</em> không.</p>
+<p><strong>Logic hai giá trị vs ba giá trị.</strong> SQL chọn thêm UNKNOWN để mô hình hóa dữ liệu thiếu — cái giá là mọi luật quen thuộc phải xét lại (mục 7). Go chọn bool hai giá trị thuần và buộc bạn mô hình hóa &ldquo;thiếu&rdquo; tường minh bằng <code>*bool</code> hoặc <code>ok</code> pattern. Không hệ nào &ldquo;đúng&rdquo; hơn — nhưng <strong>phải biết mình đang đứng trong hệ nào</strong>, và cẩn trọng gấp đôi ở biên giới giữa hai hệ (mọi lớp ORM/driver mapping NULL ↔ Go đều là biên giới đó).</p>
+<p><strong>Khi nào KHÔNG cần bộ máy hình thức?</strong> Điều kiện 1–2 biến, đọc phát hiểu ngay — cứ viết tự nhiên. Bộ máy đặt tên mệnh đề, De Morgan, truth table chỉ đáng giá khi (a) có phủ định lồng ngoặc, (b) từ 3 biến trở lên, hoặc (c) bạn sắp <em>thay đổi</em> một điều kiện đang chạy đúng trong production. Dùng dao mổ trâu giết gà làm code review chậm đi vô ích.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>SQL three-valued logic và bug <code>NOT IN</code> kinh điển.</strong> SQL có ba giá trị chân lý: TRUE, FALSE, UNKNOWN. Mọi phép so sánh với NULL đều cho UNKNOWN (<code>NULL = NULL</code> cũng là UNKNOWN — vì NULL nghĩa là &ldquo;không biết&rdquo;, và &ldquo;không biết có bằng không biết không&rdquo; thì&hellip; không biết). <code>WHERE</code> chỉ giữ dòng có predicate TRUE — UNKNOWN bị loại như FALSE. Giờ mổ xẻ bug mở đầu chương:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span>id <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">IN</span> (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#66d9ef">NULL</span>)
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">≡</span> <span style="color:#66d9ef">NOT</span> (id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">OR</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">OR</span> id <span style="color:#f92672">=</span> <span style="color:#66d9ef">NULL</span>)
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">≡</span> <span style="color:#66d9ef">NOT</span> (id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">OR</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">OR</span> <span style="color:#66d9ef">UNKNOWN</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- nếu id ∉ {1,2}: NOT (F OR F OR UNKNOWN) = NOT UNKNOWN = UNKNOWN → dòng bị loại!
+</span></span></span></code></pre></div><p>De Morgan vẫn đúng trong logic ba giá trị — chính vì áp nó một cách máy móc ta <em>thấy được</em> UNKNOWN lan truyền qua phủ định. Cách chữa: <code>NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id)</code> — EXISTS chỉ hỏi &ldquo;có dòng nào TRUE không&rdquo;, UNKNOWN không lọt qua được. Đây là bug mà <strong>hiểu logic thì tránh được trong 5 giây, không hiểu thì mất một buổi chiều với debugger</strong>.</p>
+<p><strong>Query optimizer rewrite điều kiện.</strong> PostgreSQL biến đổi mệnh đề WHERE bằng chính các luật ở mục 3: đẩy phủ định vào trong, phân phối để tách <code>(a OR b) AND c</code> thành dạng cho phép dùng index trên từng nhánh, loại mệnh đề luôn-đúng, phát hiện mâu thuẫn <code>x &gt; 5 AND x &lt; 3</code> để trả rỗng không cần đọc đĩa (constraint exclusion — chính là phát hiện p ∧ ¬p ≡ FALSE). Predicate pushdown trong các engine phân tán (Spark, Trino) cũng là biến đổi logic được chứng minh bảo toàn tương đương: đẩy filter xuống gần dữ liệu chỉ hợp lệ vì các luật giao hoán/phân phối cho phép.</p>
+<p><strong>Static analysis và compiler.</strong> <code>go vet</code> và staticcheck phát hiện điều kiện hằng (<code>x != nil</code> sau khi đã dereference x), nhánh chết, biểu thức luôn true — bằng cách lan truyền các sự kiện logic qua luồng điều khiển. Type checker về bản chất là một prover nhỏ: chứng minh mệnh đề &ldquo;không tồn tại đường thực thi nào gán string vào int&rdquo;. Rust borrow checker chứng minh mệnh đề ∀ về aliasing. Mức công nghiệp nặng: SMT solver (Z3) đứng sau symbolic execution và nhiều công cụ tìm lỗ hổng — chúng <em>giải</em> các công thức logic hàng triệu biến.</p>
+<p><strong>Short-circuit trong Go runtime và API design.</strong> Chuỗi middleware HTTP là một AND lười: auth fail thì handler sau không chạy. <code>ctx.Err() != nil</code> check đầu hàm là guard ¬p → thoát. Cả pattern <code>val, ok := m[key]; if ok &amp;&amp; val.Ready {...}</code> — toàn bộ Go idiomatic code là logic mệnh đề được sắp thứ tự thực thi cẩn thận.</p>
+<p><strong>Feature flag và cấu hình.</strong> Hệ thống flag như LaunchDarkly đánh giá cây điều kiện (segment, percentage, prerequisite) — một biểu thức logic trên thuộc tính user. Flag lồng flag tạo implication ngầm: flag B chỉ có nghĩa khi flag A bật — quên mối quan hệ p → q này là nguồn của các tổ hợp cấu hình chưa từng được test (chương 02 sẽ đếm chính xác có bao nhiêu tổ hợp — gợi ý: 2ⁿ).</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p>Logic hiếm khi là <em>câu hỏi</em> phỏng vấn trực tiếp, nhưng là <em>lý do trượt</em> phổ biến: điều kiện biên viết sai, vòng while có điều kiện dừng lật ngược, xử lý case rỗng sai.</p>
+<p><strong>Các dạng phổ biến:</strong></p>
+<ul>
+<li>Viết điều kiện phức tạp đúng ngay lần đầu: Valid Parentheses (LeetCode 20), Valid Number (LeetCode 65 — bài mà bản chất là viết một predicate lớn không sai một nhánh).</li>
+<li>Điều kiện dừng vòng lặp: <code>lo &lt; hi</code> hay <code>lo &lt;= hi</code> trong binary search — trả lời chắc chắn được nhờ invariant (chương 03), nhưng phát biểu invariant đòi hỏi quantifier: &ldquo;∀ i &lt; lo: a[i] &lt; target&rdquo;.</li>
+<li>Boolean logic trực tiếp: đôi khi được yêu cầu rút gọn biểu thức hoặc giải thích vì sao hai đoạn điều kiện tương đương/không tương đương.</li>
+<li>Bài đếm/kiểm tra trên tập có thể rỗng: hãy chú ý interviewer gần như <em>luôn</em> hỏi &ldquo;nếu mảng rỗng thì sao?&rdquo; — trả lời bằng vacuous truth một cách tự tin (&ldquo;mọi phần tử của mảng rỗng đều thỏa điều kiện, nên trả về true/0/[] tùy ngữ nghĩa&rdquo;) là điểm cộng rõ rệt.</li>
+</ul>
+<p><strong>Lỗi tư duy thường gặp:</strong></p>
+<ul>
+<li>Lật phủ định quên đổi AND↔OR, hoặc đổi <code>&gt;</code> thành <code>&lt;</code> mà quên trường hợp bằng.</li>
+<li>Khẳng định converse: &ldquo;hàm trả true thì input hợp lệ&rdquo; từ spec &ldquo;input hợp lệ thì hàm trả true&rdquo;.</li>
+<li>Kiểm tra <code>if len(s) == 0</code> rồi xử lý riêng một cách không cần thiết — nhiều thuật toán đúng <em>tự nhiên</em> với input rỗng nhờ vacuous truth; thêm nhánh riêng vừa thừa vừa dễ sai.</li>
+<li>Viết <code>if cond { return true } else { return false }</code> — dấu hiệu chưa nhìn ra biểu thức bool là giá trị hạng nhất: <code>return cond</code>.</li>
+</ul>
+<p><strong>Cách phân tích thay vì học thuộc:</strong> với mọi điều kiện sắp viết, tự trả lời ba câu: (1) mệnh đề nguyên tử là gì — đặt tên được không; (2) tập rỗng/nil/zero value đi qua điều kiện này cho kết quả gì, có đúng ý không; (3) phủ định của điều kiện này — tức là nhánh else — phát biểu thành lời được không. Nếu câu (3) ấp úng, điều kiện đang quá phức tạp.</p>
+<p><strong>Từ phỏng vấn sang production:</strong> kỹ năng &ldquo;phát biểu điều kiện thành lời&rdquo; chính là kỹ năng viết PR description và định nghĩa alert rule. Một alert <code>error_rate &gt; 1% AND NOT deploy_in_progress</code> là một mệnh đề — và alert nhiễu (false positive) thường là mệnh đề thiếu một liên từ.</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>Phủ định lồng phủ định.</strong> <code>if !notReady</code> — cờ đặt tên phủ định (<code>disabled</code>, <code>notFound</code>, <code>skipValidation</code>) buộc mọi chỗ dùng phải nhân phủ định trong đầu. Đặt tên mệnh đề ở <strong>thể khẳng định</strong> (<code>enabled</code>, <code>found</code>, <code>validate</code>), để dấu <code>!</code> xuất hiện tường minh và duy nhất tại chỗ dùng.</p>
+<p><strong>So sánh với true/false.</strong> <code>if isValid == true</code>, tệ hơn nữa <code>if isValid != false</code> — thừa và mở cửa cho lỗi ở ngôn ngữ có truthiness. Trong logic, p ≡ (p = true); viết vế phải là chưa tin bool là giá trị.</p>
+<p><strong>Điều kiện trùng lặp lệch nhau.</strong> Cùng một quy tắc nghiệp vụ (&ldquo;đơn được hoàn tiền khi&hellip;&rdquo;) viết inline ở 5 nơi, rồi 4 nơi được sửa khi quy tắc đổi. Đây là vi phạm nguyên tắc mỗi mệnh đề nghiệp vụ nên có <strong>một định nghĩa duy nhất</strong> — một hàm predicate được đặt tên: <code>func (o *Order) Refundable() bool</code>.</p>
+<p><strong>Tin rằng test pass nghĩa là logic đúng.</strong> Điều kiện 4 biến có 16 tổ hợp; 3 unit test phủ 3 tổ hợp. Suy &ldquo;3 pass → đúng cả 16&rdquo; là affirming the consequent phiên bản thống kê. Với logic thuần ít biến: test hết bảng chân trị, hoặc property-based testing (chương 03).</p>
+<p><strong>Mang trực giác hai giá trị vào vùng ba giá trị.</strong> Mọi lần chạm SQL với cột nullable, <code>x &lt;&gt; 5</code> <strong>không</strong> bắt được dòng NULL; <code>SUM</code> trên tập rỗng trả NULL chứ không phải 0; hai NULL không bằng nhau trong <code>=</code> nhưng lại &ldquo;bằng nhau&rdquo; trong <code>DISTINCT</code> và <code>GROUP BY</code>. Không nhớ chi tiết cũng được — nhưng phải nhớ <em>rằng mình đang ở hệ logic khác</em> để tra cứu đúng lúc.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Đặt tên biến bool ở thể khẳng định; tách điều kiện ≥ 3 biến thành predicate có tên. Tên hàm tốt là bản dịch tiếng người của công thức logic.</li>
+<li>Áp De Morgan chủ động khi gặp <code>!(...)</code> trong review — biến đổi 10 giây, ngăn hiểu nhầm 10 ngày.</li>
+<li>Xếp toán hạng <code>&amp;&amp;</code>/<code>||</code> theo thứ tự: guard an toàn (nil check) → rẻ → đắt; không side effect trong điều kiện.</li>
+<li>Với mọi vòng lặp/hàm nhận collection: nghĩ về tập rỗng <em>một cách tường minh</em>, quyết định xem vacuous truth có phải hành vi mong muốn, và viết test cho case đó.</li>
+<li>Khi viết SQL trên cột nullable: mặc định dùng <code>NOT EXISTS</code> thay <code>NOT IN</code>, và tự hỏi &ldquo;NULL đi qua predicate này thành gì?&rdquo;.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không refactor điều kiện production &ldquo;theo cảm giác&rdquo; — hoặc chứng minh tương đương (truth table 5 phút), hoặc đừng đụng.</li>
+<li>Không dùng converse trong lập luận debug: &ldquo;deploy xong thì lỗi xuất hiện&rdquo; không suy ra &ldquo;lỗi do deploy&rdquo; — nó chỉ là một giả thuyết cần kiểm chứng bằng contrapositive (rollback mà lỗi còn thì giả thuyết sập).</li>
+<li>Không trộn quy ước &ldquo;hoặc loại trừ&rdquo; của ngôn ngữ đời thường vào spec kỹ thuật — khi requirement nói &ldquo;hoặc&rdquo;, xác nhận lại inclusive hay exclusive rồi mới viết code.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Vì sao <code>NOT IN</code> với subquery chứa NULL trả về 0 dòng, và dạng viết lại nào miễn nhiễm với vấn đề đó? Giải thích bằng cách lan truyền UNKNOWN qua De Morgan.</li>
+<li>&ldquo;Nếu cache hit thì latency &lt; 5ms.&rdquo; Từ quan sát &ldquo;latency = 20ms&rdquo;, bạn suy ra được gì, và từ &ldquo;cache miss&rdquo; bạn suy ra được gì? Cái nào là contrapositive, cái nào là bẫy inverse?</li>
+<li>Hàm <code>allMatch(items, pred)</code> trả gì với <code>items</code> rỗng, vì sao đó là lựa chọn duy nhất nhất quán với việc ∀ là AND trên cả tập, và hãy kể một tình huống production mà hành vi này gây tai nạn nếu quên.</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-1-mathematical-thinking/02-set-theory-functions-relations/">02 — Set Theory, Functions &amp; Relations</a>, nơi các predicate của chương này định nghĩa nên các tập hợp — và tập hợp hóa ra chính là ngôn ngữ nền của SQL, type system và sharding.</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/00-muc-luc/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Mathematics for Computer Science &amp; Software Engineering</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-1-mathematical-thinking/02-set-theory-functions-relations/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 02 — Set Theory, Functions &amp; Relations: Ngôn ngữ của dữ liệu</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 01 — Logic: Nền tảng của mọi dòng code on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2001%20%e2%80%94%20Logic%3a%20N%e1%bb%81n%20t%e1%ba%a3ng%20c%e1%bb%a7a%20m%e1%bb%8di%20d%c3%b2ng%20code&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 01 — Logic: Nền tảng của mọi dòng code on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f&amp;title=Ch%c6%b0%c6%a1ng%2001%20%e2%80%94%20Logic%3a%20N%e1%bb%81n%20t%e1%ba%a3ng%20c%e1%bb%a7a%20m%e1%bb%8di%20d%c3%b2ng%20code&amp;summary=Ch%c6%b0%c6%a1ng%2001%20%e2%80%94%20Logic%3a%20N%e1%bb%81n%20t%e1%ba%a3ng%20c%e1%bb%a7a%20m%e1%bb%8di%20d%c3%b2ng%20code&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 01 — Logic: Nền tảng của mọi dòng code on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f&title=Ch%c6%b0%c6%a1ng%2001%20%e2%80%94%20Logic%3a%20N%e1%bb%81n%20t%e1%ba%a3ng%20c%e1%bb%a7a%20m%e1%bb%8di%20d%c3%b2ng%20code">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 01 — Logic: Nền tảng của mọi dòng code on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 01 — Logic: Nền tảng của mọi dòng code on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2001%20%e2%80%94%20Logic%3a%20N%e1%bb%81n%20t%e1%ba%a3ng%20c%e1%bb%a7a%20m%e1%bb%8di%20d%c3%b2ng%20code%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 01 — Logic: Nền tảng của mọi dòng code on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2001%20%e2%80%94%20Logic%3a%20N%e1%bb%81n%20t%e1%ba%a3ng%20c%e1%bb%a7a%20m%e1%bb%8di%20d%c3%b2ng%20code&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 01 — Logic: Nền tảng của mọi dòng code on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2001%20%e2%80%94%20Logic%3a%20N%e1%bb%81n%20t%e1%ba%a3ng%20c%e1%bb%a7a%20m%e1%bb%8di%20d%c3%b2ng%20code&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-1-mathematical-thinking%2f01-logic%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

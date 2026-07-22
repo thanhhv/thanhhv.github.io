@@ -1,20 +1,179 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế | Thanh HV's Blog</title>
-<meta name=keywords content="backend,cdc,kafka,database"><meta name=description content="Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế"><meta property="og:description" content="Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-02-20T09:00:00+07:00"><meta property="article:modified_time" content="2026-02-20T09:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Cdc"><meta property="article:tag" content="Kafka"><meta property="article:tag" content="Database"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế"><meta name=twitter:description content="Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Change Data Capture","item":"https://thanhhv.github.io/series/cdc/"},{"@type":"ListItem","position":3,"name":"Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế","item":"https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế","name":"Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế","description":"Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.\n","keywords":["backend","cdc","kafka","database"],"articleBody":"Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.\n2.1. Batch ETL theo lịch Cách hoạt động Mỗi đêm (hoặc mỗi giờ), một job Extract-Transform-Load chạy: query toàn bộ hoặc một phần bảng nguồn, biến đổi, ghi đè hoặc merge vào đích. Đây là xương sống của data warehouse suốt từ thập niên 90.\ngraph LR PG[\"PostgreSQL - OLTP\"] --\u003e|\"1h sang: full/partial extract\"| ETL[\"ETL Job - Airflow/cron\"] ETL --\u003e|\"transform\"| ETL ETL --\u003e|\"bulk load\"| DWH[\"Data Warehouse\"] Ưu điểm Đơn giản tối đa về mặt khái niệm; toàn bộ logic nằm ở một chỗ, dễ debug, dễ chạy lại (rerun idempotent nếu thiết kế tốt). Tách hoàn toàn khỏi transaction path — không thêm một nanosecond nào vào latency ghi của OLTP. Bulk load cực kỳ hiệu quả với columnar warehouse: ghi 100 triệu rows một lần rẻ hơn nhiều so với 100 triệu lần ghi lẻ. Hạn chế kỹ thuật Consistency window tính bằng giờ hoặc ngày. Business ngày nay hỏi “doanh thu 15 phút qua”, không phải “doanh thu hôm qua”. Full extract không scale: dump 500GB mỗi đêm tạo áp lực I/O và lock/snapshot dài lên nguồn; incremental extract thì quay lại đúng các vấn đề updated_at của Chương 1 — không bắt DELETE, sót transaction commit muộn. Batch window co lại khi dữ liệu phình ra: job từng chạy 2 tiếng dần thành 9 tiếng, tràn sang giờ làm việc. Trạng thái đích là các “bức ảnh” rời rạc — không có lịch sử thay đổi giữa hai lần chạy. Ví dụ production fail Một hệ thống fintech tôi từng review: ETL đêm extract bảng giao dịch theo created_at \u003e= yesterday. Batch job đối soát của ngân hàng đối tác thỉnh thoảng ghi bổ sung giao dịch với created_at lùi 2 ngày (backdate theo ngày phát sinh thực). Các row này rơi ra ngoài mọi cửa sổ extract. Warehouse thiếu ~0,1% giao dịch, chỉ bị phát hiện sau 4 tháng khi đối soát tổng quý lệch số. Chi phí sửa: backfill toàn bộ + 3 tuần điều tra. Bài học: incremental theo cột thời gian do application kiểm soát là hợp đồng không ai cam kết.\nKhi nào vẫn nên dùng Dữ liệu tham chiếu thay đổi chậm (danh mục, tỷ giá chốt ngày), báo cáo chỉ cần theo ngày, nguồn là hệ thống bên thứ ba chỉ cho phép export định kỳ. Đừng dựng CDC pipeline cho một bảng 10.000 rows cập nhật mỗi tuần — đó là over-engineering.\n2.2. Polling với updated_at Cách hoạt động Phiên bản “real-time hóa” của batch: thu nhỏ chu kỳ xuống giây/phút, checkpoint theo updated_at (hoặc cột version/sequence tăng dần).\ngraph TD S[\"Scheduler moi 5s\"] --\u003e Q[\"SELECT * FROM t WHERE updated_at \u003e checkpoint ORDER BY updated_at\"] Q --\u003e PG[\"PostgreSQL\"] PG --\u003e R[\"Rows thay doi\"] R --\u003e W[\"Ghi sang dich + doi checkpoint\"] W --\u003e SƯu điểm Không cần quyền đặc biệt trên database, không cần hạ tầng mới — một cron job và một bảng checkpoint là đủ. Dễ hiểu, dễ vận hành với đội nhỏ. Hạn chế kỹ thuật Chương 1 đã mổ xẻ chi tiết, tóm tắt lại đầy đủ: (1) latency sàn bằng chu kỳ poll; (2) tải query lặp vô ích lên primary, nhân theo số consumer; (3) không bắt được DELETE; (4) mất intermediate state giữa hai lần poll; (5) sót dữ liệu do clock skew và transaction commit muộn hơn updated_at; (6) phải thêm cột + index vào mọi bảng cần sync — thay đổi schema vì nhu cầu của consumer; (7) ORDER BY updated_at không phải commit order — thứ tự áp dụng ở đích có thể sai với thứ tự nhân quả thực.\nThêm một điểm ít người để ý: index trên updated_at là loại index bị ghi lại ở mọi UPDATE, tăng write amplification và (trên PostgreSQL) phá HOT update, gây bloat.\nVí dụ production fail Sàn thương mại điện tử đồng bộ sản phẩm sang Elasticsearch bằng polling 10 giây. Nghiệp vụ gỡ sản phẩm vi phạm dùng hard DELETE. Sản phẩm bị gỡ vẫn nằm trên search suốt nhiều ngày (đến khi full reindex hàng tuần chạy). Đội pháp lý nhận khiếu nại vì hàng cấm đã gỡ vẫn tìm thấy được. Bản vá: chuyển sang soft delete — kéo theo sửa 40+ query trong codebase để thêm WHERE is_deleted = false, và ba tháng sau vẫn lòi ra hai query quên filter.\nKhi nào vẫn nên dùng Bảng append-only thuần túy (không UPDATE/DELETE) có cột sequence tăng dần đáng tin (id tự tăng — nhưng nhớ rằng id cũng commit không theo thứ tự cấp phát), yêu cầu latency lỏng lẻo, đội chưa có hạ tầng streaming. Biết rõ mình đang chấp nhận gì.\n2.3. Trigger-based replication Cách hoạt động Tạo trigger AFTER INSERT/UPDATE/DELETE trên bảng nguồn; trigger ghi bản ghi thay đổi vào một bảng khác (thường gọi là bảng audit/changelog/shadow table) trong cùng transaction; một job đọc bảng changelog và đẩy đi.\nsequenceDiagram participant App as \"Application\" participant T as \"Bang products\" participant TR as \"Trigger\" participant CL as \"Bang changelog\" participant J as \"Relay job\" App-\u003e\u003eT: \"UPDATE products SET price = 450k\" T-\u003e\u003eTR: \"AFTER UPDATE fired\" TR-\u003e\u003eCL: \"INSERT (op, old, new, ts) - cung transaction\" Note over App,CL: \"COMMIT ca hai bang atomic\" J-\u003e\u003eCL: \"Doc changelog theo id tang dan\" J-\u003e\u003eJ: \"Publish sang Kafka/ES roi xoa hoac danh dau\"Ưu điểm Atomic với dữ liệu: changelog và thay đổi gốc commit cùng nhau — không thể lệch, không sót DELETE, bắt được cả old value lẫn new value. Đây là ưu điểm thật sự và là lý do phương pháp này thống trị trước kỷ nguyên log-based (các sản phẩm như Oracle GoldenGate đời đầu, SymmetricDS đều đi đường này). Bắt được thay đổi từ mọi nguồn ghi, kể cả câu SQL thủ công. Hạn chế kỹ thuật Overhead nằm trong transaction path — đây là điểm chí tử. Mỗi lượt ghi giờ là ít nhất hai lượt ghi (bảng chính + changelog), cộng chi phí thực thi trigger (với PL/pgSQL là interpreter overhead trên từng row). Con số minh họa điển hình từ kinh nghiệm thực tế (số tham khảo, phụ thuộc workload): trigger audit ghi old/new row dạng JSONB trên bảng ghi nặng làm giảm 30–40% write throughput và tăng p99 write latency tương ứng; với batch UPDATE chạm 1 triệu rows, trigger per-row biến câu lệnh 20 giây thành nhiều phút. Bạn đang bắt workload OLTP — thứ cần bảo vệ nhất — trả thuế cho nhu cầu của hệ thống downstream. Bảng changelog trở thành điểm nóng: ghi tập trung tuần tự, phình rất nhanh, cần job dọn dẹp; dọn bằng DELETE lại gây bloat và vacuum pressure. Tôi từng thấy bảng changelog 800GB — lớn hơn dữ liệu chính. Khó maintain: trigger là code “vô hình” nằm trong database, ngoài luồng review/deploy thông thường; mỗi lần ALTER TABLE phải nhớ sửa trigger tương ứng; N bảng cần sync là N bộ trigger. Sau ba năm và hai thế hệ engineer, không ai còn dám đụng vào chúng. Relay job đọc changelog thực chất vẫn là polling — với đầy đủ vấn đề latency của polling, chỉ khác là không sót dữ liệu. Ví dụ production fail Một hệ thống ERP thêm trigger audit lên 12 bảng lõi theo yêu cầu compliance. Sáu tháng sau, kỳ chốt sổ cuối tháng — vốn chạy các batch UPDATE lớn — bắt đầu timeout. Điều tra cho thấy trigger chiếm ~35% thời gian ghi, và bảng audit (không ai đặt lịch dọn) đã 500GB, index của nó không còn vừa RAM khiến mỗi INSERT vào audit thành random I/O. Hệ thống chậm dần đều theo đúng nghĩa đen trong nhiều tháng mà không ai nối được nguyên nhân, vì “trigger deploy từ nửa năm trước rồi mà”.\nKhi nào vẫn nên dùng Audit nội bộ trong phạm vi database (không cần đẩy đi đâu), khối lượng ghi thấp, hoặc database không mở transaction log cho bên ngoài đọc (một số managed service, database nhúng). Ngay cả khi đó, hãy đo overhead trước khi bật trên bảng nóng.\n2.4. Dual Write — anti-pattern quan trọng nhất Đây là phương pháp mà mọi đội đều tự phát minh lại, vì nó là điều tự nhiên nhất để nghĩ ra: “cần dữ liệu ở hai nơi thì ghi vào hai nơi”.\nCách hoạt động sequenceDiagram participant App as \"Application\" participant PG as \"PostgreSQL\" participant K as \"Kafka / Elasticsearch\" App-\u003e\u003ePG: \"BEGIN; UPDATE ...; COMMIT\" PG--\u003e\u003eApp: \"OK\" App-\u003e\u003eK: \"publish event / index document\" K--\u003e\u003eApp: \"OK (hoac khong...)\"Application, sau khi ghi database thành công, ghi tiếp vào hệ thống thứ hai (Kafka, Elasticsearch, Redis…) ngay trong request handler.\nVì sao không thể đảm bảo atomicity Đây là điểm phải hiểu đến tận gốc, vì nó không phải lỗi triển khai — nó là bất khả thi về nguyên lý. PostgreSQL và Kafka là hai hệ thống độc lập, không chia sẻ transaction coordinator. Không tồn tại thao tác nào cho phép “commit cả hai hoặc không hệ nào”. Giữa hai lệnh ghi luôn có một khoảng thời gian mà process có thể chết, network có thể đứt, một trong hai hệ có thể từ chối. Liệt kê các failure mode:\nFailure mode 1 — DB commit thành công, publish fail. Process crash ngay sau COMMIT, hoặc Kafka unavailable, hoặc publish timeout. Kết quả: database có dữ liệu mới, downstream không bao giờ biết. Retry ở đâu? Request đã trả về, state đã mất. Đây là mất event vĩnh viễn, âm thầm — loại lỗi tệ nhất vì không có exception nào ghi nhận nó ở đúng chỗ.\nFailure mode 2 — Publish trước, DB rollback sau. Đảo thứ tự để “chắc chắn có event” thì tệ hơn: event mô tả một thay đổi chưa từng tồn tại (transaction rollback vì conflict, vì constraint, vì crash trước COMMIT). Downstream index một đơn hàng không có thật. Đây là event ma — phá vỡ tính chất “event phản ánh sự thật đã commit”.\nFailure mode 3 — Retry tạo duplicate không kiểm soát. Vá failure mode 1 bằng retry: publish timeout nhưng thực ra đã thành công → retry tạo bản sao. Không có deduplication key gắn với transaction, downstream không phân biệt được.\nFailure mode 4 — Race condition về ordering. Đây là failure mode tinh vi nhất và hay bị bỏ qua nhất. Hai request đồng thời cập nhật cùng một row:\nsequenceDiagram participant A as \"Request A - price 450k\" participant B as \"Request B - price 400k\" participant PG as \"PostgreSQL\" participant K as \"Kafka\" A-\u003e\u003ePG: \"UPDATE price = 450k; COMMIT\" B-\u003e\u003ePG: \"UPDATE price = 400k; COMMIT\" Note over PG: \"Thu tu commit: A truoc, B sau. DB chot gia 400k\" B-\u003e\u003eK: \"publish price = 400k\" A-\u003e\u003eK: \"publish price = 450k (den sau do GC pause/retry)\" Note over K: \"Consumer ap dung cuoi cung: 450k. LECH VINH VIEN voi DB\"Thứ tự publish lên Kafka do scheduler của OS, GC pause, network jitter quyết định — không liên quan gì đến thứ tự commit trong database. Downstream áp dụng event cuối cùng nhận được và lệch vĩnh viễn với source of truth, không có cơ chế nào tự phát hiện. Với write rate cao trên các hot key, xác suất xảy ra không hề nhỏ — và mỗi lần xảy ra là một bản ghi lệch âm thầm.\nVì sao 2PC không phải lối thoát Phản xạ của người mới đọc về distributed transaction: “vậy dùng two-phase commit”. Không thực tế, vì bốn lý do:\nKafka, Elasticsearch, Redis không phải XA resource — chúng không tham gia được vào 2PC chuẩn. (Kafka có transaction nội bộ, nhưng đó là transaction giữa các Kafka topic/offset, không phải giữa Kafka và PostgreSQL.) 2PC là blocking protocol: nếu coordinator chết giữa prepare và commit, participant giữ lock chờ vô hạn định. Bạn nối độ khả dụng của đường ghi OLTP vào độ khả dụng của mọi hệ downstream — đảo ngược hoàn toàn nguyên tắc cách ly lỗi. Latency: mỗi lượt ghi trả thêm ít nhất một round-trip prepare/commit đến mọi participant. Ngay cả khi mọi hệ hỗ trợ XA, 2PC đảm bảo atomic commit chứ không đảm bảo atomic visibility — vẫn có khoảnh khắc participant này đã commit còn participant kia chưa. Ngành công nghiệp đã thử con đường này trong thập niên 2000 (các bus XA/JTA của Java EE) và rút lui có tổ chức.\nVì sao Dual Write nguy hiểm hơn các phương pháp khác Batch ETL sai thì sai to, dễ thấy. Dual Write sai theo kiểu rò rỉ từng giọt: 99,9% event đi đúng, 0,1% mất hoặc sai thứ tự, tích lũy dần thành hàng nghìn bản ghi lệch sau một năm, và không có điểm nào trong hệ thống biết điều đó. Chi phí thật của Dual Write không phải là code viết nó (rất rẻ) mà là hệ thống đối soát (reconciliation) bạn buộc phải xây sau đó — job so khớp định kỳ giữa DB và downstream, thứ mà tôi thấy mọi công ty dùng Dual Write nghiêm túc cuối cùng đều phải xây, và bản thân job đó lại là một batch ETL với đầy đủ hạn chế ở mục 2.1.\nKhi nào chấp nhận được Cache dạng best-effort có TTL ngắn (lệch thì tự hết hạn sau 60 giây), dữ liệu mà việc mất/lệch một phần không có hậu quả nghiệp vụ và có full rebuild định kỳ. Nói cách khác: chỉ khi bạn đã thiết kế sẵn cơ chế tự chữa lành và trả lời được câu “lệch thì sao?” bằng “không sao thật”.\n2.5. Event Publishing từ application (và Outbox Pattern) Cách hoạt động Bước tiến hóa tiếp theo: thay vì ghi thẳng sang hệ đích, application publish domain event (OrderPlaced, ProductPriceChanged) lên message broker; các consumer tự cập nhật store của mình. Đây là kiến trúc event-driven kinh điển.\nPhiên bản ngây thơ của nó — publish trong request handler sau khi commit — chính là Dual Write với đầy đủ failure mode ở mục 2.4, chỉ khoác áo ngữ nghĩa đẹp hơn. Phiên bản đúng là Outbox Pattern: ghi event vào bảng outbox trong cùng transaction với thay đổi nghiệp vụ, rồi một relay process đọc bảng outbox và publish.\ngraph TD App[\"Application\"] --\u003e|\"cung 1 transaction\"| TX[\"BEGIN\"] TX --\u003e T1[\"UPDATE orders ...\"] TX --\u003e T2[\"INSERT INTO outbox (event)\"] TX --\u003e C[\"COMMIT - atomic\"] C --\u003e Relay[\"Relay process\"] Relay --\u003e|\"doc outbox, publish\"| K[\"Kafka\"] K --\u003e Con[\"Consumers\"]Ưu điểm Outbox giải quyết đúng vấn đề atomicity: event và dữ liệu commit cùng nhau hoặc không gì cả. Không event ma, không mất event. Event mang ngữ nghĩa nghiệp vụ — contract được thiết kế chủ động, không lộ schema nội bộ của database ra ngoài. Đây là ưu thế thật so với data change event, đặc biệt giữa các bounded context. Hạn chế kỹ thuật Độ phủ phụ thuộc kỷ luật của developer: chỉ những code path có gọi publish mới sinh event. Migration script, bulk update, hotfix SQL trực tiếp, service cũ chưa refactor — tất cả ghi dữ liệu mà không phát event. Với mục đích business integration thì chấp nhận được; với mục đích đồng bộ dữ liệu thì đây là lỗ thủng cấu trúc. Relay đọc bảng outbox bằng polling thì thừa hưởng latency + tải của polling (dù không sót, vì outbox là append-only có sequence); bảng outbox cần dọn dẹp như bảng changelog của trigger. Mỗi bảng/aggregate cần sync là thêm code outbox — chi phí lặp lại trên toàn codebase, và không giúp gì cho hệ thống legacy không sửa được code. Relay publish vẫn là at-least-once → consumer phải idempotent (điều này thì gần như mọi giải pháp đều yêu cầu, kể cả CDC — sẽ bàn ở Chương 3). Ví dụ production fail Một công ty logistics dùng event publishing (không outbox) cho trạng thái vận đơn. Chiến dịch làm sạch dữ liệu chạy UPDATE shipments SET status = 'delivered' WHERE ... trực tiếp cho 40.000 đơn kẹt trạng thái. Không event nào phát ra. App khách hàng (đọc từ read model build từ event) hiển thị 40.000 đơn “đang giao” suốt hai tuần; call center quá tải. Đây là minh họa hoàn hảo cho khoảng cách giữa domain event và data change: sự thật nằm trong database, không nằm trong thiện chí của code.\nKhi nào vẫn nên dùng Luôn luôn — cho mục đích của nó: business workflow, saga, integration giữa các service. Outbox Pattern là best practice thực thụ ở đây. Điều không nên làm là dùng nó làm cơ chế đồng bộ dữ liệu duy nhất cho search/analytics/cache khi có nhiều đường ghi vào database. Và một điểm nối sang chương sau: cách hiệu quả nhất để relay bảng outbox… chính là CDC đọc transaction log của bảng outbox — hai kỹ thuật này hội tụ chứ không cạnh tranh.\n2.6. Nhìn lại toàn cảnh: mẫu số chung của các thất bại Xếp các phương pháp cạnh nhau, một quy luật hiện ra. Mọi phương pháp đều phải trả lời ba câu hỏi, và mỗi phương pháp gãy ở ít nhất một câu:\nTính đầy đủ — có bắt được mọi thay đổi không, kể cả DELETE, kể cả từ code path không ngờ tới? (Polling: không. Event publishing: không.) Tính atomic với dữ liệu — event có được đảm bảo khớp với những gì đã commit không? (Dual Write: không, về nguyên lý.) Chi phí đặt ở đâu — trong transaction path của OLTP hay ngoài nó? (Trigger: trong, và đó là chỗ đắt nhất.) Chỉ có hai phương pháp trả lời đúng câu 1 và 2: trigger-based và outbox — và cả hai đều đúng vì cùng một lý do: chúng ghi thông tin thay đổi trong cùng transaction với dữ liệu. Nhưng cả hai đều trả giá ở câu 3: một lượt ghi phụ trong transaction path, cộng một tầng polling phía sau.\nĐến đây, câu hỏi tự nhiên bật ra: có tồn tại thứ gì đó vốn đã được ghi trong cùng transaction với mọi thay đổi, vốn đã đầy đủ tuyệt đối, vốn đã đúng thứ tự commit, và chi phí ghi nó đã được trả sẵn bất kể ta có dùng hay không? Có. Chương 1 đã gọi tên nó: transaction log. Đó là nội dung của Chương 3.\nBảng so sánh tổng hợp Tiêu chí Batch ETL Polling updated_at Trigger-based Dual Write Event Publishing + Outbox Consistency window Giờ → ngày Giây → phút Giây (qua relay) ms (khi không lỗi) Giây (qua relay) Bắt được DELETE Không (trừ full compare) Không Có Có (nếu code nhớ) Có (nếu code nhớ) Bắt intermediate state Không Không Có Không đảm bảo Theo event được phát Atomic với dữ liệu commit Không Không Có Không — về nguyên lý Có (nhờ outbox) Đúng thứ tự commit Không Không Gần đúng (theo seq changelog) Không — race condition Theo seq outbox Độ phủ mọi đường ghi Có (query lại bảng) Có với UPDATE, sót DELETE Có Chỉ code path có gọi Chỉ code path có gọi Overhead lên transaction path Không Không (nhưng tải query nền) Cao: 30–40% write * Thêm 1 RPC mỗi request Thêm 1 INSERT mỗi transaction Thay đổi schema/code Không Cột + index updated_at Trigger + bảng changelog Sửa mọi write path Sửa mọi write path + bảng outbox Độ phức tạp vận hành Thấp Thấp Trung bình (dọn changelog) Thấp lúc đầu, cao về sau (reconciliation) Trung bình Rủi ro âm thầm nhất Sót row backdate Sót DELETE, clock skew Chậm dần theo size changelog Lệch rò rỉ không phát hiện được Đường ghi ngoài luồng không phát event Vẫn nên dùng khi Dữ liệu chậm, báo cáo theo ngày Bảng append-only, latency lỏng DB không mở log, audit nội bộ Cache TTL ngắn, best-effort Business integration giữa service * Số tham khảo minh họa từ kinh nghiệm thực tế, phụ thuộc workload và cách viết trigger.\nTóm tắt chương Tiến hóa của đồng bộ dữ liệu — Batch ETL → Polling → Trigger → Dual Write → Event Publishing — là chuỗi các lời giải từng phần, mỗi bước vá một điểm yếu của bước trước và lộ ra điểm yếu mới. Ba câu hỏi kiểm định mọi cơ chế đồng bộ: đầy đủ mọi thay đổi không? atomic với dữ liệu commit không? chi phí đặt trong hay ngoài transaction path? Dual Write là anti-pattern quan trọng nhất: không thể đảm bảo atomicity giữa hai hệ thống độc lập về nguyên lý; failure mode gồm mất event âm thầm, event ma, duplicate, và race condition ordering làm lệch vĩnh viễn; 2PC không phải lối thoát vì broker/search không phải XA resource, blocking, và không đảm bảo atomic visibility. Trigger-based và Outbox trả lời đúng câu atomicity vì cùng nguyên lý “ghi thông tin thay đổi trong cùng transaction” — nhưng trả giá bằng overhead trong transaction path (trigger có thể ăn 30–40% write throughput) và một tầng polling phía sau. Event Publishing/Outbox vẫn là best practice cho business integration; nó chỉ sai vai khi bị dùng làm cơ chế đồng bộ dữ liệu duy nhất trong hệ có nhiều đường ghi. Mẫu số chung dẫn đến chương sau: thứ duy nhất vốn đã đầy đủ, đã atomic, đã đúng thứ tự commit, và đã được trả chi phí sẵn — là transaction log. Đọc tiếp Chương 3 — Bản chất của Change Data Capture: khai thác chính transaction log làm nguồn sự kiện thay đổi — vì sao log-based CDC ưu việt hơn query-based, các khái niệm cốt lõi (Snapshot, Offset, Delivery Guarantee, Ordering, Tombstone), kiến trúc pipeline chuẩn, và những trade-off phải trả.\n","wordCount":"3761","inLanguage":"en","datePublished":"2026-02-20T09:00:00+07:00","dateModified":"2026-02-20T09:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/cdc/>Change Data Capture</a></div><h1 class="post-title entry-hint-parent">Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế</h1><div class=post-meta><span title='2026-02-20 09:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;18 min</div></header><div class=post-content><p>Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về <strong>vì sao CDC log-based cuối cùng trở thành câu trả lời</strong>. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.</p><h2 id=21-batch-etl-theo-lịch>2.1. Batch ETL theo lịch<a hidden class=anchor aria-hidden=true href=#21-batch-etl-theo-lịch>#</a></h2><h3 id=cách-hoạt-động>Cách hoạt động<a hidden class=anchor aria-hidden=true href=#cách-hoạt-động>#</a></h3><p>Mỗi đêm (hoặc mỗi giờ), một job Extract-Transform-Load chạy: query toàn bộ hoặc một phần bảng nguồn, biến đổi, ghi đè hoặc merge vào đích. Đây là xương sống của data warehouse suốt từ thập niên 90.</p><pre class=mermaid>graph LR
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, cdc, kafka, database">
+<meta name="description" content="Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/cdc/">Change Data Capture</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế
+    </h1>
+    <div class="post-meta"><span title='2026-02-20 09:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;18 min
+
+</div>
+  </header> 
+  <div class="post-content"><p>Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về <strong>vì sao CDC log-based cuối cùng trở thành câu trả lời</strong>. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.</p>
+<h2 id="21-batch-etl-theo-lịch">2.1. Batch ETL theo lịch<a hidden class="anchor" aria-hidden="true" href="#21-batch-etl-theo-lịch">#</a></h2>
+<h3 id="cách-hoạt-động">Cách hoạt động<a hidden class="anchor" aria-hidden="true" href="#cách-hoạt-động">#</a></h3>
+<p>Mỗi đêm (hoặc mỗi giờ), một job Extract-Transform-Load chạy: query toàn bộ hoặc một phần bảng nguồn, biến đổi, ghi đè hoặc merge vào đích. Đây là xương sống của data warehouse suốt từ thập niên 90.</p>
+<pre class="mermaid">graph LR
     PG[&#34;PostgreSQL - OLTP&#34;] --&gt;|&#34;1h sang: full/partial extract&#34;| ETL[&#34;ETL Job - Airflow/cron&#34;]
     ETL --&gt;|&#34;transform&#34;| ETL
-    ETL --&gt;|&#34;bulk load&#34;| DWH[&#34;Data Warehouse&#34;]</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
+    ETL --&gt;|&#34;bulk load&#34;| DWH[&#34;Data Warehouse&#34;]</pre><style>
+  pre.mermaid {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+  }
+</style>
+<script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({
     startOnLoad: true,
     theme: document.body.classList.contains("dark") ? "dark" : "default",
     securityLevel: "loose",
   });
-</script><h3 id=ưu-điểm>Ưu điểm<a hidden class=anchor aria-hidden=true href=#ưu-điểm>#</a></h3><ul><li>Đơn giản tối đa về mặt khái niệm; toàn bộ logic nằm ở một chỗ, dễ debug, dễ chạy lại (rerun idempotent nếu thiết kế tốt).</li><li>Tách hoàn toàn khỏi transaction path — không thêm một nanosecond nào vào latency ghi của OLTP.</li><li>Bulk load cực kỳ hiệu quả với columnar warehouse: ghi 100 triệu rows một lần rẻ hơn nhiều so với 100 triệu lần ghi lẻ.</li></ul><h3 id=hạn-chế-kỹ-thuật>Hạn chế kỹ thuật<a hidden class=anchor aria-hidden=true href=#hạn-chế-kỹ-thuật>#</a></h3><ul><li><strong>Consistency window tính bằng giờ hoặc ngày.</strong> Business ngày nay hỏi &ldquo;doanh thu 15 phút qua&rdquo;, không phải &ldquo;doanh thu hôm qua&rdquo;.</li><li><strong>Full extract không scale</strong>: dump 500GB mỗi đêm tạo áp lực I/O và lock/snapshot dài lên nguồn; incremental extract thì quay lại đúng các vấn đề <code>updated_at</code> của Chương 1 — không bắt DELETE, sót transaction commit muộn.</li><li><strong>Batch window co lại khi dữ liệu phình ra</strong>: job từng chạy 2 tiếng dần thành 9 tiếng, tràn sang giờ làm việc.</li><li>Trạng thái đích là các &ldquo;bức ảnh&rdquo; rời rạc — không có lịch sử thay đổi giữa hai lần chạy.</li></ul><h3 id=ví-dụ-production-fail>Ví dụ production fail<a hidden class=anchor aria-hidden=true href=#ví-dụ-production-fail>#</a></h3><p>Một hệ thống fintech tôi từng review: ETL đêm extract bảng giao dịch theo <code>created_at >= yesterday</code>. Batch job đối soát của ngân hàng đối tác thỉnh thoảng ghi bổ sung giao dịch với <code>created_at</code> lùi 2 ngày (backdate theo ngày phát sinh thực). Các row này rơi ra ngoài mọi cửa sổ extract. Warehouse thiếu ~0,1% giao dịch, chỉ bị phát hiện sau 4 tháng khi đối soát tổng quý lệch số. Chi phí sửa: backfill toàn bộ + 3 tuần điều tra. Bài học: incremental theo cột thời gian do application kiểm soát là hợp đồng không ai cam kết.</p><h3 id=khi-nào-vẫn-nên-dùng>Khi nào vẫn nên dùng<a hidden class=anchor aria-hidden=true href=#khi-nào-vẫn-nên-dùng>#</a></h3><p>Dữ liệu tham chiếu thay đổi chậm (danh mục, tỷ giá chốt ngày), báo cáo chỉ cần theo ngày, nguồn là hệ thống bên thứ ba chỉ cho phép export định kỳ. Đừng dựng CDC pipeline cho một bảng 10.000 rows cập nhật mỗi tuần — đó là over-engineering.</p><h2 id=22-polling-với-updated_at>2.2. Polling với <code>updated_at</code><a hidden class=anchor aria-hidden=true href=#22-polling-với-updated_at>#</a></h2><h3 id=cách-hoạt-động-1>Cách hoạt động<a hidden class=anchor aria-hidden=true href=#cách-hoạt-động-1>#</a></h3><p>Phiên bản &ldquo;real-time hóa&rdquo; của batch: thu nhỏ chu kỳ xuống giây/phút, checkpoint theo <code>updated_at</code> (hoặc cột version/sequence tăng dần).</p><pre class=mermaid>graph TD
+</script><h3 id="ưu-điểm">Ưu điểm<a hidden class="anchor" aria-hidden="true" href="#ưu-điểm">#</a></h3>
+<ul>
+<li>Đơn giản tối đa về mặt khái niệm; toàn bộ logic nằm ở một chỗ, dễ debug, dễ chạy lại (rerun idempotent nếu thiết kế tốt).</li>
+<li>Tách hoàn toàn khỏi transaction path — không thêm một nanosecond nào vào latency ghi của OLTP.</li>
+<li>Bulk load cực kỳ hiệu quả với columnar warehouse: ghi 100 triệu rows một lần rẻ hơn nhiều so với 100 triệu lần ghi lẻ.</li>
+</ul>
+<h3 id="hạn-chế-kỹ-thuật">Hạn chế kỹ thuật<a hidden class="anchor" aria-hidden="true" href="#hạn-chế-kỹ-thuật">#</a></h3>
+<ul>
+<li><strong>Consistency window tính bằng giờ hoặc ngày.</strong> Business ngày nay hỏi &ldquo;doanh thu 15 phút qua&rdquo;, không phải &ldquo;doanh thu hôm qua&rdquo;.</li>
+<li><strong>Full extract không scale</strong>: dump 500GB mỗi đêm tạo áp lực I/O và lock/snapshot dài lên nguồn; incremental extract thì quay lại đúng các vấn đề <code>updated_at</code> của Chương 1 — không bắt DELETE, sót transaction commit muộn.</li>
+<li><strong>Batch window co lại khi dữ liệu phình ra</strong>: job từng chạy 2 tiếng dần thành 9 tiếng, tràn sang giờ làm việc.</li>
+<li>Trạng thái đích là các &ldquo;bức ảnh&rdquo; rời rạc — không có lịch sử thay đổi giữa hai lần chạy.</li>
+</ul>
+<h3 id="ví-dụ-production-fail">Ví dụ production fail<a hidden class="anchor" aria-hidden="true" href="#ví-dụ-production-fail">#</a></h3>
+<p>Một hệ thống fintech tôi từng review: ETL đêm extract bảng giao dịch theo <code>created_at &gt;= yesterday</code>. Batch job đối soát của ngân hàng đối tác thỉnh thoảng ghi bổ sung giao dịch với <code>created_at</code> lùi 2 ngày (backdate theo ngày phát sinh thực). Các row này rơi ra ngoài mọi cửa sổ extract. Warehouse thiếu ~0,1% giao dịch, chỉ bị phát hiện sau 4 tháng khi đối soát tổng quý lệch số. Chi phí sửa: backfill toàn bộ + 3 tuần điều tra. Bài học: incremental theo cột thời gian do application kiểm soát là hợp đồng không ai cam kết.</p>
+<h3 id="khi-nào-vẫn-nên-dùng">Khi nào vẫn nên dùng<a hidden class="anchor" aria-hidden="true" href="#khi-nào-vẫn-nên-dùng">#</a></h3>
+<p>Dữ liệu tham chiếu thay đổi chậm (danh mục, tỷ giá chốt ngày), báo cáo chỉ cần theo ngày, nguồn là hệ thống bên thứ ba chỉ cho phép export định kỳ. Đừng dựng CDC pipeline cho một bảng 10.000 rows cập nhật mỗi tuần — đó là over-engineering.</p>
+<h2 id="22-polling-với-updated_at">2.2. Polling với <code>updated_at</code><a hidden class="anchor" aria-hidden="true" href="#22-polling-với-updated_at">#</a></h2>
+<h3 id="cách-hoạt-động-1">Cách hoạt động<a hidden class="anchor" aria-hidden="true" href="#cách-hoạt-động-1">#</a></h3>
+<p>Phiên bản &ldquo;real-time hóa&rdquo; của batch: thu nhỏ chu kỳ xuống giây/phút, checkpoint theo <code>updated_at</code> (hoặc cột version/sequence tăng dần).</p>
+<pre class="mermaid">graph TD
     S[&#34;Scheduler moi 5s&#34;] --&gt; Q[&#34;SELECT * FROM t WHERE updated_at &gt; checkpoint ORDER BY updated_at&#34;]
     Q --&gt; PG[&#34;PostgreSQL&#34;]
     PG --&gt; R[&#34;Rows thay doi&#34;]
     R --&gt; W[&#34;Ghi sang dich + doi checkpoint&#34;]
-    W --&gt; S</pre><h3 id=ưu-điểm-1>Ưu điểm<a hidden class=anchor aria-hidden=true href=#ưu-điểm-1>#</a></h3><ul><li>Không cần quyền đặc biệt trên database, không cần hạ tầng mới — một cron job và một bảng checkpoint là đủ.</li><li>Dễ hiểu, dễ vận hành với đội nhỏ.</li></ul><h3 id=hạn-chế-kỹ-thuật-1>Hạn chế kỹ thuật<a hidden class=anchor aria-hidden=true href=#hạn-chế-kỹ-thuật-1>#</a></h3><p>Chương 1 đã mổ xẻ chi tiết, tóm tắt lại đầy đủ: (1) latency sàn bằng chu kỳ poll; (2) tải query lặp vô ích lên primary, nhân theo số consumer; (3) <strong>không bắt được DELETE</strong>; (4) mất intermediate state giữa hai lần poll; (5) sót dữ liệu do clock skew và transaction commit muộn hơn <code>updated_at</code>; (6) phải thêm cột + index vào mọi bảng cần sync — thay đổi schema vì nhu cầu của consumer; (7) <code>ORDER BY updated_at</code> không phải commit order — thứ tự áp dụng ở đích có thể sai với thứ tự nhân quả thực.</p><p>Thêm một điểm ít người để ý: index trên <code>updated_at</code> là loại index bị ghi lại ở <strong>mọi</strong> UPDATE, tăng write amplification và (trên PostgreSQL) phá HOT update, gây bloat.</p><h3 id=ví-dụ-production-fail-1>Ví dụ production fail<a hidden class=anchor aria-hidden=true href=#ví-dụ-production-fail-1>#</a></h3><p>Sàn thương mại điện tử đồng bộ sản phẩm sang Elasticsearch bằng polling 10 giây. Nghiệp vụ gỡ sản phẩm vi phạm dùng hard DELETE. Sản phẩm bị gỡ vẫn nằm trên search suốt nhiều ngày (đến khi full reindex hàng tuần chạy). Đội pháp lý nhận khiếu nại vì hàng cấm đã gỡ vẫn tìm thấy được. Bản vá: chuyển sang soft delete — kéo theo sửa 40+ query trong codebase để thêm <code>WHERE is_deleted = false</code>, và ba tháng sau vẫn lòi ra hai query quên filter.</p><h3 id=khi-nào-vẫn-nên-dùng-1>Khi nào vẫn nên dùng<a hidden class=anchor aria-hidden=true href=#khi-nào-vẫn-nên-dùng-1>#</a></h3><p>Bảng append-only thuần túy (không UPDATE/DELETE) có cột sequence tăng dần đáng tin (id tự tăng — nhưng nhớ rằng id cũng commit không theo thứ tự cấp phát), yêu cầu latency lỏng lẻo, đội chưa có hạ tầng streaming. Biết rõ mình đang chấp nhận gì.</p><h2 id=23-trigger-based-replication>2.3. Trigger-based replication<a hidden class=anchor aria-hidden=true href=#23-trigger-based-replication>#</a></h2><h3 id=cách-hoạt-động-2>Cách hoạt động<a hidden class=anchor aria-hidden=true href=#cách-hoạt-động-2>#</a></h3><p>Tạo trigger <code>AFTER INSERT/UPDATE/DELETE</code> trên bảng nguồn; trigger ghi bản ghi thay đổi vào một bảng khác (thường gọi là bảng audit/changelog/shadow table) <strong>trong cùng transaction</strong>; một job đọc bảng changelog và đẩy đi.</p><pre class=mermaid>sequenceDiagram
+    W --&gt; S</pre><h3 id="ưu-điểm-1">Ưu điểm<a hidden class="anchor" aria-hidden="true" href="#ưu-điểm-1">#</a></h3>
+<ul>
+<li>Không cần quyền đặc biệt trên database, không cần hạ tầng mới — một cron job và một bảng checkpoint là đủ.</li>
+<li>Dễ hiểu, dễ vận hành với đội nhỏ.</li>
+</ul>
+<h3 id="hạn-chế-kỹ-thuật-1">Hạn chế kỹ thuật<a hidden class="anchor" aria-hidden="true" href="#hạn-chế-kỹ-thuật-1">#</a></h3>
+<p>Chương 1 đã mổ xẻ chi tiết, tóm tắt lại đầy đủ: (1) latency sàn bằng chu kỳ poll; (2) tải query lặp vô ích lên primary, nhân theo số consumer; (3) <strong>không bắt được DELETE</strong>; (4) mất intermediate state giữa hai lần poll; (5) sót dữ liệu do clock skew và transaction commit muộn hơn <code>updated_at</code>; (6) phải thêm cột + index vào mọi bảng cần sync — thay đổi schema vì nhu cầu của consumer; (7) <code>ORDER BY updated_at</code> không phải commit order — thứ tự áp dụng ở đích có thể sai với thứ tự nhân quả thực.</p>
+<p>Thêm một điểm ít người để ý: index trên <code>updated_at</code> là loại index bị ghi lại ở <strong>mọi</strong> UPDATE, tăng write amplification và (trên PostgreSQL) phá HOT update, gây bloat.</p>
+<h3 id="ví-dụ-production-fail-1">Ví dụ production fail<a hidden class="anchor" aria-hidden="true" href="#ví-dụ-production-fail-1">#</a></h3>
+<p>Sàn thương mại điện tử đồng bộ sản phẩm sang Elasticsearch bằng polling 10 giây. Nghiệp vụ gỡ sản phẩm vi phạm dùng hard DELETE. Sản phẩm bị gỡ vẫn nằm trên search suốt nhiều ngày (đến khi full reindex hàng tuần chạy). Đội pháp lý nhận khiếu nại vì hàng cấm đã gỡ vẫn tìm thấy được. Bản vá: chuyển sang soft delete — kéo theo sửa 40+ query trong codebase để thêm <code>WHERE is_deleted = false</code>, và ba tháng sau vẫn lòi ra hai query quên filter.</p>
+<h3 id="khi-nào-vẫn-nên-dùng-1">Khi nào vẫn nên dùng<a hidden class="anchor" aria-hidden="true" href="#khi-nào-vẫn-nên-dùng-1">#</a></h3>
+<p>Bảng append-only thuần túy (không UPDATE/DELETE) có cột sequence tăng dần đáng tin (id tự tăng — nhưng nhớ rằng id cũng commit không theo thứ tự cấp phát), yêu cầu latency lỏng lẻo, đội chưa có hạ tầng streaming. Biết rõ mình đang chấp nhận gì.</p>
+<h2 id="23-trigger-based-replication">2.3. Trigger-based replication<a hidden class="anchor" aria-hidden="true" href="#23-trigger-based-replication">#</a></h2>
+<h3 id="cách-hoạt-động-2">Cách hoạt động<a hidden class="anchor" aria-hidden="true" href="#cách-hoạt-động-2">#</a></h3>
+<p>Tạo trigger <code>AFTER INSERT/UPDATE/DELETE</code> trên bảng nguồn; trigger ghi bản ghi thay đổi vào một bảng khác (thường gọi là bảng audit/changelog/shadow table) <strong>trong cùng transaction</strong>; một job đọc bảng changelog và đẩy đi.</p>
+<pre class="mermaid">sequenceDiagram
     participant App as &#34;Application&#34;
     participant T as &#34;Bang products&#34;
     participant TR as &#34;Trigger&#34;
@@ -25,14 +184,40 @@
     TR-&gt;&gt;CL: &#34;INSERT (op, old, new, ts) - cung transaction&#34;
     Note over App,CL: &#34;COMMIT ca hai bang atomic&#34;
     J-&gt;&gt;CL: &#34;Doc changelog theo id tang dan&#34;
-    J-&gt;&gt;J: &#34;Publish sang Kafka/ES roi xoa hoac danh dau&#34;</pre><h3 id=ưu-điểm-2>Ưu điểm<a hidden class=anchor aria-hidden=true href=#ưu-điểm-2>#</a></h3><ul><li><strong>Atomic với dữ liệu</strong>: changelog và thay đổi gốc commit cùng nhau — không thể lệch, không sót DELETE, bắt được cả old value lẫn new value. Đây là ưu điểm thật sự và là lý do phương pháp này thống trị trước kỷ nguyên log-based (các sản phẩm như Oracle GoldenGate đời đầu, SymmetricDS đều đi đường này).</li><li>Bắt được thay đổi từ <strong>mọi nguồn ghi</strong>, kể cả câu SQL thủ công.</li></ul><h3 id=hạn-chế-kỹ-thuật-2>Hạn chế kỹ thuật<a hidden class=anchor aria-hidden=true href=#hạn-chế-kỹ-thuật-2>#</a></h3><ul><li><strong>Overhead nằm trong transaction path</strong> — đây là điểm chí tử. Mỗi lượt ghi giờ là ít nhất hai lượt ghi (bảng chính + changelog), cộng chi phí thực thi trigger (với PL/pgSQL là interpreter overhead trên từng row). Con số minh họa điển hình từ kinh nghiệm thực tế (<em>số tham khảo, phụ thuộc workload</em>): trigger audit ghi old/new row dạng JSONB trên bảng ghi nặng làm giảm <strong>30–40% write throughput</strong> và tăng p99 write latency tương ứng; với batch UPDATE chạm 1 triệu rows, trigger per-row biến câu lệnh 20 giây thành nhiều phút. Bạn đang bắt workload OLTP — thứ cần bảo vệ nhất — trả thuế cho nhu cầu của hệ thống downstream.</li><li><strong>Bảng changelog trở thành điểm nóng</strong>: ghi tập trung tuần tự, phình rất nhanh, cần job dọn dẹp; dọn bằng DELETE lại gây bloat và vacuum pressure. Tôi từng thấy bảng changelog 800GB — lớn hơn dữ liệu chính.</li><li><strong>Khó maintain</strong>: trigger là code &ldquo;vô hình&rdquo; nằm trong database, ngoài luồng review/deploy thông thường; mỗi lần <code>ALTER TABLE</code> phải nhớ sửa trigger tương ứng; N bảng cần sync là N bộ trigger. Sau ba năm và hai thế hệ engineer, không ai còn dám đụng vào chúng.</li><li>Relay job đọc changelog thực chất vẫn là polling — với đầy đủ vấn đề latency của polling, chỉ khác là không sót dữ liệu.</li></ul><h3 id=ví-dụ-production-fail-2>Ví dụ production fail<a hidden class=anchor aria-hidden=true href=#ví-dụ-production-fail-2>#</a></h3><p>Một hệ thống ERP thêm trigger audit lên 12 bảng lõi theo yêu cầu compliance. Sáu tháng sau, kỳ chốt sổ cuối tháng — vốn chạy các batch UPDATE lớn — bắt đầu timeout. Điều tra cho thấy trigger chiếm ~35% thời gian ghi, và bảng audit (không ai đặt lịch dọn) đã 500GB, index của nó không còn vừa RAM khiến mỗi INSERT vào audit thành random I/O. Hệ thống chậm dần đều theo đúng nghĩa đen trong nhiều tháng mà không ai nối được nguyên nhân, vì &ldquo;trigger deploy từ nửa năm trước rồi mà&rdquo;.</p><h3 id=khi-nào-vẫn-nên-dùng-2>Khi nào vẫn nên dùng<a hidden class=anchor aria-hidden=true href=#khi-nào-vẫn-nên-dùng-2>#</a></h3><p>Audit nội bộ trong phạm vi database (không cần đẩy đi đâu), khối lượng ghi thấp, hoặc database không mở transaction log cho bên ngoài đọc (một số managed service, database nhúng). Ngay cả khi đó, hãy đo overhead trước khi bật trên bảng nóng.</p><h2 id=24-dual-write--anti-pattern-quan-trọng-nhất>2.4. Dual Write — anti-pattern quan trọng nhất<a hidden class=anchor aria-hidden=true href=#24-dual-write--anti-pattern-quan-trọng-nhất>#</a></h2><p>Đây là phương pháp mà <strong>mọi đội đều tự phát minh lại</strong>, vì nó là điều tự nhiên nhất để nghĩ ra: &ldquo;cần dữ liệu ở hai nơi thì ghi vào hai nơi&rdquo;.</p><h3 id=cách-hoạt-động-3>Cách hoạt động<a hidden class=anchor aria-hidden=true href=#cách-hoạt-động-3>#</a></h3><pre class=mermaid>sequenceDiagram
+    J-&gt;&gt;J: &#34;Publish sang Kafka/ES roi xoa hoac danh dau&#34;</pre><h3 id="ưu-điểm-2">Ưu điểm<a hidden class="anchor" aria-hidden="true" href="#ưu-điểm-2">#</a></h3>
+<ul>
+<li><strong>Atomic với dữ liệu</strong>: changelog và thay đổi gốc commit cùng nhau — không thể lệch, không sót DELETE, bắt được cả old value lẫn new value. Đây là ưu điểm thật sự và là lý do phương pháp này thống trị trước kỷ nguyên log-based (các sản phẩm như Oracle GoldenGate đời đầu, SymmetricDS đều đi đường này).</li>
+<li>Bắt được thay đổi từ <strong>mọi nguồn ghi</strong>, kể cả câu SQL thủ công.</li>
+</ul>
+<h3 id="hạn-chế-kỹ-thuật-2">Hạn chế kỹ thuật<a hidden class="anchor" aria-hidden="true" href="#hạn-chế-kỹ-thuật-2">#</a></h3>
+<ul>
+<li><strong>Overhead nằm trong transaction path</strong> — đây là điểm chí tử. Mỗi lượt ghi giờ là ít nhất hai lượt ghi (bảng chính + changelog), cộng chi phí thực thi trigger (với PL/pgSQL là interpreter overhead trên từng row). Con số minh họa điển hình từ kinh nghiệm thực tế (<em>số tham khảo, phụ thuộc workload</em>): trigger audit ghi old/new row dạng JSONB trên bảng ghi nặng làm giảm <strong>30–40% write throughput</strong> và tăng p99 write latency tương ứng; với batch UPDATE chạm 1 triệu rows, trigger per-row biến câu lệnh 20 giây thành nhiều phút. Bạn đang bắt workload OLTP — thứ cần bảo vệ nhất — trả thuế cho nhu cầu của hệ thống downstream.</li>
+<li><strong>Bảng changelog trở thành điểm nóng</strong>: ghi tập trung tuần tự, phình rất nhanh, cần job dọn dẹp; dọn bằng DELETE lại gây bloat và vacuum pressure. Tôi từng thấy bảng changelog 800GB — lớn hơn dữ liệu chính.</li>
+<li><strong>Khó maintain</strong>: trigger là code &ldquo;vô hình&rdquo; nằm trong database, ngoài luồng review/deploy thông thường; mỗi lần <code>ALTER TABLE</code> phải nhớ sửa trigger tương ứng; N bảng cần sync là N bộ trigger. Sau ba năm và hai thế hệ engineer, không ai còn dám đụng vào chúng.</li>
+<li>Relay job đọc changelog thực chất vẫn là polling — với đầy đủ vấn đề latency của polling, chỉ khác là không sót dữ liệu.</li>
+</ul>
+<h3 id="ví-dụ-production-fail-2">Ví dụ production fail<a hidden class="anchor" aria-hidden="true" href="#ví-dụ-production-fail-2">#</a></h3>
+<p>Một hệ thống ERP thêm trigger audit lên 12 bảng lõi theo yêu cầu compliance. Sáu tháng sau, kỳ chốt sổ cuối tháng — vốn chạy các batch UPDATE lớn — bắt đầu timeout. Điều tra cho thấy trigger chiếm ~35% thời gian ghi, và bảng audit (không ai đặt lịch dọn) đã 500GB, index của nó không còn vừa RAM khiến mỗi INSERT vào audit thành random I/O. Hệ thống chậm dần đều theo đúng nghĩa đen trong nhiều tháng mà không ai nối được nguyên nhân, vì &ldquo;trigger deploy từ nửa năm trước rồi mà&rdquo;.</p>
+<h3 id="khi-nào-vẫn-nên-dùng-2">Khi nào vẫn nên dùng<a hidden class="anchor" aria-hidden="true" href="#khi-nào-vẫn-nên-dùng-2">#</a></h3>
+<p>Audit nội bộ trong phạm vi database (không cần đẩy đi đâu), khối lượng ghi thấp, hoặc database không mở transaction log cho bên ngoài đọc (một số managed service, database nhúng). Ngay cả khi đó, hãy đo overhead trước khi bật trên bảng nóng.</p>
+<h2 id="24-dual-write--anti-pattern-quan-trọng-nhất">2.4. Dual Write — anti-pattern quan trọng nhất<a hidden class="anchor" aria-hidden="true" href="#24-dual-write--anti-pattern-quan-trọng-nhất">#</a></h2>
+<p>Đây là phương pháp mà <strong>mọi đội đều tự phát minh lại</strong>, vì nó là điều tự nhiên nhất để nghĩ ra: &ldquo;cần dữ liệu ở hai nơi thì ghi vào hai nơi&rdquo;.</p>
+<h3 id="cách-hoạt-động-3">Cách hoạt động<a hidden class="anchor" aria-hidden="true" href="#cách-hoạt-động-3">#</a></h3>
+<pre class="mermaid">sequenceDiagram
     participant App as &#34;Application&#34;
     participant PG as &#34;PostgreSQL&#34;
     participant K as &#34;Kafka / Elasticsearch&#34;
     App-&gt;&gt;PG: &#34;BEGIN; UPDATE ...; COMMIT&#34;
     PG--&gt;&gt;App: &#34;OK&#34;
     App-&gt;&gt;K: &#34;publish event / index document&#34;
-    K--&gt;&gt;App: &#34;OK (hoac khong...)&#34;</pre><p>Application, sau khi ghi database thành công, ghi tiếp vào hệ thống thứ hai (Kafka, Elasticsearch, Redis&mldr;) ngay trong request handler.</p><h3 id=vì-sao-không-thể-đảm-bảo-atomicity>Vì sao không thể đảm bảo atomicity<a hidden class=anchor aria-hidden=true href=#vì-sao-không-thể-đảm-bảo-atomicity>#</a></h3><p>Đây là điểm phải hiểu đến tận gốc, vì nó không phải lỗi triển khai — nó là <strong>bất khả thi về nguyên lý</strong>. PostgreSQL và Kafka là hai hệ thống độc lập, không chia sẻ transaction coordinator. Không tồn tại thao tác nào cho phép &ldquo;commit cả hai hoặc không hệ nào&rdquo;. Giữa hai lệnh ghi luôn có một khoảng thời gian mà process có thể chết, network có thể đứt, một trong hai hệ có thể từ chối. Liệt kê các failure mode:</p><p><strong>Failure mode 1 — DB commit thành công, publish fail.</strong> Process crash ngay sau COMMIT, hoặc Kafka unavailable, hoặc publish timeout. Kết quả: database có dữ liệu mới, downstream không bao giờ biết. Retry ở đâu? Request đã trả về, state đã mất. Đây là <strong>mất event vĩnh viễn, âm thầm</strong> — loại lỗi tệ nhất vì không có exception nào ghi nhận nó ở đúng chỗ.</p><p><strong>Failure mode 2 — Publish trước, DB rollback sau.</strong> Đảo thứ tự để &ldquo;chắc chắn có event&rdquo; thì tệ hơn: event mô tả một thay đổi <strong>chưa từng tồn tại</strong> (transaction rollback vì conflict, vì constraint, vì crash trước COMMIT). Downstream index một đơn hàng không có thật. Đây là <strong>event ma</strong> — phá vỡ tính chất &ldquo;event phản ánh sự thật đã commit&rdquo;.</p><p><strong>Failure mode 3 — Retry tạo duplicate không kiểm soát.</strong> Vá failure mode 1 bằng retry: publish timeout nhưng thực ra đã thành công → retry tạo bản sao. Không có deduplication key gắn với transaction, downstream không phân biệt được.</p><p><strong>Failure mode 4 — Race condition về ordering.</strong> Đây là failure mode tinh vi nhất và hay bị bỏ qua nhất. Hai request đồng thời cập nhật cùng một row:</p><pre class=mermaid>sequenceDiagram
+    K--&gt;&gt;App: &#34;OK (hoac khong...)&#34;</pre><p>Application, sau khi ghi database thành công, ghi tiếp vào hệ thống thứ hai (Kafka, Elasticsearch, Redis&hellip;) ngay trong request handler.</p>
+<h3 id="vì-sao-không-thể-đảm-bảo-atomicity">Vì sao không thể đảm bảo atomicity<a hidden class="anchor" aria-hidden="true" href="#vì-sao-không-thể-đảm-bảo-atomicity">#</a></h3>
+<p>Đây là điểm phải hiểu đến tận gốc, vì nó không phải lỗi triển khai — nó là <strong>bất khả thi về nguyên lý</strong>. PostgreSQL và Kafka là hai hệ thống độc lập, không chia sẻ transaction coordinator. Không tồn tại thao tác nào cho phép &ldquo;commit cả hai hoặc không hệ nào&rdquo;. Giữa hai lệnh ghi luôn có một khoảng thời gian mà process có thể chết, network có thể đứt, một trong hai hệ có thể từ chối. Liệt kê các failure mode:</p>
+<p><strong>Failure mode 1 — DB commit thành công, publish fail.</strong> Process crash ngay sau COMMIT, hoặc Kafka unavailable, hoặc publish timeout. Kết quả: database có dữ liệu mới, downstream không bao giờ biết. Retry ở đâu? Request đã trả về, state đã mất. Đây là <strong>mất event vĩnh viễn, âm thầm</strong> — loại lỗi tệ nhất vì không có exception nào ghi nhận nó ở đúng chỗ.</p>
+<p><strong>Failure mode 2 — Publish trước, DB rollback sau.</strong> Đảo thứ tự để &ldquo;chắc chắn có event&rdquo; thì tệ hơn: event mô tả một thay đổi <strong>chưa từng tồn tại</strong> (transaction rollback vì conflict, vì constraint, vì crash trước COMMIT). Downstream index một đơn hàng không có thật. Đây là <strong>event ma</strong> — phá vỡ tính chất &ldquo;event phản ánh sự thật đã commit&rdquo;.</p>
+<p><strong>Failure mode 3 — Retry tạo duplicate không kiểm soát.</strong> Vá failure mode 1 bằng retry: publish timeout nhưng thực ra đã thành công → retry tạo bản sao. Không có deduplication key gắn với transaction, downstream không phân biệt được.</p>
+<p><strong>Failure mode 4 — Race condition về ordering.</strong> Đây là failure mode tinh vi nhất và hay bị bỏ qua nhất. Hai request đồng thời cập nhật cùng một row:</p>
+<pre class="mermaid">sequenceDiagram
     participant A as &#34;Request A - price 450k&#34;
     participant B as &#34;Request B - price 400k&#34;
     participant PG as &#34;PostgreSQL&#34;
@@ -42,16 +227,392 @@
     Note over PG: &#34;Thu tu commit: A truoc, B sau. DB chot gia 400k&#34;
     B-&gt;&gt;K: &#34;publish price = 400k&#34;
     A-&gt;&gt;K: &#34;publish price = 450k (den sau do GC pause/retry)&#34;
-    Note over K: &#34;Consumer ap dung cuoi cung: 450k. LECH VINH VIEN voi DB&#34;</pre><p>Thứ tự publish lên Kafka do scheduler của OS, GC pause, network jitter quyết định — <strong>không liên quan gì đến thứ tự commit trong database</strong>. Downstream áp dụng event cuối cùng nhận được và lệch vĩnh viễn với source of truth, không có cơ chế nào tự phát hiện. Với write rate cao trên các hot key, xác suất xảy ra không hề nhỏ — và mỗi lần xảy ra là một bản ghi lệch âm thầm.</p><h3 id=vì-sao-2pc-không-phải-lối-thoát>Vì sao 2PC không phải lối thoát<a hidden class=anchor aria-hidden=true href=#vì-sao-2pc-không-phải-lối-thoát>#</a></h3><p>Phản xạ của người mới đọc về distributed transaction: &ldquo;vậy dùng two-phase commit&rdquo;. Không thực tế, vì bốn lý do:</p><ol><li><strong>Kafka, Elasticsearch, Redis không phải XA resource</strong> — chúng không tham gia được vào 2PC chuẩn. (Kafka có transaction nội bộ, nhưng đó là transaction giữa các Kafka topic/offset, không phải giữa Kafka và PostgreSQL.)</li><li>2PC là <strong>blocking protocol</strong>: nếu coordinator chết giữa prepare và commit, participant giữ lock chờ vô hạn định. Bạn nối độ khả dụng của đường ghi OLTP vào độ khả dụng của mọi hệ downstream — đảo ngược hoàn toàn nguyên tắc cách ly lỗi.</li><li>Latency: mỗi lượt ghi trả thêm ít nhất một round-trip prepare/commit đến mọi participant.</li><li>Ngay cả khi mọi hệ hỗ trợ XA, 2PC đảm bảo atomic commit chứ <strong>không đảm bảo atomic visibility</strong> — vẫn có khoảnh khắc participant này đã commit còn participant kia chưa.</li></ol><p>Ngành công nghiệp đã thử con đường này trong thập niên 2000 (các bus XA/JTA của Java EE) và rút lui có tổ chức.</p><h3 id=vì-sao-dual-write-nguy-hiểm-hơn-các-phương-pháp-khác>Vì sao Dual Write nguy hiểm hơn các phương pháp khác<a hidden class=anchor aria-hidden=true href=#vì-sao-dual-write-nguy-hiểm-hơn-các-phương-pháp-khác>#</a></h3><p>Batch ETL sai thì sai to, dễ thấy. Dual Write sai theo kiểu <strong>rò rỉ từng giọt</strong>: 99,9% event đi đúng, 0,1% mất hoặc sai thứ tự, tích lũy dần thành hàng nghìn bản ghi lệch sau một năm, và không có điểm nào trong hệ thống biết điều đó. Chi phí thật của Dual Write không phải là code viết nó (rất rẻ) mà là <strong>hệ thống đối soát (reconciliation) bạn buộc phải xây sau đó</strong> — job so khớp định kỳ giữa DB và downstream, thứ mà tôi thấy mọi công ty dùng Dual Write nghiêm túc cuối cùng đều phải xây, và bản thân job đó lại là một batch ETL với đầy đủ hạn chế ở mục 2.1.</p><h3 id=khi-nào-chấp-nhận-được>Khi nào chấp nhận được<a hidden class=anchor aria-hidden=true href=#khi-nào-chấp-nhận-được>#</a></h3><p>Cache dạng best-effort có TTL ngắn (lệch thì tự hết hạn sau 60 giây), dữ liệu mà việc mất/lệch một phần không có hậu quả nghiệp vụ và có full rebuild định kỳ. Nói cách khác: chỉ khi bạn đã thiết kế sẵn cơ chế tự chữa lành và trả lời được câu &ldquo;lệch thì sao?&rdquo; bằng &ldquo;không sao thật&rdquo;.</p><h2 id=25-event-publishing-từ-application-và-outbox-pattern>2.5. Event Publishing từ application (và Outbox Pattern)<a hidden class=anchor aria-hidden=true href=#25-event-publishing-từ-application-và-outbox-pattern>#</a></h2><h3 id=cách-hoạt-động-4>Cách hoạt động<a hidden class=anchor aria-hidden=true href=#cách-hoạt-động-4>#</a></h3><p>Bước tiến hóa tiếp theo: thay vì ghi thẳng sang hệ đích, application publish <strong>domain event</strong> (<code>OrderPlaced</code>, <code>ProductPriceChanged</code>) lên message broker; các consumer tự cập nhật store của mình. Đây là kiến trúc event-driven kinh điển.</p><p>Phiên bản ngây thơ của nó — publish trong request handler sau khi commit — <strong>chính là Dual Write</strong> với đầy đủ failure mode ở mục 2.4, chỉ khoác áo ngữ nghĩa đẹp hơn. Phiên bản đúng là <strong>Outbox Pattern</strong>: ghi event vào bảng <code>outbox</code> <strong>trong cùng transaction</strong> với thay đổi nghiệp vụ, rồi một relay process đọc bảng outbox và publish.</p><pre class=mermaid>graph TD
+    Note over K: &#34;Consumer ap dung cuoi cung: 450k. LECH VINH VIEN voi DB&#34;</pre><p>Thứ tự publish lên Kafka do scheduler của OS, GC pause, network jitter quyết định — <strong>không liên quan gì đến thứ tự commit trong database</strong>. Downstream áp dụng event cuối cùng nhận được và lệch vĩnh viễn với source of truth, không có cơ chế nào tự phát hiện. Với write rate cao trên các hot key, xác suất xảy ra không hề nhỏ — và mỗi lần xảy ra là một bản ghi lệch âm thầm.</p>
+<h3 id="vì-sao-2pc-không-phải-lối-thoát">Vì sao 2PC không phải lối thoát<a hidden class="anchor" aria-hidden="true" href="#vì-sao-2pc-không-phải-lối-thoát">#</a></h3>
+<p>Phản xạ của người mới đọc về distributed transaction: &ldquo;vậy dùng two-phase commit&rdquo;. Không thực tế, vì bốn lý do:</p>
+<ol>
+<li><strong>Kafka, Elasticsearch, Redis không phải XA resource</strong> — chúng không tham gia được vào 2PC chuẩn. (Kafka có transaction nội bộ, nhưng đó là transaction giữa các Kafka topic/offset, không phải giữa Kafka và PostgreSQL.)</li>
+<li>2PC là <strong>blocking protocol</strong>: nếu coordinator chết giữa prepare và commit, participant giữ lock chờ vô hạn định. Bạn nối độ khả dụng của đường ghi OLTP vào độ khả dụng của mọi hệ downstream — đảo ngược hoàn toàn nguyên tắc cách ly lỗi.</li>
+<li>Latency: mỗi lượt ghi trả thêm ít nhất một round-trip prepare/commit đến mọi participant.</li>
+<li>Ngay cả khi mọi hệ hỗ trợ XA, 2PC đảm bảo atomic commit chứ <strong>không đảm bảo atomic visibility</strong> — vẫn có khoảnh khắc participant này đã commit còn participant kia chưa.</li>
+</ol>
+<p>Ngành công nghiệp đã thử con đường này trong thập niên 2000 (các bus XA/JTA của Java EE) và rút lui có tổ chức.</p>
+<h3 id="vì-sao-dual-write-nguy-hiểm-hơn-các-phương-pháp-khác">Vì sao Dual Write nguy hiểm hơn các phương pháp khác<a hidden class="anchor" aria-hidden="true" href="#vì-sao-dual-write-nguy-hiểm-hơn-các-phương-pháp-khác">#</a></h3>
+<p>Batch ETL sai thì sai to, dễ thấy. Dual Write sai theo kiểu <strong>rò rỉ từng giọt</strong>: 99,9% event đi đúng, 0,1% mất hoặc sai thứ tự, tích lũy dần thành hàng nghìn bản ghi lệch sau một năm, và không có điểm nào trong hệ thống biết điều đó. Chi phí thật của Dual Write không phải là code viết nó (rất rẻ) mà là <strong>hệ thống đối soát (reconciliation) bạn buộc phải xây sau đó</strong> — job so khớp định kỳ giữa DB và downstream, thứ mà tôi thấy mọi công ty dùng Dual Write nghiêm túc cuối cùng đều phải xây, và bản thân job đó lại là một batch ETL với đầy đủ hạn chế ở mục 2.1.</p>
+<h3 id="khi-nào-chấp-nhận-được">Khi nào chấp nhận được<a hidden class="anchor" aria-hidden="true" href="#khi-nào-chấp-nhận-được">#</a></h3>
+<p>Cache dạng best-effort có TTL ngắn (lệch thì tự hết hạn sau 60 giây), dữ liệu mà việc mất/lệch một phần không có hậu quả nghiệp vụ và có full rebuild định kỳ. Nói cách khác: chỉ khi bạn đã thiết kế sẵn cơ chế tự chữa lành và trả lời được câu &ldquo;lệch thì sao?&rdquo; bằng &ldquo;không sao thật&rdquo;.</p>
+<h2 id="25-event-publishing-từ-application-và-outbox-pattern">2.5. Event Publishing từ application (và Outbox Pattern)<a hidden class="anchor" aria-hidden="true" href="#25-event-publishing-từ-application-và-outbox-pattern">#</a></h2>
+<h3 id="cách-hoạt-động-4">Cách hoạt động<a hidden class="anchor" aria-hidden="true" href="#cách-hoạt-động-4">#</a></h3>
+<p>Bước tiến hóa tiếp theo: thay vì ghi thẳng sang hệ đích, application publish <strong>domain event</strong> (<code>OrderPlaced</code>, <code>ProductPriceChanged</code>) lên message broker; các consumer tự cập nhật store của mình. Đây là kiến trúc event-driven kinh điển.</p>
+<p>Phiên bản ngây thơ của nó — publish trong request handler sau khi commit — <strong>chính là Dual Write</strong> với đầy đủ failure mode ở mục 2.4, chỉ khoác áo ngữ nghĩa đẹp hơn. Phiên bản đúng là <strong>Outbox Pattern</strong>: ghi event vào bảng <code>outbox</code> <strong>trong cùng transaction</strong> với thay đổi nghiệp vụ, rồi một relay process đọc bảng outbox và publish.</p>
+<pre class="mermaid">graph TD
     App[&#34;Application&#34;] --&gt;|&#34;cung 1 transaction&#34;| TX[&#34;BEGIN&#34;]
     TX --&gt; T1[&#34;UPDATE orders ...&#34;]
     TX --&gt; T2[&#34;INSERT INTO outbox (event)&#34;]
     TX --&gt; C[&#34;COMMIT - atomic&#34;]
     C --&gt; Relay[&#34;Relay process&#34;]
     Relay --&gt;|&#34;doc outbox, publish&#34;| K[&#34;Kafka&#34;]
-    K --&gt; Con[&#34;Consumers&#34;]</pre><h3 id=ưu-điểm-3>Ưu điểm<a hidden class=anchor aria-hidden=true href=#ưu-điểm-3>#</a></h3><ul><li>Outbox giải quyết đúng vấn đề atomicity: event và dữ liệu commit cùng nhau hoặc không gì cả. Không event ma, không mất event.</li><li>Event mang <strong>ngữ nghĩa nghiệp vụ</strong> — contract được thiết kế chủ động, không lộ schema nội bộ của database ra ngoài. Đây là ưu thế thật so với data change event, đặc biệt giữa các bounded context.</li></ul><h3 id=hạn-chế-kỹ-thuật-3>Hạn chế kỹ thuật<a hidden class=anchor aria-hidden=true href=#hạn-chế-kỹ-thuật-3>#</a></h3><ul><li><strong>Độ phủ phụ thuộc kỷ luật của developer</strong>: chỉ những code path có gọi publish mới sinh event. Migration script, bulk update, hotfix SQL trực tiếp, service cũ chưa refactor — tất cả ghi dữ liệu mà không phát event. Với mục đích <em>business integration</em> thì chấp nhận được; với mục đích <em>đồng bộ dữ liệu</em> thì đây là lỗ thủng cấu trúc.</li><li>Relay đọc bảng outbox bằng polling thì thừa hưởng latency + tải của polling (dù không sót, vì outbox là append-only có sequence); bảng outbox cần dọn dẹp như bảng changelog của trigger.</li><li>Mỗi bảng/aggregate cần sync là thêm code outbox — chi phí lặp lại trên toàn codebase, và không giúp gì cho hệ thống legacy không sửa được code.</li><li>Relay publish vẫn là at-least-once → consumer phải idempotent (điều này thì gần như mọi giải pháp đều yêu cầu, kể cả CDC — sẽ bàn ở Chương 3).</li></ul><h3 id=ví-dụ-production-fail-3>Ví dụ production fail<a hidden class=anchor aria-hidden=true href=#ví-dụ-production-fail-3>#</a></h3><p>Một công ty logistics dùng event publishing (không outbox) cho trạng thái vận đơn. Chiến dịch làm sạch dữ liệu chạy <code>UPDATE shipments SET status = 'delivered' WHERE ...</code> trực tiếp cho 40.000 đơn kẹt trạng thái. Không event nào phát ra. App khách hàng (đọc từ read model build từ event) hiển thị 40.000 đơn &ldquo;đang giao&rdquo; suốt hai tuần; call center quá tải. Đây là minh họa hoàn hảo cho khoảng cách giữa domain event và data change: <strong>sự thật nằm trong database, không nằm trong thiện chí của code</strong>.</p><h3 id=khi-nào-vẫn-nên-dùng-3>Khi nào vẫn nên dùng<a hidden class=anchor aria-hidden=true href=#khi-nào-vẫn-nên-dùng-3>#</a></h3><p>Luôn luôn — <strong>cho mục đích của nó</strong>: business workflow, saga, integration giữa các service. Outbox Pattern là best practice thực thụ ở đây. Điều không nên làm là dùng nó làm cơ chế <em>đồng bộ dữ liệu</em> duy nhất cho search/analytics/cache khi có nhiều đường ghi vào database. Và một điểm nối sang chương sau: cách hiệu quả nhất để relay bảng outbox&mldr; chính là CDC đọc transaction log của bảng outbox — hai kỹ thuật này hội tụ chứ không cạnh tranh.</p><h2 id=26-nhìn-lại-toàn-cảnh-mẫu-số-chung-của-các-thất-bại>2.6. Nhìn lại toàn cảnh: mẫu số chung của các thất bại<a hidden class=anchor aria-hidden=true href=#26-nhìn-lại-toàn-cảnh-mẫu-số-chung-của-các-thất-bại>#</a></h2><p>Xếp các phương pháp cạnh nhau, một quy luật hiện ra. Mọi phương pháp đều phải trả lời ba câu hỏi, và mỗi phương pháp gãy ở ít nhất một câu:</p><ol><li><strong>Tính đầy đủ</strong> — có bắt được <em>mọi</em> thay đổi không, kể cả DELETE, kể cả từ code path không ngờ tới? (Polling: không. Event publishing: không.)</li><li><strong>Tính atomic với dữ liệu</strong> — event có được đảm bảo khớp với những gì đã commit không? (Dual Write: không, về nguyên lý.)</li><li><strong>Chi phí đặt ở đâu</strong> — trong transaction path của OLTP hay ngoài nó? (Trigger: trong, và đó là chỗ đắt nhất.)</li></ol><p>Chỉ có hai phương pháp trả lời đúng câu 1 và 2: trigger-based và outbox — và cả hai đều đúng vì cùng một lý do: <strong>chúng ghi thông tin thay đổi trong cùng transaction với dữ liệu</strong>. Nhưng cả hai đều trả giá ở câu 3: một lượt ghi phụ trong transaction path, cộng một tầng polling phía sau.</p><p>Đến đây, câu hỏi tự nhiên bật ra: có tồn tại thứ gì đó <em>vốn đã</em> được ghi trong cùng transaction với mọi thay đổi, <em>vốn đã</em> đầy đủ tuyệt đối, <em>vốn đã</em> đúng thứ tự commit, và chi phí ghi nó <em>đã được trả sẵn</em> bất kể ta có dùng hay không? Có. Chương 1 đã gọi tên nó: <strong>transaction log</strong>. Đó là nội dung của Chương 3.</p><h3 id=bảng-so-sánh-tổng-hợp>Bảng so sánh tổng hợp<a hidden class=anchor aria-hidden=true href=#bảng-so-sánh-tổng-hợp>#</a></h3><table><thead><tr><th>Tiêu chí</th><th>Batch ETL</th><th>Polling <code>updated_at</code></th><th>Trigger-based</th><th>Dual Write</th><th>Event Publishing + Outbox</th></tr></thead><tbody><tr><td>Consistency window</td><td>Giờ → ngày</td><td>Giây → phút</td><td>Giây (qua relay)</td><td>ms (khi không lỗi)</td><td>Giây (qua relay)</td></tr><tr><td>Bắt được DELETE</td><td>Không (trừ full compare)</td><td>Không</td><td>Có</td><td>Có (nếu code nhớ)</td><td>Có (nếu code nhớ)</td></tr><tr><td>Bắt intermediate state</td><td>Không</td><td>Không</td><td>Có</td><td>Không đảm bảo</td><td>Theo event được phát</td></tr><tr><td>Atomic với dữ liệu commit</td><td>Không</td><td>Không</td><td><strong>Có</strong></td><td><strong>Không — về nguyên lý</strong></td><td><strong>Có</strong> (nhờ outbox)</td></tr><tr><td>Đúng thứ tự commit</td><td>Không</td><td>Không</td><td>Gần đúng (theo seq changelog)</td><td><strong>Không — race condition</strong></td><td>Theo seq outbox</td></tr><tr><td>Độ phủ mọi đường ghi</td><td>Có (query lại bảng)</td><td>Có với UPDATE, sót DELETE</td><td><strong>Có</strong></td><td>Chỉ code path có gọi</td><td>Chỉ code path có gọi</td></tr><tr><td>Overhead lên transaction path</td><td>Không</td><td>Không (nhưng tải query nền)</td><td><strong>Cao: 30–40% write</strong> *</td><td>Thêm 1 RPC mỗi request</td><td>Thêm 1 INSERT mỗi transaction</td></tr><tr><td>Thay đổi schema/code</td><td>Không</td><td>Cột + index <code>updated_at</code></td><td>Trigger + bảng changelog</td><td>Sửa mọi write path</td><td>Sửa mọi write path + bảng outbox</td></tr><tr><td>Độ phức tạp vận hành</td><td>Thấp</td><td>Thấp</td><td>Trung bình (dọn changelog)</td><td>Thấp lúc đầu, <strong>cao về sau (reconciliation)</strong></td><td>Trung bình</td></tr><tr><td>Rủi ro âm thầm nhất</td><td>Sót row backdate</td><td>Sót DELETE, clock skew</td><td>Chậm dần theo size changelog</td><td>Lệch rò rỉ không phát hiện được</td><td>Đường ghi ngoài luồng không phát event</td></tr><tr><td>Vẫn nên dùng khi</td><td>Dữ liệu chậm, báo cáo theo ngày</td><td>Bảng append-only, latency lỏng</td><td>DB không mở log, audit nội bộ</td><td>Cache TTL ngắn, best-effort</td><td>Business integration giữa service</td></tr></tbody></table><p>* <em>Số tham khảo minh họa từ kinh nghiệm thực tế, phụ thuộc workload và cách viết trigger.</em></p><h2 id=tóm-tắt-chương>Tóm tắt chương<a hidden class=anchor aria-hidden=true href=#tóm-tắt-chương>#</a></h2><ul><li>Tiến hóa của đồng bộ dữ liệu — Batch ETL → Polling → Trigger → Dual Write → Event Publishing — là chuỗi các lời giải từng phần, mỗi bước vá một điểm yếu của bước trước và lộ ra điểm yếu mới.</li><li>Ba câu hỏi kiểm định mọi cơ chế đồng bộ: đầy đủ mọi thay đổi không? atomic với dữ liệu commit không? chi phí đặt trong hay ngoài transaction path?</li><li>Dual Write là anti-pattern quan trọng nhất: không thể đảm bảo atomicity giữa hai hệ thống độc lập về nguyên lý; failure mode gồm mất event âm thầm, event ma, duplicate, và race condition ordering làm lệch vĩnh viễn; 2PC không phải lối thoát vì broker/search không phải XA resource, blocking, và không đảm bảo atomic visibility.</li><li>Trigger-based và Outbox trả lời đúng câu atomicity vì cùng nguyên lý &ldquo;ghi thông tin thay đổi trong cùng transaction&rdquo; — nhưng trả giá bằng overhead trong transaction path (trigger có thể ăn 30–40% write throughput) và một tầng polling phía sau.</li><li>Event Publishing/Outbox vẫn là best practice cho business integration; nó chỉ sai vai khi bị dùng làm cơ chế đồng bộ dữ liệu duy nhất trong hệ có nhiều đường ghi.</li><li>Mẫu số chung dẫn đến chương sau: thứ duy nhất vốn đã đầy đủ, đã atomic, đã đúng thứ tự commit, và đã được trả chi phí sẵn — là transaction log.</li></ul><h2 id=đọc-tiếp>Đọc tiếp<a hidden class=anchor aria-hidden=true href=#đọc-tiếp>#</a></h2><p>Chương 3 — <a href=/series/cdc/03-ban-chat-cdc/>Bản chất của Change Data Capture</a>: khai thác chính transaction log làm nguồn sự kiện thay đổi — vì sao log-based CDC ưu việt hơn query-based, các khái niệm cốt lõi (Snapshot, Offset, Delivery Guarantee, Ordering, Tombstone), kiến trúc pipeline chuẩn, và những trade-off phải trả.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/cdc/>Cdc</a></li><li><a href=https://thanhhv.github.io/tags/kafka/>Kafka</a></li><li><a href=https://thanhhv.github.io/tags/database/>Database</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/cdc/01-bai-toan-dong-bo-du-lieu/><span class=title>« Prev</span><br><span>Chương 1: Bài toán đồng bộ dữ liệu</span>
-</a><a class=next href=https://thanhhv.github.io/series/cdc/03-ban-chat-cdc/><span class=title>Next »</span><br><span>Chương 3: Bản chất của Change Data Capture</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f&amp;hashtags=backend%2ccdc%2ckafka%2cdatabase"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f&amp;title=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;summary=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f&title=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+    K --&gt; Con[&#34;Consumers&#34;]</pre><h3 id="ưu-điểm-3">Ưu điểm<a hidden class="anchor" aria-hidden="true" href="#ưu-điểm-3">#</a></h3>
+<ul>
+<li>Outbox giải quyết đúng vấn đề atomicity: event và dữ liệu commit cùng nhau hoặc không gì cả. Không event ma, không mất event.</li>
+<li>Event mang <strong>ngữ nghĩa nghiệp vụ</strong> — contract được thiết kế chủ động, không lộ schema nội bộ của database ra ngoài. Đây là ưu thế thật so với data change event, đặc biệt giữa các bounded context.</li>
+</ul>
+<h3 id="hạn-chế-kỹ-thuật-3">Hạn chế kỹ thuật<a hidden class="anchor" aria-hidden="true" href="#hạn-chế-kỹ-thuật-3">#</a></h3>
+<ul>
+<li><strong>Độ phủ phụ thuộc kỷ luật của developer</strong>: chỉ những code path có gọi publish mới sinh event. Migration script, bulk update, hotfix SQL trực tiếp, service cũ chưa refactor — tất cả ghi dữ liệu mà không phát event. Với mục đích <em>business integration</em> thì chấp nhận được; với mục đích <em>đồng bộ dữ liệu</em> thì đây là lỗ thủng cấu trúc.</li>
+<li>Relay đọc bảng outbox bằng polling thì thừa hưởng latency + tải của polling (dù không sót, vì outbox là append-only có sequence); bảng outbox cần dọn dẹp như bảng changelog của trigger.</li>
+<li>Mỗi bảng/aggregate cần sync là thêm code outbox — chi phí lặp lại trên toàn codebase, và không giúp gì cho hệ thống legacy không sửa được code.</li>
+<li>Relay publish vẫn là at-least-once → consumer phải idempotent (điều này thì gần như mọi giải pháp đều yêu cầu, kể cả CDC — sẽ bàn ở Chương 3).</li>
+</ul>
+<h3 id="ví-dụ-production-fail-3">Ví dụ production fail<a hidden class="anchor" aria-hidden="true" href="#ví-dụ-production-fail-3">#</a></h3>
+<p>Một công ty logistics dùng event publishing (không outbox) cho trạng thái vận đơn. Chiến dịch làm sạch dữ liệu chạy <code>UPDATE shipments SET status = 'delivered' WHERE ...</code> trực tiếp cho 40.000 đơn kẹt trạng thái. Không event nào phát ra. App khách hàng (đọc từ read model build từ event) hiển thị 40.000 đơn &ldquo;đang giao&rdquo; suốt hai tuần; call center quá tải. Đây là minh họa hoàn hảo cho khoảng cách giữa domain event và data change: <strong>sự thật nằm trong database, không nằm trong thiện chí của code</strong>.</p>
+<h3 id="khi-nào-vẫn-nên-dùng-3">Khi nào vẫn nên dùng<a hidden class="anchor" aria-hidden="true" href="#khi-nào-vẫn-nên-dùng-3">#</a></h3>
+<p>Luôn luôn — <strong>cho mục đích của nó</strong>: business workflow, saga, integration giữa các service. Outbox Pattern là best practice thực thụ ở đây. Điều không nên làm là dùng nó làm cơ chế <em>đồng bộ dữ liệu</em> duy nhất cho search/analytics/cache khi có nhiều đường ghi vào database. Và một điểm nối sang chương sau: cách hiệu quả nhất để relay bảng outbox&hellip; chính là CDC đọc transaction log của bảng outbox — hai kỹ thuật này hội tụ chứ không cạnh tranh.</p>
+<h2 id="26-nhìn-lại-toàn-cảnh-mẫu-số-chung-của-các-thất-bại">2.6. Nhìn lại toàn cảnh: mẫu số chung của các thất bại<a hidden class="anchor" aria-hidden="true" href="#26-nhìn-lại-toàn-cảnh-mẫu-số-chung-của-các-thất-bại">#</a></h2>
+<p>Xếp các phương pháp cạnh nhau, một quy luật hiện ra. Mọi phương pháp đều phải trả lời ba câu hỏi, và mỗi phương pháp gãy ở ít nhất một câu:</p>
+<ol>
+<li><strong>Tính đầy đủ</strong> — có bắt được <em>mọi</em> thay đổi không, kể cả DELETE, kể cả từ code path không ngờ tới? (Polling: không. Event publishing: không.)</li>
+<li><strong>Tính atomic với dữ liệu</strong> — event có được đảm bảo khớp với những gì đã commit không? (Dual Write: không, về nguyên lý.)</li>
+<li><strong>Chi phí đặt ở đâu</strong> — trong transaction path của OLTP hay ngoài nó? (Trigger: trong, và đó là chỗ đắt nhất.)</li>
+</ol>
+<p>Chỉ có hai phương pháp trả lời đúng câu 1 và 2: trigger-based và outbox — và cả hai đều đúng vì cùng một lý do: <strong>chúng ghi thông tin thay đổi trong cùng transaction với dữ liệu</strong>. Nhưng cả hai đều trả giá ở câu 3: một lượt ghi phụ trong transaction path, cộng một tầng polling phía sau.</p>
+<p>Đến đây, câu hỏi tự nhiên bật ra: có tồn tại thứ gì đó <em>vốn đã</em> được ghi trong cùng transaction với mọi thay đổi, <em>vốn đã</em> đầy đủ tuyệt đối, <em>vốn đã</em> đúng thứ tự commit, và chi phí ghi nó <em>đã được trả sẵn</em> bất kể ta có dùng hay không? Có. Chương 1 đã gọi tên nó: <strong>transaction log</strong>. Đó là nội dung của Chương 3.</p>
+<h3 id="bảng-so-sánh-tổng-hợp">Bảng so sánh tổng hợp<a hidden class="anchor" aria-hidden="true" href="#bảng-so-sánh-tổng-hợp">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Tiêu chí</th>
+          <th>Batch ETL</th>
+          <th>Polling <code>updated_at</code></th>
+          <th>Trigger-based</th>
+          <th>Dual Write</th>
+          <th>Event Publishing + Outbox</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Consistency window</td>
+          <td>Giờ → ngày</td>
+          <td>Giây → phút</td>
+          <td>Giây (qua relay)</td>
+          <td>ms (khi không lỗi)</td>
+          <td>Giây (qua relay)</td>
+      </tr>
+      <tr>
+          <td>Bắt được DELETE</td>
+          <td>Không (trừ full compare)</td>
+          <td>Không</td>
+          <td>Có</td>
+          <td>Có (nếu code nhớ)</td>
+          <td>Có (nếu code nhớ)</td>
+      </tr>
+      <tr>
+          <td>Bắt intermediate state</td>
+          <td>Không</td>
+          <td>Không</td>
+          <td>Có</td>
+          <td>Không đảm bảo</td>
+          <td>Theo event được phát</td>
+      </tr>
+      <tr>
+          <td>Atomic với dữ liệu commit</td>
+          <td>Không</td>
+          <td>Không</td>
+          <td><strong>Có</strong></td>
+          <td><strong>Không — về nguyên lý</strong></td>
+          <td><strong>Có</strong> (nhờ outbox)</td>
+      </tr>
+      <tr>
+          <td>Đúng thứ tự commit</td>
+          <td>Không</td>
+          <td>Không</td>
+          <td>Gần đúng (theo seq changelog)</td>
+          <td><strong>Không — race condition</strong></td>
+          <td>Theo seq outbox</td>
+      </tr>
+      <tr>
+          <td>Độ phủ mọi đường ghi</td>
+          <td>Có (query lại bảng)</td>
+          <td>Có với UPDATE, sót DELETE</td>
+          <td><strong>Có</strong></td>
+          <td>Chỉ code path có gọi</td>
+          <td>Chỉ code path có gọi</td>
+      </tr>
+      <tr>
+          <td>Overhead lên transaction path</td>
+          <td>Không</td>
+          <td>Không (nhưng tải query nền)</td>
+          <td><strong>Cao: 30–40% write</strong> *</td>
+          <td>Thêm 1 RPC mỗi request</td>
+          <td>Thêm 1 INSERT mỗi transaction</td>
+      </tr>
+      <tr>
+          <td>Thay đổi schema/code</td>
+          <td>Không</td>
+          <td>Cột + index <code>updated_at</code></td>
+          <td>Trigger + bảng changelog</td>
+          <td>Sửa mọi write path</td>
+          <td>Sửa mọi write path + bảng outbox</td>
+      </tr>
+      <tr>
+          <td>Độ phức tạp vận hành</td>
+          <td>Thấp</td>
+          <td>Thấp</td>
+          <td>Trung bình (dọn changelog)</td>
+          <td>Thấp lúc đầu, <strong>cao về sau (reconciliation)</strong></td>
+          <td>Trung bình</td>
+      </tr>
+      <tr>
+          <td>Rủi ro âm thầm nhất</td>
+          <td>Sót row backdate</td>
+          <td>Sót DELETE, clock skew</td>
+          <td>Chậm dần theo size changelog</td>
+          <td>Lệch rò rỉ không phát hiện được</td>
+          <td>Đường ghi ngoài luồng không phát event</td>
+      </tr>
+      <tr>
+          <td>Vẫn nên dùng khi</td>
+          <td>Dữ liệu chậm, báo cáo theo ngày</td>
+          <td>Bảng append-only, latency lỏng</td>
+          <td>DB không mở log, audit nội bộ</td>
+          <td>Cache TTL ngắn, best-effort</td>
+          <td>Business integration giữa service</td>
+      </tr>
+  </tbody>
+</table>
+<p>* <em>Số tham khảo minh họa từ kinh nghiệm thực tế, phụ thuộc workload và cách viết trigger.</em></p>
+<h2 id="tóm-tắt-chương">Tóm tắt chương<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt-chương">#</a></h2>
+<ul>
+<li>Tiến hóa của đồng bộ dữ liệu — Batch ETL → Polling → Trigger → Dual Write → Event Publishing — là chuỗi các lời giải từng phần, mỗi bước vá một điểm yếu của bước trước và lộ ra điểm yếu mới.</li>
+<li>Ba câu hỏi kiểm định mọi cơ chế đồng bộ: đầy đủ mọi thay đổi không? atomic với dữ liệu commit không? chi phí đặt trong hay ngoài transaction path?</li>
+<li>Dual Write là anti-pattern quan trọng nhất: không thể đảm bảo atomicity giữa hai hệ thống độc lập về nguyên lý; failure mode gồm mất event âm thầm, event ma, duplicate, và race condition ordering làm lệch vĩnh viễn; 2PC không phải lối thoát vì broker/search không phải XA resource, blocking, và không đảm bảo atomic visibility.</li>
+<li>Trigger-based và Outbox trả lời đúng câu atomicity vì cùng nguyên lý &ldquo;ghi thông tin thay đổi trong cùng transaction&rdquo; — nhưng trả giá bằng overhead trong transaction path (trigger có thể ăn 30–40% write throughput) và một tầng polling phía sau.</li>
+<li>Event Publishing/Outbox vẫn là best practice cho business integration; nó chỉ sai vai khi bị dùng làm cơ chế đồng bộ dữ liệu duy nhất trong hệ có nhiều đường ghi.</li>
+<li>Mẫu số chung dẫn đến chương sau: thứ duy nhất vốn đã đầy đủ, đã atomic, đã đúng thứ tự commit, và đã được trả chi phí sẵn — là transaction log.</li>
+</ul>
+<h2 id="đọc-tiếp">Đọc tiếp<a hidden class="anchor" aria-hidden="true" href="#đọc-tiếp">#</a></h2>
+<p>Chương 3 — <a href="/series/cdc/03-ban-chat-cdc/">Bản chất của Change Data Capture</a>: khai thác chính transaction log làm nguồn sự kiện thay đổi — vì sao log-based CDC ưu việt hơn query-based, các khái niệm cốt lõi (Snapshot, Offset, Delivery Guarantee, Ordering, Tombstone), kiến trúc pipeline chuẩn, và những trade-off phải trả.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/cdc/">Cdc</a></li>
+      <li><a href="http://localhost:1313/tags/kafka/">Kafka</a></li>
+      <li><a href="http://localhost:1313/tags/database/">Database</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/cdc/01-bai-toan-dong-bo-du-lieu/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 1: Bài toán đồng bộ dữ liệu</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/cdc/03-ban-chat-cdc/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 3: Bản chất của Change Data Capture</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f&amp;hashtags=backend%2ccdc%2ckafka%2cdatabase">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f&amp;title=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;summary=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f&title=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%202%3a%20C%c3%a1c%20ph%c6%b0%c6%a1ng%20ph%c3%a1p%20%c4%91%e1%bb%93ng%20b%e1%bb%99%20truy%e1%bb%81n%20th%e1%bb%91ng%20v%c3%a0%20h%e1%ba%a1n%20ch%e1%ba%bf&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f02-cac-phuong-phap-dong-bo-truyen-thong%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

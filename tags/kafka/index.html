@@ -1,50 +1,538 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Kafka | Thanh HV's Blog</title>
-<meta name=keywords content><meta name=description content><meta name=author content><link rel=canonical href=https://thanhhv.github.io/tags/kafka/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/tags/kafka/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/tags/kafka/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/tags/kafka/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Kafka"><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Kafka"><meta name=twitter:description content></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/tags/>Tags</a></div><h1>Kafka</h1></header><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 5 — Message Queue & API</h2></header><div class=entry-content><p>PHẦN A — MESSAGE QUEUE Câu 1 — [Intermediate → Senior] Kafka hoạt động thế nào? Tại sao nó đạt throughput hàng triệu message/giây? 1. Câu hỏi “Kiến trúc Kafka: topic, partition, consumer group, offset. Điều gì cho phép Kafka nhanh như vậy trên phần cứng thường?”
-2. Interviewer muốn kiểm tra điều gì? Hiểu Kafka là distributed log, không phải message queue truyền thống — khác biệt định hình mọi tính chất. Giải thích được nguồn hiệu năng bằng cơ chế cụ thể (sequential I/O, zero-copy, batching), không phải “Kafka nhanh vì được thiết kế tốt”. Nắm ordering, rebalance, lag — các khái niệm vận hành hằng ngày. 3. Câu trả lời ngắn gọn (30 giây) “Kafka là log phân tán: topic chia thành partition, mỗi partition là file log append-only có thứ tự; message không bị xóa khi đọc mà giữ theo retention; consumer tự quản offset của mình. Consumer group chia partition cho các consumer — scale đọc bằng cách thêm consumer tới tối đa = số partition. Nhanh nhờ: ghi/đọc tuần tự trên đĩa (nhanh gần bằng RAM, tận dụng page cache OS), zero-copy (sendfile — dữ liệu từ page cache thẳng ra socket không qua user space), batching + nén cả lô, và broker cực kỳ ’ngu’ — không track trạng thái từng message như RabbitMQ, chỉ là cái log có index.”
-...</p></div><footer class=entry-footer><span title='2026-07-03 12:00:00 +0700 +07'>July 3, 2026</span>&nbsp;·&nbsp;24 min</footer><a class=entry-link aria-label="post link to Bài 5 — Message Queue & API" href=https://thanhhv.github.io/series/backend-interview/05-message-queue-api/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh</h2></header><div class=entry-content><p>Tốc độ Kafka đến từ bốn quyết định thiết kế cộng hưởng, không phải một mẹo.
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Kafka | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/tags/kafka/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/kafka/index.xml">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/kafka/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/tags/">Tags</a></div>
+  <h1>
+    Kafka
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 5 — Message Queue &amp; API
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> PHẦN A — MESSAGE QUEUE Câu 1 — [Intermediate → Senior] Kafka hoạt động thế nào? Tại sao nó đạt throughput hàng triệu message/giây? 1. Câu hỏi “Kiến trúc Kafka: topic, partition, consumer group, offset. Điều gì cho phép Kafka nhanh như vậy trên phần cứng thường?”
+2. Interviewer muốn kiểm tra điều gì? Hiểu Kafka là distributed log, không phải message queue truyền thống — khác biệt định hình mọi tính chất. Giải thích được nguồn hiệu năng bằng cơ chế cụ thể (sequential I/O, zero-copy, batching), không phải “Kafka nhanh vì được thiết kế tốt”. Nắm ordering, rebalance, lag — các khái niệm vận hành hằng ngày. 3. Câu trả lời ngắn gọn (30 giây) “Kafka là log phân tán: topic chia thành partition, mỗi partition là file log append-only có thứ tự; message không bị xóa khi đọc mà giữ theo retention; consumer tự quản offset của mình. Consumer group chia partition cho các consumer — scale đọc bằng cách thêm consumer tới tối đa = số partition. Nhanh nhờ: ghi/đọc tuần tự trên đĩa (nhanh gần bằng RAM, tận dụng page cache OS), zero-copy (sendfile — dữ liệu từ page cache thẳng ra socket không qua user space), batching &#43; nén cả lô, và broker cực kỳ ’ngu’ — không track trạng thái từng message như RabbitMQ, chỉ là cái log có index.”
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-03 12:00:00 +0700 +07'>July 3, 2026</span>&nbsp;·&nbsp;24 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 5 — Message Queue & API" href="http://localhost:1313/series/backend-interview/05-message-queue-api/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Tốc độ Kafka đến từ bốn quyết định thiết kế cộng hưởng, không phải một mẹo.
 1. Ghi tuần tự (sequential write) Trực giác sai: “ghi đĩa chậm, phải dùng RAM”. Thực tế: ghi đĩa tuần tự nhanh hơn ghi RAM ngẫu nhiên.
 Random access (DB cập nhật chỗ này chỗ kia): tốn seek, chậm cả HDD lẫn SSD. Sequential write: chỉ ghi nối tiếp vào cuối file, không seek — HDD ~100s MB/s, SSD cao hơn. Kafka chọn log append-only: message mới luôn ghi vào cuối, không sửa/chèn. Đây là lý do sâu xa Kafka không cho xóa/sửa message — ràng buộc có chủ đích để đổi lấy tốc độ.
-...</p></div><footer class=entry-footer><span title='2026-05-25 08:00:00 +0700 +07'>May 25, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh" href=https://thanhhv.github.io/series/kafka/11-storage-internals/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 10 — Kiến trúc thực chiến</h2></header><div class=entry-content><p>Outbox Pattern — giải bài toán “dual write” Service order phải ghi vào DB và bắn event lên Kafka. Làm tuần tự thì luôn có khe hở:
-ghi DB OK -> bắn Kafka FAIL => DB có đơn, hệ thống khác không biết (lệch) bắn Kafka OK -> ghi DB FAIL => event bắn rồi nhưng đơn không tồn tại (ma)Hai hệ thống khác nhau không chia sẻ transaction → không thể “cùng thành công hoặc cùng thất bại” trực tiếp.
-...</p></div><footer class=entry-footer><span title='2026-05-23 08:00:00 +0700 +07'>May 23, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Bài 10 — Kiến trúc thực chiến" href=https://thanhhv.github.io/series/kafka/10-kien-truc-thuc-chien/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 9 — Performance Tuning</h2></header><div class=entry-content><p>Mọi tinh chỉnh là đánh đổi giữa throughput (số lượng/giây), latency (độ trễ mỗi message), và durability. Không có nút “nhanh hơn” miễn phí.
-Phía Producer — gom để nhanh linger.ms + batch.size (cặp quan trọng nhất). Mặc định linger.ms=0 = gửi ngay từng message → nhiều request nhỏ. Tăng linger.ms (5–20ms) cho producer chờ gom batch rồi gửi một lần. batch.size (mặc định 16KB) là trần mỗi batch.
-...</p></div><footer class=entry-footer><span title='2026-05-20 08:00:00 +0700 +07'>May 20, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 9 — Performance Tuning" href=https://thanhhv.github.io/series/kafka/09-performance-tuning/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 8 — Schema Registry & Schema Evolution</h2></header><div class=entry-content><p>Vấn đề Topic được nhiều team ghi/đọc. Một ngày team A đổi cấu trúc message (đổi tên field, đổi kiểu, bỏ field) → consumer của B, C, D vỡ ngay, thường lúc 2h sáng. JSON tự do có 3 điểm yếu ở quy mô lớn: không có schema bắt buộc, tốn băng thông (lặp tên field), không kiểm soát thay đổi.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-25 08:00:00 +0700 +07'>May 25, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 11 (Nâng cao) — Cơ chế lưu trữ: vì sao Kafka nhanh" href="http://localhost:1313/series/kafka/11-storage-internals/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 10 — Kiến trúc thực chiến
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Outbox Pattern — giải bài toán “dual write” Service order phải ghi vào DB và bắn event lên Kafka. Làm tuần tự thì luôn có khe hở:
+ghi DB OK -&gt; bắn Kafka FAIL =&gt; DB có đơn, hệ thống khác không biết (lệch) bắn Kafka OK -&gt; ghi DB FAIL =&gt; event bắn rồi nhưng đơn không tồn tại (ma)Hai hệ thống khác nhau không chia sẻ transaction → không thể “cùng thành công hoặc cùng thất bại” trực tiếp.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-23 08:00:00 +0700 +07'>May 23, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 10 — Kiến trúc thực chiến" href="http://localhost:1313/series/kafka/10-kien-truc-thuc-chien/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 9 — Performance Tuning
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Mọi tinh chỉnh là đánh đổi giữa throughput (số lượng/giây), latency (độ trễ mỗi message), và durability. Không có nút “nhanh hơn” miễn phí.
+Phía Producer — gom để nhanh linger.ms &#43; batch.size (cặp quan trọng nhất). Mặc định linger.ms=0 = gửi ngay từng message → nhiều request nhỏ. Tăng linger.ms (5–20ms) cho producer chờ gom batch rồi gửi một lần. batch.size (mặc định 16KB) là trần mỗi batch.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-20 08:00:00 +0700 +07'>May 20, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 9 — Performance Tuning" href="http://localhost:1313/series/kafka/09-performance-tuning/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 8 — Schema Registry &amp; Schema Evolution
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Vấn đề Topic được nhiều team ghi/đọc. Một ngày team A đổi cấu trúc message (đổi tên field, đổi kiểu, bỏ field) → consumer của B, C, D vỡ ngay, thường lúc 2h sáng. JSON tự do có 3 điểm yếu ở quy mô lớn: không có schema bắt buộc, tốn băng thông (lặp tên field), không kiểm soát thay đổi.
 Schema Registry hoạt động thế nào Service riêng lưu và đánh version cho schema:
-...</p></div><footer class=entry-footer><span title='2026-05-17 08:00:00 +0700 +07'>May 17, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 8 — Schema Registry & Schema Evolution" href=https://thanhhv.github.io/series/kafka/08-schema-registry-evolution/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 7 — Retry, Backoff & Dead Letter Queue</h2></header><div class=entry-content><p>Triết lý: fail gracefully, đừng fail catastrophically. Một message hỏng là chuyện bình thường; mục tiêu là nó không kéo cả partition/hệ thống sập.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-17 08:00:00 +0700 +07'>May 17, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 8 — Schema Registry & Schema Evolution" href="http://localhost:1313/series/kafka/08-schema-registry-evolution/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 7 — Retry, Backoff &amp; Dead Letter Queue
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Triết lý: fail gracefully, đừng fail catastrophically. Một message hỏng là chuyện bình thường; mục tiêu là nó không kéo cả partition/hệ thống sập.
 Hai loại lỗi — phân biệt được mới xử lý đúng Tạm thời (transient): DB timeout, API phụ thuộc down, mạng chập chờn. → retry sẽ qua. Vĩnh viễn (permanent / “poison”): sai format, thiếu field, vi phạm nghiệp vụ. → retry vô ích, đẩy đi chỗ khác. Ánh xạ HTTP status hữu ích:
-...</p></div><footer class=entry-footer><span title='2026-05-14 08:00:00 +0700 +07'>May 14, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 7 — Retry, Backoff & Dead Letter Queue" href=https://thanhhv.github.io/series/kafka/07-retry-backoff-dlq/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 6 — Idempotent Producer & Transactions (Exactly-Once)</h2></header><div class=entry-content><p>Vấn đề 1 — Duplicate do PRODUCER retry Producer gửi message, broker đã ghi thành công nhưng gói ACK rớt trên đường về. Producer tưởng thất bại → retry → broker ghi lần hai. Message nằm 2 lần trong log dù bạn làm đúng mọi thứ. (Khác với duplicate phía consumer ở Bài 4.)
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-14 08:00:00 +0700 +07'>May 14, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 7 — Retry, Backoff & Dead Letter Queue" href="http://localhost:1313/series/kafka/07-retry-backoff-dlq/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 6 — Idempotent Producer &amp; Transactions (Exactly-Once)
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Vấn đề 1 — Duplicate do PRODUCER retry Producer gửi message, broker đã ghi thành công nhưng gói ACK rớt trên đường về. Producer tưởng thất bại → retry → broker ghi lần hai. Message nằm 2 lần trong log dù bạn làm đúng mọi thứ. (Khác với duplicate phía consumer ở Bài 4.)
 Giải pháp — Idempotent Producer enable.idempotence=true: broker cấp mỗi producer một PID và mỗi message một sequence number theo partition. Retry mang sequence đã thấy → broker lặng lẽ bỏ qua. Thêm bảo đảm thứ tự không bị đảo khi retry.
-...</p></div><footer class=entry-footer><span title='2026-05-12 08:00:00 +0700 +07'>May 12, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 6 — Idempotent Producer & Transactions (Exactly-Once)" href=https://thanhhv.github.io/series/kafka/06-transactions-exactly-once/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 5 — Replication, acks & ISR</h2></header><div class=entry-content><p>Replica, Leader, Follower Mỗi partition có N bản sao (replication-factor):
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-12 08:00:00 +0700 +07'>May 12, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 6 — Idempotent Producer & Transactions (Exactly-Once)" href="http://localhost:1313/series/kafka/06-transactions-exactly-once/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 5 — Replication, acks &amp; ISR
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Replica, Leader, Follower Mỗi partition có N bản sao (replication-factor):
 1 leader: phục vụ mọi đọc/ghi của client. N-1 follower: liên tục kéo dữ liệu từ leader để bắt kịp. Ẩn với client. Client chỉ làm việc với leader. Follower chỉ để chống mất dữ liệu khi broker chứa leader chết.
 ISR (In-Sync Replicas) Tập các replica đang theo kịp leader (gồm cả leader). Follower tụt quá replica.lag.time.max.ms (~30s) bị đá khỏi ISR. Khi leader chết, Kafka chỉ bầu leader mới từ trong ISR (vì chỉ chúng chắc chắn có đủ dữ liệu đã xác nhận).
-...</p></div><footer class=entry-footer><span title='2026-05-10 08:00:00 +0700 +07'>May 10, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 5 — Replication, acks & ISR" href=https://thanhhv.github.io/series/kafka/05-replication-acks-isr/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 4 — Offset & Delivery Semantics</h2></header><div class=entry-content><p>Bài quan trọng nhất về độ tin cậy. Hầu hết bug “mất message” / “xử lý trùng” ở production nằm ở đây.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-10 08:00:00 +0700 +07'>May 10, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 5 — Replication, acks & ISR" href="http://localhost:1313/series/kafka/05-replication-acks-isr/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 4 — Offset &amp; Delivery Semantics
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Bài quan trọng nhất về độ tin cậy. Hầu hết bug “mất message” / “xử lý trùng” ở production nằm ở đây.
 Offset commit là gì? Consumer cần báo cho Kafka biết đã xử lý đến đâu, để lần sau (hoặc consumer khác sau rebalance) đọc tiếp đúng chỗ. Việc đó gọi là commit offset, lưu trong topic nội bộ __consumer_offsets.
 Mấu chốt sinh ra mọi vấn đề: xử lý message và commit offset là hai hành động riêng biệt, giữa chúng consumer có thể crash. Thứ tự hai hành động này quyết định “delivery semantics”.
-...</p></div><footer class=entry-footer><span title='2026-05-08 08:00:00 +0700 +07'>May 8, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 4 — Offset & Delivery Semantics" href=https://thanhhv.github.io/series/kafka/04-offset-delivery-semantics/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 3 — Partitioning & Đảm bảo thứ tự</h2></header><div class=entry-content><p>Producer chọn partition thế nào? Có key: partition = hash(key) % số_partition. Cùng key + số partition không đổi → luôn cùng partition → giữ thứ tự. Không key: rải đều (sticky/round-robin), tối ưu throughput nhưng không đảm bảo thứ tự. Ba cạm bẫy quanh partitioning Bẫy 1 — Hàm hash khác nhau giữa các client Client Java dùng murmur2; librdkafka (confluent-kafka-go, Python, C…) mặc định dùng thuật toán khác (consistent_random, nền CRC32). → Cùng một key, producer Java và producer Go có thể đẩy vào hai partition khác nhau!
-...</p></div><footer class=entry-footer><span title='2026-05-06 08:00:00 +0700 +07'>May 6, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 3 — Partitioning & Đảm bảo thứ tự" href=https://thanhhv.github.io/series/kafka/03-partitioning-thu-tu/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 2 — Consumer Group & Rebalance</h2></header><div class=entry-content><p>Khái niệm Consumer group là tập các consumer cùng group.id, hợp sức tiêu thụ một topic. Kafka tự chia partition cho các thành viên — gọi là partition assignment.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-08 08:00:00 +0700 +07'>May 8, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 4 — Offset & Delivery Semantics" href="http://localhost:1313/series/kafka/04-offset-delivery-semantics/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 3 — Partitioning &amp; Đảm bảo thứ tự
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Producer chọn partition thế nào? Có key: partition = hash(key) % số_partition. Cùng key &#43; số partition không đổi → luôn cùng partition → giữ thứ tự. Không key: rải đều (sticky/round-robin), tối ưu throughput nhưng không đảm bảo thứ tự. Ba cạm bẫy quanh partitioning Bẫy 1 — Hàm hash khác nhau giữa các client Client Java dùng murmur2; librdkafka (confluent-kafka-go, Python, C…) mặc định dùng thuật toán khác (consistent_random, nền CRC32). → Cùng một key, producer Java và producer Go có thể đẩy vào hai partition khác nhau!
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-06 08:00:00 +0700 +07'>May 6, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 3 — Partitioning & Đảm bảo thứ tự" href="http://localhost:1313/series/kafka/03-partitioning-thu-tu/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 2 — Consumer Group &amp; Rebalance
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Khái niệm Consumer group là tập các consumer cùng group.id, hợp sức tiêu thụ một topic. Kafka tự chia partition cho các thành viên — gọi là partition assignment.
 Quan hệ then chốt:
-Trong 1 group: 1 partition -> tối đa 1 consumer (KHÔNG phải 1-n) 1 consumer -> có thể N partition Trên nhiều group: 1 partition -> N consumer (mỗi group 1 đứa) (pub/sub)Hệ quả thực chiến: số consumer hữu ích tối đa trong một group = số partition. Topic 3 partition, group 5 consumer → 3 đứa làm việc, 2 đứa ngồi không. Partition là trần scale của consumer — muốn xử lý song song hơn phải tăng partition trước.
-...</p></div><footer class=entry-footer><span title='2026-05-03 08:00:00 +0700 +07'>May 3, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 2 — Consumer Group & Rebalance" href=https://thanhhv.github.io/series/kafka/02-consumer-group-rebalance/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Bài 1 — Topic, Partition, Producer & Consumer</h2></header><div class=entry-content><p>Khái niệm nền tảng Topic là một “kênh” logic chứa message, ví dụ orders chứa các sự kiện đơn hàng.
+Trong 1 group: 1 partition -&gt; tối đa 1 consumer (KHÔNG phải 1-n) 1 consumer -&gt; có thể N partition Trên nhiều group: 1 partition -&gt; N consumer (mỗi group 1 đứa) (pub/sub)Hệ quả thực chiến: số consumer hữu ích tối đa trong một group = số partition. Topic 3 partition, group 5 consumer → 3 đứa làm việc, 2 đứa ngồi không. Partition là trần scale của consumer — muốn xử lý song song hơn phải tăng partition trước.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-03 08:00:00 +0700 +07'>May 3, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 2 — Consumer Group & Rebalance" href="http://localhost:1313/series/kafka/02-consumer-group-rebalance/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Bài 1 — Topic, Partition, Producer &amp; Consumer
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Khái niệm nền tảng Topic là một “kênh” logic chứa message, ví dụ orders chứa các sự kiện đơn hàng.
 Partition là điểm mấu chốt phân biệt Kafka với hàng đợi thường. Mỗi topic được chia thành nhiều partition. Mỗi partition là một log ghi nối tiếp (append-only): message có thứ tự tuyệt đối trong partition, và mỗi message mang một số thứ tự gọi là offset (0, 1, 2, …).
-...</p></div><footer class=entry-footer><span title='2026-05-01 08:00:00 +0700 +07'>May 1, 2026</span>&nbsp;·&nbsp;3 min</footer><a class=entry-link aria-label="post link to Bài 1 — Topic, Partition, Producer & Consumer" href=https://thanhhv.github.io/series/kafka/01-topic-partition-producer-consumer/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 13: Best Practices, Anti-patterns và Khi nào KHÔNG nên dùng CDC</h2></header><div class=entry-content><p>Chương cuối này là phần “chưng cất” của toàn bộ tài liệu. Sau mười hai chương về cơ chế, pattern, sự cố và kiến trúc, câu hỏi còn lại rất thực dụng: làm gì, tránh gì, và — quan trọng không kém — khi nào đừng làm cả. Tôi cố tình viết chương này theo kiểu có thể in ra dán cạnh bàn on-call: mỗi practice kèm lý do, mỗi anti-pattern kèm hậu quả thật, vì quy tắc không có lý do sẽ bị bỏ qua ngay lần deadline đầu tiên.
-...</p></div><footer class=entry-footer><span title='2026-02-20 20:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;16 min</footer><a class=entry-link aria-label="post link to Chương 13: Best Practices, Anti-patterns và Khi nào KHÔNG nên dùng CDC" href=https://thanhhv.github.io/series/cdc/13-best-practices-anti-patterns/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 12: Kiến trúc CDC thực tế theo domain</h2></header><div class=entry-content><p>Hai chương trước cho bạn pattern (chương 10) và bản đồ rủi ro (chương 11). Chương này ghép chúng lại thành thiết kế hoàn chỉnh theo từng loại hệ thống. Cùng một công nghệ — Debezium, Kafka — nhưng bài toán e-commerce, FinTech hay SaaS multi-tenant dẫn đến những quyết định rất khác nhau, và điều làm nên một Solution Architect giỏi không phải là biết công cụ, mà là biết bối cảnh nào bẻ cong thiết kế theo hướng nào.
-...</p></div><footer class=entry-footer><span title='2026-02-20 19:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer><a class=entry-link aria-label="post link to Chương 12: Kiến trúc CDC thực tế theo domain" href=https://thanhhv.github.io/series/cdc/12-kien-truc-thuc-te/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 11: Production Failure Cases</h2></header><div class=entry-content><p>Đây là chương quan trọng nhất của toàn bộ tài liệu. Lý do rất đơn giản: CDC không khó ở lúc setup — CDC khó ở tháng thứ ba vận hành. Demo Debezium chạy trong một buổi chiều; nhưng pipeline CDC production là một chuỗi hệ thống stateful nối tiếp nhau (database → connector → Kafka → consumer → sink), và mỗi mắt xích có những chế độ hỏng riêng, đôi khi âm thầm, đôi khi phá hủy cả database nguồn.
-...</p></div><footer class=entry-footer><span title='2026-02-20 18:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;38 min</footer><a class=entry-link aria-label="post link to Chương 11: Production Failure Cases" href=https://thanhhv.github.io/series/cdc/11-production-failure-cases/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS</h2></header><div class=entry-content><p>Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì.
-...</p></div><footer class=entry-footer><span title='2026-02-20 17:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;19 min</footer><a class=entry-link aria-label="post link to Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS" href=https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse</h2></header><div class=entry-content><p>Hai chương trước cho bạn nguồn (Debezium) và nền tảng (Kafka Connect). Chương này lắp mọi thứ thành pipeline hoàn chỉnh — và quan trọng hơn, chỉ ra các quyết định thiết kế ở giữa hai đầu: topic và partition, schema contract, cách từng loại đích tiêu hóa change event, và latency/backpressure của toàn tuyến. Kinh nghiệm của tôi: pipeline CDC thất bại ở production hiếm khi vì Debezium hay Kafka lỗi — nó thất bại vì các quyết định thiết kế trung gian bị bỏ qua: topic 200 partition cho bảng 50 nghìn row, JSON không schema, insert từng row vào ClickHouse. Cuối chương có đúng ví dụ đó, kèm bản chữa.
-...</p></div><footer class=entry-footer><span title='2026-02-20 16:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer><a class=entry-link aria-label="post link to Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse" href=https://thanhhv.github.io/series/cdc/09-event-pipeline/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 8: Kafka Connect — Nền tảng vận hành Connector</h2></header><div class=entry-content><p>Chương 7 kết thúc với một nhận định: phần khó nhất của CDC không phải đọc log mà là quản lý trạng thái và fault tolerance — và Debezium đẩy toàn bộ phần đó cho Kafka Connect. Chương này mở hộp đen Kafka Connect từ góc nhìn người vận hành platform. Nếu Debezium là động cơ, Connect là khung gầm: khi pipeline CDC gặp sự cố lúc 3 giờ sáng, thứ bạn thao tác gần như luôn là Connect — REST API, task state, rebalance, internal topic — chứ không phải code Debezium.
-...</p></div><footer class=entry-footer><span title='2026-02-20 15:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;16 min</footer><a class=entry-link aria-label="post link to Chương 8: Kafka Connect — Nền tảng vận hành Connector" href=https://thanhhv.github.io/series/cdc/08-kafka-connect/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 7: Debezium Internal Architecture</h2></header><div class=entry-content><p>Ở các chương trước, chúng ta đã phân tích cơ chế log-based CDC ở tầng database: WAL của PostgreSQL, binlog của MySQL, replication slot, logical decoding. Chương này đi vào bên trong Debezium — thành phần đứng giữa database và Kafka — để trả lời câu hỏi mà mọi kiến trúc sư phải trả lời được trước khi đưa Debezium vào production: nó thực sự làm gì bên trong, trạng thái của nó nằm ở đâu, và điều gì xảy ra khi nó chết?
-...</p></div><footer class=entry-footer><span title='2026-02-20 14:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;20 min</footer><a class=entry-link aria-label="post link to Chương 7: Debezium Internal Architecture" href=https://thanhhv.github.io/series/cdc/07-debezium-internals/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 6: Cơ chế CDC — Snapshot, Offset, Ordering và Delivery Guarantee</h2></header><div class=entry-content><p>Đối tượng: Senior Backend Engineer, Tech Lead, Solution Architect thiết kế pipeline CDC end-to-end. Mục tiêu chương: Hai chương trước đi sâu vào từng nguồn log. Chương này trả lời câu hỏi ở tầng trên: bất kể nguồn là WAL, binlog hay oplog, một CDC connector phải giải năm bài toán bất biến: (1) dựng trạng thái ban đầu khi log không giữ toàn bộ lịch sử; (2) nhớ vị trí đọc để crash không chết pipeline; (3) đảm bảo gì về delivery; (4) đảm bảo gì về thứ tự; (5) sống sót qua schema change. Ai nắm năm bài toán này sẽ đánh giá được mọi công cụ CDC — Debezium hay bất cứ tên nào xuất hiện sau này — bằng cùng một checklist.
-...</p></div><footer class=entry-footer><span title='2026-02-20 13:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;21 min</footer><a class=entry-link aria-label="post link to Chương 6: Cơ chế CDC — Snapshot, Offset, Ordering và Delivery Guarantee" href=https://thanhhv.github.io/series/cdc/06-co-che-cdc/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 5: MySQL Binlog và MongoDB Oplog</h2></header><div class=entry-content><p>Đối tượng: Senior Backend Engineer, Tech Lead, Solution Architect vận hành CDC trên MySQL và MongoDB. Mục tiêu chương: Chương 4 đã mổ xẻ WAL của PostgreSQL. Chương này áp cùng khung tư duy lên hai họ database còn lại chiếm phần lớn thị phần CDC: MySQL (binlog) và MongoDB (oplog). Điểm mấu chốt không phải là học ba bộ thuật ngữ — mà là nhận ra ba hệ đã chọn ba mô hình retention và contract khác nhau cho cùng một bài toán, và mỗi lựa chọn sinh ra một failure mode đặc trưng mà bạn, người thiết kế platform, phải phòng thủ theo cách khác nhau.
-...</p></div><footer class=entry-footer><span title='2026-02-20 12:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;19 min</footer><a class=entry-link aria-label="post link to Chương 5: MySQL Binlog và MongoDB Oplog" href=https://thanhhv.github.io/series/cdc/05-mysql-mongodb-internals/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 4: PostgreSQL Internals — WAL và Logical Replication</h2></header><div class=entry-content><p>Đối tượng: Senior Backend Engineer, Tech Lead, Solution Architect đang thiết kế hoặc vận hành pipeline CDC trên PostgreSQL. Mục tiêu chương: Sau chương này, bạn phải trả lời được ba câu hỏi mà mọi cuộc review kiến trúc CDC trên PostgreSQL đều xoay quanh: (1) WAL thực chất là gì và vì sao nó là nguồn sự thật duy nhất mà CDC có thể tin; (2) replication slot hoạt động thế nào và vì sao nó là con dao hai lưỡi nổi tiếng nhất của CDC trên PostgreSQL; (3) REPLICA IDENTITY ảnh hưởng gì đến nội dung event và bạn phải trả giá gì cho từng lựa chọn.
-...</p></div><footer class=entry-footer><span title='2026-02-20 11:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;21 min</footer><a class=entry-link aria-label="post link to Chương 4: PostgreSQL Internals — WAL và Logical Replication" href=https://thanhhv.github.io/series/cdc/04-postgresql-internals/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 3: Bản chất của Change Data Capture</h2></header><div class=entry-content><p>3.1. Insight nền tảng: dữ liệu về mọi thay đổi đã tồn tại sẵn Hãy quay lại điểm mà Chương 2 dừng lại. Chúng ta cần một nguồn thông tin về thay đổi thỏa mãn ba điều kiện: đầy đủ tuyệt đối (mọi thay đổi, từ mọi đường ghi, kể cả DELETE), atomic với dữ liệu commit (không event ma, không mất event), và không đặt thêm chi phí vào transaction path.
-...</p></div><footer class=entry-footer><span title='2026-02-20 10:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer><a class=entry-link aria-label="post link to Chương 3: Bản chất của Change Data Capture" href=https://thanhhv.github.io/series/cdc/03-ban-chat-cdc/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế</h2></header><div class=entry-content><p>Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.
-...</p></div><footer class=entry-footer><span title='2026-02-20 09:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;18 min</footer><a class=entry-link aria-label="post link to Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế" href=https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 1: Bài toán đồng bộ dữ liệu</h2></header><div class=entry-content><p>1.1. Bắt đầu từ một bài toán kinh doanh cụ thể Hãy hình dung một hệ thống e-commerce cỡ vừa: 5 triệu người dùng, 2 triệu SKU, khoảng 300.000 đơn hàng mỗi ngày. PostgreSQL là source of truth — nơi mọi transaction ghi đơn, trừ kho, cập nhật giá diễn ra. Hệ thống chạy tốt trong hai năm đầu. Rồi các yêu cầu sau lần lượt xuất hiện:
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-05-01 08:00:00 +0700 +07'>May 1, 2026</span>&nbsp;·&nbsp;3 min</footer>
+  <a class="entry-link" aria-label="post link to Bài 1 — Topic, Partition, Producer & Consumer" href="http://localhost:1313/series/kafka/01-topic-partition-producer-consumer/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 13: Best Practices, Anti-patterns và Khi nào KHÔNG nên dùng CDC
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Chương cuối này là phần “chưng cất” của toàn bộ tài liệu. Sau mười hai chương về cơ chế, pattern, sự cố và kiến trúc, câu hỏi còn lại rất thực dụng: làm gì, tránh gì, và — quan trọng không kém — khi nào đừng làm cả. Tôi cố tình viết chương này theo kiểu có thể in ra dán cạnh bàn on-call: mỗi practice kèm lý do, mỗi anti-pattern kèm hậu quả thật, vì quy tắc không có lý do sẽ bị bỏ qua ngay lần deadline đầu tiên.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 20:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;16 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 13: Best Practices, Anti-patterns và Khi nào KHÔNG nên dùng CDC" href="http://localhost:1313/series/cdc/13-best-practices-anti-patterns/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 12: Kiến trúc CDC thực tế theo domain
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Hai chương trước cho bạn pattern (chương 10) và bản đồ rủi ro (chương 11). Chương này ghép chúng lại thành thiết kế hoàn chỉnh theo từng loại hệ thống. Cùng một công nghệ — Debezium, Kafka — nhưng bài toán e-commerce, FinTech hay SaaS multi-tenant dẫn đến những quyết định rất khác nhau, và điều làm nên một Solution Architect giỏi không phải là biết công cụ, mà là biết bối cảnh nào bẻ cong thiết kế theo hướng nào.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 19:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 12: Kiến trúc CDC thực tế theo domain" href="http://localhost:1313/series/cdc/12-kien-truc-thuc-te/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 11: Production Failure Cases
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Đây là chương quan trọng nhất của toàn bộ tài liệu. Lý do rất đơn giản: CDC không khó ở lúc setup — CDC khó ở tháng thứ ba vận hành. Demo Debezium chạy trong một buổi chiều; nhưng pipeline CDC production là một chuỗi hệ thống stateful nối tiếp nhau (database → connector → Kafka → consumer → sink), và mỗi mắt xích có những chế độ hỏng riêng, đôi khi âm thầm, đôi khi phá hủy cả database nguồn.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 18:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;38 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 11: Production Failure Cases" href="http://localhost:1313/series/cdc/11-production-failure-cases/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 17:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;19 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS" href="http://localhost:1313/series/cdc/10-cdc-va-kien-truc/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Hai chương trước cho bạn nguồn (Debezium) và nền tảng (Kafka Connect). Chương này lắp mọi thứ thành pipeline hoàn chỉnh — và quan trọng hơn, chỉ ra các quyết định thiết kế ở giữa hai đầu: topic và partition, schema contract, cách từng loại đích tiêu hóa change event, và latency/backpressure của toàn tuyến. Kinh nghiệm của tôi: pipeline CDC thất bại ở production hiếm khi vì Debezium hay Kafka lỗi — nó thất bại vì các quyết định thiết kế trung gian bị bỏ qua: topic 200 partition cho bảng 50 nghìn row, JSON không schema, insert từng row vào ClickHouse. Cuối chương có đúng ví dụ đó, kèm bản chữa.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 16:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse" href="http://localhost:1313/series/cdc/09-event-pipeline/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 8: Kafka Connect — Nền tảng vận hành Connector
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Chương 7 kết thúc với một nhận định: phần khó nhất của CDC không phải đọc log mà là quản lý trạng thái và fault tolerance — và Debezium đẩy toàn bộ phần đó cho Kafka Connect. Chương này mở hộp đen Kafka Connect từ góc nhìn người vận hành platform. Nếu Debezium là động cơ, Connect là khung gầm: khi pipeline CDC gặp sự cố lúc 3 giờ sáng, thứ bạn thao tác gần như luôn là Connect — REST API, task state, rebalance, internal topic — chứ không phải code Debezium.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 15:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;16 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 8: Kafka Connect — Nền tảng vận hành Connector" href="http://localhost:1313/series/cdc/08-kafka-connect/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 7: Debezium Internal Architecture
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Ở các chương trước, chúng ta đã phân tích cơ chế log-based CDC ở tầng database: WAL của PostgreSQL, binlog của MySQL, replication slot, logical decoding. Chương này đi vào bên trong Debezium — thành phần đứng giữa database và Kafka — để trả lời câu hỏi mà mọi kiến trúc sư phải trả lời được trước khi đưa Debezium vào production: nó thực sự làm gì bên trong, trạng thái của nó nằm ở đâu, và điều gì xảy ra khi nó chết?
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 14:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;20 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 7: Debezium Internal Architecture" href="http://localhost:1313/series/cdc/07-debezium-internals/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 6: Cơ chế CDC — Snapshot, Offset, Ordering và Delivery Guarantee
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Đối tượng: Senior Backend Engineer, Tech Lead, Solution Architect thiết kế pipeline CDC end-to-end. Mục tiêu chương: Hai chương trước đi sâu vào từng nguồn log. Chương này trả lời câu hỏi ở tầng trên: bất kể nguồn là WAL, binlog hay oplog, một CDC connector phải giải năm bài toán bất biến: (1) dựng trạng thái ban đầu khi log không giữ toàn bộ lịch sử; (2) nhớ vị trí đọc để crash không chết pipeline; (3) đảm bảo gì về delivery; (4) đảm bảo gì về thứ tự; (5) sống sót qua schema change. Ai nắm năm bài toán này sẽ đánh giá được mọi công cụ CDC — Debezium hay bất cứ tên nào xuất hiện sau này — bằng cùng một checklist.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 13:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;21 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 6: Cơ chế CDC — Snapshot, Offset, Ordering và Delivery Guarantee" href="http://localhost:1313/series/cdc/06-co-che-cdc/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 5: MySQL Binlog và MongoDB Oplog
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Đối tượng: Senior Backend Engineer, Tech Lead, Solution Architect vận hành CDC trên MySQL và MongoDB. Mục tiêu chương: Chương 4 đã mổ xẻ WAL của PostgreSQL. Chương này áp cùng khung tư duy lên hai họ database còn lại chiếm phần lớn thị phần CDC: MySQL (binlog) và MongoDB (oplog). Điểm mấu chốt không phải là học ba bộ thuật ngữ — mà là nhận ra ba hệ đã chọn ba mô hình retention và contract khác nhau cho cùng một bài toán, và mỗi lựa chọn sinh ra một failure mode đặc trưng mà bạn, người thiết kế platform, phải phòng thủ theo cách khác nhau.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 12:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;19 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 5: MySQL Binlog và MongoDB Oplog" href="http://localhost:1313/series/cdc/05-mysql-mongodb-internals/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 4: PostgreSQL Internals — WAL và Logical Replication
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Đối tượng: Senior Backend Engineer, Tech Lead, Solution Architect đang thiết kế hoặc vận hành pipeline CDC trên PostgreSQL. Mục tiêu chương: Sau chương này, bạn phải trả lời được ba câu hỏi mà mọi cuộc review kiến trúc CDC trên PostgreSQL đều xoay quanh: (1) WAL thực chất là gì và vì sao nó là nguồn sự thật duy nhất mà CDC có thể tin; (2) replication slot hoạt động thế nào và vì sao nó là con dao hai lưỡi nổi tiếng nhất của CDC trên PostgreSQL; (3) REPLICA IDENTITY ảnh hưởng gì đến nội dung event và bạn phải trả giá gì cho từng lựa chọn.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 11:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;21 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 4: PostgreSQL Internals — WAL và Logical Replication" href="http://localhost:1313/series/cdc/04-postgresql-internals/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 3: Bản chất của Change Data Capture
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>3.1. Insight nền tảng: dữ liệu về mọi thay đổi đã tồn tại sẵn Hãy quay lại điểm mà Chương 2 dừng lại. Chúng ta cần một nguồn thông tin về thay đổi thỏa mãn ba điều kiện: đầy đủ tuyệt đối (mọi thay đổi, từ mọi đường ghi, kể cả DELETE), atomic với dữ liệu commit (không event ma, không mất event), và không đặt thêm chi phí vào transaction path.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 10:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 3: Bản chất của Change Data Capture" href="http://localhost:1313/series/cdc/03-ban-chat-cdc/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về vì sao CDC log-based cuối cùng trở thành câu trả lời. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 09:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;18 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế" href="http://localhost:1313/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 1: Bài toán đồng bộ dữ liệu
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>1.1. Bắt đầu từ một bài toán kinh doanh cụ thể Hãy hình dung một hệ thống e-commerce cỡ vừa: 5 triệu người dùng, 2 triệu SKU, khoảng 300.000 đơn hàng mỗi ngày. PostgreSQL là source of truth — nơi mọi transaction ghi đơn, trừ kho, cập nhật giá diễn ra. Hệ thống chạy tốt trong hai năm đầu. Rồi các yêu cầu sau lần lượt xuất hiện:
 Search: người dùng cần tìm kiếm sản phẩm theo full-text, fuzzy matching, faceted filter theo thương hiệu, khoảng giá, đánh giá. Đội ngũ chọn Elasticsearch. Analytics: đội business cần dashboard doanh thu theo giờ, phân tích cohort, funnel conversion trên hàng trăm triệu event. Đội data chọn ClickHouse. Cache: trang chi tiết sản phẩm chịu 20.000 request/giây lúc flash sale, không thể đánh thẳng vào PostgreSQL. Đội backend đặt Redis phía trước. Đến đây, cùng một thực thể product tồn tại ở bốn nơi: PostgreSQL (bản gốc), Elasticsearch (bản đánh index cho search), ClickHouse (bản denormalized cho analytics), Redis (bản serialized cho cache). Dữ liệu đã bị phân mảnh (data fragmentation). Và câu hỏi trung tâm của toàn bộ tài liệu này xuất hiện:
-...</p></div><footer class=entry-footer><span title='2026-02-20 08:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer><a class=entry-link aria-label="post link to Chương 1: Bài toán đồng bộ dữ liệu" href=https://thanhhv.github.io/series/cdc/01-bai-toan-dong-bo-du-lieu/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Change Data Capture và Đồng bộ dữ liệu trong hệ thống Backend hiện đại</h2></header><div class=entry-content><p>Bộ tài liệu chuyên sâu về Change Data Capture (CDC) — viết từ góc nhìn của người thiết kế Data Platform và Distributed Systems, không phải từ góc nhìn người dùng công cụ.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 08:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;17 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 1: Bài toán đồng bộ dữ liệu" href="http://localhost:1313/series/cdc/01-bai-toan-dong-bo-du-lieu/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Change Data Capture và Đồng bộ dữ liệu trong hệ thống Backend hiện đại
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>Bộ tài liệu chuyên sâu về Change Data Capture (CDC) — viết từ góc nhìn của người thiết kế Data Platform và Distributed Systems, không phải từ góc nhìn người dùng công cụ.
 Đối tượng: Backend Engineer, Data Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.
 Triết lý trình bày: Business Problem → Vì sao cần đồng bộ dữ liệu → Hạn chế của Polling → Trigger / Dual Write / Event Publishing → CDC → Log-based CDC → Internal Architecture → Trade-off → Production → Khi nào không nên dùng CDC.
-...</p></div><footer class=entry-footer><span title='2026-02-20 07:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Change Data Capture và Đồng bộ dữ liệu trong hệ thống Backend hiện đại" href=https://thanhhv.github.io/series/cdc/00-muc-luc/></a></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-02-20 07:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Change Data Capture và Đồng bộ dữ liệu trong hệ thống Backend hiện đại" href="http://localhost:1313/series/cdc/00-muc-luc/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

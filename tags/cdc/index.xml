@@ -1,17 +1,126 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Cdc on Thanh HV's Blog</title><link>https://thanhhv.github.io/tags/cdc/</link><description>Recent content in Cdc on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Fri, 20 Feb 2026 20:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/tags/cdc/index.xml" rel="self" type="application/rss+xml"/><item><title>Chương 13: Best Practices, Anti-patterns và Khi nào KHÔNG nên dùng CDC</title><link>https://thanhhv.github.io/series/cdc/13-best-practices-anti-patterns/</link><pubDate>Fri, 20 Feb 2026 20:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/13-best-practices-anti-patterns/</guid><description>&lt;p>Chương cuối này là phần &amp;ldquo;chưng cất&amp;rdquo; của toàn bộ tài liệu. Sau mười hai chương về cơ chế, pattern, sự cố và kiến trúc, câu hỏi còn lại rất thực dụng: &lt;strong>làm gì, tránh gì, và — quan trọng không kém — khi nào đừng làm cả&lt;/strong>. Tôi cố tình viết chương này theo kiểu có thể in ra dán cạnh bàn on-call: mỗi practice kèm &lt;em>lý do&lt;/em>, mỗi anti-pattern kèm &lt;em>hậu quả thật&lt;/em>, vì quy tắc không có lý do sẽ bị bỏ qua ngay lần deadline đầu tiên.&lt;/p></description></item><item><title>Chương 12: Kiến trúc CDC thực tế theo domain</title><link>https://thanhhv.github.io/series/cdc/12-kien-truc-thuc-te/</link><pubDate>Fri, 20 Feb 2026 19:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/12-kien-truc-thuc-te/</guid><description>&lt;p>Hai chương trước cho bạn pattern (chương 10) và bản đồ rủi ro (chương 11). Chương này ghép chúng lại thành &lt;strong>thiết kế hoàn chỉnh theo từng loại hệ thống&lt;/strong>. Cùng một công nghệ — Debezium, Kafka — nhưng bài toán e-commerce, FinTech hay SaaS multi-tenant dẫn đến những quyết định rất khác nhau, và điều làm nên một Solution Architect giỏi không phải là biết công cụ, mà là biết &lt;em>bối cảnh nào bẻ cong thiết kế theo hướng nào&lt;/em>.&lt;/p></description></item><item><title>Chương 11: Production Failure Cases</title><link>https://thanhhv.github.io/series/cdc/11-production-failure-cases/</link><pubDate>Fri, 20 Feb 2026 18:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/11-production-failure-cases/</guid><description>&lt;p>Đây là chương quan trọng nhất của toàn bộ tài liệu. Lý do rất đơn giản: &lt;strong>CDC không khó ở lúc setup — CDC khó ở tháng thứ ba vận hành.&lt;/strong> Demo Debezium chạy trong một buổi chiều; nhưng pipeline CDC production là một chuỗi hệ thống stateful nối tiếp nhau (database → connector → Kafka → consumer → sink), và mỗi mắt xích có những chế độ hỏng riêng, đôi khi âm thầm, đôi khi phá hủy cả database nguồn.&lt;/p></description></item><item><title>Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS</title><link>https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/</link><pubDate>Fri, 20 Feb 2026 17:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/</guid><description>&lt;p>Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: &lt;strong>CDC đứng ở đâu trong kiến trúc tổng thể?&lt;/strong> Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó &lt;em>không phải&lt;/em> là cái gì.&lt;/p></description></item><item><title>Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse</title><link>https://thanhhv.github.io/series/cdc/09-event-pipeline/</link><pubDate>Fri, 20 Feb 2026 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/09-event-pipeline/</guid><description>&lt;p>Hai chương trước cho bạn nguồn (Debezium) và nền tảng (Kafka Connect). Chương này lắp mọi thứ thành pipeline hoàn chỉnh — và quan trọng hơn, chỉ ra các quyết định thiết kế &lt;strong>ở giữa&lt;/strong> hai đầu: topic và partition, schema contract, cách từng loại đích tiêu hóa change event, và latency/backpressure của toàn tuyến. Kinh nghiệm của tôi: pipeline CDC thất bại ở production hiếm khi vì Debezium hay Kafka lỗi — nó thất bại vì &lt;strong>các quyết định thiết kế trung gian bị bỏ qua&lt;/strong>: topic 200 partition cho bảng 50 nghìn row, JSON không schema, insert từng row vào ClickHouse. Cuối chương có đúng ví dụ đó, kèm bản chữa.&lt;/p></description></item><item><title>Chương 8: Kafka Connect — Nền tảng vận hành Connector</title><link>https://thanhhv.github.io/series/cdc/08-kafka-connect/</link><pubDate>Fri, 20 Feb 2026 15:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/08-kafka-connect/</guid><description>&lt;p>Chương 7 kết thúc với một nhận định: phần khó nhất của CDC không phải đọc log mà là quản lý trạng thái và fault tolerance — và Debezium đẩy toàn bộ phần đó cho Kafka Connect. Chương này mở hộp đen Kafka Connect từ góc nhìn người vận hành platform. Nếu Debezium là động cơ, Connect là khung gầm: khi pipeline CDC gặp sự cố lúc 3 giờ sáng, thứ bạn thao tác gần như luôn là Connect — REST API, task state, rebalance, internal topic — chứ không phải code Debezium.&lt;/p></description></item><item><title>Chương 7: Debezium Internal Architecture</title><link>https://thanhhv.github.io/series/cdc/07-debezium-internals/</link><pubDate>Fri, 20 Feb 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/07-debezium-internals/</guid><description>&lt;p>Ở các chương trước, chúng ta đã phân tích cơ chế log-based CDC ở tầng database: WAL của PostgreSQL, binlog của MySQL, replication slot, logical decoding. Chương này đi vào bên trong Debezium — thành phần đứng giữa database và Kafka — để trả lời câu hỏi mà mọi kiến trúc sư phải trả lời được trước khi đưa Debezium vào production: &lt;strong>nó thực sự làm gì bên trong, trạng thái của nó nằm ở đâu, và điều gì xảy ra khi nó chết?&lt;/strong>&lt;/p></description></item><item><title>Chương 6: Cơ chế CDC — Snapshot, Offset, Ordering và Delivery Guarantee</title><link>https://thanhhv.github.io/series/cdc/06-co-che-cdc/</link><pubDate>Fri, 20 Feb 2026 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/06-co-che-cdc/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Đối tượng&lt;/strong>: Senior Backend Engineer, Tech Lead, Solution Architect thiết kế pipeline CDC end-to-end.
-&lt;strong>Mục tiêu chương&lt;/strong>: Hai chương trước đi sâu vào từng nguồn log. Chương này trả lời câu hỏi ở tầng trên: bất kể nguồn là WAL, binlog hay oplog, một CDC connector phải giải &lt;strong>năm bài toán bất biến&lt;/strong>: (1) dựng trạng thái ban đầu khi log không giữ toàn bộ lịch sử; (2) nhớ vị trí đọc để crash không chết pipeline; (3) đảm bảo gì về delivery; (4) đảm bảo gì về thứ tự; (5) sống sót qua schema change. Ai nắm năm bài toán này sẽ đánh giá được mọi công cụ CDC — Debezium hay bất cứ tên nào xuất hiện sau này — bằng cùng một checklist.&lt;/p></description></item><item><title>Chương 5: MySQL Binlog và MongoDB Oplog</title><link>https://thanhhv.github.io/series/cdc/05-mysql-mongodb-internals/</link><pubDate>Fri, 20 Feb 2026 12:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/05-mysql-mongodb-internals/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Đối tượng&lt;/strong>: Senior Backend Engineer, Tech Lead, Solution Architect vận hành CDC trên MySQL và MongoDB.
-&lt;strong>Mục tiêu chương&lt;/strong>: Chương 4 đã mổ xẻ WAL của PostgreSQL. Chương này áp cùng khung tư duy lên hai họ database còn lại chiếm phần lớn thị phần CDC: MySQL (binlog) và MongoDB (oplog). Điểm mấu chốt không phải là học ba bộ thuật ngữ — mà là nhận ra ba hệ đã chọn &lt;strong>ba mô hình retention và contract khác nhau&lt;/strong> cho cùng một bài toán, và mỗi lựa chọn sinh ra một failure mode đặc trưng mà bạn, người thiết kế platform, phải phòng thủ theo cách khác nhau.&lt;/p></description></item><item><title>Chương 4: PostgreSQL Internals — WAL và Logical Replication</title><link>https://thanhhv.github.io/series/cdc/04-postgresql-internals/</link><pubDate>Fri, 20 Feb 2026 11:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/04-postgresql-internals/</guid><description>&lt;blockquote>
-&lt;p>&lt;strong>Đối tượng&lt;/strong>: Senior Backend Engineer, Tech Lead, Solution Architect đang thiết kế hoặc vận hành pipeline CDC trên PostgreSQL.
-&lt;strong>Mục tiêu chương&lt;/strong>: Sau chương này, bạn phải trả lời được ba câu hỏi mà mọi cuộc review kiến trúc CDC trên PostgreSQL đều xoay quanh: (1) WAL thực chất là gì và vì sao nó là &lt;em>nguồn sự thật duy nhất&lt;/em> mà CDC có thể tin; (2) replication slot hoạt động thế nào và vì sao nó là con dao hai lưỡi nổi tiếng nhất của CDC trên PostgreSQL; (3) REPLICA IDENTITY ảnh hưởng gì đến nội dung event và bạn phải trả giá gì cho từng lựa chọn.&lt;/p></description></item><item><title>Chương 3: Bản chất của Change Data Capture</title><link>https://thanhhv.github.io/series/cdc/03-ban-chat-cdc/</link><pubDate>Fri, 20 Feb 2026 10:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/03-ban-chat-cdc/</guid><description>&lt;h2 id="31-insight-nền-tảng-dữ-liệu-về-mọi-thay-đổi-đã-tồn-tại-sẵn">3.1. Insight nền tảng: dữ liệu về mọi thay đổi đã tồn tại sẵn&lt;/h2>
-&lt;p>Hãy quay lại điểm mà Chương 2 dừng lại. Chúng ta cần một nguồn thông tin về thay đổi thỏa mãn ba điều kiện: &lt;strong>đầy đủ tuyệt đối&lt;/strong> (mọi thay đổi, từ mọi đường ghi, kể cả DELETE), &lt;strong>atomic với dữ liệu commit&lt;/strong> (không event ma, không mất event), và &lt;strong>không đặt thêm chi phí vào transaction path&lt;/strong>.&lt;/p></description></item><item><title>Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế</title><link>https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/</link><pubDate>Fri, 20 Feb 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/</guid><description>&lt;p>Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về &lt;strong>vì sao CDC log-based cuối cùng trở thành câu trả lời&lt;/strong>. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.&lt;/p></description></item><item><title>Chương 1: Bài toán đồng bộ dữ liệu</title><link>https://thanhhv.github.io/series/cdc/01-bai-toan-dong-bo-du-lieu/</link><pubDate>Fri, 20 Feb 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/01-bai-toan-dong-bo-du-lieu/</guid><description>&lt;h2 id="11-bắt-đầu-từ-một-bài-toán-kinh-doanh-cụ-thể">1.1. Bắt đầu từ một bài toán kinh doanh cụ thể&lt;/h2>
-&lt;p>Hãy hình dung một hệ thống e-commerce cỡ vừa: 5 triệu người dùng, 2 triệu SKU, khoảng 300.000 đơn hàng mỗi ngày. PostgreSQL là source of truth — nơi mọi transaction ghi đơn, trừ kho, cập nhật giá diễn ra. Hệ thống chạy tốt trong hai năm đầu. Rồi các yêu cầu sau lần lượt xuất hiện:&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>Search&lt;/strong>: người dùng cần tìm kiếm sản phẩm theo full-text, fuzzy matching, faceted filter theo thương hiệu, khoảng giá, đánh giá. Đội ngũ chọn Elasticsearch.&lt;/li>
-&lt;li>&lt;strong>Analytics&lt;/strong>: đội business cần dashboard doanh thu theo giờ, phân tích cohort, funnel conversion trên hàng trăm triệu event. Đội data chọn ClickHouse.&lt;/li>
-&lt;li>&lt;strong>Cache&lt;/strong>: trang chi tiết sản phẩm chịu 20.000 request/giây lúc flash sale, không thể đánh thẳng vào PostgreSQL. Đội backend đặt Redis phía trước.&lt;/li>
-&lt;/ul>
-&lt;p>Đến đây, cùng một thực thể &lt;code>product&lt;/code> tồn tại ở &lt;strong>bốn nơi&lt;/strong>: PostgreSQL (bản gốc), Elasticsearch (bản đánh index cho search), ClickHouse (bản denormalized cho analytics), Redis (bản serialized cho cache). Dữ liệu đã bị &lt;strong>phân mảnh&lt;/strong> (data fragmentation). Và câu hỏi trung tâm của toàn bộ tài liệu này xuất hiện:&lt;/p></description></item><item><title>Change Data Capture và Đồng bộ dữ liệu trong hệ thống Backend hiện đại</title><link>https://thanhhv.github.io/series/cdc/00-muc-luc/</link><pubDate>Fri, 20 Feb 2026 07:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/cdc/00-muc-luc/</guid><description>&lt;p>Bộ tài liệu chuyên sâu về Change Data Capture (CDC) — viết từ góc nhìn của người thiết kế Data Platform và Distributed Systems, không phải từ góc nhìn người dùng công cụ.&lt;/p>
-&lt;p>&lt;strong>Đối tượng:&lt;/strong> Backend Engineer, Data Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.&lt;/p>
-&lt;p>&lt;strong>Triết lý trình bày:&lt;/strong> Business Problem → Vì sao cần đồng bộ dữ liệu → Hạn chế của Polling → Trigger / Dual Write / Event Publishing → CDC → Log-based CDC → Internal Architecture → Trade-off → Production → Khi nào không nên dùng CDC.&lt;/p></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Cdc on Thanh HV&#39;s Blog</title>
+    <link>http://localhost:1313/tags/cdc/</link>
+    <description>Recent content in Cdc on Thanh HV&#39;s Blog</description>
+    <generator>Hugo -- 0.146.7</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 20 Feb 2026 20:00:00 +0700</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/cdc/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Chương 13: Best Practices, Anti-patterns và Khi nào KHÔNG nên dùng CDC</title>
+      <link>http://localhost:1313/series/cdc/13-best-practices-anti-patterns/</link>
+      <pubDate>Fri, 20 Feb 2026 20:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/13-best-practices-anti-patterns/</guid>
+      <description>&lt;p&gt;Chương cuối này là phần &amp;ldquo;chưng cất&amp;rdquo; của toàn bộ tài liệu. Sau mười hai chương về cơ chế, pattern, sự cố và kiến trúc, câu hỏi còn lại rất thực dụng: &lt;strong&gt;làm gì, tránh gì, và — quan trọng không kém — khi nào đừng làm cả&lt;/strong&gt;. Tôi cố tình viết chương này theo kiểu có thể in ra dán cạnh bàn on-call: mỗi practice kèm &lt;em&gt;lý do&lt;/em&gt;, mỗi anti-pattern kèm &lt;em&gt;hậu quả thật&lt;/em&gt;, vì quy tắc không có lý do sẽ bị bỏ qua ngay lần deadline đầu tiên.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 12: Kiến trúc CDC thực tế theo domain</title>
+      <link>http://localhost:1313/series/cdc/12-kien-truc-thuc-te/</link>
+      <pubDate>Fri, 20 Feb 2026 19:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/12-kien-truc-thuc-te/</guid>
+      <description>&lt;p&gt;Hai chương trước cho bạn pattern (chương 10) và bản đồ rủi ro (chương 11). Chương này ghép chúng lại thành &lt;strong&gt;thiết kế hoàn chỉnh theo từng loại hệ thống&lt;/strong&gt;. Cùng một công nghệ — Debezium, Kafka — nhưng bài toán e-commerce, FinTech hay SaaS multi-tenant dẫn đến những quyết định rất khác nhau, và điều làm nên một Solution Architect giỏi không phải là biết công cụ, mà là biết &lt;em&gt;bối cảnh nào bẻ cong thiết kế theo hướng nào&lt;/em&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 11: Production Failure Cases</title>
+      <link>http://localhost:1313/series/cdc/11-production-failure-cases/</link>
+      <pubDate>Fri, 20 Feb 2026 18:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/11-production-failure-cases/</guid>
+      <description>&lt;p&gt;Đây là chương quan trọng nhất của toàn bộ tài liệu. Lý do rất đơn giản: &lt;strong&gt;CDC không khó ở lúc setup — CDC khó ở tháng thứ ba vận hành.&lt;/strong&gt; Demo Debezium chạy trong một buổi chiều; nhưng pipeline CDC production là một chuỗi hệ thống stateful nối tiếp nhau (database → connector → Kafka → consumer → sink), và mỗi mắt xích có những chế độ hỏng riêng, đôi khi âm thầm, đôi khi phá hủy cả database nguồn.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS</title>
+      <link>http://localhost:1313/series/cdc/10-cdc-va-kien-truc/</link>
+      <pubDate>Fri, 20 Feb 2026 17:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/10-cdc-va-kien-truc/</guid>
+      <description>&lt;p&gt;Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: &lt;strong&gt;CDC đứng ở đâu trong kiến trúc tổng thể?&lt;/strong&gt; Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó &lt;em&gt;không phải&lt;/em&gt; là cái gì.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse</title>
+      <link>http://localhost:1313/series/cdc/09-event-pipeline/</link>
+      <pubDate>Fri, 20 Feb 2026 16:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/09-event-pipeline/</guid>
+      <description>&lt;p&gt;Hai chương trước cho bạn nguồn (Debezium) và nền tảng (Kafka Connect). Chương này lắp mọi thứ thành pipeline hoàn chỉnh — và quan trọng hơn, chỉ ra các quyết định thiết kế &lt;strong&gt;ở giữa&lt;/strong&gt; hai đầu: topic và partition, schema contract, cách từng loại đích tiêu hóa change event, và latency/backpressure của toàn tuyến. Kinh nghiệm của tôi: pipeline CDC thất bại ở production hiếm khi vì Debezium hay Kafka lỗi — nó thất bại vì &lt;strong&gt;các quyết định thiết kế trung gian bị bỏ qua&lt;/strong&gt;: topic 200 partition cho bảng 50 nghìn row, JSON không schema, insert từng row vào ClickHouse. Cuối chương có đúng ví dụ đó, kèm bản chữa.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 8: Kafka Connect — Nền tảng vận hành Connector</title>
+      <link>http://localhost:1313/series/cdc/08-kafka-connect/</link>
+      <pubDate>Fri, 20 Feb 2026 15:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/08-kafka-connect/</guid>
+      <description>&lt;p&gt;Chương 7 kết thúc với một nhận định: phần khó nhất của CDC không phải đọc log mà là quản lý trạng thái và fault tolerance — và Debezium đẩy toàn bộ phần đó cho Kafka Connect. Chương này mở hộp đen Kafka Connect từ góc nhìn người vận hành platform. Nếu Debezium là động cơ, Connect là khung gầm: khi pipeline CDC gặp sự cố lúc 3 giờ sáng, thứ bạn thao tác gần như luôn là Connect — REST API, task state, rebalance, internal topic — chứ không phải code Debezium.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 7: Debezium Internal Architecture</title>
+      <link>http://localhost:1313/series/cdc/07-debezium-internals/</link>
+      <pubDate>Fri, 20 Feb 2026 14:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/07-debezium-internals/</guid>
+      <description>&lt;p&gt;Ở các chương trước, chúng ta đã phân tích cơ chế log-based CDC ở tầng database: WAL của PostgreSQL, binlog của MySQL, replication slot, logical decoding. Chương này đi vào bên trong Debezium — thành phần đứng giữa database và Kafka — để trả lời câu hỏi mà mọi kiến trúc sư phải trả lời được trước khi đưa Debezium vào production: &lt;strong&gt;nó thực sự làm gì bên trong, trạng thái của nó nằm ở đâu, và điều gì xảy ra khi nó chết?&lt;/strong&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 6: Cơ chế CDC — Snapshot, Offset, Ordering và Delivery Guarantee</title>
+      <link>http://localhost:1313/series/cdc/06-co-che-cdc/</link>
+      <pubDate>Fri, 20 Feb 2026 13:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/06-co-che-cdc/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Đối tượng&lt;/strong&gt;: Senior Backend Engineer, Tech Lead, Solution Architect thiết kế pipeline CDC end-to-end.
+&lt;strong&gt;Mục tiêu chương&lt;/strong&gt;: Hai chương trước đi sâu vào từng nguồn log. Chương này trả lời câu hỏi ở tầng trên: bất kể nguồn là WAL, binlog hay oplog, một CDC connector phải giải &lt;strong&gt;năm bài toán bất biến&lt;/strong&gt;: (1) dựng trạng thái ban đầu khi log không giữ toàn bộ lịch sử; (2) nhớ vị trí đọc để crash không chết pipeline; (3) đảm bảo gì về delivery; (4) đảm bảo gì về thứ tự; (5) sống sót qua schema change. Ai nắm năm bài toán này sẽ đánh giá được mọi công cụ CDC — Debezium hay bất cứ tên nào xuất hiện sau này — bằng cùng một checklist.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 5: MySQL Binlog và MongoDB Oplog</title>
+      <link>http://localhost:1313/series/cdc/05-mysql-mongodb-internals/</link>
+      <pubDate>Fri, 20 Feb 2026 12:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/05-mysql-mongodb-internals/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Đối tượng&lt;/strong&gt;: Senior Backend Engineer, Tech Lead, Solution Architect vận hành CDC trên MySQL và MongoDB.
+&lt;strong&gt;Mục tiêu chương&lt;/strong&gt;: Chương 4 đã mổ xẻ WAL của PostgreSQL. Chương này áp cùng khung tư duy lên hai họ database còn lại chiếm phần lớn thị phần CDC: MySQL (binlog) và MongoDB (oplog). Điểm mấu chốt không phải là học ba bộ thuật ngữ — mà là nhận ra ba hệ đã chọn &lt;strong&gt;ba mô hình retention và contract khác nhau&lt;/strong&gt; cho cùng một bài toán, và mỗi lựa chọn sinh ra một failure mode đặc trưng mà bạn, người thiết kế platform, phải phòng thủ theo cách khác nhau.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 4: PostgreSQL Internals — WAL và Logical Replication</title>
+      <link>http://localhost:1313/series/cdc/04-postgresql-internals/</link>
+      <pubDate>Fri, 20 Feb 2026 11:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/04-postgresql-internals/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Đối tượng&lt;/strong&gt;: Senior Backend Engineer, Tech Lead, Solution Architect đang thiết kế hoặc vận hành pipeline CDC trên PostgreSQL.
+&lt;strong&gt;Mục tiêu chương&lt;/strong&gt;: Sau chương này, bạn phải trả lời được ba câu hỏi mà mọi cuộc review kiến trúc CDC trên PostgreSQL đều xoay quanh: (1) WAL thực chất là gì và vì sao nó là &lt;em&gt;nguồn sự thật duy nhất&lt;/em&gt; mà CDC có thể tin; (2) replication slot hoạt động thế nào và vì sao nó là con dao hai lưỡi nổi tiếng nhất của CDC trên PostgreSQL; (3) REPLICA IDENTITY ảnh hưởng gì đến nội dung event và bạn phải trả giá gì cho từng lựa chọn.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 3: Bản chất của Change Data Capture</title>
+      <link>http://localhost:1313/series/cdc/03-ban-chat-cdc/</link>
+      <pubDate>Fri, 20 Feb 2026 10:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/03-ban-chat-cdc/</guid>
+      <description>&lt;h2 id=&#34;31-insight-nền-tảng-dữ-liệu-về-mọi-thay-đổi-đã-tồn-tại-sẵn&#34;&gt;3.1. Insight nền tảng: dữ liệu về mọi thay đổi đã tồn tại sẵn&lt;/h2&gt;
+&lt;p&gt;Hãy quay lại điểm mà Chương 2 dừng lại. Chúng ta cần một nguồn thông tin về thay đổi thỏa mãn ba điều kiện: &lt;strong&gt;đầy đủ tuyệt đối&lt;/strong&gt; (mọi thay đổi, từ mọi đường ghi, kể cả DELETE), &lt;strong&gt;atomic với dữ liệu commit&lt;/strong&gt; (không event ma, không mất event), và &lt;strong&gt;không đặt thêm chi phí vào transaction path&lt;/strong&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 2: Các phương pháp đồng bộ truyền thống và hạn chế</title>
+      <link>http://localhost:1313/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/</link>
+      <pubDate>Fri, 20 Feb 2026 09:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/02-cac-phuong-phap-dong-bo-truyen-thong/</guid>
+      <description>&lt;p&gt;Chương 1 đã xác lập bài toán: dữ liệu buộc phải phân mảnh theo workload, và cần một cơ chế đưa thay đổi từ source of truth đến các hệ thống downstream. Chương này đi qua các phương pháp mà ngành đã dùng suốt ba thập kỷ — theo đúng thứ tự tiến hóa của chúng. Đây không phải bài điểm danh lịch sử: mỗi phương pháp vẫn đang chạy trong production ở đâu đó ngay lúc này, và mỗi phương pháp đều dạy ta một bài học về &lt;strong&gt;vì sao CDC log-based cuối cùng trở thành câu trả lời&lt;/strong&gt;. Với mỗi phương pháp, ta phân tích theo cùng một template: cách hoạt động, ưu điểm, hạn chế kỹ thuật, một ví dụ production khi nó fail, và — quan trọng không kém — khi nào nó vẫn là lựa chọn đúng.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Chương 1: Bài toán đồng bộ dữ liệu</title>
+      <link>http://localhost:1313/series/cdc/01-bai-toan-dong-bo-du-lieu/</link>
+      <pubDate>Fri, 20 Feb 2026 08:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/01-bai-toan-dong-bo-du-lieu/</guid>
+      <description>&lt;h2 id=&#34;11-bắt-đầu-từ-một-bài-toán-kinh-doanh-cụ-thể&#34;&gt;1.1. Bắt đầu từ một bài toán kinh doanh cụ thể&lt;/h2&gt;
+&lt;p&gt;Hãy hình dung một hệ thống e-commerce cỡ vừa: 5 triệu người dùng, 2 triệu SKU, khoảng 300.000 đơn hàng mỗi ngày. PostgreSQL là source of truth — nơi mọi transaction ghi đơn, trừ kho, cập nhật giá diễn ra. Hệ thống chạy tốt trong hai năm đầu. Rồi các yêu cầu sau lần lượt xuất hiện:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Search&lt;/strong&gt;: người dùng cần tìm kiếm sản phẩm theo full-text, fuzzy matching, faceted filter theo thương hiệu, khoảng giá, đánh giá. Đội ngũ chọn Elasticsearch.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Analytics&lt;/strong&gt;: đội business cần dashboard doanh thu theo giờ, phân tích cohort, funnel conversion trên hàng trăm triệu event. Đội data chọn ClickHouse.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Cache&lt;/strong&gt;: trang chi tiết sản phẩm chịu 20.000 request/giây lúc flash sale, không thể đánh thẳng vào PostgreSQL. Đội backend đặt Redis phía trước.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Đến đây, cùng một thực thể &lt;code&gt;product&lt;/code&gt; tồn tại ở &lt;strong&gt;bốn nơi&lt;/strong&gt;: PostgreSQL (bản gốc), Elasticsearch (bản đánh index cho search), ClickHouse (bản denormalized cho analytics), Redis (bản serialized cho cache). Dữ liệu đã bị &lt;strong&gt;phân mảnh&lt;/strong&gt; (data fragmentation). Và câu hỏi trung tâm của toàn bộ tài liệu này xuất hiện:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Change Data Capture và Đồng bộ dữ liệu trong hệ thống Backend hiện đại</title>
+      <link>http://localhost:1313/series/cdc/00-muc-luc/</link>
+      <pubDate>Fri, 20 Feb 2026 07:00:00 +0700</pubDate>
+      <guid>http://localhost:1313/series/cdc/00-muc-luc/</guid>
+      <description>&lt;p&gt;Bộ tài liệu chuyên sâu về Change Data Capture (CDC) — viết từ góc nhìn của người thiết kế Data Platform và Distributed Systems, không phải từ góc nhìn người dùng công cụ.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Đối tượng:&lt;/strong&gt; Backend Engineer, Data Engineer, Senior Backend Engineer, Tech Lead, Solution Architect, Software Architect.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Triết lý trình bày:&lt;/strong&gt; Business Problem → Vì sao cần đồng bộ dữ liệu → Hạn chế của Polling → Trigger / Dual Write / Event Publishing → CDC → Log-based CDC → Internal Architecture → Trade-off → Production → Khi nào không nên dùng CDC.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

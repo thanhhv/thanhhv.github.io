@@ -1,5 +1,13 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 16 — Factor 11: Logs | Thanh HV's Blog</title>
-<meta name=keywords content="backend,twelve-factor,cloud-native"><meta name=description content="
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 16 — Factor 11: Logs | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, twelve-factor, cloud-native">
+<meta name="description" content="
 &ldquo;Treat logs as event streams&rdquo; — Coi log là dòng sự kiện.
 Phần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Dev/Prod Parity | Chương sau: Admin Processes
 
@@ -10,21 +18,134 @@ Filesystem là tạm bợ: container chết là file log chết theo — đúng 
 Nhiều instance: 30 pod = 30 file log trên 30 node — &ldquo;grep file log&rdquo; đòi hỏi biết pod nào xử lý request nào, điều bạn không thể biết trước.
 App phải biết quá nhiều: đường dẫn, quyền ghi, rotate policy, dung lượng — toàn tri thức về môi trường, vi phạm nguyên tắc environment coupling ngay từ chương 1. Tệ hơn: ghi vào filesystem phá readOnlyRootFilesystem, và disk đầy vì log là sự cố &ldquo;tự bắn vào chân&rdquo; kinh điển.
 
-Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:"><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/twelve-factor/16-factor-11-logs/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/twelve-factor/16-factor-11-logs/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/twelve-factor/16-factor-11-logs/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 16 — Factor 11: Logs"><meta property="og:description" content=" “Treat logs as event streams” — Coi log là dòng sự kiện.
-Phần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Dev/Prod Parity | Chương sau: Admin Processes
-1. Problem Statement Mô hình cũ: app ghi log vào file (/var/log/app/app.log), tự lo rotate, nén, xóa. Trên hạ tầng hiện đại, mô hình đó gãy ở mọi khớp:
-Filesystem là tạm bợ: container chết là file log chết theo — đúng lúc bạn cần log nhất (điều tra vì sao nó chết) thì log đã bay màu cùng nó. Nhiều instance: 30 pod = 30 file log trên 30 node — “grep file log” đòi hỏi biết pod nào xử lý request nào, điều bạn không thể biết trước. App phải biết quá nhiều: đường dẫn, quyền ghi, rotate policy, dung lượng — toàn tri thức về môi trường, vi phạm nguyên tắc environment coupling ngay từ chương 1. Tệ hơn: ghi vào filesystem phá readOnlyRootFilesystem, và disk đầy vì log là sự cố “tự bắn vào chân” kinh điển. Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:"><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-10T17:00:00+07:00"><meta property="article:modified_time" content="2026-07-10T17:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Twelve-Factor"><meta property="article:tag" content="Cloud-Native"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 16 — Factor 11: Logs"><meta name=twitter:description content="
-&ldquo;Treat logs as event streams&rdquo; — Coi log là dòng sự kiện.
-Phần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Dev/Prod Parity | Chương sau: Admin Processes
+Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/twelve-factor/16-factor-11-logs/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/twelve-factor/16-factor-11-logs/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Problem Statement
-Mô hình cũ: app ghi log vào file (/var/log/app/app.log), tự lo rotate, nén, xóa. Trên hạ tầng hiện đại, mô hình đó gãy ở mọi khớp:
+    </style>
+</noscript>
+</head>
 
-Filesystem là tạm bợ: container chết là file log chết theo — đúng lúc bạn cần log nhất (điều tra vì sao nó chết) thì log đã bay màu cùng nó.
-Nhiều instance: 30 pod = 30 file log trên 30 node — &ldquo;grep file log&rdquo; đòi hỏi biết pod nào xử lý request nào, điều bạn không thể biết trước.
-App phải biết quá nhiều: đường dẫn, quyền ghi, rotate policy, dung lượng — toàn tri thức về môi trường, vi phạm nguyên tắc environment coupling ngay từ chương 1. Tệ hơn: ghi vào filesystem phá readOnlyRootFilesystem, và disk đầy vì log là sự cố &ldquo;tự bắn vào chân&rdquo; kinh điển.
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
 
-Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"The Twelve-Factor App","item":"https://thanhhv.github.io/series/twelve-factor/"},{"@type":"ListItem","position":3,"name":"Chương 16 — Factor 11: Logs","item":"https://thanhhv.github.io/series/twelve-factor/16-factor-11-logs/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 16 — Factor 11: Logs","name":"Chương 16 — Factor 11: Logs","description":" \u0026ldquo;Treat logs as event streams\u0026rdquo; — Coi log là dòng sự kiện.\nPhần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Dev/Prod Parity | Chương sau: Admin Processes\n1. Problem Statement Mô hình cũ: app ghi log vào file (/var/log/app/app.log), tự lo rotate, nén, xóa. Trên hạ tầng hiện đại, mô hình đó gãy ở mọi khớp:\nFilesystem là tạm bợ: container chết là file log chết theo — đúng lúc bạn cần log nhất (điều tra vì sao nó chết) thì log đã bay màu cùng nó. Nhiều instance: 30 pod = 30 file log trên 30 node — \u0026ldquo;grep file log\u0026rdquo; đòi hỏi biết pod nào xử lý request nào, điều bạn không thể biết trước. App phải biết quá nhiều: đường dẫn, quyền ghi, rotate policy, dung lượng — toàn tri thức về môi trường, vi phạm nguyên tắc environment coupling ngay từ chương 1. Tệ hơn: ghi vào filesystem phá readOnlyRootFilesystem, và disk đầy vì log là sự cố \u0026ldquo;tự bắn vào chân\u0026rdquo; kinh điển. Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:\n","keywords":["backend","twelve-factor","cloud-native"],"articleBody":" “Treat logs as event streams” — Coi log là dòng sự kiện.\nPhần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Dev/Prod Parity | Chương sau: Admin Processes\n1. Problem Statement Mô hình cũ: app ghi log vào file (/var/log/app/app.log), tự lo rotate, nén, xóa. Trên hạ tầng hiện đại, mô hình đó gãy ở mọi khớp:\nFilesystem là tạm bợ: container chết là file log chết theo — đúng lúc bạn cần log nhất (điều tra vì sao nó chết) thì log đã bay màu cùng nó. Nhiều instance: 30 pod = 30 file log trên 30 node — “grep file log” đòi hỏi biết pod nào xử lý request nào, điều bạn không thể biết trước. App phải biết quá nhiều: đường dẫn, quyền ghi, rotate policy, dung lượng — toàn tri thức về môi trường, vi phạm nguyên tắc environment coupling ngay từ chương 1. Tệ hơn: ghi vào filesystem phá readOnlyRootFilesystem, và disk đầy vì log là sự cố “tự bắn vào chân” kinh điển. Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:\nApp chỉ làm một việc: ghi dòng sự kiện ra stdout/stderr, không buffer, không quản lý file. Việc thu gom, định tuyến, lưu trữ, đánh index là của MÔI TRƯỜNG THỰC THI (execution environment), không phải của app.\n2. Tại sao nguyên lý này tồn tại Operational: không SSH được vào 30 pod tạm bợ — dòng log phải chảy ra khỏi nơi sinh ra nó đến một chỗ tập trung, sống lâu hơn process. Deployment: cùng một app, dev muốn xem log ở terminal, staging đẩy vào Loki, production đẩy vào Elasticsearch + lưu trữ lạnh S3. Nếu app tự quyết định đích đến, mỗi môi trường phải một bản build/config log riêng; app ghi stdout thì đích đến là quyết định của môi trường — đổi cả hệ thống log không đụng một dòng code. Scalability: log của N pod cần được hợp dòng (merge theo thời gian, lọc theo request) — chỉ làm được ở tầng thu gom tập trung. Business/Compliance: audit log phải bất biến, lưu đủ hạn định — không thể giao cho filesystem của process tạm bợ. 3. Bản chất Log là một event stream — dòng sự kiện bất tận, có thứ tự thời gian, mỗi sự kiện mô tả “điều gì vừa xảy ra”. Nhìn như stream (thay vì file) mở ra kiến trúc:\n30 pod TẦNG THU GOM (env lo) TIÊU THỤ ┌────────┐ ┌───────────────────┐ │app→stdout│──┐ │ node agent │──▶ Loki / Elastic (tra cứu) ├────────┤ ├─ container ─▶│ (Fluent Bit, │──▶ S3 / cold store (audit, rẻ) │app→stdout│──┤ runtime │ Vector, Promtail)│──▶ alerting (đếm ERROR) ├────────┤ │ ghi ra │ đọc file đó, gắn │──▶ stream processing │app→stdout│──┘ node │ metadata pod/node │ (nếu cần realtime) └────────┘ └───────────────────┘ App: 1 việc — println Hoàn toàn trong suốt với appChuỗi trách nhiệm: app ghi stdout → container runtime bắt stream ghi ra node → agent (DaemonSet) đọc, gắn metadata (pod, namespace, node), đẩy về backend. App không biết và không cần biết gì từ mắt xích thứ hai trở đi.\nStructured logging — nâng cấp bắt buộc của thời hiện đại. 12-Factor gốc chỉ nói “dòng text ra stdout”. Ở quy mô hàng triệu dòng/phút, text tự do (log.Printf(\"user %s failed to pay %d\", ...)) là ngõ cụt: muốn tìm phải viết regex, muốn thống kê phải parse. Chuẩn hiện đại: mỗi dòng là một JSON object — log trở thành dữ liệu truy vấn được (level=error AND user_id=42 AND route=/pay), không phải văn xuôi để grep.\nĐiều gì xảy ra nếu vi phạm? Ghi file local: mất log khi pod chết, disk đầy, và mù trên hệ nhiều instance. Tự đẩy log sang backend từ trong app (gọi Elasticsearch trực tiếp): app coupling với hạ tầng log (đổi backend = sửa app), log backend chậm làm app chậm theo, và log trong khoảnh khắc app crash — khoảnh khắc quý nhất — thất lạc vì buffer trong app chưa flush.\n4. Cách áp dụng với Go 4.1. log/slog — structured logging chuẩn thư viện chuẩn // internal/logging/logging.go package logging import ( \"log/slog\" \"os\" ) func New(level string) *slog.Logger { var lv slog.Level _ = lv.UnmarshalText([]byte(level)) // \"debug\"|\"info\"|\"warn\"|\"error\" — từ config (F3) h := slog.NewJSONHandler(os.Stdout, \u0026slog.HandlerOptions{ // stdout — hết. Không file. Level: lv, }) return slog.New(h) } // Sử dụng trong handler — log là DỮ LIỆU, không phải câu văn logger.Info(\"order created\", \"order_id\", order.ID, \"user_id\", order.UserID, \"amount\", order.Amount, \"duration_ms\", time.Since(start).Milliseconds(), ) // → {\"time\":\"2026-07-08T09:15:02Z\",\"level\":\"INFO\",\"msg\":\"order created\", // \"order_id\":\"ord_9x2\",\"user_id\":\"u_42\",\"amount\":150000,\"duration_ms\":23} logger.Error(\"payment failed\", \"err\", err, // error luôn có key riêng \"order_id\", order.ID, \"gateway\", \"vnpay\", ) 4.2. Correlation: request ID xuyên suốt — log 30 pod đọc như một câu chuyện Log tập trung chỉ hữu ích khi ghép được các dòng của cùng một request. Middleware gắn request ID (nhận từ header nếu upstream đã tạo — chuẩn W3C traceparent — hoặc tự sinh), nhét logger-có-context vào context.Context:\n// internal/middleware/requestid.go func RequestLogger(base *slog.Logger) func(http.Handler) http.Handler { return func(next http.Handler) http.Handler { return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { reqID := r.Header.Get(\"X-Request-Id\") if reqID == \"\" { reqID = uuid.NewString() } // logger con mang sẵn ngữ cảnh — mọi dòng log sau tự có request_id l := base.With(\"request_id\", reqID, \"method\", r.Method, \"path\", r.URL.Path) ctx := logging.WithLogger(r.Context(), l) start := time.Now() sw := \u0026statusWriter{ResponseWriter: w, status: 200} next.ServeHTTP(sw, r.WithContext(ctx)) l.Info(\"request completed\", \"status\", sw.status, \"duration_ms\", time.Since(start).Milliseconds(), ) }) } } // Ở tầng sâu bất kỳ: lấy logger từ context — request_id đi theo tự động func (s *OrderService) Create(ctx context.Context, o *Order) error { log := logging.FromContext(ctx) log.Info(\"creating order\", \"order_id\", o.ID) // ... } Khi tích hợp OpenTelemetry (chương 22), thay request_id bằng trace_id/span_id — log, metrics, traces nối với nhau thành một mặt phẳng quan sát.\n4.3. Docker \u0026 Kubernetes — phần của môi trường # Dev: stream hiện ngay trên terminal — chính là lợi ích của hợp đồng stdout docker compose logs -f app kubectl logs -f deploy/myapp --tail=100 # fluent-bit DaemonSet (trích ý tưởng cấu hình) — chạy 1 bản mỗi node, # app KHÔNG biết sự tồn tại của nó # INPUT: tail /var/log/containers/*.log (nơi runtime ghi stdout của mọi pod) # FILTER: kubernetes (gắn pod name, namespace, labels vào mỗi dòng) # OUTPUT: loki / elasticsearch / s3 (quyết định của platform team) Trên cloud managed (EKS/GKE/Cloud Run), tầng này thường có sẵn (CloudWatch, Cloud Logging) — bạn ghi stdout là xong, đúng nghĩa “việc của môi trường”.\n5. Trade-off JSON vs text đẹp cho người đọc. JSON tối ưu cho máy, khó đọc bằng mắt ở terminal dev. Giải pháp phổ biến: handler theo config — dev dùng text/tint (đẹp, màu), staging/prod dùng JSON. Lưu ý đây là khác biệt trình bày chấp nhận được, nhưng đừng để hai handler khác nhau về nội dung (field nào có ở prod phải có ở dev — không thì bug về log chỉ lộ trên prod, vi phạm F10).\nLog bao nhiêu là đủ? Log là chi phí thật: CPU serialize, băng thông, và tiền lưu trữ/index (các hãng log SaaS tính tiền theo GB — hệ thống log bừa bãi trả hóa đơn hàng chục nghìn USD/tháng là chuyện thường). Chiến lược: INFO cho sự kiện nghiệp vụ (một request một dòng tổng kết), DEBUG tắt ở prod và bật được qua config khi điều tra, ERROR phải actionable (có người đọc và làm gì đó). Cân nhắc sampling cho log lặp lại nhiều. Đừng dùng log thay metrics: “đếm số request” là việc của counter (rẻ), không phải của việc parse triệu dòng log (đắt) — chương 22.\nSync vs async ghi log. stdout mặc định là blocking — dưới tải cực cao, ghi log tranh chấp. Thực tế: với JSON handler của slog, chi phí ~vài trăm ns–µs mỗi dòng, không đáng lo với đa số. Nếu profile chỉ ra log là nút cổ chai: giảm lượng log trước (thường là nguyên nhân thật), rồi mới nghĩ đến buffered writer (và chấp nhận rủi ro mất vài dòng cuối khi crash).\n6. Best Practices slog.NewJSONHandler(os.Stdout) + level từ env; không mở file, không rotate, không tự đẩy backend từ trong app. Mỗi request: một request ID (tôn trọng header từ upstream), logger-trong-context, một dòng tổng kết access log. Field chuẩn hóa toàn công ty: level, msg, time, request_id/trace_id, service, version — dashboard và alert viết một lần dùng cho mọi service. Không log secret/PII: password, token, số thẻ, email thô — dùng masking helper; đây là quy định pháp lý (GDPR/PDPA), không chỉ là gu. stderr cho chẩn đoán khởi động sớm (trước khi logger dựng xong); panic mặc định đã ra stderr — đừng nuốt. Alert đếm trên log ERROR có chọn lọc; log kèm version (buildinfo chương 6) để so sánh trước/sau deploy. Retention phân tầng: hot (7–30 ngày, index đầy đủ) / cold (S3, nén, vài năm cho audit). 7. Anti-patterns Ghi log vào file trong container — mất khi pod chết, phá read-only filesystem, disk node đầy; mô hình cũ nguyên vẹn mọi nhược điểm. App gọi thẳng Elasticsearch/Kafka để gửi log — coupling, backend log chậm kéo app chậm, mất log lúc crash; nếu tổ chức muốn log qua Kafka, đó là việc của agent, không phải của app. fmt.Println / log.Printf phi cấu trúc rải rác — không level, không field, không tắt được debug; nghìn dòng “here 2” của quá khứ. Log câu văn thay vì dữ liệu (\"User Nam vừa mua 3 món hết 150k\") — regex-hell cho người vận hành; chuyển thành field. Nuốt error thay vì log (_ = doSomething()) hoặc log rồi ném tiếp cùng error ở mọi tầng — một lỗi in 5 lần, alert đếm 5 lần; quy tắc: log tại nơi xử lý error, các tầng giữa chỉ wrap (fmt.Errorf(\"...: %w\", err)). Log PII/secret — sự cố bảo mật qua đường log, nơi quyền đọc rộng nhất công ty. Sidecar log cho từng pod khi node agent là đủ — nhân chi phí thu gom lên số pod thay vì số node, không thêm giá trị. 8. Khi nào KHÔNG áp dụng đầy đủ CLI tool: stdout là output của chương trình, log chẩn đoán đi stderr — đúng chuẩn Unix, đừng trộn (JSON log lẫn vào output mà user đang pipe là phá UX). Desktop/mobile app: không có “môi trường thu gom” — ghi file local + cơ chế gửi báo cáo lỗi là đúng. Embedded: có thể chỉ có serial/flash — hoàn cảnh quyết định. Hệ legacy ghi file đang chạy ổn: không cần sửa app ngay — agent tail file cũng đạt 80% giá trị (log tập trung), sửa app ra stdout khi có dịp refactor. Tóm tắt Hợp đồng: app ghi event ra stdout — mọi thứ còn lại (thu gom, định tuyến, lưu, index) là việc của môi trường. App không biết log đi đâu là một tính năng. Chuẩn hiện đại: structured JSON logging (log/slog), level từ config, request_id/trace_id xuyên suốt qua context — log của 30 pod đọc như một câu chuyện có thể truy vấn. Log là chi phí: một dòng tổng kết mỗi request, DEBUG tắt ở prod, đừng dùng log làm metrics, retention phân tầng. Lỗi chí mạng cần nhớ: file trong container, app tự đẩy log đi backend, log secret/PII. ","wordCount":"1892","inLanguage":"en","datePublished":"2026-07-10T17:00:00+07:00","dateModified":"2026-07-10T17:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/twelve-factor/16-factor-11-logs/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/twelve-factor/>The Twelve-Factor App</a></div><h1 class="post-title entry-hint-parent">Chương 16 — Factor 11: Logs</h1><div class=post-meta><span title='2026-07-10 17:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;9 min</div></header><div class=post-content><blockquote><p><em>&ldquo;Treat logs as event streams&rdquo;</em> — Coi log là dòng sự kiện.</p><p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Operable</strong> | Chương trước: <a href=/series/twelve-factor/15-factor-10-dev-prod-parity/>Dev/Prod Parity</a> | Chương sau: <a href=/series/twelve-factor/17-factor-12-admin-processes/>Admin Processes</a></p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Mô hình cũ: app ghi log vào file (<code>/var/log/app/app.log</code>), tự lo rotate, nén, xóa. Trên hạ tầng hiện đại, mô hình đó gãy ở mọi khớp:</p><ul><li><strong>Filesystem là tạm bợ</strong>: container chết là file log chết theo — đúng lúc bạn cần log nhất (điều tra vì sao nó chết) thì log đã bay màu cùng nó.</li><li><strong>Nhiều instance</strong>: 30 pod = 30 file log trên 30 node — &ldquo;grep file log&rdquo; đòi hỏi biết pod nào xử lý request nào, điều bạn không thể biết trước.</li><li><strong>App phải biết quá nhiều</strong>: đường dẫn, quyền ghi, rotate policy, dung lượng — toàn tri thức về <em>môi trường</em>, vi phạm nguyên tắc environment coupling ngay từ chương 1. Tệ hơn: ghi vào filesystem phá <code>readOnlyRootFilesystem</code>, và disk đầy vì log là sự cố &ldquo;tự bắn vào chân&rdquo; kinh điển.</li></ul><p>Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:</p><blockquote><p><strong>App chỉ làm một việc: ghi dòng sự kiện ra <code>stdout</code>/<code>stderr</code>, không buffer, không quản lý file. Việc thu gom, định tuyến, lưu trữ, đánh index là của MÔI TRƯỜNG THỰC THI (execution environment), không phải của app.</strong></p></blockquote><h2 id=2-tại-sao-nguyên-lý-này-tồn-tại>2. Tại sao nguyên lý này tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-nguyên-lý-này-tồn-tại>#</a></h2><ul><li><strong>Operational</strong>: không SSH được vào 30 pod tạm bợ — dòng log phải <em>chảy ra khỏi</em> nơi sinh ra nó đến một chỗ tập trung, sống lâu hơn process.</li><li><strong>Deployment</strong>: cùng một app, dev muốn xem log ở terminal, staging đẩy vào Loki, production đẩy vào Elasticsearch + lưu trữ lạnh S3. Nếu app tự quyết định đích đến, mỗi môi trường phải một bản build/config log riêng; app ghi stdout thì <strong>đích đến là quyết định của môi trường</strong> — đổi cả hệ thống log không đụng một dòng code.</li><li><strong>Scalability</strong>: log của N pod cần được <em>hợp dòng</em> (merge theo thời gian, lọc theo request) — chỉ làm được ở tầng thu gom tập trung.</li><li><strong>Business/Compliance</strong>: audit log phải bất biến, lưu đủ hạn định — không thể giao cho filesystem của process tạm bợ.</li></ul><h2 id=3-bản-chất>3. Bản chất<a hidden class=anchor aria-hidden=true href=#3-bản-chất>#</a></h2><p><strong>Log là một event stream</strong> — dòng sự kiện bất tận, có thứ tự thời gian, mỗi sự kiện mô tả &ldquo;điều gì vừa xảy ra&rdquo;. Nhìn như stream (thay vì file) mở ra kiến trúc:</p><pre tabindex=0><code>   30 pod                    TẦNG THU GOM (env lo)         TIÊU THỤ
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/twelve-factor/">The Twelve-Factor App</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 16 — Factor 11: Logs
+    </h1>
+    <div class="post-meta"><span title='2026-07-10 17:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;9 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p><em>&ldquo;Treat logs as event streams&rdquo;</em> — Coi log là dòng sự kiện.</p>
+<p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Operable</strong> | Chương trước: <a href="/series/twelve-factor/15-factor-10-dev-prod-parity/">Dev/Prod Parity</a> | Chương sau: <a href="/series/twelve-factor/17-factor-12-admin-processes/">Admin Processes</a></p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Mô hình cũ: app ghi log vào file (<code>/var/log/app/app.log</code>), tự lo rotate, nén, xóa. Trên hạ tầng hiện đại, mô hình đó gãy ở mọi khớp:</p>
+<ul>
+<li><strong>Filesystem là tạm bợ</strong>: container chết là file log chết theo — đúng lúc bạn cần log nhất (điều tra vì sao nó chết) thì log đã bay màu cùng nó.</li>
+<li><strong>Nhiều instance</strong>: 30 pod = 30 file log trên 30 node — &ldquo;grep file log&rdquo; đòi hỏi biết pod nào xử lý request nào, điều bạn không thể biết trước.</li>
+<li><strong>App phải biết quá nhiều</strong>: đường dẫn, quyền ghi, rotate policy, dung lượng — toàn tri thức về <em>môi trường</em>, vi phạm nguyên tắc environment coupling ngay từ chương 1. Tệ hơn: ghi vào filesystem phá <code>readOnlyRootFilesystem</code>, và disk đầy vì log là sự cố &ldquo;tự bắn vào chân&rdquo; kinh điển.</li>
+</ul>
+<p>Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:</p>
+<blockquote>
+<p><strong>App chỉ làm một việc: ghi dòng sự kiện ra <code>stdout</code>/<code>stderr</code>, không buffer, không quản lý file. Việc thu gom, định tuyến, lưu trữ, đánh index là của MÔI TRƯỜNG THỰC THI (execution environment), không phải của app.</strong></p></blockquote>
+<h2 id="2-tại-sao-nguyên-lý-này-tồn-tại">2. Tại sao nguyên lý này tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-nguyên-lý-này-tồn-tại">#</a></h2>
+<ul>
+<li><strong>Operational</strong>: không SSH được vào 30 pod tạm bợ — dòng log phải <em>chảy ra khỏi</em> nơi sinh ra nó đến một chỗ tập trung, sống lâu hơn process.</li>
+<li><strong>Deployment</strong>: cùng một app, dev muốn xem log ở terminal, staging đẩy vào Loki, production đẩy vào Elasticsearch + lưu trữ lạnh S3. Nếu app tự quyết định đích đến, mỗi môi trường phải một bản build/config log riêng; app ghi stdout thì <strong>đích đến là quyết định của môi trường</strong> — đổi cả hệ thống log không đụng một dòng code.</li>
+<li><strong>Scalability</strong>: log của N pod cần được <em>hợp dòng</em> (merge theo thời gian, lọc theo request) — chỉ làm được ở tầng thu gom tập trung.</li>
+<li><strong>Business/Compliance</strong>: audit log phải bất biến, lưu đủ hạn định — không thể giao cho filesystem của process tạm bợ.</li>
+</ul>
+<h2 id="3-bản-chất">3. Bản chất<a hidden class="anchor" aria-hidden="true" href="#3-bản-chất">#</a></h2>
+<p><strong>Log là một event stream</strong> — dòng sự kiện bất tận, có thứ tự thời gian, mỗi sự kiện mô tả &ldquo;điều gì vừa xảy ra&rdquo;. Nhìn như stream (thay vì file) mở ra kiến trúc:</p>
+<pre tabindex="0"><code>   30 pod                    TẦNG THU GOM (env lo)         TIÊU THỤ
   ┌────────┐                ┌───────────────────┐
   │app→stdout│──┐            │ node agent         │──▶ Loki / Elastic  (tra cứu)
   ├────────┤  ├─ container ─▶│ (Fluent Bit,      │──▶ S3 / cold store (audit, rẻ)
@@ -32,78 +153,344 @@ Factor 11 tách đôi trách nhiệm bằng một hợp đồng tối giản:"><
   ├────────┤  │  ghi ra      │ đọc file đó, gắn  │──▶ stream processing
   │app→stdout│──┘  node       │ metadata pod/node │    (nếu cần realtime)
   └────────┘                └───────────────────┘
-   App: 1 việc — println      Hoàn toàn trong suốt với app</code></pre><p>Chuỗi trách nhiệm: app ghi stdout → container runtime bắt stream ghi ra node → agent (DaemonSet) đọc, gắn metadata (pod, namespace, node), đẩy về backend. App không biết và không cần biết gì từ mắt xích thứ hai trở đi.</p><p><strong>Structured logging — nâng cấp bắt buộc của thời hiện đại.</strong> 12-Factor gốc chỉ nói &ldquo;dòng text ra stdout&rdquo;. Ở quy mô hàng triệu dòng/phút, text tự do (<code>log.Printf("user %s failed to pay %d", ...)</code>) là ngõ cụt: muốn tìm phải viết regex, muốn thống kê phải parse. Chuẩn hiện đại: <strong>mỗi dòng là một JSON object</strong> — log trở thành dữ liệu truy vấn được (<code>level=error AND user_id=42 AND route=/pay</code>), không phải văn xuôi để grep.</p><p><strong>Điều gì xảy ra nếu vi phạm?</strong> Ghi file local: mất log khi pod chết, disk đầy, và mù trên hệ nhiều instance. Tự đẩy log sang backend từ trong app (gọi Elasticsearch trực tiếp): app coupling với hạ tầng log (đổi backend = sửa app), log backend chậm làm <em>app</em> chậm theo, và log trong khoảnh khắc app crash — khoảnh khắc quý nhất — thất lạc vì buffer trong app chưa flush.</p><h2 id=4-cách-áp-dụng-với-go>4. Cách áp dụng với Go<a hidden class=anchor aria-hidden=true href=#4-cách-áp-dụng-với-go>#</a></h2><h3 id=41-logslog--structured-logging-chuẩn-thư-viện-chuẩn>4.1. <code>log/slog</code> — structured logging chuẩn thư viện chuẩn<a hidden class=anchor aria-hidden=true href=#41-logslog--structured-logging-chuẩn-thư-viện-chuẩn>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/logging/logging.go</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>logging</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;log/slog&#34;</span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;os&#34;</span>
-</span></span><span style=display:flex><span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>New</span>(<span style=color:#a6e22e>level</span> <span style=color:#66d9ef>string</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>Logger</span> {
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>lv</span> <span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>Level</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>lv</span>.<span style=color:#a6e22e>UnmarshalText</span>([]byte(<span style=color:#a6e22e>level</span>)) <span style=color:#75715e>// &#34;debug&#34;|&#34;info&#34;|&#34;warn&#34;|&#34;error&#34; — từ config (F3)</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>h</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>NewJSONHandler</span>(<span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Stdout</span>, <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>HandlerOptions</span>{ <span style=color:#75715e>// stdout — hết. Không file.</span>
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>Level</span>: <span style=color:#a6e22e>lv</span>,
-</span></span><span style=display:flex><span>	})
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>New</span>(<span style=color:#a6e22e>h</span>)
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Sử dụng trong handler — log là DỮ LIỆU, không phải câu văn</span>
-</span></span><span style=display:flex><span><span style=color:#a6e22e>logger</span>.<span style=color:#a6e22e>Info</span>(<span style=color:#e6db74>&#34;order created&#34;</span>,
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;order_id&#34;</span>, <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>ID</span>,
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;user_id&#34;</span>, <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>UserID</span>,
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;amount&#34;</span>, <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Amount</span>,
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;duration_ms&#34;</span>, <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Since</span>(<span style=color:#a6e22e>start</span>).<span style=color:#a6e22e>Milliseconds</span>(),
-</span></span><span style=display:flex><span>)
-</span></span><span style=display:flex><span><span style=color:#75715e>// → {&#34;time&#34;:&#34;2026-07-08T09:15:02Z&#34;,&#34;level&#34;:&#34;INFO&#34;,&#34;msg&#34;:&#34;order created&#34;,</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>//    &#34;order_id&#34;:&#34;ord_9x2&#34;,&#34;user_id&#34;:&#34;u_42&#34;,&#34;amount&#34;:150000,&#34;duration_ms&#34;:23}</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#a6e22e>logger</span>.<span style=color:#a6e22e>Error</span>(<span style=color:#e6db74>&#34;payment failed&#34;</span>,
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;err&#34;</span>, <span style=color:#a6e22e>err</span>,                    <span style=color:#75715e>// error luôn có key riêng</span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;order_id&#34;</span>, <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>ID</span>,
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;gateway&#34;</span>, <span style=color:#e6db74>&#34;vnpay&#34;</span>,
-</span></span><span style=display:flex><span>)
-</span></span></code></pre></div><h3 id=42-correlation-request-id-xuyên-suốt--log-30-pod-đọc-như-một-câu-chuyện>4.2. Correlation: request ID xuyên suốt — log 30 pod đọc như một câu chuyện<a hidden class=anchor aria-hidden=true href=#42-correlation-request-id-xuyên-suốt--log-30-pod-đọc-như-một-câu-chuyện>#</a></h3><p>Log tập trung chỉ hữu ích khi ghép được các dòng của <em>cùng một request</em>. Middleware gắn request ID (nhận từ header nếu upstream đã tạo — chuẩn W3C <code>traceparent</code> — hoặc tự sinh), nhét logger-có-context vào <code>context.Context</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/middleware/requestid.go</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>RequestLogger</span>(<span style=color:#a6e22e>base</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>Logger</span>) <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Handler</span>) <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Handler</span> {
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>next</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Handler</span>) <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Handler</span> {
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>HandlerFunc</span>(<span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>w</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>ResponseWriter</span>, <span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Request</span>) {
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>reqID</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Header</span>.<span style=color:#a6e22e>Get</span>(<span style=color:#e6db74>&#34;X-Request-Id&#34;</span>)
-</span></span><span style=display:flex><span>			<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>reqID</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;&#34;</span> {
-</span></span><span style=display:flex><span>				<span style=color:#a6e22e>reqID</span> = <span style=color:#a6e22e>uuid</span>.<span style=color:#a6e22e>NewString</span>()
-</span></span><span style=display:flex><span>			}
-</span></span><span style=display:flex><span>			<span style=color:#75715e>// logger con mang sẵn ngữ cảnh — mọi dòng log sau tự có request_id</span>
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>l</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>base</span>.<span style=color:#a6e22e>With</span>(<span style=color:#e6db74>&#34;request_id&#34;</span>, <span style=color:#a6e22e>reqID</span>, <span style=color:#e6db74>&#34;method&#34;</span>, <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Method</span>, <span style=color:#e6db74>&#34;path&#34;</span>, <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>URL</span>.<span style=color:#a6e22e>Path</span>)
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>ctx</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>logging</span>.<span style=color:#a6e22e>WithLogger</span>(<span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Context</span>(), <span style=color:#a6e22e>l</span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>start</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Now</span>()
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>sw</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>statusWriter</span>{<span style=color:#a6e22e>ResponseWriter</span>: <span style=color:#a6e22e>w</span>, <span style=color:#a6e22e>status</span>: <span style=color:#ae81ff>200</span>}
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>next</span>.<span style=color:#a6e22e>ServeHTTP</span>(<span style=color:#a6e22e>sw</span>, <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>WithContext</span>(<span style=color:#a6e22e>ctx</span>))
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>l</span>.<span style=color:#a6e22e>Info</span>(<span style=color:#e6db74>&#34;request completed&#34;</span>,
-</span></span><span style=display:flex><span>				<span style=color:#e6db74>&#34;status&#34;</span>, <span style=color:#a6e22e>sw</span>.<span style=color:#a6e22e>status</span>,
-</span></span><span style=display:flex><span>				<span style=color:#e6db74>&#34;duration_ms&#34;</span>, <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Since</span>(<span style=color:#a6e22e>start</span>).<span style=color:#a6e22e>Milliseconds</span>(),
-</span></span><span style=display:flex><span>			)
-</span></span><span style=display:flex><span>		})
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Ở tầng sâu bất kỳ: lấy logger từ context — request_id đi theo tự động</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>OrderService</span>) <span style=color:#a6e22e>Create</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Order</span>) <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>log</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>logging</span>.<span style=color:#a6e22e>FromContext</span>(<span style=color:#a6e22e>ctx</span>)
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Info</span>(<span style=color:#e6db74>&#34;creating order&#34;</span>, <span style=color:#e6db74>&#34;order_id&#34;</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ID</span>)
-</span></span><span style=display:flex><span>	<span style=color:#75715e>// ...</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Khi tích hợp OpenTelemetry (chương 22), thay <code>request_id</code> bằng <code>trace_id</code>/<code>span_id</code> — log, metrics, traces nối với nhau thành một mặt phẳng quan sát.</p><h3 id=43-docker--kubernetes--phần-của-môi-trường>4.3. Docker & Kubernetes — phần của môi trường<a hidden class=anchor aria-hidden=true href=#43-docker--kubernetes--phần-của-môi-trường>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Dev: stream hiện ngay trên terminal — chính là lợi ích của hợp đồng stdout</span>
-</span></span><span style=display:flex><span>docker compose logs -f app
-</span></span><span style=display:flex><span>kubectl logs -f deploy/myapp --tail<span style=color:#f92672>=</span><span style=color:#ae81ff>100</span>
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># fluent-bit DaemonSet (trích ý tưởng cấu hình) — chạy 1 bản mỗi node,</span>
-</span></span><span style=display:flex><span><span style=color:#75715e># app KHÔNG biết sự tồn tại của nó</span>
-</span></span><span style=display:flex><span><span style=color:#75715e># INPUT:  tail /var/log/containers/*.log   (nơi runtime ghi stdout của mọi pod)</span>
-</span></span><span style=display:flex><span><span style=color:#75715e># FILTER: kubernetes (gắn pod name, namespace, labels vào mỗi dòng)</span>
-</span></span><span style=display:flex><span><span style=color:#75715e># OUTPUT: loki / elasticsearch / s3       (quyết định của platform team)</span>
-</span></span></code></pre></div><p>Trên cloud managed (EKS/GKE/Cloud Run), tầng này thường có sẵn (CloudWatch, Cloud Logging) — bạn ghi stdout là xong, đúng nghĩa &ldquo;việc của môi trường&rdquo;.</p><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><p><strong>JSON vs text đẹp cho người đọc.</strong> JSON tối ưu cho máy, khó đọc bằng mắt ở terminal dev. Giải pháp phổ biến: handler theo config — dev dùng text/tint (đẹp, màu), staging/prod dùng JSON. Lưu ý đây là khác biệt <em>trình bày</em> chấp nhận được, nhưng đừng để hai handler khác nhau về <em>nội dung</em> (field nào có ở prod phải có ở dev — không thì bug về log chỉ lộ trên prod, vi phạm F10).</p><p><strong>Log bao nhiêu là đủ?</strong> Log là chi phí thật: CPU serialize, băng thông, và tiền lưu trữ/index (các hãng log SaaS tính tiền theo GB — hệ thống log bừa bãi trả hóa đơn hàng chục nghìn USD/tháng là chuyện thường). Chiến lược: INFO cho sự kiện nghiệp vụ (một request một dòng tổng kết), DEBUG tắt ở prod và bật được qua config khi điều tra, ERROR phải <em>actionable</em> (có người đọc và làm gì đó). Cân nhắc sampling cho log lặp lại nhiều. Đừng dùng log thay metrics: &ldquo;đếm số request&rdquo; là việc của counter (rẻ), không phải của việc parse triệu dòng log (đắt) — chương 22.</p><p><strong>Sync vs async ghi log.</strong> stdout mặc định là blocking — dưới tải cực cao, ghi log tranh chấp. Thực tế: với JSON handler của slog, chi phí ~vài trăm ns–µs mỗi dòng, không đáng lo với đa số. Nếu profile chỉ ra log là nút cổ chai: giảm lượng log trước (thường là nguyên nhân thật), rồi mới nghĩ đến buffered writer (và chấp nhận rủi ro mất vài dòng cuối khi crash).</p><h2 id=6-best-practices>6. Best Practices<a hidden class=anchor aria-hidden=true href=#6-best-practices>#</a></h2><ul><li><code>slog.NewJSONHandler(os.Stdout)</code> + level từ env; <strong>không mở file, không rotate, không tự đẩy backend từ trong app</strong>.</li><li>Mỗi request: một request ID (tôn trọng header từ upstream), logger-trong-context, một dòng tổng kết access log.</li><li>Field chuẩn hóa toàn công ty: <code>level</code>, <code>msg</code>, <code>time</code>, <code>request_id</code>/<code>trace_id</code>, <code>service</code>, <code>version</code> — dashboard và alert viết một lần dùng cho mọi service.</li><li><strong>Không log secret/PII</strong>: password, token, số thẻ, email thô — dùng masking helper; đây là quy định pháp lý (GDPR/PDPA), không chỉ là gu.</li><li><code>stderr</code> cho chẩn đoán khởi động sớm (trước khi logger dựng xong); panic mặc định đã ra stderr — đừng nuốt.</li><li>Alert đếm trên log ERROR có chọn lọc; log kèm <code>version</code> (buildinfo chương 6) để so sánh trước/sau deploy.</li><li>Retention phân tầng: hot (7–30 ngày, index đầy đủ) / cold (S3, nén, vài năm cho audit).</li></ul><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li><strong>Ghi log vào file trong container</strong> — mất khi pod chết, phá read-only filesystem, disk node đầy; mô hình cũ nguyên vẹn mọi nhược điểm.</li><li><strong>App gọi thẳng Elasticsearch/Kafka để gửi log</strong> — coupling, backend log chậm kéo app chậm, mất log lúc crash; nếu tổ chức muốn log qua Kafka, đó là việc của agent, không phải của app.</li><li><strong><code>fmt.Println</code> / <code>log.Printf</code> phi cấu trúc rải rác</strong> — không level, không field, không tắt được debug; nghìn dòng &ldquo;here 2&rdquo; của quá khứ.</li><li><strong>Log câu văn thay vì dữ liệu</strong> (<code>"User Nam vừa mua 3 món hết 150k"</code>) — regex-hell cho người vận hành; chuyển thành field.</li><li><strong>Nuốt error thay vì log</strong> (<code>_ = doSomething()</code>) hoặc <strong>log rồi ném tiếp cùng error ở mọi tầng</strong> — một lỗi in 5 lần, alert đếm 5 lần; quy tắc: log tại nơi <em>xử lý</em> error, các tầng giữa chỉ wrap (<code>fmt.Errorf("...: %w", err)</code>).</li><li><strong>Log PII/secret</strong> — sự cố bảo mật qua đường log, nơi quyền đọc rộng nhất công ty.</li><li><strong>Sidecar log cho từng pod khi node agent là đủ</strong> — nhân chi phí thu gom lên số pod thay vì số node, không thêm giá trị.</li></ul><h2 id=8-khi-nào-không-áp-dụng-đầy-đủ>8. Khi nào KHÔNG áp dụng đầy đủ<a hidden class=anchor aria-hidden=true href=#8-khi-nào-không-áp-dụng-đầy-đủ>#</a></h2><ul><li><strong>CLI tool</strong>: stdout là <em>output của chương trình</em>, log chẩn đoán đi stderr — đúng chuẩn Unix, đừng trộn (JSON log lẫn vào output mà user đang pipe là phá UX).</li><li><strong>Desktop/mobile app</strong>: không có &ldquo;môi trường thu gom&rdquo; — ghi file local + cơ chế gửi báo cáo lỗi là đúng.</li><li><strong>Embedded</strong>: có thể chỉ có serial/flash — hoàn cảnh quyết định.</li><li><strong>Hệ legacy ghi file đang chạy ổn</strong>: không cần sửa app ngay — agent tail file cũng đạt 80% giá trị (log tập trung), sửa app ra stdout khi có dịp refactor.</li></ul><hr><h2 id=tóm-tắt>Tóm tắt<a hidden class=anchor aria-hidden=true href=#tóm-tắt>#</a></h2><ul><li>Hợp đồng: <strong>app ghi event ra stdout — mọi thứ còn lại (thu gom, định tuyến, lưu, index) là việc của môi trường.</strong> App không biết log đi đâu là một <em>tính năng</em>.</li><li>Chuẩn hiện đại: <strong>structured JSON logging</strong> (<code>log/slog</code>), level từ config, request_id/trace_id xuyên suốt qua context — log của 30 pod đọc như một câu chuyện có thể truy vấn.</li><li>Log là chi phí: một dòng tổng kết mỗi request, DEBUG tắt ở prod, đừng dùng log làm metrics, retention phân tầng.</li><li>Lỗi chí mạng cần nhớ: file trong container, app tự đẩy log đi backend, log secret/PII.</li></ul></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/twelve-factor/>Twelve-Factor</a></li><li><a href=https://thanhhv.github.io/tags/cloud-native/>Cloud-Native</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/twelve-factor/15-factor-10-dev-prod-parity/><span class=title>« Prev</span><br><span>Chương 15 — Factor 10: Dev/Prod Parity</span>
-</a><a class=next href=https://thanhhv.github.io/series/twelve-factor/17-factor-12-admin-processes/><span class=title>Next »</span><br><span>Chương 17 — Factor 12: Admin Processes</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f&amp;title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;summary=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f&title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+   App: 1 việc — println      Hoàn toàn trong suốt với app</code></pre><p>Chuỗi trách nhiệm: app ghi stdout → container runtime bắt stream ghi ra node → agent (DaemonSet) đọc, gắn metadata (pod, namespace, node), đẩy về backend. App không biết và không cần biết gì từ mắt xích thứ hai trở đi.</p>
+<p><strong>Structured logging — nâng cấp bắt buộc của thời hiện đại.</strong> 12-Factor gốc chỉ nói &ldquo;dòng text ra stdout&rdquo;. Ở quy mô hàng triệu dòng/phút, text tự do (<code>log.Printf(&quot;user %s failed to pay %d&quot;, ...)</code>) là ngõ cụt: muốn tìm phải viết regex, muốn thống kê phải parse. Chuẩn hiện đại: <strong>mỗi dòng là một JSON object</strong> — log trở thành dữ liệu truy vấn được (<code>level=error AND user_id=42 AND route=/pay</code>), không phải văn xuôi để grep.</p>
+<p><strong>Điều gì xảy ra nếu vi phạm?</strong> Ghi file local: mất log khi pod chết, disk đầy, và mù trên hệ nhiều instance. Tự đẩy log sang backend từ trong app (gọi Elasticsearch trực tiếp): app coupling với hạ tầng log (đổi backend = sửa app), log backend chậm làm <em>app</em> chậm theo, và log trong khoảnh khắc app crash — khoảnh khắc quý nhất — thất lạc vì buffer trong app chưa flush.</p>
+<h2 id="4-cách-áp-dụng-với-go">4. Cách áp dụng với Go<a hidden class="anchor" aria-hidden="true" href="#4-cách-áp-dụng-với-go">#</a></h2>
+<h3 id="41-logslog--structured-logging-chuẩn-thư-viện-chuẩn">4.1. <code>log/slog</code> — structured logging chuẩn thư viện chuẩn<a hidden class="anchor" aria-hidden="true" href="#41-logslog--structured-logging-chuẩn-thư-viện-chuẩn">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/logging/logging.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">logging</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;log/slog&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;os&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">level</span> <span style="color:#66d9ef">string</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">Logger</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">lv</span> <span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">Level</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">lv</span>.<span style="color:#a6e22e">UnmarshalText</span>([]byte(<span style="color:#a6e22e">level</span>)) <span style="color:#75715e">// &#34;debug&#34;|&#34;info&#34;|&#34;warn&#34;|&#34;error&#34; — từ config (F3)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">h</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">NewJSONHandler</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdout</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">HandlerOptions</span>{ <span style="color:#75715e">// stdout — hết. Không file.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Level</span>: <span style="color:#a6e22e">lv</span>,
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">h</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Sử dụng trong handler — log là DỮ LIỆU, không phải câu văn</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;order created&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;order_id&#34;</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">ID</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;user_id&#34;</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">UserID</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;amount&#34;</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Amount</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;duration_ms&#34;</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>).<span style="color:#a6e22e">Milliseconds</span>(),
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// → {&#34;time&#34;:&#34;2026-07-08T09:15:02Z&#34;,&#34;level&#34;:&#34;INFO&#34;,&#34;msg&#34;:&#34;order created&#34;,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//    &#34;order_id&#34;:&#34;ord_9x2&#34;,&#34;user_id&#34;:&#34;u_42&#34;,&#34;amount&#34;:150000,&#34;duration_ms&#34;:23}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#e6db74">&#34;payment failed&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;err&#34;</span>, <span style="color:#a6e22e">err</span>,                    <span style="color:#75715e">// error luôn có key riêng</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;order_id&#34;</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">ID</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;gateway&#34;</span>, <span style="color:#e6db74">&#34;vnpay&#34;</span>,
+</span></span><span style="display:flex;"><span>)
+</span></span></code></pre></div><h3 id="42-correlation-request-id-xuyên-suốt--log-30-pod-đọc-như-một-câu-chuyện">4.2. Correlation: request ID xuyên suốt — log 30 pod đọc như một câu chuyện<a hidden class="anchor" aria-hidden="true" href="#42-correlation-request-id-xuyên-suốt--log-30-pod-đọc-như-một-câu-chuyện">#</a></h3>
+<p>Log tập trung chỉ hữu ích khi ghép được các dòng của <em>cùng một request</em>. Middleware gắn request ID (nhận từ header nếu upstream đã tạo — chuẩn W3C <code>traceparent</code> — hoặc tự sinh), nhét logger-có-context vào <code>context.Context</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/middleware/requestid.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">RequestLogger</span>(<span style="color:#a6e22e">base</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">Logger</span>) <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">next</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">reqID</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Header</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#e6db74">&#34;X-Request-Id&#34;</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reqID</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">reqID</span> = <span style="color:#a6e22e">uuid</span>.<span style="color:#a6e22e">NewString</span>()
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// logger con mang sẵn ngữ cảnh — mọi dòng log sau tự có request_id</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">l</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">base</span>.<span style="color:#a6e22e">With</span>(<span style="color:#e6db74">&#34;request_id&#34;</span>, <span style="color:#a6e22e">reqID</span>, <span style="color:#e6db74">&#34;method&#34;</span>, <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Method</span>, <span style="color:#e6db74">&#34;path&#34;</span>, <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">Path</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">ctx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">logging</span>.<span style="color:#a6e22e">WithLogger</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>(), <span style="color:#a6e22e">l</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">sw</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">statusWriter</span>{<span style="color:#a6e22e">ResponseWriter</span>: <span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">status</span>: <span style="color:#ae81ff">200</span>}
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">next</span>.<span style="color:#a6e22e">ServeHTTP</span>(<span style="color:#a6e22e">sw</span>, <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">WithContext</span>(<span style="color:#a6e22e">ctx</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;request completed&#34;</span>,
+</span></span><span style="display:flex;"><span>				<span style="color:#e6db74">&#34;status&#34;</span>, <span style="color:#a6e22e">sw</span>.<span style="color:#a6e22e">status</span>,
+</span></span><span style="display:flex;"><span>				<span style="color:#e6db74">&#34;duration_ms&#34;</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>).<span style="color:#a6e22e">Milliseconds</span>(),
+</span></span><span style="display:flex;"><span>			)
+</span></span><span style="display:flex;"><span>		})
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Ở tầng sâu bất kỳ: lấy logger từ context — request_id đi theo tự động</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">OrderService</span>) <span style="color:#a6e22e">Create</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">logging</span>.<span style="color:#a6e22e">FromContext</span>(<span style="color:#a6e22e">ctx</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;creating order&#34;</span>, <span style="color:#e6db74">&#34;order_id&#34;</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">ID</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Khi tích hợp OpenTelemetry (chương 22), thay <code>request_id</code> bằng <code>trace_id</code>/<code>span_id</code> — log, metrics, traces nối với nhau thành một mặt phẳng quan sát.</p>
+<h3 id="43-docker--kubernetes--phần-của-môi-trường">4.3. Docker &amp; Kubernetes — phần của môi trường<a hidden class="anchor" aria-hidden="true" href="#43-docker--kubernetes--phần-của-môi-trường">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Dev: stream hiện ngay trên terminal — chính là lợi ích của hợp đồng stdout</span>
+</span></span><span style="display:flex;"><span>docker compose logs -f app
+</span></span><span style="display:flex;"><span>kubectl logs -f deploy/myapp --tail<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># fluent-bit DaemonSet (trích ý tưởng cấu hình) — chạy 1 bản mỗi node,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># app KHÔNG biết sự tồn tại của nó</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># INPUT:  tail /var/log/containers/*.log   (nơi runtime ghi stdout của mọi pod)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># FILTER: kubernetes (gắn pod name, namespace, labels vào mỗi dòng)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># OUTPUT: loki / elasticsearch / s3       (quyết định của platform team)</span>
+</span></span></code></pre></div><p>Trên cloud managed (EKS/GKE/Cloud Run), tầng này thường có sẵn (CloudWatch, Cloud Logging) — bạn ghi stdout là xong, đúng nghĩa &ldquo;việc của môi trường&rdquo;.</p>
+<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
+<p><strong>JSON vs text đẹp cho người đọc.</strong> JSON tối ưu cho máy, khó đọc bằng mắt ở terminal dev. Giải pháp phổ biến: handler theo config — dev dùng text/tint (đẹp, màu), staging/prod dùng JSON. Lưu ý đây là khác biệt <em>trình bày</em> chấp nhận được, nhưng đừng để hai handler khác nhau về <em>nội dung</em> (field nào có ở prod phải có ở dev — không thì bug về log chỉ lộ trên prod, vi phạm F10).</p>
+<p><strong>Log bao nhiêu là đủ?</strong> Log là chi phí thật: CPU serialize, băng thông, và tiền lưu trữ/index (các hãng log SaaS tính tiền theo GB — hệ thống log bừa bãi trả hóa đơn hàng chục nghìn USD/tháng là chuyện thường). Chiến lược: INFO cho sự kiện nghiệp vụ (một request một dòng tổng kết), DEBUG tắt ở prod và bật được qua config khi điều tra, ERROR phải <em>actionable</em> (có người đọc và làm gì đó). Cân nhắc sampling cho log lặp lại nhiều. Đừng dùng log thay metrics: &ldquo;đếm số request&rdquo; là việc của counter (rẻ), không phải của việc parse triệu dòng log (đắt) — chương 22.</p>
+<p><strong>Sync vs async ghi log.</strong> stdout mặc định là blocking — dưới tải cực cao, ghi log tranh chấp. Thực tế: với JSON handler của slog, chi phí ~vài trăm ns–µs mỗi dòng, không đáng lo với đa số. Nếu profile chỉ ra log là nút cổ chai: giảm lượng log trước (thường là nguyên nhân thật), rồi mới nghĩ đến buffered writer (và chấp nhận rủi ro mất vài dòng cuối khi crash).</p>
+<h2 id="6-best-practices">6. Best Practices<a hidden class="anchor" aria-hidden="true" href="#6-best-practices">#</a></h2>
+<ul>
+<li><code>slog.NewJSONHandler(os.Stdout)</code> + level từ env; <strong>không mở file, không rotate, không tự đẩy backend từ trong app</strong>.</li>
+<li>Mỗi request: một request ID (tôn trọng header từ upstream), logger-trong-context, một dòng tổng kết access log.</li>
+<li>Field chuẩn hóa toàn công ty: <code>level</code>, <code>msg</code>, <code>time</code>, <code>request_id</code>/<code>trace_id</code>, <code>service</code>, <code>version</code> — dashboard và alert viết một lần dùng cho mọi service.</li>
+<li><strong>Không log secret/PII</strong>: password, token, số thẻ, email thô — dùng masking helper; đây là quy định pháp lý (GDPR/PDPA), không chỉ là gu.</li>
+<li><code>stderr</code> cho chẩn đoán khởi động sớm (trước khi logger dựng xong); panic mặc định đã ra stderr — đừng nuốt.</li>
+<li>Alert đếm trên log ERROR có chọn lọc; log kèm <code>version</code> (buildinfo chương 6) để so sánh trước/sau deploy.</li>
+<li>Retention phân tầng: hot (7–30 ngày, index đầy đủ) / cold (S3, nén, vài năm cho audit).</li>
+</ul>
+<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
+<ul>
+<li><strong>Ghi log vào file trong container</strong> — mất khi pod chết, phá read-only filesystem, disk node đầy; mô hình cũ nguyên vẹn mọi nhược điểm.</li>
+<li><strong>App gọi thẳng Elasticsearch/Kafka để gửi log</strong> — coupling, backend log chậm kéo app chậm, mất log lúc crash; nếu tổ chức muốn log qua Kafka, đó là việc của agent, không phải của app.</li>
+<li><strong><code>fmt.Println</code> / <code>log.Printf</code> phi cấu trúc rải rác</strong> — không level, không field, không tắt được debug; nghìn dòng &ldquo;here 2&rdquo; của quá khứ.</li>
+<li><strong>Log câu văn thay vì dữ liệu</strong> (<code>&quot;User Nam vừa mua 3 món hết 150k&quot;</code>) — regex-hell cho người vận hành; chuyển thành field.</li>
+<li><strong>Nuốt error thay vì log</strong> (<code>_ = doSomething()</code>) hoặc <strong>log rồi ném tiếp cùng error ở mọi tầng</strong> — một lỗi in 5 lần, alert đếm 5 lần; quy tắc: log tại nơi <em>xử lý</em> error, các tầng giữa chỉ wrap (<code>fmt.Errorf(&quot;...: %w&quot;, err)</code>).</li>
+<li><strong>Log PII/secret</strong> — sự cố bảo mật qua đường log, nơi quyền đọc rộng nhất công ty.</li>
+<li><strong>Sidecar log cho từng pod khi node agent là đủ</strong> — nhân chi phí thu gom lên số pod thay vì số node, không thêm giá trị.</li>
+</ul>
+<h2 id="8-khi-nào-không-áp-dụng-đầy-đủ">8. Khi nào KHÔNG áp dụng đầy đủ<a hidden class="anchor" aria-hidden="true" href="#8-khi-nào-không-áp-dụng-đầy-đủ">#</a></h2>
+<ul>
+<li><strong>CLI tool</strong>: stdout là <em>output của chương trình</em>, log chẩn đoán đi stderr — đúng chuẩn Unix, đừng trộn (JSON log lẫn vào output mà user đang pipe là phá UX).</li>
+<li><strong>Desktop/mobile app</strong>: không có &ldquo;môi trường thu gom&rdquo; — ghi file local + cơ chế gửi báo cáo lỗi là đúng.</li>
+<li><strong>Embedded</strong>: có thể chỉ có serial/flash — hoàn cảnh quyết định.</li>
+<li><strong>Hệ legacy ghi file đang chạy ổn</strong>: không cần sửa app ngay — agent tail file cũng đạt 80% giá trị (log tập trung), sửa app ra stdout khi có dịp refactor.</li>
+</ul>
+<hr>
+<h2 id="tóm-tắt">Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt">#</a></h2>
+<ul>
+<li>Hợp đồng: <strong>app ghi event ra stdout — mọi thứ còn lại (thu gom, định tuyến, lưu, index) là việc của môi trường.</strong> App không biết log đi đâu là một <em>tính năng</em>.</li>
+<li>Chuẩn hiện đại: <strong>structured JSON logging</strong> (<code>log/slog</code>), level từ config, request_id/trace_id xuyên suốt qua context — log của 30 pod đọc như một câu chuyện có thể truy vấn.</li>
+<li>Log là chi phí: một dòng tổng kết mỗi request, DEBUG tắt ở prod, đừng dùng log làm metrics, retention phân tầng.</li>
+<li>Lỗi chí mạng cần nhớ: file trong container, app tự đẩy log đi backend, log secret/PII.</li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/twelve-factor/">Twelve-Factor</a></li>
+      <li><a href="http://localhost:1313/tags/cloud-native/">Cloud-Native</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/twelve-factor/15-factor-10-dev-prod-parity/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 15 — Factor 10: Dev/Prod Parity</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/twelve-factor/17-factor-12-admin-processes/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 17 — Factor 12: Admin Processes</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f&amp;title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;summary=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f&title=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 16 — Factor 11: Logs on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2016%20%e2%80%94%20Factor%2011%3a%20Logs&u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f16-factor-11-logs%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

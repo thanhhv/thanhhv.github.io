@@ -1,165 +1,561 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 17 — Factor 12: Admin Processes | Thanh HV's Blog</title>
-<meta name=keywords content="backend,twelve-factor,cloud-native"><meta name=description content="
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 17 — Factor 12: Admin Processes | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, twelve-factor, cloud-native">
+<meta name="description" content="
 &ldquo;Run admin/management tasks as one-off processes&rdquo; — Chạy tác vụ quản trị như các process một lần.
 Phần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Logs | Chương sau: Golang Patterns
 
 1. Problem Statement
-Ngoài dòng traffic chính, hệ thống nào cũng có tác vụ quản trị: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?"><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/twelve-factor/17-factor-12-admin-processes/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/twelve-factor/17-factor-12-admin-processes/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/twelve-factor/17-factor-12-admin-processes/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 17 — Factor 12: Admin Processes"><meta property="og:description" content=" “Run admin/management tasks as one-off processes” — Chạy tác vụ quản trị như các process một lần.
-Phần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Logs | Chương sau: Golang Patterns
-1. Problem Statement Ngoài dòng traffic chính, hệ thống nào cũng có tác vụ quản trị: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?"><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-10T18:00:00+07:00"><meta property="article:modified_time" content="2026-07-10T18:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Twelve-Factor"><meta property="article:tag" content="Cloud-Native"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 17 — Factor 12: Admin Processes"><meta name=twitter:description content="
-&ldquo;Run admin/management tasks as one-off processes&rdquo; — Chạy tác vụ quản trị như các process một lần.
-Phần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Logs | Chương sau: Golang Patterns
+Ngoài dòng traffic chính, hệ thống nào cũng có tác vụ quản trị: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/twelve-factor/17-factor-12-admin-processes/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/twelve-factor/17-factor-12-admin-processes/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Problem Statement
-Ngoài dòng traffic chính, hệ thống nào cũng có tác vụ quản trị: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"The Twelve-Factor App","item":"https://thanhhv.github.io/series/twelve-factor/"},{"@type":"ListItem","position":3,"name":"Chương 17 — Factor 12: Admin Processes","item":"https://thanhhv.github.io/series/twelve-factor/17-factor-12-admin-processes/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 17 — Factor 12: Admin Processes","name":"Chương 17 — Factor 12: Admin Processes","description":" \u0026ldquo;Run admin/management tasks as one-off processes\u0026rdquo; — Chạy tác vụ quản trị như các process một lần.\nPhần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Logs | Chương sau: Golang Patterns\n1. Problem Statement Ngoài dòng traffic chính, hệ thống nào cũng có tác vụ quản trị: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?\n","keywords":["backend","twelve-factor","cloud-native"],"articleBody":" “Run admin/management tasks as one-off processes” — Chạy tác vụ quản trị như các process một lần.\nPhần 2 – The Twelve Factors | Nhóm: Operable | Chương trước: Logs | Chương sau: Golang Patterns\n1. Problem Statement Ngoài dòng traffic chính, hệ thống nào cũng có tác vụ quản trị: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?\nCác cách làm sai kinh điển — và hậu quả:\nScript “cứu hỏa” viết vội trên máy dev, chạy thẳng vào DB production bằng Python trong khi app là Go: script dùng logic khác app (validate khác, encoding khác, timezone khác) → “sửa dữ liệu” tạo ra dữ liệu hỏng kiểu mới. Script không nằm trong Git, không review, không chạy lại được. SSH vào server production, mở psql gõ UPDATE tay — không transaction, không backup trước, gõ thiếu WHERE. Mọi DBA lâu năm đều có một câu chuyện kinh hoàng bắt đầu như thế. Cron đặt tay trên “server số 1” — tri thức nằm ngoài codebase (vi phạm F1), chết cùng server, và nhân bản khi scale (đã bàn ở F6). Migration chạy tự động trong main() của app — N pod đua nhau migrate (đã bàn ở F5). Mẫu số chung: tác vụ quản trị chạy với code khác, môi trường khác, kỷ luật khác so với app — trong khi nó đụng vào cùng một dữ liệu với quyền còn cao hơn.\n2. Tại sao nguyên lý này tồn tại Correctness: tác vụ quản trị thao tác dữ liệu thật với quyền lớn; nó cần cùng logic với app (cùng model, cùng validation, cùng serialization) — khác một ly là dữ liệu đi một dặm. Operational: sự cố cần được xử lý bằng công cụ lặp lại được, có dấu vết — “đã chạy script X phiên bản Y lúc Z, output đây” thay vì “hình như anh A có gõ gì đó tối qua”. Deployment: schema migration là một phần của release (F5) — nó phải đi qua cùng pipeline, cùng review, cùng rollback plan với code. Compliance/Security: truy cập production tùy tiện (SSH + psql) là thứ audit SOC2/ISO không bao giờ cho qua; one-off process qua nền tảng có RBAC + log là câu trả lời có kiểm soát. 3. Bản chất Nguyên tắc gói trong một câu:\nTác vụ quản trị là công dân hạng nhất của codebase: cùng code, cùng release, cùng config, cùng môi trường thực thi với app — chỉ khác ở chỗ chạy một lần rồi thoát.\nCụ thể hóa “cùng” theo từng factor đã học:\nCùng CODEBASE (F1): lệnh admin nằm trong repo, được review, có lịch sử Cùng RELEASE (F5): chạy từ CHÍNH image đã build — không phải script rời Cùng CONFIG (F3): đọc DATABASE_URL từ env như app — không hardcode DSN nào khác Cùng DEPENDENCIES (F2): image chứa mọi thứ cần — không \"máy tôi có psql\" Log ra stdout (F11): output được thu gom như mọi process khác Chạy như PROCESS (F6): sinh ra, làm việc, thoát — không sống lâu, không giữ stateHình dung đúng nhất: app của bạn có nhiều cách chạy — server (dài hạn, phục vụ), worker (dài hạn, tiêu thụ queue), và các one-off: migrate, backfill, cleanup. Tất cả là một binary từ một image, khác nhau ở subcommand.\nĐiều gì xảy ra nếu vi phạm? Hai hệ sinh thái logic song song hình thành: app một đằng, “đống script vận hành” một nẻo — trôi dạt dần theo thời gian, và một ngày script cũ 8 tháng chạy vào schema mới. Cộng thêm: không audit được ai đã làm gì với dữ liệu production.\n4. Cách áp dụng với Go 4.1. Một binary, nhiều subcommand // cmd/app/main.go — một entrypoint cho mọi vai package main import ( \"context\" \"fmt\" \"os\" ) func main() { if len(os.Args) \u003c 2 { fmt.Fprintln(os.Stderr, \"usage: app \") os.Exit(2) } cfg := config.MustLoad() // CÙNG config (F3) logger := logging.New(cfg.LogLevel) // CÙNG logging (F11) ctx := context.Background() var err error switch os.Args[1] { case \"server\": err = runServer(ctx, cfg, logger) // process dài hạn case \"worker\": err = runWorker(ctx, cfg, logger) // process dài hạn case \"migrate\": err = runMigrate(ctx, cfg, logger) // one-off (F12) case \"backfill-emails\": err = runBackfillEmails(ctx, cfg, logger) // one-off (F12) case \"cleanup-expired\": err = runCleanup(ctx, cfg, logger) // định kỳ — CronJob gọi (F12) default: fmt.Fprintf(os.Stderr, \"unknown command %q\\n\", os.Args[1]) os.Exit(2) } if err != nil { logger.Error(\"command failed\", \"cmd\", os.Args[1], \"err\", err) os.Exit(1) // exit code chuẩn — nền tảng biết job fail để retry/alert } } 4.2. Migration — embed vào binary, dùng chung mọi thứ với app // internal/migrate/migrate.go — golang-migrate với file SQL embed trong binary: // image TỰ CHỨA schema của chính nó (F2), không cần mount gì thêm package migrate import ( \"embed\" \"github.com/golang-migrate/migrate/v4\" _ \"github.com/golang-migrate/migrate/v4/database/postgres\" \"github.com/golang-migrate/migrate/v4/source/iofs\" ) //go:embed sql/*.sql var migrations embed.FS func Up(databaseURL string) error { src, err := iofs.New(migrations, \"sql\") if err != nil { return err } m, err := migrate.NewWithSourceInstance(\"iofs\", src, databaseURL) if err != nil { return err } defer m.Close() if err := m.Up(); err != nil \u0026\u0026 err != migrate.ErrNoChange { return err } return nil } 4.3. Backfill — mẫu one-off an toàn cho production Backfill (điền dữ liệu cho cột mới, sửa hàng loạt) là one-off nguy hiểm nhất. Mẫu an toàn tối thiểu:\nfunc runBackfillEmails(ctx context.Context, cfg *config.Config, log *slog.Logger) error { pool := mustConnect(ctx, cfg.DatabaseURL) defer pool.Close() dryRun := os.Getenv(\"DRY_RUN\") != \"false\" // ✅ mặc định DRY RUN — phá hoại phải opt-in const batchSize = 500 // ✅ theo lô nhỏ — không khóa bảng, không ăn hết IO var total int for { // ✅ idempotent: điều kiện WHERE tự loại hàng đã xử lý — // job chết giữa chừng (F9!) chạy lại là tiếp tục, không hỏng rows, err := selectBatch(ctx, pool, batchSize) // WHERE email_normalized IS NULL if err != nil { return err } if len(rows) == 0 { break } if dryRun { log.Info(\"DRY RUN: would update\", \"count\", len(rows), \"sample\", rows[0].ID) } else { if err := updateBatch(ctx, pool, rows); err != nil { return err } } total += len(rows) log.Info(\"progress\", \"processed\", total) // ✅ tiến độ ra stdout (F11) time.Sleep(100 * time.Millisecond) // ✅ nhường IO cho traffic thật } log.Info(\"backfill done\", \"total\", total, \"dry_run\", dryRun) return nil } 4.4. Kubernetes — Job cho one-off, CronJob thay crontab # Job: chạy backfill MỘT lần — cùng image, cùng secret với app apiVersion: batch/v1 kind: Job metadata: name: backfill-emails-20260708 # tên có ngày: dấu vết tự nhiên spec: backoffLimit: 0 # backfill fail → người xem xét, không tự retry mù ttlSecondsAfterFinished: 86400 template: spec: restartPolicy: Never containers: - name: backfill image: registry.example.com/myapp@sha256:... # CHÍNH image đang chạy prod args: [\"backfill-emails\"] env: [{ name: DRY_RUN, value: \"false\" }] envFrom: [{ secretRef: { name: myapp-secrets } }] # CÙNG config resources: requests: { cpu: 100m, memory: 128Mi } limits: { memory: 256Mi } --- # CronJob: thay thế crontab-trên-server-số-1 (giải bài toán F6 để lại) apiVersion: batch/v1 kind: CronJob metadata: name: cleanup-expired spec: schedule: \"0 3 * * *\" concurrencyPolicy: Forbid # lần trước chưa xong thì không chạy đè startingDeadlineSeconds: 3600 jobTemplate: spec: template: spec: restartPolicy: OnFailure containers: - name: cleanup image: registry.example.com/myapp@sha256:... args: [\"cleanup-expired\"] envFrom: [{ secretRef: { name: myapp-secrets } }] Còn nhu cầu “gõ lệnh thăm dò” (REPL của thế giới Rails/Django)? Go không có REPL, và thay thế đúng là: viết lệnh thăm dò thành subcommand read-only (app inspect-user ), hoặc truy vấn qua công cụ DB có kiểm soát quyền (read-only replica + SQL client có audit). kubectl exec vào pod app chỉ dành cho chẩn đoán khẩn cấp — và distroless image (chương 4) cố tình làm nó bất khả thi; dùng kubectl debug với ephemeral container khi thật sự cần.\n5. Trade-off Kỷ luật vs tốc độ lúc cứu hỏa. Đang sự cố, viết subcommand + build + deploy Job chậm hơn mở psql gõ UPDATE. Trung thực mà nói: đôi khi bạn sẽ gõ SQL tay lúc cháy nhà. Kỷ luật thực tế của tổ chức trưởng thành: (1) đường nóng có kiểm soát — bastion có audit log, transaction bắt buộc, hai người một màn hình; (2) sau sự cố, thao tác tay được chuyển thành subcommand có test — lần cháy sau đã có sẵn bình cứu hỏa; (3) pipeline đủ nhanh (build 5 phút) để con đường kỷ luật không quá đắt.\nJob trong release pipeline vs Job thủ công. Migration nên tự động trong pipeline (mọi release đều chạy, idempotent, ErrNoChange là bình thường). Backfill/sửa dữ liệu nên thủ công có chủ đích (người bấm nút, có dry-run trước) — tự động hóa thứ chạy đúng một lần không đáng rủi ro chạy nhầm.\nMột binary đa vai vs binary riêng cho tool. Một binary: đảm bảo “cùng release” tuyệt đối, image gọn (một cái). Giá: binary to hơn chút, và cẩn thận để lệnh phá hoại không bị gọi nhầm (subcommand rõ ràng, xác nhận, DRY_RUN mặc định). Với đa số team, một binary thắng.\n6. Best Practices Mọi tác vụ quản trị là subcommand trong repo — review, test (integration test cho migration/backfill trên testcontainers!), có lịch sử. Chạy từ đúng image của release đang chạy (pin digest); cùng env/secret với app qua envFrom. One-off nguy hiểm: DRY_RUN mặc định, batch nhỏ, idempotent, có tiến độ, có giới hạn tốc độ. Migration: tự động trong pipeline như release step (F5), forward-only + expand–contract; backfill: thủ công có chủ đích. CronJob: concurrencyPolicy: Forbid, job idempotent (K8s CronJob có thể chạy trùng/bỏ lỡ — thiết kế để chịu được). Exit code nghiêm túc (0/1) — hệ thống alert dựa vào Job status. Quyền chạy Job tách khỏi quyền sửa Deployment (RBAC) — ai được “bấm nút” là quyết định có chủ đích. 7. Anti-patterns SSH + psql gõ UPDATE tay trên production — không dấu vết, không lặp lại được, không lối thoát khi gõ nhầm; anti-pattern mẹ của factor này. Script vận hành bằng ngôn ngữ khác app, sống ngoài repo — logic trôi dạt khỏi app; “đúng hôm qua” không có nghĩa “đúng hôm nay”. Script hardcode DSN production — vừa vi phạm F3 vừa là quả bom: ai đó chạy nhầm từ máy dev là dữ liệu thật lãnh đủ. Migration trong main() app — N pod đua migrate; crash-loop toàn fleet khi migration fail (F5 đã mổ xẻ). Crontab trên một server cưng — chết cùng server, nhân bản khi scale, vô hình với codebase. kubectl exec vào pod chạy việc quản trị định kỳ — dùng nền tảng (Job/CronJob), không dùng đường chẩn đoán làm đường vận hành. Backfill một transaction ôm 10 triệu hàng — khóa bảng, đầy WAL, replica lag; luôn theo lô. 8. Khi nào KHÔNG cần áp dụng đầy đủ Hệ nhỏ một server: script bash cạnh app + cron trên server chấp nhận được — miễn script nằm trong repo và không hardcode secret. Hai điều đó không bao giờ có lý do bỏ. Thao tác thăm dò read-only: query replica qua BI/SQL tool là bình thường, không cần nghi thức Job — ranh giới là ghi. Tác vụ của DBA thuần hạ tầng (VACUUM, reindex, tuning): thuộc tầng vận hành database, theo quy trình của tầng đó — không phải mọi thứ chạm DB đều là “admin process của app”. Tóm tắt Tác vụ quản trị là công dân hạng nhất: cùng codebase, cùng image/release, cùng config, log ra stdout — chỉ khác là chạy một lần rồi thoát. Hình thái Go: một binary, nhiều subcommand (server/worker/migrate/backfill); migration embed trong binary, chạy như release step; one-off qua K8s Job; định kỳ qua CronJob thay crontab. One-off nguy hiểm cần nghi thức: DRY_RUN mặc định, batch nhỏ, idempotent, dấu vết đầy đủ. Thao tác tay lúc cứu hỏa là thực tế — tổ chức trưởng thành biến mỗi lần tay thành một subcommand cho lần sau. Hết Phần 2. Mười hai factor đã đi qua — và bạn có thể thấy chúng đan vào nhau chặt đến mức chương nào cũng phải tham chiếu chương khác. Phần 3 chuyển sang thực chiến kỹ thuật: Golang patterns cho ứng dụng 12-Factor.\n","wordCount":"2078","inLanguage":"en","datePublished":"2026-07-10T18:00:00+07:00","dateModified":"2026-07-10T18:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/twelve-factor/17-factor-12-admin-processes/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/twelve-factor/>The Twelve-Factor App</a></div><h1 class="post-title entry-hint-parent">Chương 17 — Factor 12: Admin Processes</h1><div class=post-meta><span title='2026-07-10 18:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;10 min</div></header><div class=post-content><blockquote><p><em>&ldquo;Run admin/management tasks as one-off processes&rdquo;</em> — Chạy tác vụ quản trị như các process một lần.</p><p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Operable</strong> | Chương trước: <a href=/series/twelve-factor/16-factor-11-logs/>Logs</a> | Chương sau: <a href=/series/twelve-factor/18-golang-patterns/>Golang Patterns</a></p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Ngoài dòng traffic chính, hệ thống nào cũng có <strong>tác vụ quản trị</strong>: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: <strong>các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?</strong></p><p>Các cách làm sai kinh điển — và hậu quả:</p><ul><li><strong>Script &ldquo;cứu hỏa&rdquo; viết vội trên máy dev, chạy thẳng vào DB production</strong> bằng Python trong khi app là Go: script dùng logic <em>khác</em> app (validate khác, encoding khác, timezone khác) → &ldquo;sửa dữ liệu&rdquo; tạo ra dữ liệu hỏng kiểu mới. Script không nằm trong Git, không review, không chạy lại được.</li><li><strong>SSH vào server production, mở psql gõ UPDATE tay</strong> — không transaction, không backup trước, gõ thiếu WHERE. Mọi DBA lâu năm đều có một câu chuyện kinh hoàng bắt đầu như thế.</li><li><strong>Cron đặt tay trên &ldquo;server số 1&rdquo;</strong> — tri thức nằm ngoài codebase (vi phạm F1), chết cùng server, và nhân bản khi scale (đã bàn ở F6).</li><li><strong>Migration chạy tự động trong <code>main()</code> của app</strong> — N pod đua nhau migrate (đã bàn ở F5).</li></ul><p>Mẫu số chung: tác vụ quản trị chạy với <strong>code khác, môi trường khác, kỷ luật khác</strong> so với app — trong khi nó đụng vào <em>cùng một dữ liệu</em> với quyền còn cao hơn.</p><h2 id=2-tại-sao-nguyên-lý-này-tồn-tại>2. Tại sao nguyên lý này tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-nguyên-lý-này-tồn-tại>#</a></h2><ul><li><strong>Correctness</strong>: tác vụ quản trị thao tác dữ liệu thật với quyền lớn; nó cần <em>cùng logic</em> với app (cùng model, cùng validation, cùng serialization) — khác một ly là dữ liệu đi một dặm.</li><li><strong>Operational</strong>: sự cố cần được xử lý bằng công cụ <em>lặp lại được, có dấu vết</em> — &ldquo;đã chạy script X phiên bản Y lúc Z, output đây&rdquo; thay vì &ldquo;hình như anh A có gõ gì đó tối qua&rdquo;.</li><li><strong>Deployment</strong>: schema migration là một phần của release (F5) — nó phải đi qua cùng pipeline, cùng review, cùng rollback plan với code.</li><li><strong>Compliance/Security</strong>: truy cập production tùy tiện (SSH + psql) là thứ audit SOC2/ISO không bao giờ cho qua; one-off process qua nền tảng có RBAC + log là câu trả lời có kiểm soát.</li></ul><h2 id=3-bản-chất>3. Bản chất<a hidden class=anchor aria-hidden=true href=#3-bản-chất>#</a></h2><p>Nguyên tắc gói trong một câu:</p><blockquote><p><strong>Tác vụ quản trị là công dân hạng nhất của codebase: cùng code, cùng release, cùng config, cùng môi trường thực thi với app — chỉ khác ở chỗ chạy một lần rồi thoát.</strong></p></blockquote><p>Cụ thể hóa &ldquo;cùng&rdquo; theo từng factor đã học:</p><pre tabindex=0><code>  Cùng CODEBASE (F1):  lệnh admin nằm trong repo, được review, có lịch sử
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/twelve-factor/">The Twelve-Factor App</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 17 — Factor 12: Admin Processes
+    </h1>
+    <div class="post-meta"><span title='2026-07-10 18:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p><em>&ldquo;Run admin/management tasks as one-off processes&rdquo;</em> — Chạy tác vụ quản trị như các process một lần.</p>
+<p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Operable</strong> | Chương trước: <a href="/series/twelve-factor/16-factor-11-logs/">Logs</a> | Chương sau: <a href="/series/twelve-factor/18-golang-patterns/">Golang Patterns</a></p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Ngoài dòng traffic chính, hệ thống nào cũng có <strong>tác vụ quản trị</strong>: database migration, backfill dữ liệu, sửa dữ liệu hỏng một lần, chạy lại job fail, script thống kê, xóa dữ liệu hết hạn theo lịch. Câu hỏi của factor này: <strong>các tác vụ đó chạy ở đâu, bằng code nào, với môi trường nào?</strong></p>
+<p>Các cách làm sai kinh điển — và hậu quả:</p>
+<ul>
+<li><strong>Script &ldquo;cứu hỏa&rdquo; viết vội trên máy dev, chạy thẳng vào DB production</strong> bằng Python trong khi app là Go: script dùng logic <em>khác</em> app (validate khác, encoding khác, timezone khác) → &ldquo;sửa dữ liệu&rdquo; tạo ra dữ liệu hỏng kiểu mới. Script không nằm trong Git, không review, không chạy lại được.</li>
+<li><strong>SSH vào server production, mở psql gõ UPDATE tay</strong> — không transaction, không backup trước, gõ thiếu WHERE. Mọi DBA lâu năm đều có một câu chuyện kinh hoàng bắt đầu như thế.</li>
+<li><strong>Cron đặt tay trên &ldquo;server số 1&rdquo;</strong> — tri thức nằm ngoài codebase (vi phạm F1), chết cùng server, và nhân bản khi scale (đã bàn ở F6).</li>
+<li><strong>Migration chạy tự động trong <code>main()</code> của app</strong> — N pod đua nhau migrate (đã bàn ở F5).</li>
+</ul>
+<p>Mẫu số chung: tác vụ quản trị chạy với <strong>code khác, môi trường khác, kỷ luật khác</strong> so với app — trong khi nó đụng vào <em>cùng một dữ liệu</em> với quyền còn cao hơn.</p>
+<h2 id="2-tại-sao-nguyên-lý-này-tồn-tại">2. Tại sao nguyên lý này tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-nguyên-lý-này-tồn-tại">#</a></h2>
+<ul>
+<li><strong>Correctness</strong>: tác vụ quản trị thao tác dữ liệu thật với quyền lớn; nó cần <em>cùng logic</em> với app (cùng model, cùng validation, cùng serialization) — khác một ly là dữ liệu đi một dặm.</li>
+<li><strong>Operational</strong>: sự cố cần được xử lý bằng công cụ <em>lặp lại được, có dấu vết</em> — &ldquo;đã chạy script X phiên bản Y lúc Z, output đây&rdquo; thay vì &ldquo;hình như anh A có gõ gì đó tối qua&rdquo;.</li>
+<li><strong>Deployment</strong>: schema migration là một phần của release (F5) — nó phải đi qua cùng pipeline, cùng review, cùng rollback plan với code.</li>
+<li><strong>Compliance/Security</strong>: truy cập production tùy tiện (SSH + psql) là thứ audit SOC2/ISO không bao giờ cho qua; one-off process qua nền tảng có RBAC + log là câu trả lời có kiểm soát.</li>
+</ul>
+<h2 id="3-bản-chất">3. Bản chất<a hidden class="anchor" aria-hidden="true" href="#3-bản-chất">#</a></h2>
+<p>Nguyên tắc gói trong một câu:</p>
+<blockquote>
+<p><strong>Tác vụ quản trị là công dân hạng nhất của codebase: cùng code, cùng release, cùng config, cùng môi trường thực thi với app — chỉ khác ở chỗ chạy một lần rồi thoát.</strong></p></blockquote>
+<p>Cụ thể hóa &ldquo;cùng&rdquo; theo từng factor đã học:</p>
+<pre tabindex="0"><code>  Cùng CODEBASE (F1):  lệnh admin nằm trong repo, được review, có lịch sử
   Cùng RELEASE  (F5):  chạy từ CHÍNH image đã build — không phải script rời
   Cùng CONFIG   (F3):  đọc DATABASE_URL từ env như app — không hardcode DSN nào khác
   Cùng DEPENDENCIES (F2): image chứa mọi thứ cần — không &#34;máy tôi có psql&#34;
   Log ra stdout (F11): output được thu gom như mọi process khác
-  Chạy như PROCESS (F6): sinh ra, làm việc, thoát — không sống lâu, không giữ state</code></pre><p>Hình dung đúng nhất: app của bạn có nhiều <em>cách chạy</em> — <code>server</code> (dài hạn, phục vụ), <code>worker</code> (dài hạn, tiêu thụ queue), và các <em>one-off</em>: <code>migrate</code>, <code>backfill</code>, <code>cleanup</code>. Tất cả là <strong>một binary từ một image</strong>, khác nhau ở subcommand.</p><p><strong>Điều gì xảy ra nếu vi phạm?</strong> Hai hệ sinh thái logic song song hình thành: app một đằng, &ldquo;đống script vận hành&rdquo; một nẻo — trôi dạt dần theo thời gian, và một ngày script cũ 8 tháng chạy vào schema mới. Cộng thêm: không audit được ai đã làm gì với dữ liệu production.</p><h2 id=4-cách-áp-dụng-với-go>4. Cách áp dụng với Go<a hidden class=anchor aria-hidden=true href=#4-cách-áp-dụng-với-go>#</a></h2><h3 id=41-một-binary-nhiều-subcommand>4.1. Một binary, nhiều subcommand<a hidden class=anchor aria-hidden=true href=#41-một-binary-nhiều-subcommand>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// cmd/app/main.go — một entrypoint cho mọi vai</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;context&#34;</span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;os&#34;</span>
-</span></span><span style=display:flex><span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Args</span>) &lt; <span style=color:#ae81ff>2</span> {
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Fprintln</span>(<span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Stderr</span>, <span style=color:#e6db74>&#34;usage: app &lt;server|worker|migrate|backfill-emails|cleanup-expired&gt;&#34;</span>)
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Exit</span>(<span style=color:#ae81ff>2</span>)
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>cfg</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>config</span>.<span style=color:#a6e22e>MustLoad</span>()          <span style=color:#75715e>// CÙNG config (F3)</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>logger</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>logging</span>.<span style=color:#a6e22e>New</span>(<span style=color:#a6e22e>cfg</span>.<span style=color:#a6e22e>LogLevel</span>) <span style=color:#75715e>// CÙNG logging (F11)</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>ctx</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>()
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>switch</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Args</span>[<span style=color:#ae81ff>1</span>] {
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#34;server&#34;</span>:
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>runServer</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>cfg</span>, <span style=color:#a6e22e>logger</span>)      <span style=color:#75715e>// process dài hạn</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#34;worker&#34;</span>:
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>runWorker</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>cfg</span>, <span style=color:#a6e22e>logger</span>)      <span style=color:#75715e>// process dài hạn</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#34;migrate&#34;</span>:
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>runMigrate</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>cfg</span>, <span style=color:#a6e22e>logger</span>)     <span style=color:#75715e>// one-off (F12)</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#34;backfill-emails&#34;</span>:
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>runBackfillEmails</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>cfg</span>, <span style=color:#a6e22e>logger</span>) <span style=color:#75715e>// one-off (F12)</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>case</span> <span style=color:#e6db74>&#34;cleanup-expired&#34;</span>:
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>runCleanup</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>cfg</span>, <span style=color:#a6e22e>logger</span>)     <span style=color:#75715e>// định kỳ — CronJob gọi (F12)</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>default</span>:
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Fprintf</span>(<span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Stderr</span>, <span style=color:#e6db74>&#34;unknown command %q\n&#34;</span>, <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Args</span>[<span style=color:#ae81ff>1</span>])
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Exit</span>(<span style=color:#ae81ff>2</span>)
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>logger</span>.<span style=color:#a6e22e>Error</span>(<span style=color:#e6db74>&#34;command failed&#34;</span>, <span style=color:#e6db74>&#34;cmd&#34;</span>, <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Args</span>[<span style=color:#ae81ff>1</span>], <span style=color:#e6db74>&#34;err&#34;</span>, <span style=color:#a6e22e>err</span>)
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Exit</span>(<span style=color:#ae81ff>1</span>) <span style=color:#75715e>// exit code chuẩn — nền tảng biết job fail để retry/alert</span>
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h3 id=42-migration--embed-vào-binary-dùng-chung-mọi-thứ-với-app>4.2. Migration — embed vào binary, dùng chung mọi thứ với app<a hidden class=anchor aria-hidden=true href=#42-migration--embed-vào-binary-dùng-chung-mọi-thứ-với-app>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/migrate/migrate.go — golang-migrate với file SQL embed trong binary:</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// image TỰ CHỨA schema của chính nó (F2), không cần mount gì thêm</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>migrate</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;embed&#34;</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;github.com/golang-migrate/migrate/v4&#34;</span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>_</span> <span style=color:#e6db74>&#34;github.com/golang-migrate/migrate/v4/database/postgres&#34;</span>
-</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;github.com/golang-migrate/migrate/v4/source/iofs&#34;</span>
-</span></span><span style=display:flex><span>)
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>//go:embed sql/*.sql</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>migrations</span> <span style=color:#a6e22e>embed</span>.<span style=color:#a6e22e>FS</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Up</span>(<span style=color:#a6e22e>databaseURL</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>src</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>iofs</span>.<span style=color:#a6e22e>New</span>(<span style=color:#a6e22e>migrations</span>, <span style=color:#e6db74>&#34;sql&#34;</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>m</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>migrate</span>.<span style=color:#a6e22e>NewWithSourceInstance</span>(<span style=color:#e6db74>&#34;iofs&#34;</span>, <span style=color:#a6e22e>src</span>, <span style=color:#a6e22e>databaseURL</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>Close</span>()
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>m</span>.<span style=color:#a6e22e>Up</span>(); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>migrate</span>.<span style=color:#a6e22e>ErrNoChange</span> {
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h3 id=43-backfill--mẫu-one-off-an-toàn-cho-production>4.3. Backfill — mẫu one-off an toàn cho production<a hidden class=anchor aria-hidden=true href=#43-backfill--mẫu-one-off-an-toàn-cho-production>#</a></h3><p>Backfill (điền dữ liệu cho cột mới, sửa hàng loạt) là one-off nguy hiểm nhất. Mẫu an toàn tối thiểu:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>runBackfillEmails</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>cfg</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>config</span>.<span style=color:#a6e22e>Config</span>, <span style=color:#a6e22e>log</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>slog</span>.<span style=color:#a6e22e>Logger</span>) <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>pool</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>mustConnect</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>cfg</span>.<span style=color:#a6e22e>DatabaseURL</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>pool</span>.<span style=color:#a6e22e>Close</span>()
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>dryRun</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>os</span>.<span style=color:#a6e22e>Getenv</span>(<span style=color:#e6db74>&#34;DRY_RUN&#34;</span>) <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#34;false&#34;</span> <span style=color:#75715e>// ✅ mặc định DRY RUN — phá hoại phải opt-in</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>batchSize</span> = <span style=color:#ae81ff>500</span>                      <span style=color:#75715e>// ✅ theo lô nhỏ — không khóa bảng, không ăn hết IO</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>total</span> <span style=color:#66d9ef>int</span>
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>for</span> {
-</span></span><span style=display:flex><span>		<span style=color:#75715e>// ✅ idempotent: điều kiện WHERE tự loại hàng đã xử lý —</span>
-</span></span><span style=display:flex><span>		<span style=color:#75715e>// job chết giữa chừng (F9!) chạy lại là tiếp tục, không hỏng</span>
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>rows</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>selectBatch</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>pool</span>, <span style=color:#a6e22e>batchSize</span>) <span style=color:#75715e>// WHERE email_normalized IS NULL</span>
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>			<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>
-</span></span><span style=display:flex><span>		}
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>rows</span>) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> {
-</span></span><span style=display:flex><span>			<span style=color:#66d9ef>break</span>
-</span></span><span style=display:flex><span>		}
-</span></span><span style=display:flex><span>		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>dryRun</span> {
-</span></span><span style=display:flex><span>			<span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Info</span>(<span style=color:#e6db74>&#34;DRY RUN: would update&#34;</span>, <span style=color:#e6db74>&#34;count&#34;</span>, len(<span style=color:#a6e22e>rows</span>), <span style=color:#e6db74>&#34;sample&#34;</span>, <span style=color:#a6e22e>rows</span>[<span style=color:#ae81ff>0</span>].<span style=color:#a6e22e>ID</span>)
-</span></span><span style=display:flex><span>		} <span style=color:#66d9ef>else</span> {
-</span></span><span style=display:flex><span>			<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>updateBatch</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>pool</span>, <span style=color:#a6e22e>rows</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>				<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>err</span>
-</span></span><span style=display:flex><span>			}
-</span></span><span style=display:flex><span>		}
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>total</span> <span style=color:#f92672>+=</span> len(<span style=color:#a6e22e>rows</span>)
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Info</span>(<span style=color:#e6db74>&#34;progress&#34;</span>, <span style=color:#e6db74>&#34;processed&#34;</span>, <span style=color:#a6e22e>total</span>) <span style=color:#75715e>// ✅ tiến độ ra stdout (F11)</span>
-</span></span><span style=display:flex><span>		<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Sleep</span>(<span style=color:#ae81ff>100</span> <span style=color:#f92672>*</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Millisecond</span>)       <span style=color:#75715e>// ✅ nhường IO cho traffic thật</span>
-</span></span><span style=display:flex><span>	}
-</span></span><span style=display:flex><span>	<span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Info</span>(<span style=color:#e6db74>&#34;backfill done&#34;</span>, <span style=color:#e6db74>&#34;total&#34;</span>, <span style=color:#a6e22e>total</span>, <span style=color:#e6db74>&#34;dry_run&#34;</span>, <span style=color:#a6e22e>dryRun</span>)
-</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h3 id=44-kubernetes--job-cho-one-off-cronjob-thay-crontab>4.4. Kubernetes — Job cho one-off, CronJob thay crontab<a hidden class=anchor aria-hidden=true href=#44-kubernetes--job-cho-one-off-cronjob-thay-crontab>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># Job: chạy backfill MỘT lần — cùng image, cùng secret với app</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>batch/v1</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Job</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>metadata</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>name: backfill-emails-20260708        # tên có ngày</span>: <span style=color:#ae81ff>dấu vết tự nhiên</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>backoffLimit</span>: <span style=color:#ae81ff>0</span>                       <span style=color:#75715e># backfill fail → người xem xét, không tự retry mù</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>ttlSecondsAfterFinished</span>: <span style=color:#ae81ff>86400</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>template</span>:
-</span></span><span style=display:flex><span>    <span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>      <span style=color:#f92672>restartPolicy</span>: <span style=color:#ae81ff>Never</span>
-</span></span><span style=display:flex><span>      <span style=color:#f92672>containers</span>:
-</span></span><span style=display:flex><span>        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>backfill</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>registry.example.com/myapp@sha256:...  </span> <span style=color:#75715e># CHÍNH image đang chạy prod</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>args</span>: [<span style=color:#e6db74>&#34;backfill-emails&#34;</span>]
-</span></span><span style=display:flex><span>          <span style=color:#f92672>env</span>: [{ <span style=color:#f92672>name: DRY_RUN, value</span>: <span style=color:#e6db74>&#34;false&#34;</span> }]
-</span></span><span style=display:flex><span>          <span style=color:#f92672>envFrom</span>: [{ <span style=color:#f92672>secretRef</span>: { <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-secrets } }] </span> <span style=color:#75715e># CÙNG config</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>resources</span>:
-</span></span><span style=display:flex><span>            <span style=color:#f92672>requests</span>: { <span style=color:#f92672>cpu: 100m, memory</span>: <span style=color:#ae81ff>128Mi }</span>
-</span></span><span style=display:flex><span>            <span style=color:#f92672>limits</span>: { <span style=color:#f92672>memory</span>: <span style=color:#ae81ff>256Mi }</span>
-</span></span><span style=display:flex><span>---
-</span></span><span style=display:flex><span><span style=color:#75715e># CronJob: thay thế crontab-trên-server-số-1 (giải bài toán F6 để lại)</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>batch/v1</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>kind</span>: <span style=color:#ae81ff>CronJob</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>metadata</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>cleanup-expired</span>
-</span></span><span style=display:flex><span><span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>  <span style=color:#f92672>schedule</span>: <span style=color:#e6db74>&#34;0 3 * * *&#34;</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>concurrencyPolicy</span>: <span style=color:#ae81ff>Forbid            </span> <span style=color:#75715e># lần trước chưa xong thì không chạy đè</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>startingDeadlineSeconds</span>: <span style=color:#ae81ff>3600</span>
-</span></span><span style=display:flex><span>  <span style=color:#f92672>jobTemplate</span>:
-</span></span><span style=display:flex><span>    <span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>      <span style=color:#f92672>template</span>:
-</span></span><span style=display:flex><span>        <span style=color:#f92672>spec</span>:
-</span></span><span style=display:flex><span>          <span style=color:#f92672>restartPolicy</span>: <span style=color:#ae81ff>OnFailure</span>
-</span></span><span style=display:flex><span>          <span style=color:#f92672>containers</span>:
-</span></span><span style=display:flex><span>            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>cleanup</span>
-</span></span><span style=display:flex><span>              <span style=color:#f92672>image</span>: <span style=color:#ae81ff>registry.example.com/myapp@sha256:...</span>
-</span></span><span style=display:flex><span>              <span style=color:#f92672>args</span>: [<span style=color:#e6db74>&#34;cleanup-expired&#34;</span>]
-</span></span><span style=display:flex><span>              <span style=color:#f92672>envFrom</span>: [{ <span style=color:#f92672>secretRef</span>: { <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-secrets } }]</span>
-</span></span></code></pre></div><p>Còn nhu cầu &ldquo;gõ lệnh thăm dò&rdquo; (REPL của thế giới Rails/Django)? Go không có REPL, và thay thế đúng là: viết lệnh thăm dò thành subcommand read-only (<code>app inspect-user &lt;id></code>), hoặc truy vấn qua công cụ DB có kiểm soát quyền (read-only replica + SQL client có audit). <code>kubectl exec</code> vào pod app chỉ dành cho chẩn đoán khẩn cấp — và distroless image (chương 4) cố tình làm nó bất khả thi; dùng <code>kubectl debug</code> với ephemeral container khi thật sự cần.</p><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><p><strong>Kỷ luật vs tốc độ lúc cứu hỏa.</strong> Đang sự cố, viết subcommand + build + deploy Job chậm hơn mở psql gõ UPDATE. Trung thực mà nói: đôi khi bạn <em>sẽ</em> gõ SQL tay lúc cháy nhà. Kỷ luật thực tế của tổ chức trưởng thành: (1) đường nóng có kiểm soát — bastion có audit log, transaction bắt buộc, hai người một màn hình; (2) <em>sau</em> sự cố, thao tác tay được chuyển thành subcommand có test — lần cháy sau đã có sẵn bình cứu hỏa; (3) pipeline đủ nhanh (build 5 phút) để con đường kỷ luật không quá đắt.</p><p><strong>Job trong release pipeline vs Job thủ công.</strong> Migration nên tự động trong pipeline (mọi release đều chạy, idempotent, <code>ErrNoChange</code> là bình thường). Backfill/sửa dữ liệu nên <strong>thủ công có chủ đích</strong> (người bấm nút, có dry-run trước) — tự động hóa thứ chạy đúng một lần không đáng rủi ro chạy nhầm.</p><p><strong>Một binary đa vai vs binary riêng cho tool.</strong> Một binary: đảm bảo &ldquo;cùng release&rdquo; tuyệt đối, image gọn (một cái). Giá: binary to hơn chút, và cẩn thận để lệnh phá hoại không bị gọi nhầm (subcommand rõ ràng, xác nhận, DRY_RUN mặc định). Với đa số team, một binary thắng.</p><h2 id=6-best-practices>6. Best Practices<a hidden class=anchor aria-hidden=true href=#6-best-practices>#</a></h2><ul><li>Mọi tác vụ quản trị là subcommand trong repo — review, test (integration test cho migration/backfill trên testcontainers!), có lịch sử.</li><li>Chạy từ <strong>đúng image của release đang chạy</strong> (pin digest); cùng env/secret với app qua <code>envFrom</code>.</li><li>One-off nguy hiểm: DRY_RUN mặc định, batch nhỏ, idempotent, có tiến độ, có giới hạn tốc độ.</li><li>Migration: tự động trong pipeline như release step (F5), forward-only + expand–contract; backfill: thủ công có chủ đích.</li><li>CronJob: <code>concurrencyPolicy: Forbid</code>, job idempotent (K8s CronJob có thể chạy trùng/bỏ lỡ — thiết kế để chịu được).</li><li>Exit code nghiêm túc (0/1) — hệ thống alert dựa vào Job status.</li><li>Quyền chạy Job tách khỏi quyền sửa Deployment (RBAC) — ai được &ldquo;bấm nút&rdquo; là quyết định có chủ đích.</li></ul><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li><strong>SSH + psql gõ UPDATE tay trên production</strong> — không dấu vết, không lặp lại được, không lối thoát khi gõ nhầm; anti-pattern mẹ của factor này.</li><li><strong>Script vận hành bằng ngôn ngữ khác app, sống ngoài repo</strong> — logic trôi dạt khỏi app; &ldquo;đúng hôm qua&rdquo; không có nghĩa &ldquo;đúng hôm nay&rdquo;.</li><li><strong>Script hardcode DSN production</strong> — vừa vi phạm F3 vừa là quả bom: ai đó chạy nhầm từ máy dev là dữ liệu thật lãnh đủ.</li><li><strong>Migration trong <code>main()</code> app</strong> — N pod đua migrate; crash-loop toàn fleet khi migration fail (F5 đã mổ xẻ).</li><li><strong>Crontab trên một server cưng</strong> — chết cùng server, nhân bản khi scale, vô hình với codebase.</li><li><strong><code>kubectl exec</code> vào pod chạy việc quản trị định kỳ</strong> — dùng nền tảng (Job/CronJob), không dùng đường chẩn đoán làm đường vận hành.</li><li><strong>Backfill một transaction ôm 10 triệu hàng</strong> — khóa bảng, đầy WAL, replica lag; luôn theo lô.</li></ul><h2 id=8-khi-nào-không-cần-áp-dụng-đầy-đủ>8. Khi nào KHÔNG cần áp dụng đầy đủ<a hidden class=anchor aria-hidden=true href=#8-khi-nào-không-cần-áp-dụng-đầy-đủ>#</a></h2><ul><li><strong>Hệ nhỏ một server</strong>: script bash cạnh app + cron trên server chấp nhận được — miễn script <strong>nằm trong repo</strong> và không hardcode secret. Hai điều đó không bao giờ có lý do bỏ.</li><li><strong>Thao tác thăm dò read-only</strong>: query replica qua BI/SQL tool là bình thường, không cần nghi thức Job — ranh giới là <em>ghi</em>.</li><li><strong>Tác vụ của DBA thuần hạ tầng</strong> (VACUUM, reindex, tuning): thuộc tầng vận hành database, theo quy trình của tầng đó — không phải mọi thứ chạm DB đều là &ldquo;admin process của app&rdquo;.</li></ul><hr><h2 id=tóm-tắt>Tóm tắt<a hidden class=anchor aria-hidden=true href=#tóm-tắt>#</a></h2><ul><li>Tác vụ quản trị là <strong>công dân hạng nhất</strong>: cùng codebase, cùng image/release, cùng config, log ra stdout — chỉ khác là chạy một lần rồi thoát.</li><li>Hình thái Go: <strong>một binary, nhiều subcommand</strong> (<code>server</code>/<code>worker</code>/<code>migrate</code>/<code>backfill</code>); migration embed trong binary, chạy như release step; one-off qua K8s Job; định kỳ qua CronJob thay crontab.</li><li>One-off nguy hiểm cần nghi thức: DRY_RUN mặc định, batch nhỏ, idempotent, dấu vết đầy đủ.</li><li>Thao tác tay lúc cứu hỏa là thực tế — tổ chức trưởng thành biến mỗi lần tay thành một subcommand cho lần sau.</li></ul><p><strong>Hết Phần 2.</strong> Mười hai factor đã đi qua — và bạn có thể thấy chúng đan vào nhau chặt đến mức chương nào cũng phải tham chiếu chương khác. Phần 3 chuyển sang thực chiến kỹ thuật: <a href=/series/twelve-factor/18-golang-patterns/>Golang patterns cho ứng dụng 12-Factor</a>.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/twelve-factor/>Twelve-Factor</a></li><li><a href=https://thanhhv.github.io/tags/cloud-native/>Cloud-Native</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/twelve-factor/16-factor-11-logs/><span class=title>« Prev</span><br><span>Chương 16 — Factor 11: Logs</span>
-</a><a class=next href=https://thanhhv.github.io/series/twelve-factor/18-golang-patterns/><span class=title>Next »</span><br><span>Chương 18 — Golang Patterns cho ứng dụng 12-Factor</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f&amp;title=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;summary=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f&title=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+  Chạy như PROCESS (F6): sinh ra, làm việc, thoát — không sống lâu, không giữ state</code></pre><p>Hình dung đúng nhất: app của bạn có nhiều <em>cách chạy</em> — <code>server</code> (dài hạn, phục vụ), <code>worker</code> (dài hạn, tiêu thụ queue), và các <em>one-off</em>: <code>migrate</code>, <code>backfill</code>, <code>cleanup</code>. Tất cả là <strong>một binary từ một image</strong>, khác nhau ở subcommand.</p>
+<p><strong>Điều gì xảy ra nếu vi phạm?</strong> Hai hệ sinh thái logic song song hình thành: app một đằng, &ldquo;đống script vận hành&rdquo; một nẻo — trôi dạt dần theo thời gian, và một ngày script cũ 8 tháng chạy vào schema mới. Cộng thêm: không audit được ai đã làm gì với dữ liệu production.</p>
+<h2 id="4-cách-áp-dụng-với-go">4. Cách áp dụng với Go<a hidden class="anchor" aria-hidden="true" href="#4-cách-áp-dụng-với-go">#</a></h2>
+<h3 id="41-một-binary-nhiều-subcommand">4.1. Một binary, nhiều subcommand<a hidden class="anchor" aria-hidden="true" href="#41-một-binary-nhiều-subcommand">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// cmd/app/main.go — một entrypoint cho mọi vai</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;os&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Args</span>) &lt; <span style="color:#ae81ff">2</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintln</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stderr</span>, <span style="color:#e6db74">&#34;usage: app &lt;server|worker|migrate|backfill-emails|cleanup-expired&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Exit</span>(<span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cfg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">MustLoad</span>()          <span style="color:#75715e">// CÙNG config (F3)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">logger</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">logging</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">cfg</span>.<span style="color:#a6e22e">LogLevel</span>) <span style="color:#75715e">// CÙNG logging (F11)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ctx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Args</span>[<span style="color:#ae81ff">1</span>] {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;server&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">runServer</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cfg</span>, <span style="color:#a6e22e">logger</span>)      <span style="color:#75715e">// process dài hạn</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;worker&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">runWorker</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cfg</span>, <span style="color:#a6e22e">logger</span>)      <span style="color:#75715e">// process dài hạn</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;migrate&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">runMigrate</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cfg</span>, <span style="color:#a6e22e">logger</span>)     <span style="color:#75715e">// one-off (F12)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;backfill-emails&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">runBackfillEmails</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cfg</span>, <span style="color:#a6e22e">logger</span>) <span style="color:#75715e">// one-off (F12)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;cleanup-expired&#34;</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">runCleanup</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cfg</span>, <span style="color:#a6e22e">logger</span>)     <span style="color:#75715e">// định kỳ — CronJob gọi (F12)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintf</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stderr</span>, <span style="color:#e6db74">&#34;unknown command %q\n&#34;</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Args</span>[<span style="color:#ae81ff">1</span>])
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Exit</span>(<span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#e6db74">&#34;command failed&#34;</span>, <span style="color:#e6db74">&#34;cmd&#34;</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Args</span>[<span style="color:#ae81ff">1</span>], <span style="color:#e6db74">&#34;err&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Exit</span>(<span style="color:#ae81ff">1</span>) <span style="color:#75715e">// exit code chuẩn — nền tảng biết job fail để retry/alert</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="42-migration--embed-vào-binary-dùng-chung-mọi-thứ-với-app">4.2. Migration — embed vào binary, dùng chung mọi thứ với app<a hidden class="anchor" aria-hidden="true" href="#42-migration--embed-vào-binary-dùng-chung-mọi-thứ-với-app">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/migrate/migrate.go — golang-migrate với file SQL embed trong binary:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// image TỰ CHỨA schema của chính nó (F2), không cần mount gì thêm</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">migrate</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;embed&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/golang-migrate/migrate/v4&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;github.com/golang-migrate/migrate/v4/database/postgres&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/golang-migrate/migrate/v4/source/iofs&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//go:embed sql/*.sql</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">migrations</span> <span style="color:#a6e22e">embed</span>.<span style="color:#a6e22e">FS</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Up</span>(<span style="color:#a6e22e">databaseURL</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">src</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">iofs</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">migrations</span>, <span style="color:#e6db74">&#34;sql&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">migrate</span>.<span style="color:#a6e22e">NewWithSourceInstance</span>(<span style="color:#e6db74">&#34;iofs&#34;</span>, <span style="color:#a6e22e">src</span>, <span style="color:#a6e22e">databaseURL</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">Up</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">migrate</span>.<span style="color:#a6e22e">ErrNoChange</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="43-backfill--mẫu-one-off-an-toàn-cho-production">4.3. Backfill — mẫu one-off an toàn cho production<a hidden class="anchor" aria-hidden="true" href="#43-backfill--mẫu-one-off-an-toàn-cho-production">#</a></h3>
+<p>Backfill (điền dữ liệu cho cột mới, sửa hàng loạt) là one-off nguy hiểm nhất. Mẫu an toàn tối thiểu:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">runBackfillEmails</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">cfg</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">Config</span>, <span style="color:#a6e22e">log</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">slog</span>.<span style="color:#a6e22e">Logger</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pool</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mustConnect</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cfg</span>.<span style="color:#a6e22e">DatabaseURL</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">pool</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">dryRun</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;DRY_RUN&#34;</span>) <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;false&#34;</span> <span style="color:#75715e">// ✅ mặc định DRY RUN — phá hoại phải opt-in</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">batchSize</span> = <span style="color:#ae81ff">500</span>                      <span style="color:#75715e">// ✅ theo lô nhỏ — không khóa bảng, không ăn hết IO</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">total</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// ✅ idempotent: điều kiện WHERE tự loại hàng đã xử lý —</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// job chết giữa chừng (F9!) chạy lại là tiếp tục, không hỏng</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">rows</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">selectBatch</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">pool</span>, <span style="color:#a6e22e">batchSize</span>) <span style="color:#75715e">// WHERE email_normalized IS NULL</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">rows</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">dryRun</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;DRY RUN: would update&#34;</span>, <span style="color:#e6db74">&#34;count&#34;</span>, len(<span style="color:#a6e22e">rows</span>), <span style="color:#e6db74">&#34;sample&#34;</span>, <span style="color:#a6e22e">rows</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">ID</span>)
+</span></span><span style="display:flex;"><span>		} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">updateBatch</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">pool</span>, <span style="color:#a6e22e">rows</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">total</span> <span style="color:#f92672">+=</span> len(<span style="color:#a6e22e">rows</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;progress&#34;</span>, <span style="color:#e6db74">&#34;processed&#34;</span>, <span style="color:#a6e22e">total</span>) <span style="color:#75715e">// ✅ tiến độ ra stdout (F11)</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">100</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)       <span style="color:#75715e">// ✅ nhường IO cho traffic thật</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;backfill done&#34;</span>, <span style="color:#e6db74">&#34;total&#34;</span>, <span style="color:#a6e22e">total</span>, <span style="color:#e6db74">&#34;dry_run&#34;</span>, <span style="color:#a6e22e">dryRun</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="44-kubernetes--job-cho-one-off-cronjob-thay-crontab">4.4. Kubernetes — Job cho one-off, CronJob thay crontab<a hidden class="anchor" aria-hidden="true" href="#44-kubernetes--job-cho-one-off-cronjob-thay-crontab">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># Job: chạy backfill MỘT lần — cùng image, cùng secret với app</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">batch/v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Job</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name: backfill-emails-20260708        # tên có ngày</span>: <span style="color:#ae81ff">dấu vết tự nhiên</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">backoffLimit</span>: <span style="color:#ae81ff">0</span>                       <span style="color:#75715e"># backfill fail → người xem xét, không tự retry mù</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">ttlSecondsAfterFinished</span>: <span style="color:#ae81ff">86400</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">template</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">Never</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">backfill</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.example.com/myapp@sha256:...  </span> <span style="color:#75715e"># CHÍNH image đang chạy prod</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">args</span>: [<span style="color:#e6db74">&#34;backfill-emails&#34;</span>]
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">env</span>: [{ <span style="color:#f92672">name: DRY_RUN, value</span>: <span style="color:#e6db74">&#34;false&#34;</span> }]
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">envFrom</span>: [{ <span style="color:#f92672">secretRef</span>: { <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-secrets } }] </span> <span style="color:#75715e"># CÙNG config</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">resources</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">requests</span>: { <span style="color:#f92672">cpu: 100m, memory</span>: <span style="color:#ae81ff">128Mi }</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">limits</span>: { <span style="color:#f92672">memory</span>: <span style="color:#ae81ff">256Mi }</span>
+</span></span><span style="display:flex;"><span>---
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># CronJob: thay thế crontab-trên-server-số-1 (giải bài toán F6 để lại)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">batch/v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">CronJob</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cleanup-expired</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">schedule</span>: <span style="color:#e6db74">&#34;0 3 * * *&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">concurrencyPolicy</span>: <span style="color:#ae81ff">Forbid            </span> <span style="color:#75715e"># lần trước chưa xong thì không chạy đè</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">startingDeadlineSeconds</span>: <span style="color:#ae81ff">3600</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">jobTemplate</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">template</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">spec</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">OnFailure</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">containers</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">cleanup</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.example.com/myapp@sha256:...</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">args</span>: [<span style="color:#e6db74">&#34;cleanup-expired&#34;</span>]
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">envFrom</span>: [{ <span style="color:#f92672">secretRef</span>: { <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-secrets } }]</span>
+</span></span></code></pre></div><p>Còn nhu cầu &ldquo;gõ lệnh thăm dò&rdquo; (REPL của thế giới Rails/Django)? Go không có REPL, và thay thế đúng là: viết lệnh thăm dò thành subcommand read-only (<code>app inspect-user &lt;id&gt;</code>), hoặc truy vấn qua công cụ DB có kiểm soát quyền (read-only replica + SQL client có audit). <code>kubectl exec</code> vào pod app chỉ dành cho chẩn đoán khẩn cấp — và distroless image (chương 4) cố tình làm nó bất khả thi; dùng <code>kubectl debug</code> với ephemeral container khi thật sự cần.</p>
+<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
+<p><strong>Kỷ luật vs tốc độ lúc cứu hỏa.</strong> Đang sự cố, viết subcommand + build + deploy Job chậm hơn mở psql gõ UPDATE. Trung thực mà nói: đôi khi bạn <em>sẽ</em> gõ SQL tay lúc cháy nhà. Kỷ luật thực tế của tổ chức trưởng thành: (1) đường nóng có kiểm soát — bastion có audit log, transaction bắt buộc, hai người một màn hình; (2) <em>sau</em> sự cố, thao tác tay được chuyển thành subcommand có test — lần cháy sau đã có sẵn bình cứu hỏa; (3) pipeline đủ nhanh (build 5 phút) để con đường kỷ luật không quá đắt.</p>
+<p><strong>Job trong release pipeline vs Job thủ công.</strong> Migration nên tự động trong pipeline (mọi release đều chạy, idempotent, <code>ErrNoChange</code> là bình thường). Backfill/sửa dữ liệu nên <strong>thủ công có chủ đích</strong> (người bấm nút, có dry-run trước) — tự động hóa thứ chạy đúng một lần không đáng rủi ro chạy nhầm.</p>
+<p><strong>Một binary đa vai vs binary riêng cho tool.</strong> Một binary: đảm bảo &ldquo;cùng release&rdquo; tuyệt đối, image gọn (một cái). Giá: binary to hơn chút, và cẩn thận để lệnh phá hoại không bị gọi nhầm (subcommand rõ ràng, xác nhận, DRY_RUN mặc định). Với đa số team, một binary thắng.</p>
+<h2 id="6-best-practices">6. Best Practices<a hidden class="anchor" aria-hidden="true" href="#6-best-practices">#</a></h2>
+<ul>
+<li>Mọi tác vụ quản trị là subcommand trong repo — review, test (integration test cho migration/backfill trên testcontainers!), có lịch sử.</li>
+<li>Chạy từ <strong>đúng image của release đang chạy</strong> (pin digest); cùng env/secret với app qua <code>envFrom</code>.</li>
+<li>One-off nguy hiểm: DRY_RUN mặc định, batch nhỏ, idempotent, có tiến độ, có giới hạn tốc độ.</li>
+<li>Migration: tự động trong pipeline như release step (F5), forward-only + expand–contract; backfill: thủ công có chủ đích.</li>
+<li>CronJob: <code>concurrencyPolicy: Forbid</code>, job idempotent (K8s CronJob có thể chạy trùng/bỏ lỡ — thiết kế để chịu được).</li>
+<li>Exit code nghiêm túc (0/1) — hệ thống alert dựa vào Job status.</li>
+<li>Quyền chạy Job tách khỏi quyền sửa Deployment (RBAC) — ai được &ldquo;bấm nút&rdquo; là quyết định có chủ đích.</li>
+</ul>
+<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
+<ul>
+<li><strong>SSH + psql gõ UPDATE tay trên production</strong> — không dấu vết, không lặp lại được, không lối thoát khi gõ nhầm; anti-pattern mẹ của factor này.</li>
+<li><strong>Script vận hành bằng ngôn ngữ khác app, sống ngoài repo</strong> — logic trôi dạt khỏi app; &ldquo;đúng hôm qua&rdquo; không có nghĩa &ldquo;đúng hôm nay&rdquo;.</li>
+<li><strong>Script hardcode DSN production</strong> — vừa vi phạm F3 vừa là quả bom: ai đó chạy nhầm từ máy dev là dữ liệu thật lãnh đủ.</li>
+<li><strong>Migration trong <code>main()</code> app</strong> — N pod đua migrate; crash-loop toàn fleet khi migration fail (F5 đã mổ xẻ).</li>
+<li><strong>Crontab trên một server cưng</strong> — chết cùng server, nhân bản khi scale, vô hình với codebase.</li>
+<li><strong><code>kubectl exec</code> vào pod chạy việc quản trị định kỳ</strong> — dùng nền tảng (Job/CronJob), không dùng đường chẩn đoán làm đường vận hành.</li>
+<li><strong>Backfill một transaction ôm 10 triệu hàng</strong> — khóa bảng, đầy WAL, replica lag; luôn theo lô.</li>
+</ul>
+<h2 id="8-khi-nào-không-cần-áp-dụng-đầy-đủ">8. Khi nào KHÔNG cần áp dụng đầy đủ<a hidden class="anchor" aria-hidden="true" href="#8-khi-nào-không-cần-áp-dụng-đầy-đủ">#</a></h2>
+<ul>
+<li><strong>Hệ nhỏ một server</strong>: script bash cạnh app + cron trên server chấp nhận được — miễn script <strong>nằm trong repo</strong> và không hardcode secret. Hai điều đó không bao giờ có lý do bỏ.</li>
+<li><strong>Thao tác thăm dò read-only</strong>: query replica qua BI/SQL tool là bình thường, không cần nghi thức Job — ranh giới là <em>ghi</em>.</li>
+<li><strong>Tác vụ của DBA thuần hạ tầng</strong> (VACUUM, reindex, tuning): thuộc tầng vận hành database, theo quy trình của tầng đó — không phải mọi thứ chạm DB đều là &ldquo;admin process của app&rdquo;.</li>
+</ul>
+<hr>
+<h2 id="tóm-tắt">Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt">#</a></h2>
+<ul>
+<li>Tác vụ quản trị là <strong>công dân hạng nhất</strong>: cùng codebase, cùng image/release, cùng config, log ra stdout — chỉ khác là chạy một lần rồi thoát.</li>
+<li>Hình thái Go: <strong>một binary, nhiều subcommand</strong> (<code>server</code>/<code>worker</code>/<code>migrate</code>/<code>backfill</code>); migration embed trong binary, chạy như release step; one-off qua K8s Job; định kỳ qua CronJob thay crontab.</li>
+<li>One-off nguy hiểm cần nghi thức: DRY_RUN mặc định, batch nhỏ, idempotent, dấu vết đầy đủ.</li>
+<li>Thao tác tay lúc cứu hỏa là thực tế — tổ chức trưởng thành biến mỗi lần tay thành một subcommand cho lần sau.</li>
+</ul>
+<p><strong>Hết Phần 2.</strong> Mười hai factor đã đi qua — và bạn có thể thấy chúng đan vào nhau chặt đến mức chương nào cũng phải tham chiếu chương khác. Phần 3 chuyển sang thực chiến kỹ thuật: <a href="/series/twelve-factor/18-golang-patterns/">Golang patterns cho ứng dụng 12-Factor</a>.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/twelve-factor/">Twelve-Factor</a></li>
+      <li><a href="http://localhost:1313/tags/cloud-native/">Cloud-Native</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/twelve-factor/16-factor-11-logs/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 16 — Factor 11: Logs</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/twelve-factor/18-golang-patterns/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 18 — Golang Patterns cho ứng dụng 12-Factor</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f&amp;title=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;summary=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f&title=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 17 — Factor 12: Admin Processes on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2017%20%e2%80%94%20Factor%2012%3a%20Admin%20Processes&u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f17-factor-12-admin-processes%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

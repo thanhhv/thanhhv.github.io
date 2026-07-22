@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="math, computer-science, algorithms">
+<meta name="description" content="
+Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 06 (Recurrence), Chương 13 (Divide and Conquer)
+
+1. Problem Statement
+Mỗi lần bạn gõ git diff, Git phải trả lời một câu hỏi nghe đơn giản: chuỗi thao tác thêm/xóa ngắn nhất để biến file cũ thành file mới là gì? Với hai file 1.000 dòng, số cách &ldquo;căn chỉnh&rdquo; hai file với nhau nhiều hơn số nguyên tử trong vũ trụ quan sát được. Vậy mà Git trả lời trong vài mili giây — không phải bằng phép màu, mà bằng một quan sát toán học: hàng tỷ tỷ cách căn chỉnh đó được lắp ráp từ một số lượng rất nhỏ các bài toán con phân biệt, mỗi bài chỉ cần giải đúng một lần.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/14-dynamic-programming/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/14-dynamic-programming/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính
+    </h1>
+    <div class="post-meta"><span title='2026-07-20 09:20:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;23 min
+
+</div>
+  </header> 
+  <div class="post-content"><blockquote>
+<p>Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 06 (Recurrence), Chương 13 (Divide and Conquer)</p></blockquote>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Mỗi lần bạn gõ <code>git diff</code>, Git phải trả lời một câu hỏi nghe đơn giản: <em>chuỗi thao tác thêm/xóa ngắn nhất để biến file cũ thành file mới là gì?</em> Với hai file 1.000 dòng, số cách &ldquo;căn chỉnh&rdquo; hai file với nhau nhiều hơn số nguyên tử trong vũ trụ quan sát được. Vậy mà Git trả lời trong vài mili giây — không phải bằng phép màu, mà bằng một quan sát toán học: hàng tỷ tỷ cách căn chỉnh đó được lắp ráp từ một số lượng <strong>rất nhỏ</strong> các bài toán con phân biệt, mỗi bài chỉ cần giải đúng một lần.</p>
+<p>Cùng câu chuyện đó lặp lại ở Elasticsearch khi sửa lỗi chính tả cho query, ở router tính đường đi Bellman-Ford, ở công cụ so trình tự DNA. Tên của kỹ thuật — <em>Dynamic Programming</em> — không giúp gì cho việc hiểu nó: Richard Bellman thú nhận đã chọn cái tên này thập niên 1950 chủ yếu vì nó nghe&hellip; vô hại, để Bộ trưởng Quốc phòng Mỹ (vốn dị ứng với từ &ldquo;research&rdquo;) không cắt ngân sách của ông. &ldquo;Programming&rdquo; ở đây nghĩa là <em>lập kế hoạch</em>, không phải viết code.</p>
+<p>Câu hỏi chương này trả lời:</p>
+<p><strong>Khi không gian lời giải bùng nổ theo cấp số nhân, làm sao nhận ra — và khai thác — việc nó thực chất chỉ được xây từ đa thức bài toán con?</strong></p>
+<p>Nếu không có DP, mọi bài toán tối ưu tổ hợp chỉ còn hai lựa chọn: duyệt toàn bộ (chết ở n ≈ 25, theo bảng ngưỡng chương 10) hoặc dùng heuristic không có bảo đảm gì. DP là cây cầu giữa &ldquo;đúng nhưng mũ&rdquo; và &ldquo;nhanh nhưng sai&rdquo;.</p>
+<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
+<h3 id="dp-không-phải-kỹ-thuật-bí-ẩn">DP không phải kỹ thuật bí ẩn<a hidden class="anchor" aria-hidden="true" href="#dp-không-phải-kỹ-thuật-bí-ẩn">#</a></h3>
+<p>Hãy phá bỏ hào quang trước: <strong>DP = đệ quy + ghi nhớ</strong>. Hết. Mọi thứ còn lại là kỹ nghệ.</p>
+<p>Xét Fibonacci đệ quy thuần — ví dụ nhàm nhưng không gì thay thế được, vì cây đệ quy của nó <em>nhìn thấy được</em> sự lãng phí:</p>
+<pre tabindex="0"><code>                        F(6)
+                 ┌───────┴───────┐
+               F(5)            F(4)
+            ┌───┴───┐        ┌──┴──┐
+          F(4)    F(3)     F(3)   F(2)
+         ┌─┴─┐   ┌─┴─┐    ┌─┴─┐
+       F(3) F(2) F(2) F(1) F(2) F(1)
+      ┌─┴─┐
+    F(2) F(1)      F(3) tính 3 lần, F(2) tính 5 lần...</code></pre><p>Cây có ~2ⁿ nút, nhưng đếm số bài toán <strong>phân biệt</strong>: chỉ có n+1 giá trị F(0)&hellip;F(n). Ta trả chi phí mũ cho lượng thông tin tuyến tính. Sự chênh lệch giữa <em>kích thước cây đệ quy</em> và <em>số bài toán con phân biệt</em> chính là thước đo mức lãng phí — và là dấu hiệu nhận biết DP số một.</p>
+<p>Sửa chữa hiển nhiên đến mức trẻ con nghĩ ra được: <strong>tính rồi thì ghi lại, lần sau tra sổ</strong>. Thêm một cái map, độ phức tạp rơi từ O(2ⁿ) xuống O(n). Không có insight thuật toán mới nào cả — chỉ là từ chối làm lại việc đã làm.</p>
+<h3 id="vì-sao-trực-giác-thường-thất-bại-ở-đây">Vì sao trực giác thường thất bại ở đây<a hidden class="anchor" aria-hidden="true" href="#vì-sao-trực-giác-thường-thất-bại-ở-đây">#</a></h3>
+<p>Nếu đơn giản vậy, sao DP nổi tiếng khó? Vì với Fibonacci, bài toán con lộ thiên (tham số n). Với bài toán thật, bài toán con <strong>ẩn</strong>: &ldquo;biến file A thành file B&rdquo; phải được nhìn ra là &ldquo;biến <em>tiền tố i</em> của A thành <em>tiền tố j</em> của B&rdquo; thì cấu trúc trùng lặp mới hiện hình. Nghệ thuật của DP không nằm ở cái map ghi nhớ — nó nằm ở việc <strong>định nghĩa bài toán con sao cho chúng ít, chồng lấn, và đủ thông tin</strong>. Đó là mục 4.</p>
+<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
+<p>DP đứng trên đúng hai chân. Thiếu một trong hai, nó sụp.</p>
+<h3 id="điều-kiện-1--overlapping-subproblems">Điều kiện 1 — Overlapping subproblems<a hidden class="anchor" aria-hidden="true" href="#điều-kiện-1--overlapping-subproblems">#</a></h3>
+<p>Cây đệ quy phải chứa <strong>cùng một bài toán con nhiều lần</strong>. Đây là điểm phân thủy với chương 13: merge sort chia mảng thành hai nửa <em>không giao nhau</em> — mỗi bài toán con xuất hiện đúng một lần, memoization không tiết kiệm được gì (cache miss 100%). D&amp;C và DP là hai nhánh của cùng cây quyết định:</p>
+<pre tabindex="0"><code>                  Bài toán chia được thành bài toán con?
+                    │
+        ┌───────────┴───────────┐
+   con ĐỘC LẬP, không lặp    con TRÙNG LẶP
+        │                       │
+   Divide &amp; Conquer      Dynamic Programming
+   (chương 13)           (chương này)</code></pre><h3 id="điều-kiện-2--optimal-substructure">Điều kiện 2 — Optimal substructure<a hidden class="anchor" aria-hidden="true" href="#điều-kiện-2--optimal-substructure">#</a></h3>
+<p>Định nghĩa chính xác: <em>lời giải tối ưu của bài toán chứa bên trong nó lời giải tối ưu của các bài toán con</em> — nói cách khác, nếu thay một mảnh của lời giải tối ưu bằng lời giải tốt hơn cho mảnh đó, tổng thể phải tốt lên. Điều này cho phép xây đáp án từ dưới lên mà không sợ &ldquo;quyết định đúng cục bộ, hỏng toàn cục&rdquo;.</p>
+<p>Nghe hiển nhiên? Nó <strong>không</strong> hiển nhiên — và ví dụ phản chứng sau đáng giá hơn mười ví dụ thuận:</p>
+<p><strong>Longest simple path không có optimal substructure.</strong> Shortest path có: nếu đường ngắn nhất A→C đi qua B, thì đoạn A→B của nó phải là đường ngắn nhất A→B (nếu không, thay bằng đường ngắn hơn là cải thiện được toàn cục — mâu thuẫn). Nhưng với đường đi <strong>đơn dài nhất</strong> (không lặp đỉnh), lập luận đó gãy:</p>
+<pre tabindex="0"><code>      A ──── B
+      │      │        Đường đơn dài nhất A→C: A–B–D–C (3 cạnh)
+      │      │        Đường đơn dài nhất A→B: A–D–C–B... cũng 3 cạnh,
+      D ──── C        nhưng nó ĐÃ DÙNG C và D — ghép tiếp B→C là vi phạm &#34;đơn&#34;.</code></pre><p>Vấn đề bản chất: ràng buộc &ldquo;không lặp đỉnh&rdquo; khiến các bài toán con <strong>không còn độc lập</strong> — lời giải của mảnh này tiêu thụ tài nguyên (đỉnh) của mảnh kia. Muốn mô tả bài toán con đầy đủ, state phải kèm theo <em>tập đỉnh đã dùng</em> — 2ⁿ state, và DP trở về đúng chi phí mũ của duyệt toàn bộ. Đây là lý do longest simple path là NP-hard trong khi shortest path (không chu trình âm) nằm gọn trong P. <strong>Ranh giới giữa hai bài toán trông giống hệt nhau là một tính chất toán học của cấu trúc bài toán con</strong> — không phải độ khéo của người giải.</p>
+<h3 id="nếu-không-có-khái-niệm-này-thì-sao">Nếu không có khái niệm này thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-khái-niệm-này-thì-sao">#</a></h3>
+<p>Không nhận diện được optimal substructure, bạn không biết bài toán trước mặt thuộc loại &ldquo;DP giải ngon trong O(n²)&rdquo; hay loại &ldquo;NP-hard, đi tìm approximation đi&rdquo;. Không nhận diện được overlapping subproblems, bạn viết đệ quy mũ cho bài toán đa thức (lỗi Fibonacci) hoặc dựng bảng DP vô ích cho bài toán mà D&amp;C/greedy rẻ hơn. Hai điều kiện này là <strong>bộ lọc chẩn đoán</strong>, không phải nghi thức giáo khoa.</p>
+<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
+<h3 id="state--nghệ-thuật-quan-trọng-nhất">State — nghệ thuật quan trọng nhất<a hidden class="anchor" aria-hidden="true" href="#state--nghệ-thuật-quan-trọng-nhất">#</a></h3>
+<p>Một bài DP được xác định hoàn toàn bởi định nghĩa <strong>state</strong>: bài toán con được tham số hóa bằng gì? Tiêu chuẩn vàng:</p>
+<blockquote>
+<p>State là <strong>lượng thông tin tối thiểu về quá khứ đủ để quyết định tối ưu phần còn lại</strong>.</p></blockquote>
+<p>Hai lỗi đối xứng nhau: state <em>thiếu</em> thông tin → recurrence không viết nổi hoặc cho đáp án sai (như longest simple path thiếu tập đỉnh đã dùng); state <em>thừa</em> thông tin → số state bùng nổ vô ích. Định nghĩa state đúng là 80% lời giải; recurrence sau đó thường tự viết ra chính nó.</p>
+<p>Người học Markov chain (chương 11) sẽ thấy quen: state DP chính là yêu cầu tính Markov — <em>tương lai chỉ phụ thuộc state hiện tại, không phụ thuộc con đường đi đến nó</em>.</p>
+<h3 id="quy-trình-4-bước">Quy trình 4 bước<a hidden class="anchor" aria-hidden="true" href="#quy-trình-4-bước">#</a></h3>
+<p>Mọi lời giải DP, từ Climbing Stairs đến sequence alignment trong bioinformatics, đi qua đúng bốn bước:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Bước</th>
+          <th>Câu hỏi</th>
+          <th>Ví dụ: Edit Distance</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>1. State</td>
+          <td>Bài toán con là gì? Tham số nào?</td>
+          <td>dp[i][j] = chi phí ít nhất biến a[:i] thành b[:j]</td>
+      </tr>
+      <tr>
+          <td>2. Recurrence</td>
+          <td>State lớn tính từ state nhỏ thế nào?</td>
+          <td>min của 3 lựa chọn (dưới đây)</td>
+      </tr>
+      <tr>
+          <td>3. Base case</td>
+          <td>State nhỏ nhất có đáp án hiển nhiên?</td>
+          <td>dp[i][0] = i, dp[0][j] = j</td>
+      </tr>
+      <tr>
+          <td>4. Thứ tự tính</td>
+          <td>Tính state nào trước để phụ thuộc luôn sẵn?</td>
+          <td>i tăng dần, j tăng dần</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="edit-distance--phân-tích-kỹ-vì-nó-là-nền-của-diff">Edit distance — phân tích kỹ, vì nó là nền của diff<a hidden class="anchor" aria-hidden="true" href="#edit-distance--phân-tích-kỹ-vì-nó-là-nền-của-diff">#</a></h3>
+<p>Cho hai chuỗi a, b. Ba thao tác: thêm, xóa, thay một ký tự. Tìm số thao tác ít nhất biến a thành b (khoảng cách Levenshtein).</p>
+<p><strong>Bước 1 — state.</strong> Suy luận từ nguyên lý, không từ trí nhớ: nhìn vào ký tự <strong>cuối</strong> của a và b. Mọi kịch bản biến đổi đều kết thúc bằng một trong số ít khả năng liên quan đến hai ký tự cuối này, và phần còn lại là bài toán <em>cùng dạng trên hai tiền tố</em>. Vậy tiền tố là tham số tự nhiên: dp[i][j] = khoảng cách giữa a[:i] và b[:j]. Số state: (m+1)(n+1) — đa thức, trong khi số cách biến đổi là mũ. Sự nén thông tin này chính là DP.</p>
+<p><strong>Bước 2 — recurrence.</strong> Xét a[i−1] và b[j−1] (ký tự cuối của hai tiền tố):</p>
+<blockquote>
+<p>Nếu a[i−1] == b[j−1]: dp[i][j] = dp[i−1][j−1] — hai ký tự cuối khớp, miễn phí.
+Nếu khác: dp[i][j] = 1 + min( dp[i−1][j],  dp[i][j−1],  dp[i−1][j−1] )
+xóa a[i−1]   thêm b[j−1]   thay a[i−1] thành b[j−1]</p></blockquote>
+<p>Ba nhánh là ba quyết định <em>cạn kiệt mọi khả năng</em> cho ký tự cuối — đó là cách kiểm tra recurrence đúng: mỗi lời giải tối ưu phải rơi vào đúng một nhánh, và mỗi nhánh quy về bài toán con thực sự nhỏ hơn.</p>
+<p><strong>Bước 3, 4 — base case và thứ tự.</strong> dp[i][0] = i (xóa sạch), dp[0][j] = j (thêm từ đầu). Mỗi ô cần ô trên, trái, chéo trên-trái → duyệt hàng từ trên xuống, trong hàng từ trái sang.</p>
+<pre tabindex="0"><code>        &#34;&#34;  s   i   t
+    &#34;&#34; [ 0  1   2   3 ]      a = &#34;kit&#34;, b = &#34;sit&#34;
+    k  [ 1  1   2   3 ]      dp[3][3] = 1: thay &#39;k&#39; → &#39;s&#39;
+    i  [ 2  2   1   2 ]      Đường truy vết từ góc phải-dưới
+    t  [ 3  3   2   1 ]      ngược về gốc = kịch bản diff</code></pre><p>Chi phí: Θ(mn) thời gian, và lưu ý đường <strong>truy vết</strong> (đi ngược từ dp[m][n] về dp[0][0], mỗi bước hỏi &ldquo;ô này đến từ nhánh nào?&rdquo;) chính là chuỗi thao tác — đó là output mà <code>git diff</code> cần, không phải con số. LCS (longest common subsequence) là anh em song sinh: cùng state, recurrence đổi min thành max và bỏ thao tác thay.</p>
+<h3 id="top-down-vs-bottom-up">Top-down vs Bottom-up<a hidden class="anchor" aria-hidden="true" href="#top-down-vs-bottom-up">#</a></h3>
+<p>Cùng một mô hình toán có hai cách thi công:</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>Top-down (memoization)</th>
+          <th>Bottom-up (tabulation)</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Cơ chế</td>
+          <td>Đệ quy tự nhiên + cache</td>
+          <td>Vòng lặp điền bảng theo thứ tự</td>
+      </tr>
+      <tr>
+          <td>Thứ tự tính</td>
+          <td>Tự động theo đệ quy — không cần nghĩ</td>
+          <td>Phải tự xác định (bước 4)</td>
+      </tr>
+      <tr>
+          <td>State không cần đến</td>
+          <td>Bỏ qua (lazy) — lợi khi bảng thưa</td>
+          <td>Tính hết, kể cả vô dụng</td>
+      </tr>
+      <tr>
+          <td>Rủi ro</td>
+          <td>Stack overflow khi độ sâu lớn; overhead gọi hàm</td>
+          <td>Không</td>
+      </tr>
+      <tr>
+          <td>Space optimization</td>
+          <td>Khó — cache giữ mọi thứ</td>
+          <td>Dễ — giữ 2 hàng, xem dưới</td>
+      </tr>
+  </tbody>
+</table>
+<p>Lời khuyên thực dụng: <strong>nghĩ bằng top-down, ship bằng bottom-up</strong>. Đệ quy + memo là cách nhanh nhất kiểm chứng state và recurrence đúng; bảng lặp là dạng nhanh, an toàn stack và tối ưu bộ nhớ được.</p>
+<h3 id="space-optimization--hai-hàng-thay-cả-bảng">Space optimization — hai hàng thay cả bảng<a hidden class="anchor" aria-hidden="true" href="#space-optimization--hai-hàng-thay-cả-bảng">#</a></h3>
+<p>Nhìn lại recurrence edit distance: dp[i][j] chỉ chạm tới hàng i và i−1. Vậy giữ cả bảng m×n làm gì? Hai hàng đủ:</p>
+<p>Θ(mn) bộ nhớ → <strong>Θ(min(m, n))</strong>. Với hai file 100k dòng: từ 40GB xuống 400KB — khác biệt giữa &ldquo;không chạy nổi&rdquo; và &ldquo;chạy trên điện thoại&rdquo;. Cái giá phải trả: mất bảng đầy đủ nghĩa là mất truy vết; nếu cần cả kịch bản diff lẫn tiết kiệm bộ nhớ, phải dùng kỹ thuật chia để trị của Hirschberg — một cú bắt tay đẹp giữa chương 13 và chương này.</p>
+<h3 id="mọi-dp-là-shortest-path-trên-một-dag-ngầm">Mọi DP là shortest path trên một DAG ngầm<a hidden class="anchor" aria-hidden="true" href="#mọi-dp-là-shortest-path-trên-một-dag-ngầm">#</a></h3>
+<p>Insight thống nhất, đáng mang theo suốt sự nghiệp: vẽ mỗi state là một đỉnh, mỗi lựa chọn trong recurrence là một cạnh có trọng số đi tới state nhỏ hơn. Vì state chỉ phụ thuộc state &ldquo;nhỏ hơn&rdquo;, đồ thị này <strong>không có chu trình</strong> — nó là DAG. Khi đó:</p>
+<blockquote>
+<p>Giải DP = tìm đường ngắn nhất (hoặc dài nhất) từ base case đến state đích trên DAG đó.
+&ldquo;Thứ tự tính&rdquo; của bước 4 = một thứ tự topo của DAG (chương 08).
+Truy vết lời giải = đi ngược cạnh trên đường tối ưu.</p></blockquote>
+<p>Góc nhìn này trả lời tại chỗ nhiều câu hỏi lắt léo: <em>vì sao DP không chạy được khi recurrence có vòng phụ thuộc lẫn nhau?</em> — DAG có chu trình thì không có thứ tự topo. <em>Vì sao longest path trên DAG thì DP được còn trên đồ thị thường thì không?</em> — chính là ví dụ phản chứng ở mục 3. Và nó nối DP vào chương 08: Bellman-Ford, dijkstra trên DAG, critical path trong scheduling — tất cả là một họ.</p>
+<h2 id="5-thuật-toán">5. Thuật toán<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán">#</a></h2>
+<h3 id="mẫu-1d--climbing-stairs-và-house-robber">Mẫu 1D — Climbing Stairs và House Robber<a hidden class="anchor" aria-hidden="true" href="#mẫu-1d--climbing-stairs-và-house-robber">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ClimbStairs: mỗi bước leo 1 hoặc 2 bậc, đếm số cách lên n bậc.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// State: dp[i] = số cách đến bậc i. Recurrence: dp[i] = dp[i-1] + dp[i-2]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// (bước cuối là 1 bậc hoặc 2 bậc — hai nhánh cạn kiệt, không giao nhau).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Chỉ cần 2 state gần nhất → O(1) bộ nhớ.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ClimbStairs</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">prev</span>, <span style="color:#a6e22e">cur</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span> <span style="color:#75715e">// dp[0], dp[1]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">2</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">prev</span>, <span style="color:#a6e22e">cur</span> = <span style="color:#a6e22e">cur</span>, <span style="color:#a6e22e">prev</span><span style="color:#f92672">+</span><span style="color:#a6e22e">cur</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">cur</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// HouseRobber: cướp dãy nhà, không được cướp 2 nhà kề nhau, tối đa hóa tiền.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// State: dp[i] = tiền tối đa xét đến nhà i.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Recurrence: dp[i] = max(dp[i-1], dp[i-2]+v[i]) — bỏ nhà i, hoặc cướp nhà i</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// (khi đó nhà i-1 bị cấm, phần còn lại là bài toán đến i-2).</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">HouseRobber</span>(<span style="color:#a6e22e">v</span> []<span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">skip</span>, <span style="color:#a6e22e">take</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span> <span style="color:#75715e">// dp[i-2], dp[i-1] sau mỗi vòng</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">x</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">v</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">skip</span>, <span style="color:#a6e22e">take</span> = <span style="color:#a6e22e">take</span>, max(<span style="color:#a6e22e">take</span>, <span style="color:#a6e22e">skip</span><span style="color:#f92672">+</span><span style="color:#a6e22e">x</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">take</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Hai bài &ldquo;dễ&rdquo; này chứa toàn bộ phương pháp: state là tiền tố, recurrence là phân tích cạn kiệt quyết định cuối cùng, và vì chỉ nhìn lại O(1) state, bộ nhớ là O(1).</p>
+<h3 id="knapsack-01--và-vì-sao-duyệt-ngược">Knapsack 0/1 — và vì sao duyệt ngược<a hidden class="anchor" aria-hidden="true" href="#knapsack-01--và-vì-sao-duyệt-ngược">#</a></h3>
+<p>Cho n món đồ (trọng lượng wᵢ, giá trị vᵢ), balo chứa tối đa W. Mỗi món lấy hoặc không. State đầy đủ: dp[i][w] = giá trị tối đa dùng <em>i món đầu</em> với sức chứa w. Recurrence: dp[i][w] = max(dp[i−1][w], dp[i−1][w−wᵢ] + vᵢ).</p>
+<p>Nén xuống một mảng 1D thì xuất hiện chi tiết kinh điển:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Knapsack01: dp[w] = giá trị tối đa với sức chứa w.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Knapsack01</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">v</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">W</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">dp</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">W</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">w</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// BẮT BUỘC duyệt w giảm dần: dp[x-w[i]] phải còn là giá trị</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// của &#34;vòng trước&#34; (chưa xét món i). Duyệt tăng dần thì</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// dp[x-w[i]] đã chứa món i → món i bị lấy 2 lần</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// → vô tình giải bài unbounded knapsack (và Coin Change thì</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// NGƯỢC LẠI: chính vì cho phép lặp nên duyệt tăng dần).</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">W</span>; <span style="color:#a6e22e">x</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">w</span>[<span style="color:#a6e22e">i</span>]; <span style="color:#a6e22e">x</span><span style="color:#f92672">--</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">dp</span>[<span style="color:#a6e22e">x</span>] = max(<span style="color:#a6e22e">dp</span>[<span style="color:#a6e22e">x</span>], <span style="color:#a6e22e">dp</span>[<span style="color:#a6e22e">x</span><span style="color:#f92672">-</span><span style="color:#a6e22e">w</span>[<span style="color:#a6e22e">i</span>]]<span style="color:#f92672">+</span><span style="color:#a6e22e">v</span>[<span style="color:#a6e22e">i</span>])
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">dp</span>[<span style="color:#a6e22e">W</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Chiều duyệt không phải quy ước tùy hứng — nó <strong>mã hóa ràng buộc &ldquo;mỗi món một lần&rdquo;</strong> vào thứ tự tính. Hiểu điều này là hiểu bước 4 của quy trình ở mức sâu: thứ tự tính là một phần của ngữ nghĩa, không chỉ là chi tiết thi công.</p>
+<p>Ghi chú lý thuyết đáng biết: knapsack chạy O(nW) trông như đa thức, nhưng W là <em>giá trị</em> của input, biểu diễn chỉ tốn log W bit — nên đây là <strong>pseudo-polynomial</strong>, và knapsack vẫn NP-hard. Điều đó không cản DP hữu dụng khi W nhỏ; nó chỉ nhắc ta W = 10¹⁸ thì DP bó tay.</p>
+<h3 id="interval-dp--mức-giới-thiệu">Interval DP — mức giới thiệu<a hidden class="anchor" aria-hidden="true" href="#interval-dp--mức-giới-thiệu">#</a></h3>
+<p>Khi bài toán diễn ra trên một <em>đoạn</em> và quyết định là &ldquo;cắt đoạn ở đâu&rdquo;, state tự nhiên là cặp đầu mút: dp[i][j] = đáp án cho đoạn [i, j], recurrence duyệt điểm cắt k ở giữa: dp[i][j] = min/max theo k của (dp[i][k] ⊕ dp[k][j] ⊕ chi phí ghép). Thứ tự tính: theo <strong>độ dài đoạn tăng dần</strong> — vì đoạn dài phụ thuộc đoạn ngắn. Chi phí điển hình O(n³). Các đại diện: Matrix Chain Multiplication, Burst Balloons (LeetCode 312), và — bất ngờ thú vị — chính PostgreSQL dùng DP dạng này (thuật toán System R) để chọn thứ tự join khi số bảng ≤ <code>geqo_threshold</code>: state là <em>tập con các bảng đã join</em>, một DP trên 2ⁿ state, chấp nhận được vì n thường ≤ 12.</p>
+<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
+<p><strong>DP vs D&amp;C vs Greedy — chọn theo cấu trúc, không theo mốt.</strong> D&amp;C khi bài toán con rời nhau; DP khi trùng lặp; greedy (chương 15) khi thậm chí không cần xét nhiều lựa chọn mỗi state. Đi từ mạnh về giả định đến yếu: greedy ⊂ DP ⊂ duyệt toàn bộ — mỗi bậc thang đổi tính tổng quát lấy tốc độ.</p>
+<p><strong>Thời gian đổi bộ nhớ — và giới hạn của nó.</strong> DP bản chất là cache: trả O(số state) bộ nhớ để khỏi trả O(mũ) thời gian. Nhưng khi số state tự nó là mũ (TSP bitmask: n·2ⁿ) thì DP chỉ đẩy lùi giới hạn từ n! xuống 2ⁿ — đáng giá (n = 20 khả thi thay vì n = 11, theo bảng chương 10) nhưng không phải phép màu.</p>
+<p><strong>Memoization vs tabulation.</strong> Bảng thưa (nhiều state không bao giờ cần) → top-down thắng vì lazy. Bảng đặc + cần space optimization hoặc hot path → bottom-up. Trong Go còn một lý do riêng: map cho memo chậm hơn slice hàng chục lần do hashing và cache miss; nếu state đánh số được liên tục, luôn dùng slice.</p>
+<p><strong>Độ chính xác đổi tốc độ.</strong> Khi state space quá lớn, người ta <em>làm thô</em> state: gộp các giá trị gần nhau, giữ top-k thay vì tất cả. Đó là bước từ DP chính xác sang approximate DP / beam search — nền của nhiều hệ thống ML và của FPTAS cho knapsack. Nhận thức &ldquo;DP chính xác không khả thi, nhưng cấu trúc DP vẫn dùng được&rdquo; là một trade-off trưởng thành.</p>
+<p><strong>Khi nào KHÔNG dùng DP?</strong> Khi greedy có chứng minh đúng (activity selection — chương 15) DP là lãng phí một bậc độ phức tạp; khi bài toán con không trùng lặp, memo chỉ tốn RAM vô ích; khi không có optimal substructure, DP cho <strong>đáp án sai</strong> chứ không chỉ chậm — tệ nhất trong ba loại thất bại.</p>
+<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
+<p><strong>Git diff / Myers algorithm.</strong> <code>git diff</code> giải đúng bài LCS/edit distance nhưng bằng thuật toán Myers (1986) — một biến thể chạy O((m+n)·d) với d là kích thước diff, thay vì Θ(mn). Cùng DAG ngầm (lưới i×j, cạnh chéo miễn phí khi hai dòng khớp), Myers khai thác việc <em>diff thực tế thường nhỏ</em>: lan sóng theo d tăng dần trên DAG — về bản chất là BFS/Dijkstra trên đồ thị state của DP, minh họa sống động cho insight &ldquo;DP = shortest path trên DAG&rdquo;. Chi tiết ở chương 27.</p>
+<p><strong>Fuzzy search trong Elasticsearch.</strong> Query <code>fuzziness: AUTO</code> tìm mọi term cách từ khóa ≤ k phép sửa. Chạy edit distance với <em>từng</em> term trong index thì chết; Lucene biên dịch trước bài DP thành <strong>Levenshtein automaton</strong> — một máy trạng thái hữu hạn nhận đúng các chuỗi trong bán kính k — rồi giao với trie của term dictionary. Bài học kiến trúc: khi một bài DP phải chạy hàng triệu lần với một tham số cố định, hãy <em>precompile</em> nó thành cấu trúc dữ liệu.</p>
+<p><strong>Bellman-Ford là DP.</strong> State: dp[k][v] = đường ngắn nhất từ nguồn đến v dùng ≤ k cạnh; recurrence: relax qua từng cạnh; k chạy đến n−1. Đây là DP giáo khoa trên đồ thị có thể có chu trình — trick là đưa &ldquo;số cạnh đã dùng&rdquo; vào state để ép ra DAG. Distance-vector routing (RIP) là Bellman-Ford phân tán: mỗi router giữ một hàng của bảng DP và trao đổi với hàng xóm.</p>
+<p><strong>Sequence alignment trong bioinformatics.</strong> Needleman–Wunsch (align toàn cục) và Smith–Waterman (align cục bộ) là edit distance với ma trận chi phí sinh học (thay thế acid amin này bằng acid kia rẻ hay đắt tùy hóa tính) và gap penalty. Toàn bộ ngành so sánh genome đứng trên đúng cái bảng dp[i][j] của mục 4 — cộng thêm heuristic (BLAST) để tránh điền cả bảng cho chuỗi hàng tỷ ký tự.</p>
+<p><strong>Kubernetes bin-packing.</strong> Xếp pod (CPU/memory request) vào node là bài bin packing — NP-hard, họ hàng trực hệ của knapsack. Scheduler của Kubernetes <em>không</em> chạy DP (không kịp ở quy mô nghìn node); nó dùng heuristic chấm điểm greedy như <code>MostAllocated</code> (dồn cho chặt — tiết kiệm node) hay <code>LeastAllocated</code> (trải cho đều). Hiểu gốc knapsack cho bạn hai điều: biết vì sao kết quả có thể suboptimal và cần descheduler dọn lại, và biết đọc các tham số scoring như một <em>hàm giá trị knapsack</em> được đơn giản hóa.</p>
+<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
+<p>DP là &ldquo;trùm cuối&rdquo; của phỏng vấn thuật toán — không vì nó khó nhất, mà vì nó phơi bày rõ nhất ai học cách tư duy và ai học thuộc 50 lời giải.</p>
+<p><strong>Climbing Stairs (LeetCode 70)</strong> — bài chào sân. Giá trị thật của nó: nhận ra đây là Fibonacci <em>mà không cần ai bảo</em>, bằng cách tự phân tích quyết định cuối cùng.</p>
+<p><strong>Coin Change (LeetCode 322)</strong> — dp[x] = số đồng ít nhất tạo tổng x; recurrence min qua mọi mệnh giá. Bài này quan trọng vì là <strong>bằng chứng buộc tội greedy</strong>: với hệ xu {1, 3, 4} và tổng 6, greedy cho 4+1+1 nhưng DP tìm ra 3+3 — cứ liệu chính cho mục &ldquo;nghi ngờ greedy&rdquo; của chương 15.</p>
+<p><strong>Longest Increasing Subsequence (LeetCode 300)</strong> — bài học hai tầng. Tầng 1: state dp[i] = độ dài LIS <em>kết thúc tại i</em>, recurrence O(n²). Tầng 2 — nơi ứng viên giỏi tách tốp: đổi state! Giữ mảng <code>tails[k]</code> = phần tử kết thúc <strong>nhỏ nhất</strong> của một increasing subsequence độ dài k+1; mảng này luôn sorted (chứng minh bằng exchange nhỏ), nên cập nhật bằng binary search → O(n log n). Bài học lớn: <em>một bài toán có nhiều cách định nghĩa state, và định nghĩa khôn hơn có thể đổi cả bậc độ phức tạp</em>.</p>
+<p><strong>Edit Distance (LeetCode 72)</strong> — chính là mục 4. Trong phỏng vấn, điểm ăn tiền không phải điền bảng đúng mà là <em>dẫn dắt được</em> vì sao state là cặp tiền tố và vì sao ba nhánh cạn kiệt mọi khả năng.</p>
+<p><strong>House Robber (LeetCode 198)</strong> — kiểm tra việc đưa <em>ràng buộc</em> (không kề nhau) vào recurrence thay vì vào state. Biến thể vòng tròn (213) kiểm tra tiếp: xử lý ràng buộc toàn cục bằng cách chạy DP hai lần với hai giả định.</p>
+<p><strong>Lỗi tư duy thường gặp:</strong></p>
+<ul>
+<li><strong>Học thuộc bảng thay vì học định nghĩa state.</strong> Thuộc lời giải Edit Distance nhưng gặp &ldquo;Delete Operation for Two Strings&rdquo; (583 — chỉ cho xóa) là gãy, dù chỉ cần bỏ một nhánh của recurrence. Antidote: với mỗi bài đã giải, tự trả lời &ldquo;state là gì, <em>vì sao</em> nó đủ?&rdquo; thay vì nhớ hình cái bảng.</li>
+<li><strong>Nhảy vào code trước khi phát biểu state bằng một câu tiếng Việt hoàn chỉnh.</strong> Nếu không viết được câu &ldquo;dp[i][j] là &hellip;&rdquo;, bạn chưa có lời giải — chỉ có hy vọng.</li>
+<li><strong>Lạm dụng DP khi greedy đủ.</strong> Non-overlapping Intervals giải được bằng DP O(n²) nhưng greedy O(n log n) đúng và có chứng minh — trình bày DP ở đây là <em>trừ điểm</em> về judgment. Quy tắc: trước khi dựng bảng, dành 60 giây hỏi &ldquo;có lựa chọn cục bộ nào luôn an toàn không?&rdquo; (chương 15).</li>
+<li><strong>Quên rằng người ta thường hỏi truy vết</strong>: &ldquo;in ra phương án&rdquo; đòi lưu quyết định hoặc đi ngược bảng — nếu đã space-optimize còn 2 hàng thì mất khả năng này, một trade-off phải nêu chủ động.</li>
+</ul>
+<p><strong>Cách phân tích thay vì học thuộc:</strong> (1) mô tả lời giải như <em>chuỗi quyết định</em>; (2) hỏi &ldquo;quyết định cuối cùng có những khả năng nào?&rdquo; — mỗi khả năng phải quy về bài toán cùng dạng nhỏ hơn; (3) hỏi &ldquo;để phần còn lại tự quyết được, nó cần biết gì về những quyết định đã qua?&rdquo; — đó là state; (4) đếm số state × chi phí mỗi state, so với ràng buộc đề bài; nếu vượt, tìm cách nén state (như LIS tầng 2).</p>
+<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
+<p><strong>DP như câu thần chú.</strong> &ldquo;Bài này chắc DP&rdquo; rồi dựng bảng 2D trước khi kiểm tra hai điều kiện. Nếu bài toán con không trùng lặp, bạn vừa viết một D&amp;C tốn RAM; nếu không có optimal substructure, bạn vừa viết một chương trình cho đáp án sai với vẻ ngoài tự tin. Luôn chẩn đoán trước, dựng bảng sau.</p>
+<p><strong>State thiếu — bug đáp-án-sai khó lường nhất.</strong> Ví dụ thật: tính chi phí rẻ nhất của chuỗi giao dịch có phí chuyển đổi trạng thái (đang giữ cổ phiếu hay không), nhưng state chỉ có ngày mà thiếu cờ &ldquo;đang giữ&rdquo; → recurrence buộc phải &ldquo;nhìn trộm&rdquo; quá khứ → sai. Triệu chứng: recurrence viết mãi không gọn, đầy case đặc biệt. Thuốc: quay lại câu hỏi &ldquo;phần còn lại cần biết <em>gì</em> về quá khứ?&rdquo;</p>
+<p><strong>Bảng đầy đủ khi 2 hàng là đủ — hoặc ngược lại.</strong> Giữ bảng m×n cho hai chuỗi dài rồi OOM trong production; hoặc space-optimize xong mới phát hiện cần truy vết phương án. Quyết định bộ nhớ phải đi <em>sau</em> quyết định output.</p>
+<p><strong>Memoization với key đắt.</strong> Dùng <code>map[string]int</code> với key là <code>fmt.Sprintf(&quot;%d-%d&quot;, i, j)</code> — mỗi lần tra memo tốn một lần cấp phát chuỗi + hash, hằng số nuốt luôn lợi ích. State số nguyên → slice phẳng <code>dp[i*n+j]</code>; struct nhỏ → <code>map[[2]int]int</code> cũng đã tốt hơn chuỗi nhiều lần.</p>
+<p><strong>Đệ quy sâu không giới hạn.</strong> Top-down trên chuỗi 10⁶ phần tử với recurrence dp[i] → dp[i−1] tạo chuỗi gọi sâu 10⁶ — goroutine stack của Go giãn được nhưng vẫn có trần, và mỗi frame tốn thật. Độ sâu tuyến tính với n lớn → chuyển bottom-up, vốn chỉ là một vòng for.</p>
+<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
+<p><strong>Nên:</strong></p>
+<ul>
+<li>Bắt đầu mọi bài bằng <strong>câu văn định nghĩa state</strong> hoàn chỉnh, viết ra được thành lời — đây là deliverable số một, code chỉ là phiên dịch.</li>
+<li>Kiểm chứng recurrence trên ví dụ 3–5 phần tử bằng tay trước khi code; base case kiểm tra riêng (chuỗi rỗng, một phần tử).</li>
+<li>Prototype top-down để xác nhận đúng, chuyển bottom-up khi cần hiệu năng/bộ nhớ; space-optimize là bước <em>cuối</em>, chỉ sau khi chốt có cần truy vết không.</li>
+<li>Ước lượng số state × chi phí chuyển trước khi code, đối chiếu bảng ngưỡng chương 10 — n ≤ 20 gợi ý state bitmask 2ⁿ; n ≈ 10³ cho phép bảng n²; n ≈ 10⁵ đòi state 1D với chuyển O(log n).</li>
+<li>Trong Go: state đánh số liên tục → slice thay map; khởi tạo giá trị &ldquo;chưa tính&rdquo; bằng sentinel rõ ràng (−1) thay vì zero value dễ nhầm với đáp án thật.</li>
+</ul>
+<p><strong>Không nên:</strong></p>
+<ul>
+<li>Không dựng bảng khi chưa trả lời được hai câu: bài toán con có trùng lặp không, optimal substructure có đứng vững không (thử tấn công nó như longest simple path).</li>
+<li>Không dùng DP khi greedy có chứng minh — và không dùng greedy khi chưa có (chương 15 nói tiếp).</li>
+<li>Không tin &ldquo;O(nW) là đa thức&rdquo; — pseudo-polynomial sẽ phản bội bạn khi W là số tiền tính bằng đồng.</li>
+</ul>
+<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
+<ol>
+<li>Vì sao shortest path có optimal substructure còn longest simple path thì không — và ràng buộc nào chính xác đã phá vỡ tính độc lập của các bài toán con?</li>
+<li>Trong knapsack 0/1 nén xuống mảng 1D, điều gì sai về mặt <em>ngữ nghĩa</em> nếu duyệt sức chứa tăng dần — và bài toán nào vô tình được giải thay?</li>
+<li>&ldquo;Mọi DP là shortest path trên một DAG ngầm&rdquo; — với Edit Distance, đỉnh, cạnh và trọng số của DAG đó là gì?</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-3-algorithm-mathematics/15-greedy/">15 — Greedy Algorithms</a>: DP xét mọi lựa chọn tại mỗi state — nhưng đôi khi có một lựa chọn luôn an toàn, và nếu chứng minh được điều đó, ta vứt cả bảng DP đi. Khi nào tham lam là đúng?</em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
+      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
+      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/13-divide-and-conquer/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 13 — Divide and Conquer: Sức mạnh của chia đôi</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/15-greedy/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 15 — Greedy Algorithms: Khi nào tham lam là đúng</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2014%20%e2%80%94%20Dynamic%20Programming%3a%20%c4%90%e1%bb%abng%20t%c3%adnh%20l%e1%ba%a1i%20th%e1%bb%a9%20%c4%91%c3%a3%20t%c3%adnh&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f&amp;title=Ch%c6%b0%c6%a1ng%2014%20%e2%80%94%20Dynamic%20Programming%3a%20%c4%90%e1%bb%abng%20t%c3%adnh%20l%e1%ba%a1i%20th%e1%bb%a9%20%c4%91%c3%a3%20t%c3%adnh&amp;summary=Ch%c6%b0%c6%a1ng%2014%20%e2%80%94%20Dynamic%20Programming%3a%20%c4%90%e1%bb%abng%20t%c3%adnh%20l%e1%ba%a1i%20th%e1%bb%a9%20%c4%91%c3%a3%20t%c3%adnh&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f&title=Ch%c6%b0%c6%a1ng%2014%20%e2%80%94%20Dynamic%20Programming%3a%20%c4%90%e1%bb%abng%20t%c3%adnh%20l%e1%ba%a1i%20th%e1%bb%a9%20%c4%91%c3%a3%20t%c3%adnh">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2014%20%e2%80%94%20Dynamic%20Programming%3a%20%c4%90%e1%bb%abng%20t%c3%adnh%20l%e1%ba%a1i%20th%e1%bb%a9%20%c4%91%c3%a3%20t%c3%adnh%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2014%20%e2%80%94%20Dynamic%20Programming%3a%20%c4%90%e1%bb%abng%20t%c3%adnh%20l%e1%ba%a1i%20th%e1%bb%a9%20%c4%91%c3%a3%20t%c3%adnh&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 14 — Dynamic Programming: Đừng tính lại thứ đã tính on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2014%20%e2%80%94%20Dynamic%20Programming%3a%20%c4%90%e1%bb%abng%20t%c3%adnh%20l%e1%ba%a1i%20th%e1%bb%a9%20%c4%91%c3%a3%20t%c3%adnh&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f14-dynamic-programming%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

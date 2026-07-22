@@ -1,20 +1,345 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 10: So sánh Communication Pattern và Framework quyết định | Thanh HV's Blog</title>
-<meta name=keywords content="backend,communication,api,architecture"><meta name=description content="← Chương trước | Mục lục | Chương sau →
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 10: So sánh Communication Pattern và Framework quyết định | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, communication, api, architecture">
+<meta name="description" content="← Chương trước | Mục lục | Chương sau →
 
 1. Problem Statement
 Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:
 
 &ldquo;Service A cần nói chuyện với Service B / với client. Dùng cái gì?&rdquo;
-Cách câu hỏi này thường bị trả lời sai trong thực tế:"><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 10: So sánh Communication Pattern và Framework quyết định"><meta property="og:description" content="← Chương trước | Mục lục | Chương sau →
-1. Problem Statement Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:
-“Service A cần nói chuyện với Service B / với client. Dùng cái gì?”
-Cách câu hỏi này thường bị trả lời sai trong thực tế:"><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-02-22T16:00:00+07:00"><meta property="article:modified_time" content="2026-02-22T16:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Communication"><meta property="article:tag" content="Api"><meta property="article:tag" content="Architecture"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 10: So sánh Communication Pattern và Framework quyết định"><meta name=twitter:description content="← Chương trước | Mục lục | Chương sau →
+Cách câu hỏi này thường bị trả lời sai trong thực tế:">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/backend-communication-architect/10-so-sanh-communication-pattern/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/backend-communication-architect/10-so-sanh-communication-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Problem Statement
-Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:
+    </style>
+</noscript>
+</head>
 
-&ldquo;Service A cần nói chuyện với Service B / với client. Dùng cái gì?&rdquo;
-Cách câu hỏi này thường bị trả lời sai trong thực tế:"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Backend Communication Architecture","item":"https://thanhhv.github.io/series/backend-communication-architect/"},{"@type":"ListItem","position":3,"name":"Chương 10: So sánh Communication Pattern và Framework quyết định","item":"https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 10: So sánh Communication Pattern và Framework quyết định","name":"Chương 10: So sánh Communication Pattern và Framework quyết định","description":"← Chương trước | Mục lục | Chương sau →\n1. Problem Statement Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:\n\u0026ldquo;Service A cần nói chuyện với Service B / với client. Dùng cái gì?\u0026rdquo;\nCách câu hỏi này thường bị trả lời sai trong thực tế:\n","keywords":["backend","communication","api","architecture"],"articleBody":"← Chương trước | Mục lục | Chương sau →\n1. Problem Statement Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:\n“Service A cần nói chuyện với Service B / với client. Dùng cái gì?”\nCách câu hỏi này thường bị trả lời sai trong thực tế:\nTheo trào lưu: “Netflix dùng gRPC nên mình dùng gRPC” — trong khi consumer của bạn là browser của khách hàng bên thứ ba. Theo quán tính: “Team mình biết REST nên mọi thứ là REST” — kể cả đường internal 50K req/s đang đốt 40% CPU vào JSON marshal. Theo cú pháp thay vì ngữ nghĩa: “WebSocket và SSE đều là realtime, chọn đại một cái” — bỏ qua việc một cái là hai chiều stateful, một cái là một chiều trên hạ tầng HTTP sẵn có. Theo một chiều của trade-off: “Kafka throughput cao nhất → dùng Kafka cho mọi giao tiếp” — kể cả chỗ cần câu trả lời trong 5ms. Luận điểm trung tâm của chương này: REST, GraphQL, gRPC, WebSocket, SSE, RabbitMQ, Kafka, NATS không phải là các công nghệ cạnh tranh trực tiếp. Chúng là các mô hình giao tiếp (communication model) khác nhau, mỗi mô hình được thiết kế để giải một lớp bài toán khác nhau trên các trục: latency, bandwidth, scalability, consistency, data model, và developer experience. So sánh “REST vs Kafka” cũng vô nghĩa như so sánh “ổ cứng vs dây mạng” — chúng nằm ở những vị trí khác nhau trong kiến trúc.\nCâu hỏi đúng không phải “công nghệ nào tốt nhất” mà là: “bài toán giao tiếp này có hình dạng gì?” — ai tiêu thụ, cần kết quả ngay hay chấp nhận trễ, một chiều hay hai chiều, dữ liệu có cần sống lại (replay) không, throughput cỡ nào, và team của tôi vận hành nổi cái gì. Chương này xây framework để trả lời câu hỏi đó một cách có kỷ luật.\n2. Tại sao cần một framework quyết định Hai lý do, cả hai đều là bài học trả giá bằng sự cố:\nThứ nhất, chi phí chọn sai là chi phí kiến trúc, không phải chi phí code. Chọn sai một thư viện thì refactor một tuần. Chọn sai communication model thì ngữ nghĩa sai lan ra toàn hệ thống: dùng Kafka làm request-response nghĩa là bạn tự chế timeout, correlation, backpressure ngược — những thứ RPC cho không; dùng REST polling thay cho stream nghĩa là bạn scale chi phí theo số lần hỏi thay vì số lần có tin. Những sai lầm này không lộ ra ở prototype — chúng lộ ra ở 100x tải, khi việc đổi model đồng nghĩa viết lại contract của hàng chục service.\nThứ hai, mỗi model là một tập trade-off đã được đóng gói sẵn. Ở các chương trước ta thấy: REST đổi hiệu năng lấy tính phổ quát và cache; gRPC đổi tính phổ quát lấy hiệu năng và type safety; GraphQL đổi độ phức tạp server lấy sự linh hoạt của client; message queue đổi tính tức thời lấy decoupling và độ bền; distributed log đổi latency và sự đơn giản lấy throughput, replay và fan-out. Không model nào thắng trên mọi trục — đó là định lý, không phải quan sát. Vì vậy quyết định đúng luôn bắt đầu từ ràng buộc của bài toán, và framework tồn tại để ép bạn liệt kê ràng buộc trước khi nhìn công nghệ.\n3. Bảng so sánh tổng hợp Quy ước: đánh giá tương đối giữa các cột, cho triển khai production điển hình. “Cao/Thấp” là so với các model còn lại, không phải tuyệt đối.\nTiêu chí REST GraphQL gRPC WebSocket SSE RabbitMQ Kafka NATS Communication Model Request-response, resource-based Request-response, query-based (client định hình data) RPC, contract-first Bidirectional message channel Server → client event stream Message broker (queue/routing) Distributed log (append + replay) Subject pub/sub (+ JetStream log-lite) Sync/Async Sync Sync (subscription: async) Sync (streaming: semi-async) Async, hai chiều Async, một chiều Async Async Async (request-reply: sync được) Request-Response Bản chất Bản chất Bản chất Tự chế trên message Không Có (RPC pattern, không tự nhiên) Anti-pattern Có, first-class Streaming Không (workaround: chunked/polling) Subscription (thường cưỡi WS/SSE) Có: unary/server/client/bidi Bản chất Server→client, bản chất Không đúng nghĩa (push liên tục per-consumer) Bản chất (consumer pull liên tục) Bản chất Performance (throughput/overhead) Trung bình (JSON, header lặp; HTTP/2 đỡ) Trung bình-thấp (resolver, parse query) Cao (protobuf, HTTP/2 multiplexing) Cao sau handshake (frame nhỏ) Trung bình-cao Trung bình (per-message state) Rất cao (batch, sequential IO, zero-copy) Rất cao (Core in-memory) Serialization JSON (phổ biến), tùy chọn JSON Protobuf (binary, schema bắt buộc) Tùy bạn (JSON/binary) Text (event stream format) Tùy bạn (AMQP chở byte) Tùy bạn (byte + Schema Registry) Tùy bạn (byte) Type Safety Yếu (OpenAPI bổ cứu, opt-in) Mạnh ở schema (SDL, codegen) Mạnh nhất (proto, codegen bắt buộc) Không có sẵn Không có sẵn Không có sẵn (schema tự quản) Không có sẵn (Registry bổ cứu) Không có sẵn Cache Xuất sắc (HTTP cache, CDN, ETag) Khó (POST, query đa dạng; persisted query bổ cứu) Khó (ít chuẩn hạ tầng) Không áp dụng Không áp dụng Không áp dụng Không (nhưng replay ≈ “cache” dữ liệu nguồn) Không áp dụng Browser Support Hoàn hảo Hoàn hảo Cần grpc-web + proxy Native Native (tự reconnect) Không trực tiếp (cần gateway) Không trực tiếp (cần gateway) Có qua WS bridge Mobile Tốt (đơn giản, cache) Tốt (giảm round-trip, tiết kiệm data) Tốt (pin/băng thông, codegen), phải tự quản connection Tốn pin nếu giữ connection Tốt cho feed một chiều Không trực tiếp Không trực tiếp Tốt cho IoT (client nhẹ) Internal Service Được nhưng lãng phí ở tải cao Sai công cụ (xem anti-pattern) Mặc định đúng Hiếm khi đúng Hiếm khi đúng Tốt (task, event) Tốt (event backbone) Tốt (control plane) Public API Mặc định đúng Tốt cho client đa dạng, cần kiểm soát chặt Khó (yêu cầu client đặc thù) Cho tính năng realtime Cho feed realtime Không Không (expose qua gateway nếu cần) Không Load Balancer thân thiện Hoàn hảo (stateless) Hoàn hảo Cần L7/client-side LB (HTTP/2 dồn connection) Khó (sticky, stateful, drain khi deploy) Trung bình (connection dài) N/A (broker tự phân phối) N/A (partition assignment) N/A (cluster tự route) Debug Dễ nhất (curl, đọc được bằng mắt) Trung bình (introspection tốt, lỗi resolver sâu) Trung bình (cần grpcurl, binary) Khó (state theo connection) Dễ (curl xem được stream) Trung bình (management UI tốt) Khó (offset, partition, lag, rebalance) Trung bình (CLI tốt) Monitoring Trưởng thành nhất (status code, RED chuẩn) Cần đo per-resolver (một endpoint, nghìn hình dạng) Tốt (interceptor, status code chuẩn) Tự xây (connection count, message rate) Tự xây, đơn giản hơn WS Tốt (queue depth, ack rate) Tốt nhưng nhiều chiều (lag, ISR, skew) Tốt, gọn Operational Complexity Thấp nhất Trung bình (server phức tạp: N+1, depth limit, cost) Trung bình (proxy, LB, codegen pipeline) Trung bình-cao (state, scale-out cần pub/sub sau lưng) Thấp-trung bình Trung bình (broker stateful) Cao (cluster, partition, capacity) Thấp Ba quan sát rút từ bảng, quan trọng hơn bản thân bảng:\nCột dọc không cộng điểm được. REST thắng ở cache + debug + LB + ops; Kafka thắng ở throughput + replay. Chúng thắng ở những hàng khác nhau vì phục vụ bài toán khác nhau — cộng tổng điểm là vô nghĩa. Hàng “Type Safety” và “Operational Complexity” thường bị bỏ qua nhất nhưng quyết định chi phí dài hạn nhất. Contract lỏng lẻo giết bạn ở tháng 18; ops phức tạp giết bạn ở lần on-call thứ ba. Nhóm 5 cột trái (API/realtime) và 3 cột phải (messaging) hiếm khi thay thế nhau — chúng kết hợp với nhau. Kiến trúc thật gần như luôn là tổ hợp: gRPC bên trong, REST ra ngoài, Kafka chở event, SSE đẩy xuống browser. 4. Decision Framework Trình tự câu hỏi dưới đây được sắp theo mức độ “khó đảo ngược” của hệ quả: consumer là ai quyết định nhiều nhất, team maturity là van an toàn cuối cùng.\nflowchart TD START([\"Bài toán giao tiếp mới\"]) --\u003e Q1{\"1. Consumer là ai?\"} Q1 --\u003e|\"Browser / đối tác public\"| Q2{\"2. Cần realtimeserver đẩy xuống?\"} Q1 --\u003e|\"Internal service\"| Q3{\"3. Cần kết quả NGAY(caller chờ) haychấp nhận async?\"} Q1 --\u003e|\"Thiết bị IoT / edge\"| IOT[\"MQTT / NATS ở edge+ Kafka ở tầng ingest\"] Q2 --\u003e|\"Không\"| Q2A{\"Client đa dạng,hình dạng data khác nhau,nhiều round-trip?\"} Q2A --\u003e|\"Không\"| REST[\"REST + OpenAPI(cache, CDN, DX phổ quát)\"] Q2A --\u003e|\"Có, và có teamlàm chủ GraphQL server\"| GQL[\"GraphQL(+ persisted query, cost limit)\"] Q2 --\u003e|\"Có\"| Q2B{\"Client có cần GỬIliên tục lên server không?(hai chiều thật sự)\"} Q2B --\u003e|\"Không — chỉ nhận(feed, notification, tick)\"| SSE[\"SSE(HTTP thuần, tự reconnect,qua được LB/proxy hiện có)\"] Q2B --\u003e|\"Có (chat, game,collab editing)\"| WS[\"WebSocket(+ pub/sub backendđể scale out)\"] Q3 --\u003e|\"Cần ngay (sync)\"| GRPC[\"gRPC(protobuf contract, streaming,deadline propagation)\"] Q3 --\u003e|\"Async được\"| Q4{\"4. Một consumer xử lýrồi XONG (task)?Hay NHIỀU consumer đọc,cần replay/audit?\"} Q4 --\u003e|\"Task: đúng một worker,routing/retry/delay/DLQ\"| MQ[\"RabbitMQ / SQS(work queue)\"] Q4 --\u003e|\"Event: nhiều reader,replay, backfill\"| Q5{\"5. Throughput?\"} Q5 --\u003e|\"≥ chục nghìn msg/s,retention dài, ecosystem\"| KAFKA[\"Kafka(distributed log)\"] Q5 --\u003e|\"Vừa phải, muốn ops nhẹ,hoặc control plane / edge\"| NATSJS[\"NATS JetStream(hoặc Redis Streamsnếu đã có Redis)\"] REST --\u003e Q6{\"6. Team vận hành nổi không?(kỹ năng, on-call, budget)\"} GQL --\u003e Q6 GRPC --\u003e Q6 WS --\u003e Q6 SSE --\u003e Q6 MQ --\u003e Q6 KAFKA --\u003e Q6 NATSJS --\u003e Q6 IOT --\u003e Q6 Q6 --\u003e|\"Không\"| FALLBACK[\"Lùi về phương án đơn giản hơngần nhất trên cùng nhánh —hoặc mua managed service.Kiến trúc đúng mà vận hành hỏng= kiến trúc sai.\"] Q6 --\u003e|\"Có\"| DONE([\"Chốt. Ghi ADR:ràng buộc → lựa chọn → trade-off chấp nhận\"]) Diễn giải từng câu hỏi — vì flowchart chỉ là bản nén của lập luận:\nConsumer là ai? Câu hỏi loại trừ mạnh nhất. Browser loại gRPC thuần (cần grpc-web + proxy) và loại kết nối trực tiếp vào broker. Đối tác public loại mọi thứ đòi client đặc thù. Internal service mở ra toàn bộ phổ lựa chọn. Thiết bị IoT (RAM ít, mạng chập chờn, NAT) đòi protocol nhẹ có QoS kiểu MQTT/NATS. Cần kết quả ngay hay chấp nhận async? Ranh giới lớn nhất về ngữ nghĩa. Caller chờ để làm gì tiếp → request-response (REST/GraphQL/gRPC). Caller chỉ cần bảo đảm việc sẽ được làm → messaging, và bạn nhận về decoupling + độ bền + hấp thụ tải đột biến, trả giá bằng eventual consistency và độ khó debug. Một chiều hay hai chiều? Trong nhánh realtime: chỉ server đẩy xuống → SSE (rẻ hơn hẳn về ops); hai chiều thật sự → WebSocket. Đảo lại cũng đúng: chọn WebSocket cho việc một chiều là mua độ phức tạp không dùng đến (xem anti-pattern 5). Task hay event? Cần replay/audit không? Message “tiêu thụ xong biến mất” (gửi email, resize ảnh) → queue. Message là dữ kiện nhiều bên đọc, đọc lại được để backfill/sửa bug/audit → log. Đây là ranh giới RabbitMQ/Kafka đã phân tích sâu ở Chương 8–9. Throughput cỡ nào? Đo hoặc ước lượng có căn cứ, cho 2–3 năm. Dưới vài nghìn msg/s, gần như mọi lựa chọn đều chạy — hãy chọn cái rẻ nhất để vận hành. Trên vài chục nghìn msg/s với retention, phổ lựa chọn co về Kafka (hoặc hệ nói Kafka protocol). Team maturity — van an toàn cuối. Công nghệ đúng mà team không vận hành nổi là công nghệ sai. Lối thoát luôn có hai cửa: lùi về phương án đơn giản hơn, hoặc giữ phương án và mua managed service. Điều duy nhất không được làm là tự vận hành nửa vời một hệ stateful phức tạp. 5. Khi nào nên dùng gì — theo scenario Mỗi scenario dưới đây trả lời hai câu: vì sao chọn và — quan trọng không kém — vì sao KHÔNG chọn các phương án còn lại.\n5.1. Public API cho đối tác → REST (+ OpenAPI) Vì sao REST: đối tác của bạn dùng mọi ngôn ngữ, mọi trình độ, mọi firewall. REST/JSON chạy được từ curl đến mainframe; HTTP cache + CDN giảm tải miễn phí; hạ tầng debug/monitoring/gateway/rate-limit cho REST trưởng thành hơn mọi thứ khác cộng lại. Với public API, tính phổ quát và độ ổn định của contract quan trọng hơn hiệu năng — bạn không kiểm soát client, nên hãy chọn thứ không đòi hỏi gì từ client.\nVì sao không: gRPC — bắt đối tác cài toolchain protobuf và xuyên proxy HTTP/2 là rào cản thương mại, không chỉ kỹ thuật. GraphQL — trao quyền query tùy ý cho client bên ngoài là trao luôn bề mặt tấn công (query độc, cost khó lường) và làm rate-limiting/billing theo “request” mất nghĩa; chỉ hợp lý khi bạn đầu tư nghiêm túc vào persisted query + cost analysis. Kafka/AMQP ra ngoài — expose broker cho bên thứ ba là ác mộng bảo mật và versioning; nếu đối tác cần event, dùng webhook (REST đảo chiều) hoặc gateway chuyên biệt.\n5.2. Dashboard realtime → SSE hoặc WebSocket (hoặc GraphQL Subscription) Vì sao SSE trước tiên: dashboard là dòng chảy một chiều — server có số liệu mới thì đẩy xuống. SSE chạy trên HTTP thuần: qua được LB, proxy, auth middleware hiện có; browser tự reconnect kèm Last-Event-ID; debug bằng curl. Chi phí vận hành thấp hơn WebSocket một bậc.\nKhi nào nâng lên WebSocket: client tương tác ngược liên tục (filter đẩy lên server theo từng thao tác, collaborative cursor) — tức hai chiều thật sự. GraphQL Subscription hợp lý khi hệ đã dùng GraphQL: client giữ một ngôn ngữ query duy nhất cho cả fetch lẫn stream (bên dưới nó vẫn cưỡi WS/SSE — bạn vẫn trả chi phí vận hành của tầng transport đó).\nVì sao không: REST polling — chi phí scale theo tần suất hỏi chứ không theo tần suất có tin: 10K dashboard × poll 2s = 5K req/s để chở phần lớn câu trả lời “chưa có gì mới”. Kafka trực tiếp xuống browser — không có client browser tử tế, không có mô hình auth per-user hợp lý; đúng bài là consumer phía server đọc Kafka rồi phân phối qua SSE/WS.\n5.3. Internal microservice, đường sync → gRPC Vì sao gRPC: bạn kiểm soát cả hai đầu — tính phổ quát của REST không mua được gì, còn cái giá của nó (JSON marshal, header lặp, contract lỏng) thì vẫn phải trả ở mọi request. gRPC cho protobuf (nhỏ, nhanh, schema bắt buộc + codegen đa ngôn ngữ → contract là code, lệch là fail lúc build chứ không phải 2 giờ sáng), HTTP/2 multiplexing, deadline propagation xuyên call-chain (điều REST phải tự chế) và streaming sẵn có.\nVì sao không: REST internal — chấp nhận được ở tải thấp, nhưng ở hàng chục nghìn req/s, chi phí JSON và thiếu deadline/streaming là tiền thật (xem anti-pattern 3). GraphQL service-to-service — xem anti-pattern 4. Message queue — nếu caller cần kết quả để đi tiếp thì bọc async chỉ là giả trang cho sync với latency và độ phức tạp cộng thêm. Lưu ý vận hành duy nhất phải nhớ: HTTP/2 dồn request vào ít connection → L4 LB mất tác dụng, cần L7 LB (Envoy/mesh) hoặc client-side LB ngay từ đầu.\n5.4. Analytics / clickstream pipeline → Kafka Vì sao Kafka: đúng nguyên bài toán mở đầu Chương 9 — hàng triệu event/s, nhiều consumer đọc cùng dữ liệu với tốc độ khác nhau, cần replay để backfill. Distributed log là mô hình đúng; Kafka là hiện thân trưởng thành nhất (ecosystem Connect/Flink/Debezium, kỹ năng thị trường).\nVì sao không: RabbitMQ — fan-out N consumer là N bản copy dữ liệu, backlog lớn đè chết broker giữ per-message state, không replay (chi tiết Chương 9 mục 6.3). REST/gRPC bắn thẳng vào warehouse — mất buffer hấp thụ tải, mất fan-out, mọi consumer hạ nguồn coupling trực tiếp vào producer. NATS Core — at-most-once, mất là mất; analytics cần bảo toàn dữ liệu.\n5.5. Notification (email, push, SMS) → RabbitMQ (hoặc SQS) Vì sao queue: notification là task: mỗi cái đúng một worker xử lý, cần retry có kiểm soát, DLQ cho cái hỏng, delay (“gửi sau 30 phút”), priority (OTP trước newsletter) — toàn bộ là ngữ nghĩa first-class của smart broker. Latency deliver per-message thấp, ops nhẹ hơn Kafka rõ rệt.\nVì sao không: Kafka — delay per-message và priority là thứ Kafka làm rất gượng (đắp topic-per-delay-bucket, tự viết scheduler); retention + replay chẳng để làm gì với task “gửi xong là xong”; bạn trả chi phí vận hành cụm log phân tán để mua những tính năng không dùng. Gọi provider trực tiếp bằng REST từ request path — provider chậm/hỏng kéo sập luồng chính của bạn; queue là tấm đệm cách ly đúng nghĩa.\n5.6. Video streaming → gRPC/WebSocket cho control plane + HLS/DASH qua CDN cho media Scenario này đáng một mục riêng vì nó minh họa nguyên lý tách control plane khỏi data plane — và vì “stream video qua WebSocket/gRPC” là ý tưởng nghe hợp lý một cách nguy hiểm.\nKiến trúc đúng: tín hiệu điều khiển (play/pause/seek, DRM license, analytics, adaptive bitrate signaling) đi qua gRPC/WebSocket/REST — nhỏ, cần latency thấp, stateful. Còn media bytes đi qua HLS/DASH: video cắt thành segment vài giây, phát qua HTTP GET tĩnh trên CDN.\nVì sao KHÔNG stream video qua gRPC/WebSocket cho end-user: (1) media chiếm \u003e99% băng thông — đẩy nó qua connection stateful nghĩa là server của bạn gánh toàn bộ băng thông đó, trong khi segment HTTP tĩnh được CDN cache ở edge: một segment phổ biến phát cho một triệu người mà origin trả bytes đúng một lần; (2) connection dài xuyên qua LB/proxy/mobile network mong manh — HTTP range request + retry per-segment tự phục hồi, còn đứt WebSocket là dựng lại state; (3) adaptive bitrate (client tự đổi độ phân giải theo mạng) là thiết kế gốc của HLS/DASH, tự chế trên gRPC là viết lại nửa giao thức. Ngoại lệ tồn tại và nên biết tên: WebRTC cho hội thoại hai chiều latency \u003c 500ms (video call) — một bài toán khác hẳn video-on-demand/live broadcast.\n5.7. IoT → MQTT/NATS ở edge + Kafka ở tầng ingest Vì sao kiến trúc hai tầng: thiết bị IoT có RAM tính bằng KB–MB, mạng chập chờn, nằm sau NAT. MQTT/NATS được thiết kế đúng cho điều đó: client footprint vài chục KB, QoS level, last-will message, broker/leaf node chạy được trên gateway ở hiện trường, hoạt động ngắt mạng rồi đồng bộ lại. Kafka client thì nặng, giao thức đòi kết nối tới nhiều broker, hoàn toàn sai cỡ cho thiết bị. Ngược lại ở trung tâm, khi 500K thiết bị đổ telemetry về, bạn cần đúng thứ Kafka giỏi: buffer khổng lồ, fan-out cho nhiều pipeline, replay. Bridge MQTT→Kafka (hoặc NATS leaf → JetStream → Kafka Connect) là pattern chuẩn ngành.\nVì sao không: Kafka đến tận thiết bị — sai footprint, sai mô hình mạng. Chỉ MQTT toàn hệ — broker MQTT không phải backbone phân tích: retention, partition parallelism, ecosystem xử lý stream đều thiếu. REST từ thiết bị — chi phí TLS handshake + header per-reading đắt gấp nhiều lần payload vài chục byte, và không có ngữ nghĩa offline-queue.\n6. Anti-pattern chung Một công nghệ cho mọi thứ (“golden hammer”). Tổ chức “all-in Kafka” bắt cả notification, RPC, config distribution chui qua log; tổ chức “all-in REST” polling nhau tới chết. Dấu hiệu nhận biết: nghe thấy câu “mình đã có X rồi, cứ dùng X” trong buổi design review mà không ai liệt kê ràng buộc của bài toán. Một hệ thống trưởng thành có 3–4 model cùng tồn tại, mỗi cái đúng chỗ — đó không phải là thiếu kỷ luật, đó là kỷ luật. Kafka làm request-response. Produce request vào topic A, block chờ reply trên topic B với correlation id. Bạn vừa tự chế: timeout semantics, mapping reply-về-đúng-instance (khi service scale ra N pod, reply partition rơi vào pod khác), cleanup khi caller chết. Latency = produce batch + fetch poll + produce reply + fetch poll — hàng chục ms cho việc gRPC làm trong 2ms. Nếu cần audit trail của request, log nó bên cạnh đường RPC, đừng biến log thành đường RPC. REST cho internal high-throughput. Đường nội bộ 50K req/s bằng JSON-over-HTTP/1.1: 30–40% CPU cho marshal/unmarshal, connection pool phình, không deadline propagation nên một dependency chậm rụng dây chuyền không kiểm soát. Đây là loại nợ âm thầm nhất vì nó chạy được — chỉ là đắt gấp ba và mong manh gấp đôi mức cần thiết. GraphQL cho service-to-service. Hai service backend nói chuyện qua GraphQL: bạn trả chi phí parse query, resolver indirection, và N+1 tiềm ẩn để mua sự linh hoạt “client tự chọn field” — thứ vô nghĩa khi cả hai đầu do một tổ chức kiểm soát và có thể định nghĩa contract chính xác bằng protobuf. GraphQL giải bài toán nhiều loại client bên ngoài với nhu cầu data khác nhau; giữa hai service, bài toán đó không tồn tại. WebSocket cho thứ SSE làm được. Feed một chiều (notification, price tick, progress bar) chạy WebSocket: bạn ôm vào sticky session, custom heartbeat, tự viết reconnect + resume, proxy/firewall traversal — để dùng đúng một nửa chiều của giao thức. SSE cho tất cả những thứ đó bằng hạ tầng HTTP sẵn có. Quy tắc: hai chiều thật sự mới WebSocket; còn lại SSE trước, nâng cấp khi bị chứng minh là thiếu. Chọn model theo benchmark thay vì theo ngữ nghĩa. “NATS 10 triệu msg/s” không liên quan khi bài toán của bạn cần durability mà NATS Core không hứa. Ngữ nghĩa (delivery guarantee, ordering, replay) là ràng buộc cứng; hiệu năng chỉ là ràng buộc khi đo được là thiếu. Thêm tầng messaging để “decouple” hai service vốn dĩ coupling về nghiệp vụ. Nếu A không thể hoàn thành việc của nó khi chưa biết kết quả từ B, chèn queue vào giữa không xóa được sự phụ thuộc — chỉ giấu nó sau một tầng latency và một chế độ hỏng hóc mới (message kẹt, DLQ đầy). Decoupling bằng hạ tầng chỉ có tác dụng khi nghiệp vụ đã cho phép async. 7. Khi nào KHÔNG cần framework này — và checklist cuối Nói thẳng cho đủ hai mặt: nếu hệ của bạn là một monolith với 5K user, hai service và một background job — REST + một work queue quản lý (SQS/RabbitMQ) là đủ, và việc dừng ở đó là quyết định kiến trúc tốt, không phải thiếu tầm nhìn. Framework này dành cho lúc ràng buộc thật xuất hiện: consumer đa dạng, throughput có số liệu, realtime có yêu cầu cụ thể. Đừng nhập khẩu độ phức tạp trước khi bài toán nhập khẩu nó cho bạn.\nChecklist — architect phải tự trả lời TRƯỚC khi chọn công nghệ Ghi câu trả lời vào ADR (Architecture Decision Record). Câu nào trả lời “chưa biết” thì đi tìm số liệu, đừng đoán.\nVề consumer và contract\nAi tiêu thụ: browser, mobile, internal service, thiết bị, đối tác bên ngoài? Tôi có kiểm soát được client không? Contract sẽ tiến hóa thế nào? Ai bị vỡ khi tôi đổi schema, và tôi phát hiện điều đó lúc build hay lúc runtime? Về ngữ nghĩa giao tiếp\nCaller có cần kết quả để đi tiếp không (sync), hay chỉ cần bảo đảm việc sẽ xảy ra (async)? Một chiều hay hai chiều? Nếu tôi nghĩ là hai chiều — chiều ngược lại có thật sự tồn tại hay chỉ là ACK? Delivery guarantee nào là ràng buộc nghiệp vụ: mất được không (at-most-once)? trùng được không (at-least-once + idempotency)? Ai trả tiền cho idempotency? Ordering cần ở phạm vi nào — toàn cục (nghi ngờ lại đi), per-aggregate, hay không cần? Có cần đọc lại quá khứ không: replay, backfill, audit, thêm consumer mới sau 6 tháng? Về tải và vận hành\nThroughput hiện tại và ước lượng 2–3 năm (số, không phải cảm giác)? Peak gấp mấy lần trung bình? Latency budget end-to-end là bao nhiêu, đo ở percentile nào? Team đã vận hành hệ stateful nào chưa? Ai on-call cho broker lúc 3 giờ sáng? Ngân sách managed service có không? Khi hệ này hỏng, blast radius là gì — và tôi sẽ nhìn thấy nó hỏng bằng metric nào ngay từ ngày đầu? Phương án đơn giản hơn gần nhất là gì, và chính xác thì nó thiếu điều kiện nào nên tôi mới phải phức tạp hơn? Câu cuối cùng là câu quan trọng nhất trong toàn bộ chương. Nếu bạn không nêu được điều kiện cụ thể mà phương án đơn giản hơn không thỏa mãn, bạn chưa có lý do để chọn phương án phức tạp — bạn chỉ đang có hứng thú với nó. Kiến trúc tốt không phải là chọn công nghệ mạnh nhất; là chọn công nghệ vừa đúng với hình dạng bài toán, rồi ghi lại lý do để người kế nhiệm (thường là chính bạn, 18 tháng sau) hiểu vì sao.\n← Chương trước | Mục lục | Chương sau →\n","wordCount":"4226","inLanguage":"en","datePublished":"2026-02-22T16:00:00+07:00","dateModified":"2026-02-22T16:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/backend-communication-architect/>Backend Communication Architecture</a></div><h1 class="post-title entry-hint-parent">Chương 10: So sánh Communication Pattern và Framework quyết định</h1><div class=post-meta><span title='2026-02-22 16:00:00 +0700 +07'>February 22, 2026</span>&nbsp;·&nbsp;20 min</div></header><div class=post-content><p><a href=/series/backend-communication-architect/09-event-streaming/>← Chương trước</a> | Mục lục | <a href=/series/backend-communication-architect/11-api-design/>Chương sau →</a></p><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:</p><blockquote><p>&ldquo;Service A cần nói chuyện với Service B / với client. Dùng cái gì?&rdquo;</p></blockquote><p>Cách câu hỏi này thường bị trả lời sai trong thực tế:</p><ul><li><strong>Theo trào lưu:</strong> &ldquo;Netflix dùng gRPC nên mình dùng gRPC&rdquo; — trong khi consumer của bạn là browser của khách hàng bên thứ ba.</li><li><strong>Theo quán tính:</strong> &ldquo;Team mình biết REST nên mọi thứ là REST&rdquo; — kể cả đường internal 50K req/s đang đốt 40% CPU vào JSON marshal.</li><li><strong>Theo cú pháp thay vì ngữ nghĩa:</strong> &ldquo;WebSocket và SSE đều là realtime, chọn đại một cái&rdquo; — bỏ qua việc một cái là hai chiều stateful, một cái là một chiều trên hạ tầng HTTP sẵn có.</li><li><strong>Theo một chiều của trade-off:</strong> &ldquo;Kafka throughput cao nhất → dùng Kafka cho mọi giao tiếp&rdquo; — kể cả chỗ cần câu trả lời trong 5ms.</li></ul><p><strong>Luận điểm trung tâm của chương này:</strong> REST, GraphQL, gRPC, WebSocket, SSE, RabbitMQ, Kafka, NATS <strong>không phải là các công nghệ cạnh tranh trực tiếp</strong>. Chúng là các <strong>mô hình giao tiếp (communication model)</strong> khác nhau, mỗi mô hình được thiết kế để giải một lớp bài toán khác nhau trên các trục: latency, bandwidth, scalability, consistency, data model, và developer experience. So sánh &ldquo;REST vs Kafka&rdquo; cũng vô nghĩa như so sánh &ldquo;ổ cứng vs dây mạng&rdquo; — chúng nằm ở những vị trí khác nhau trong kiến trúc.</p><p>Câu hỏi đúng không phải &ldquo;công nghệ nào tốt nhất&rdquo; mà là: <strong>&ldquo;bài toán giao tiếp này có hình dạng gì?&rdquo;</strong> — ai tiêu thụ, cần kết quả ngay hay chấp nhận trễ, một chiều hay hai chiều, dữ liệu có cần sống lại (replay) không, throughput cỡ nào, và team của tôi vận hành nổi cái gì. Chương này xây framework để trả lời câu hỏi đó một cách có kỷ luật.</p><h2 id=2-tại-sao-cần-một-framework-quyết-định>2. Tại sao cần một framework quyết định<a hidden class=anchor aria-hidden=true href=#2-tại-sao-cần-một-framework-quyết-định>#</a></h2><p>Hai lý do, cả hai đều là bài học trả giá bằng sự cố:</p><p><strong>Thứ nhất, chi phí chọn sai là chi phí kiến trúc, không phải chi phí code.</strong> Chọn sai một thư viện thì refactor một tuần. Chọn sai communication model thì ngữ nghĩa sai lan ra toàn hệ thống: dùng Kafka làm request-response nghĩa là bạn tự chế timeout, correlation, backpressure ngược — những thứ RPC cho không; dùng REST polling thay cho stream nghĩa là bạn scale chi phí theo <em>số lần hỏi</em> thay vì <em>số lần có tin</em>. Những sai lầm này không lộ ra ở prototype — chúng lộ ra ở 100x tải, khi việc đổi model đồng nghĩa viết lại contract của hàng chục service.</p><p><strong>Thứ hai, mỗi model là một tập trade-off đã được đóng gói sẵn.</strong> Ở các chương trước ta thấy: REST đổi hiệu năng lấy tính phổ quát và cache; gRPC đổi tính phổ quát lấy hiệu năng và type safety; GraphQL đổi độ phức tạp server lấy sự linh hoạt của client; message queue đổi tính tức thời lấy decoupling và độ bền; distributed log đổi latency và sự đơn giản lấy throughput, replay và fan-out. <strong>Không model nào thắng trên mọi trục — đó là định lý, không phải quan sát.</strong> Vì vậy quyết định đúng luôn bắt đầu từ ràng buộc của bài toán, và framework tồn tại để ép bạn liệt kê ràng buộc <em>trước khi</em> nhìn công nghệ.</p><h2 id=3-bảng-so-sánh-tổng-hợp>3. Bảng so sánh tổng hợp<a hidden class=anchor aria-hidden=true href=#3-bảng-so-sánh-tổng-hợp>#</a></h2><p>Quy ước: đánh giá tương đối giữa các cột, cho triển khai production điển hình. &ldquo;Cao/Thấp&rdquo; là so với các model còn lại, không phải tuyệt đối.</p><table><thead><tr><th>Tiêu chí</th><th>REST</th><th>GraphQL</th><th>gRPC</th><th>WebSocket</th><th>SSE</th><th>RabbitMQ</th><th>Kafka</th><th>NATS</th></tr></thead><tbody><tr><td><strong>Communication Model</strong></td><td>Request-response, resource-based</td><td>Request-response, query-based (client định hình data)</td><td>RPC, contract-first</td><td>Bidirectional message channel</td><td>Server → client event stream</td><td>Message broker (queue/routing)</td><td>Distributed log (append + replay)</td><td>Subject pub/sub (+ JetStream log-lite)</td></tr><tr><td><strong>Sync/Async</strong></td><td>Sync</td><td>Sync (subscription: async)</td><td>Sync (streaming: semi-async)</td><td>Async, hai chiều</td><td>Async, một chiều</td><td>Async</td><td>Async</td><td>Async (request-reply: sync được)</td></tr><tr><td><strong>Request-Response</strong></td><td>Bản chất</td><td>Bản chất</td><td>Bản chất</td><td>Tự chế trên message</td><td>Không</td><td>Có (RPC pattern, không tự nhiên)</td><td>Anti-pattern</td><td>Có, first-class</td></tr><tr><td><strong>Streaming</strong></td><td>Không (workaround: chunked/polling)</td><td>Subscription (thường cưỡi WS/SSE)</td><td>Có: unary/server/client/bidi</td><td>Bản chất</td><td>Server→client, bản chất</td><td>Không đúng nghĩa (push liên tục per-consumer)</td><td>Bản chất (consumer pull liên tục)</td><td>Bản chất</td></tr><tr><td><strong>Performance (throughput/overhead)</strong></td><td>Trung bình (JSON, header lặp; HTTP/2 đỡ)</td><td>Trung bình-thấp (resolver, parse query)</td><td>Cao (protobuf, HTTP/2 multiplexing)</td><td>Cao sau handshake (frame nhỏ)</td><td>Trung bình-cao</td><td>Trung bình (per-message state)</td><td>Rất cao (batch, sequential IO, zero-copy)</td><td>Rất cao (Core in-memory)</td></tr><tr><td><strong>Serialization</strong></td><td>JSON (phổ biến), tùy chọn</td><td>JSON</td><td>Protobuf (binary, schema bắt buộc)</td><td>Tùy bạn (JSON/binary)</td><td>Text (event stream format)</td><td>Tùy bạn (AMQP chở byte)</td><td>Tùy bạn (byte + Schema Registry)</td><td>Tùy bạn (byte)</td></tr><tr><td><strong>Type Safety</strong></td><td>Yếu (OpenAPI bổ cứu, opt-in)</td><td>Mạnh ở schema (SDL, codegen)</td><td>Mạnh nhất (proto, codegen bắt buộc)</td><td>Không có sẵn</td><td>Không có sẵn</td><td>Không có sẵn (schema tự quản)</td><td>Không có sẵn (Registry bổ cứu)</td><td>Không có sẵn</td></tr><tr><td><strong>Cache</strong></td><td>Xuất sắc (HTTP cache, CDN, ETag)</td><td>Khó (POST, query đa dạng; persisted query bổ cứu)</td><td>Khó (ít chuẩn hạ tầng)</td><td>Không áp dụng</td><td>Không áp dụng</td><td>Không áp dụng</td><td>Không (nhưng replay ≈ &ldquo;cache&rdquo; dữ liệu nguồn)</td><td>Không áp dụng</td></tr><tr><td><strong>Browser Support</strong></td><td>Hoàn hảo</td><td>Hoàn hảo</td><td>Cần grpc-web + proxy</td><td>Native</td><td>Native (tự reconnect)</td><td>Không trực tiếp (cần gateway)</td><td>Không trực tiếp (cần gateway)</td><td>Có qua WS bridge</td></tr><tr><td><strong>Mobile</strong></td><td>Tốt (đơn giản, cache)</td><td>Tốt (giảm round-trip, tiết kiệm data)</td><td>Tốt (pin/băng thông, codegen), phải tự quản connection</td><td>Tốn pin nếu giữ connection</td><td>Tốt cho feed một chiều</td><td>Không trực tiếp</td><td>Không trực tiếp</td><td>Tốt cho IoT (client nhẹ)</td></tr><tr><td><strong>Internal Service</strong></td><td>Được nhưng lãng phí ở tải cao</td><td>Sai công cụ (xem anti-pattern)</td><td>Mặc định đúng</td><td>Hiếm khi đúng</td><td>Hiếm khi đúng</td><td>Tốt (task, event)</td><td>Tốt (event backbone)</td><td>Tốt (control plane)</td></tr><tr><td><strong>Public API</strong></td><td>Mặc định đúng</td><td>Tốt cho client đa dạng, cần kiểm soát chặt</td><td>Khó (yêu cầu client đặc thù)</td><td>Cho tính năng realtime</td><td>Cho feed realtime</td><td>Không</td><td>Không (expose qua gateway nếu cần)</td><td>Không</td></tr><tr><td><strong>Load Balancer thân thiện</strong></td><td>Hoàn hảo (stateless)</td><td>Hoàn hảo</td><td>Cần L7/client-side LB (HTTP/2 dồn connection)</td><td>Khó (sticky, stateful, drain khi deploy)</td><td>Trung bình (connection dài)</td><td>N/A (broker tự phân phối)</td><td>N/A (partition assignment)</td><td>N/A (cluster tự route)</td></tr><tr><td><strong>Debug</strong></td><td>Dễ nhất (curl, đọc được bằng mắt)</td><td>Trung bình (introspection tốt, lỗi resolver sâu)</td><td>Trung bình (cần grpcurl, binary)</td><td>Khó (state theo connection)</td><td>Dễ (curl xem được stream)</td><td>Trung bình (management UI tốt)</td><td>Khó (offset, partition, lag, rebalance)</td><td>Trung bình (CLI tốt)</td></tr><tr><td><strong>Monitoring</strong></td><td>Trưởng thành nhất (status code, RED chuẩn)</td><td>Cần đo per-resolver (một endpoint, nghìn hình dạng)</td><td>Tốt (interceptor, status code chuẩn)</td><td>Tự xây (connection count, message rate)</td><td>Tự xây, đơn giản hơn WS</td><td>Tốt (queue depth, ack rate)</td><td>Tốt nhưng nhiều chiều (lag, ISR, skew)</td><td>Tốt, gọn</td></tr><tr><td><strong>Operational Complexity</strong></td><td>Thấp nhất</td><td>Trung bình (server phức tạp: N+1, depth limit, cost)</td><td>Trung bình (proxy, LB, codegen pipeline)</td><td>Trung bình-cao (state, scale-out cần pub/sub sau lưng)</td><td>Thấp-trung bình</td><td>Trung bình (broker stateful)</td><td>Cao (cluster, partition, capacity)</td><td>Thấp</td></tr></tbody></table><p>Ba quan sát rút từ bảng, quan trọng hơn bản thân bảng:</p><ol><li><strong>Cột dọc không cộng điểm được.</strong> REST thắng ở cache + debug + LB + ops; Kafka thắng ở throughput + replay. Chúng thắng ở những hàng <em>khác nhau vì phục vụ bài toán khác nhau</em> — cộng tổng điểm là vô nghĩa.</li><li><strong>Hàng &ldquo;Type Safety&rdquo; và &ldquo;Operational Complexity&rdquo; thường bị bỏ qua nhất nhưng quyết định chi phí dài hạn nhất.</strong> Contract lỏng lẻo giết bạn ở tháng 18; ops phức tạp giết bạn ở lần on-call thứ ba.</li><li><strong>Nhóm 5 cột trái (API/realtime) và 3 cột phải (messaging) hiếm khi thay thế nhau</strong> — chúng <em>kết hợp</em> với nhau. Kiến trúc thật gần như luôn là tổ hợp: gRPC bên trong, REST ra ngoài, Kafka chở event, SSE đẩy xuống browser.</li></ol><h2 id=4-decision-framework>4. Decision Framework<a hidden class=anchor aria-hidden=true href=#4-decision-framework>#</a></h2><p>Trình tự câu hỏi dưới đây được sắp theo mức độ &ldquo;khó đảo ngược&rdquo; của hệ quả: consumer là ai quyết định nhiều nhất, team maturity là van an toàn cuối cùng.</p><pre class=mermaid>flowchart TD
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/backend-communication-architect/">Backend Communication Architecture</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 10: So sánh Communication Pattern và Framework quyết định
+    </h1>
+    <div class="post-meta"><span title='2026-02-22 16:00:00 +0700 +07'>February 22, 2026</span>&nbsp;·&nbsp;20 min
+
+</div>
+  </header> 
+  <div class="post-content"><p><a href="/series/backend-communication-architect/09-event-streaming/">← Chương trước</a> | Mục lục | <a href="/series/backend-communication-architect/11-api-design/">Chương sau →</a></p>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:</p>
+<blockquote>
+<p>&ldquo;Service A cần nói chuyện với Service B / với client. Dùng cái gì?&rdquo;</p></blockquote>
+<p>Cách câu hỏi này thường bị trả lời sai trong thực tế:</p>
+<ul>
+<li><strong>Theo trào lưu:</strong> &ldquo;Netflix dùng gRPC nên mình dùng gRPC&rdquo; — trong khi consumer của bạn là browser của khách hàng bên thứ ba.</li>
+<li><strong>Theo quán tính:</strong> &ldquo;Team mình biết REST nên mọi thứ là REST&rdquo; — kể cả đường internal 50K req/s đang đốt 40% CPU vào JSON marshal.</li>
+<li><strong>Theo cú pháp thay vì ngữ nghĩa:</strong> &ldquo;WebSocket và SSE đều là realtime, chọn đại một cái&rdquo; — bỏ qua việc một cái là hai chiều stateful, một cái là một chiều trên hạ tầng HTTP sẵn có.</li>
+<li><strong>Theo một chiều của trade-off:</strong> &ldquo;Kafka throughput cao nhất → dùng Kafka cho mọi giao tiếp&rdquo; — kể cả chỗ cần câu trả lời trong 5ms.</li>
+</ul>
+<p><strong>Luận điểm trung tâm của chương này:</strong> REST, GraphQL, gRPC, WebSocket, SSE, RabbitMQ, Kafka, NATS <strong>không phải là các công nghệ cạnh tranh trực tiếp</strong>. Chúng là các <strong>mô hình giao tiếp (communication model)</strong> khác nhau, mỗi mô hình được thiết kế để giải một lớp bài toán khác nhau trên các trục: latency, bandwidth, scalability, consistency, data model, và developer experience. So sánh &ldquo;REST vs Kafka&rdquo; cũng vô nghĩa như so sánh &ldquo;ổ cứng vs dây mạng&rdquo; — chúng nằm ở những vị trí khác nhau trong kiến trúc.</p>
+<p>Câu hỏi đúng không phải &ldquo;công nghệ nào tốt nhất&rdquo; mà là: <strong>&ldquo;bài toán giao tiếp này có hình dạng gì?&rdquo;</strong> — ai tiêu thụ, cần kết quả ngay hay chấp nhận trễ, một chiều hay hai chiều, dữ liệu có cần sống lại (replay) không, throughput cỡ nào, và team của tôi vận hành nổi cái gì. Chương này xây framework để trả lời câu hỏi đó một cách có kỷ luật.</p>
+<h2 id="2-tại-sao-cần-một-framework-quyết-định">2. Tại sao cần một framework quyết định<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-cần-một-framework-quyết-định">#</a></h2>
+<p>Hai lý do, cả hai đều là bài học trả giá bằng sự cố:</p>
+<p><strong>Thứ nhất, chi phí chọn sai là chi phí kiến trúc, không phải chi phí code.</strong> Chọn sai một thư viện thì refactor một tuần. Chọn sai communication model thì ngữ nghĩa sai lan ra toàn hệ thống: dùng Kafka làm request-response nghĩa là bạn tự chế timeout, correlation, backpressure ngược — những thứ RPC cho không; dùng REST polling thay cho stream nghĩa là bạn scale chi phí theo <em>số lần hỏi</em> thay vì <em>số lần có tin</em>. Những sai lầm này không lộ ra ở prototype — chúng lộ ra ở 100x tải, khi việc đổi model đồng nghĩa viết lại contract của hàng chục service.</p>
+<p><strong>Thứ hai, mỗi model là một tập trade-off đã được đóng gói sẵn.</strong> Ở các chương trước ta thấy: REST đổi hiệu năng lấy tính phổ quát và cache; gRPC đổi tính phổ quát lấy hiệu năng và type safety; GraphQL đổi độ phức tạp server lấy sự linh hoạt của client; message queue đổi tính tức thời lấy decoupling và độ bền; distributed log đổi latency và sự đơn giản lấy throughput, replay và fan-out. <strong>Không model nào thắng trên mọi trục — đó là định lý, không phải quan sát.</strong> Vì vậy quyết định đúng luôn bắt đầu từ ràng buộc của bài toán, và framework tồn tại để ép bạn liệt kê ràng buộc <em>trước khi</em> nhìn công nghệ.</p>
+<h2 id="3-bảng-so-sánh-tổng-hợp">3. Bảng so sánh tổng hợp<a hidden class="anchor" aria-hidden="true" href="#3-bảng-so-sánh-tổng-hợp">#</a></h2>
+<p>Quy ước: đánh giá tương đối giữa các cột, cho triển khai production điển hình. &ldquo;Cao/Thấp&rdquo; là so với các model còn lại, không phải tuyệt đối.</p>
+<table>
+  <thead>
+      <tr>
+          <th>Tiêu chí</th>
+          <th>REST</th>
+          <th>GraphQL</th>
+          <th>gRPC</th>
+          <th>WebSocket</th>
+          <th>SSE</th>
+          <th>RabbitMQ</th>
+          <th>Kafka</th>
+          <th>NATS</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>Communication Model</strong></td>
+          <td>Request-response, resource-based</td>
+          <td>Request-response, query-based (client định hình data)</td>
+          <td>RPC, contract-first</td>
+          <td>Bidirectional message channel</td>
+          <td>Server → client event stream</td>
+          <td>Message broker (queue/routing)</td>
+          <td>Distributed log (append + replay)</td>
+          <td>Subject pub/sub (+ JetStream log-lite)</td>
+      </tr>
+      <tr>
+          <td><strong>Sync/Async</strong></td>
+          <td>Sync</td>
+          <td>Sync (subscription: async)</td>
+          <td>Sync (streaming: semi-async)</td>
+          <td>Async, hai chiều</td>
+          <td>Async, một chiều</td>
+          <td>Async</td>
+          <td>Async</td>
+          <td>Async (request-reply: sync được)</td>
+      </tr>
+      <tr>
+          <td><strong>Request-Response</strong></td>
+          <td>Bản chất</td>
+          <td>Bản chất</td>
+          <td>Bản chất</td>
+          <td>Tự chế trên message</td>
+          <td>Không</td>
+          <td>Có (RPC pattern, không tự nhiên)</td>
+          <td>Anti-pattern</td>
+          <td>Có, first-class</td>
+      </tr>
+      <tr>
+          <td><strong>Streaming</strong></td>
+          <td>Không (workaround: chunked/polling)</td>
+          <td>Subscription (thường cưỡi WS/SSE)</td>
+          <td>Có: unary/server/client/bidi</td>
+          <td>Bản chất</td>
+          <td>Server→client, bản chất</td>
+          <td>Không đúng nghĩa (push liên tục per-consumer)</td>
+          <td>Bản chất (consumer pull liên tục)</td>
+          <td>Bản chất</td>
+      </tr>
+      <tr>
+          <td><strong>Performance (throughput/overhead)</strong></td>
+          <td>Trung bình (JSON, header lặp; HTTP/2 đỡ)</td>
+          <td>Trung bình-thấp (resolver, parse query)</td>
+          <td>Cao (protobuf, HTTP/2 multiplexing)</td>
+          <td>Cao sau handshake (frame nhỏ)</td>
+          <td>Trung bình-cao</td>
+          <td>Trung bình (per-message state)</td>
+          <td>Rất cao (batch, sequential IO, zero-copy)</td>
+          <td>Rất cao (Core in-memory)</td>
+      </tr>
+      <tr>
+          <td><strong>Serialization</strong></td>
+          <td>JSON (phổ biến), tùy chọn</td>
+          <td>JSON</td>
+          <td>Protobuf (binary, schema bắt buộc)</td>
+          <td>Tùy bạn (JSON/binary)</td>
+          <td>Text (event stream format)</td>
+          <td>Tùy bạn (AMQP chở byte)</td>
+          <td>Tùy bạn (byte + Schema Registry)</td>
+          <td>Tùy bạn (byte)</td>
+      </tr>
+      <tr>
+          <td><strong>Type Safety</strong></td>
+          <td>Yếu (OpenAPI bổ cứu, opt-in)</td>
+          <td>Mạnh ở schema (SDL, codegen)</td>
+          <td>Mạnh nhất (proto, codegen bắt buộc)</td>
+          <td>Không có sẵn</td>
+          <td>Không có sẵn</td>
+          <td>Không có sẵn (schema tự quản)</td>
+          <td>Không có sẵn (Registry bổ cứu)</td>
+          <td>Không có sẵn</td>
+      </tr>
+      <tr>
+          <td><strong>Cache</strong></td>
+          <td>Xuất sắc (HTTP cache, CDN, ETag)</td>
+          <td>Khó (POST, query đa dạng; persisted query bổ cứu)</td>
+          <td>Khó (ít chuẩn hạ tầng)</td>
+          <td>Không áp dụng</td>
+          <td>Không áp dụng</td>
+          <td>Không áp dụng</td>
+          <td>Không (nhưng replay ≈ &ldquo;cache&rdquo; dữ liệu nguồn)</td>
+          <td>Không áp dụng</td>
+      </tr>
+      <tr>
+          <td><strong>Browser Support</strong></td>
+          <td>Hoàn hảo</td>
+          <td>Hoàn hảo</td>
+          <td>Cần grpc-web + proxy</td>
+          <td>Native</td>
+          <td>Native (tự reconnect)</td>
+          <td>Không trực tiếp (cần gateway)</td>
+          <td>Không trực tiếp (cần gateway)</td>
+          <td>Có qua WS bridge</td>
+      </tr>
+      <tr>
+          <td><strong>Mobile</strong></td>
+          <td>Tốt (đơn giản, cache)</td>
+          <td>Tốt (giảm round-trip, tiết kiệm data)</td>
+          <td>Tốt (pin/băng thông, codegen), phải tự quản connection</td>
+          <td>Tốn pin nếu giữ connection</td>
+          <td>Tốt cho feed một chiều</td>
+          <td>Không trực tiếp</td>
+          <td>Không trực tiếp</td>
+          <td>Tốt cho IoT (client nhẹ)</td>
+      </tr>
+      <tr>
+          <td><strong>Internal Service</strong></td>
+          <td>Được nhưng lãng phí ở tải cao</td>
+          <td>Sai công cụ (xem anti-pattern)</td>
+          <td>Mặc định đúng</td>
+          <td>Hiếm khi đúng</td>
+          <td>Hiếm khi đúng</td>
+          <td>Tốt (task, event)</td>
+          <td>Tốt (event backbone)</td>
+          <td>Tốt (control plane)</td>
+      </tr>
+      <tr>
+          <td><strong>Public API</strong></td>
+          <td>Mặc định đúng</td>
+          <td>Tốt cho client đa dạng, cần kiểm soát chặt</td>
+          <td>Khó (yêu cầu client đặc thù)</td>
+          <td>Cho tính năng realtime</td>
+          <td>Cho feed realtime</td>
+          <td>Không</td>
+          <td>Không (expose qua gateway nếu cần)</td>
+          <td>Không</td>
+      </tr>
+      <tr>
+          <td><strong>Load Balancer thân thiện</strong></td>
+          <td>Hoàn hảo (stateless)</td>
+          <td>Hoàn hảo</td>
+          <td>Cần L7/client-side LB (HTTP/2 dồn connection)</td>
+          <td>Khó (sticky, stateful, drain khi deploy)</td>
+          <td>Trung bình (connection dài)</td>
+          <td>N/A (broker tự phân phối)</td>
+          <td>N/A (partition assignment)</td>
+          <td>N/A (cluster tự route)</td>
+      </tr>
+      <tr>
+          <td><strong>Debug</strong></td>
+          <td>Dễ nhất (curl, đọc được bằng mắt)</td>
+          <td>Trung bình (introspection tốt, lỗi resolver sâu)</td>
+          <td>Trung bình (cần grpcurl, binary)</td>
+          <td>Khó (state theo connection)</td>
+          <td>Dễ (curl xem được stream)</td>
+          <td>Trung bình (management UI tốt)</td>
+          <td>Khó (offset, partition, lag, rebalance)</td>
+          <td>Trung bình (CLI tốt)</td>
+      </tr>
+      <tr>
+          <td><strong>Monitoring</strong></td>
+          <td>Trưởng thành nhất (status code, RED chuẩn)</td>
+          <td>Cần đo per-resolver (một endpoint, nghìn hình dạng)</td>
+          <td>Tốt (interceptor, status code chuẩn)</td>
+          <td>Tự xây (connection count, message rate)</td>
+          <td>Tự xây, đơn giản hơn WS</td>
+          <td>Tốt (queue depth, ack rate)</td>
+          <td>Tốt nhưng nhiều chiều (lag, ISR, skew)</td>
+          <td>Tốt, gọn</td>
+      </tr>
+      <tr>
+          <td><strong>Operational Complexity</strong></td>
+          <td>Thấp nhất</td>
+          <td>Trung bình (server phức tạp: N+1, depth limit, cost)</td>
+          <td>Trung bình (proxy, LB, codegen pipeline)</td>
+          <td>Trung bình-cao (state, scale-out cần pub/sub sau lưng)</td>
+          <td>Thấp-trung bình</td>
+          <td>Trung bình (broker stateful)</td>
+          <td>Cao (cluster, partition, capacity)</td>
+          <td>Thấp</td>
+      </tr>
+  </tbody>
+</table>
+<p>Ba quan sát rút từ bảng, quan trọng hơn bản thân bảng:</p>
+<ol>
+<li><strong>Cột dọc không cộng điểm được.</strong> REST thắng ở cache + debug + LB + ops; Kafka thắng ở throughput + replay. Chúng thắng ở những hàng <em>khác nhau vì phục vụ bài toán khác nhau</em> — cộng tổng điểm là vô nghĩa.</li>
+<li><strong>Hàng &ldquo;Type Safety&rdquo; và &ldquo;Operational Complexity&rdquo; thường bị bỏ qua nhất nhưng quyết định chi phí dài hạn nhất.</strong> Contract lỏng lẻo giết bạn ở tháng 18; ops phức tạp giết bạn ở lần on-call thứ ba.</li>
+<li><strong>Nhóm 5 cột trái (API/realtime) và 3 cột phải (messaging) hiếm khi thay thế nhau</strong> — chúng <em>kết hợp</em> với nhau. Kiến trúc thật gần như luôn là tổ hợp: gRPC bên trong, REST ra ngoài, Kafka chở event, SSE đẩy xuống browser.</li>
+</ol>
+<h2 id="4-decision-framework">4. Decision Framework<a hidden class="anchor" aria-hidden="true" href="#4-decision-framework">#</a></h2>
+<p>Trình tự câu hỏi dưới đây được sắp theo mức độ &ldquo;khó đảo ngược&rdquo; của hệ quả: consumer là ai quyết định nhiều nhất, team maturity là van an toàn cuối cùng.</p>
+<pre class="mermaid">flowchart TD
     START([&#34;Bài toán giao tiếp mới&#34;]) --&gt; Q1{&#34;1. Consumer là ai?&#34;}
 
     Q1 --&gt;|&#34;Browser / đối tác public&#34;| Q2{&#34;2. Cần realtime&lt;br/&gt;server đẩy xuống?&#34;}
@@ -45,16 +370,314 @@ Cách câu hỏi này thường bị trả lời sai trong thực tế:"><script
     NATSJS --&gt; Q6
     IOT --&gt; Q6
     Q6 --&gt;|&#34;Không&#34;| FALLBACK[&#34;Lùi về phương án đơn giản hơn&lt;br/&gt;gần nhất trên cùng nhánh —&lt;br/&gt;hoặc mua managed service.&lt;br/&gt;Kiến trúc đúng mà vận hành hỏng&lt;br/&gt;= kiến trúc sai.&#34;]
-    Q6 --&gt;|&#34;Có&#34;| DONE([&#34;Chốt. Ghi ADR:&lt;br/&gt;ràng buộc → lựa chọn → trade-off chấp nhận&#34;])</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
+    Q6 --&gt;|&#34;Có&#34;| DONE([&#34;Chốt. Ghi ADR:&lt;br/&gt;ràng buộc → lựa chọn → trade-off chấp nhận&#34;])</pre><style>
+  pre.mermaid {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+  }
+</style>
+<script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({
     startOnLoad: true,
     theme: document.body.classList.contains("dark") ? "dark" : "default",
     securityLevel: "loose",
   });
-</script><p>Diễn giải từng câu hỏi — vì flowchart chỉ là bản nén của lập luận:</p><ol><li><strong>Consumer là ai?</strong> Câu hỏi loại trừ mạnh nhất. Browser loại gRPC thuần (cần grpc-web + proxy) và loại kết nối trực tiếp vào broker. Đối tác public loại mọi thứ đòi client đặc thù. Internal service mở ra toàn bộ phổ lựa chọn. Thiết bị IoT (RAM ít, mạng chập chờn, NAT) đòi protocol nhẹ có QoS kiểu MQTT/NATS.</li><li><strong>Cần kết quả ngay hay chấp nhận async?</strong> Ranh giới lớn nhất về ngữ nghĩa. Caller <em>chờ để làm gì tiếp</em> → request-response (REST/GraphQL/gRPC). Caller chỉ cần <em>bảo đảm việc sẽ được làm</em> → messaging, và bạn nhận về decoupling + độ bền + hấp thụ tải đột biến, trả giá bằng eventual consistency và độ khó debug.</li><li><strong>Một chiều hay hai chiều?</strong> Trong nhánh realtime: chỉ server đẩy xuống → SSE (rẻ hơn hẳn về ops); hai chiều thật sự → WebSocket. Đảo lại cũng đúng: chọn WebSocket cho việc một chiều là mua độ phức tạp không dùng đến (xem anti-pattern 5).</li><li><strong>Task hay event? Cần replay/audit không?</strong> Message &ldquo;tiêu thụ xong biến mất&rdquo; (gửi email, resize ảnh) → queue. Message là <em>dữ kiện</em> nhiều bên đọc, đọc lại được để backfill/sửa bug/audit → log. Đây là ranh giới RabbitMQ/Kafka đã phân tích sâu ở Chương 8–9.</li><li><strong>Throughput cỡ nào?</strong> Đo hoặc ước lượng có căn cứ, cho 2–3 năm. Dưới vài nghìn msg/s, gần như mọi lựa chọn đều chạy — hãy chọn cái <em>rẻ nhất để vận hành</em>. Trên vài chục nghìn msg/s với retention, phổ lựa chọn co về Kafka (hoặc hệ nói Kafka protocol).</li><li><strong>Team maturity — van an toàn cuối.</strong> Công nghệ đúng mà team không vận hành nổi là công nghệ sai. Lối thoát luôn có hai cửa: lùi về phương án đơn giản hơn, hoặc giữ phương án và mua managed service. Điều duy nhất không được làm là tự vận hành nửa vời một hệ stateful phức tạp.</li></ol><h2 id=5-khi-nào-nên-dùng-gì--theo-scenario>5. Khi nào nên dùng gì — theo scenario<a hidden class=anchor aria-hidden=true href=#5-khi-nào-nên-dùng-gì--theo-scenario>#</a></h2><p>Mỗi scenario dưới đây trả lời hai câu: <strong>vì sao chọn</strong> và — quan trọng không kém — <strong>vì sao KHÔNG chọn các phương án còn lại</strong>.</p><h3 id=51-public-api-cho-đối-tác--rest--openapi>5.1. Public API cho đối tác → REST (+ OpenAPI)<a hidden class=anchor aria-hidden=true href=#51-public-api-cho-đối-tác--rest--openapi>#</a></h3><p><strong>Vì sao REST:</strong> đối tác của bạn dùng mọi ngôn ngữ, mọi trình độ, mọi firewall. REST/JSON chạy được từ curl đến mainframe; HTTP cache + CDN giảm tải miễn phí; hạ tầng debug/monitoring/gateway/rate-limit cho REST trưởng thành hơn mọi thứ khác cộng lại. Với public API, <strong>tính phổ quát và độ ổn định của contract quan trọng hơn hiệu năng</strong> — bạn không kiểm soát client, nên hãy chọn thứ không đòi hỏi gì từ client.</p><p><strong>Vì sao không:</strong> <em>gRPC</em> — bắt đối tác cài toolchain protobuf và xuyên proxy HTTP/2 là rào cản thương mại, không chỉ kỹ thuật. <em>GraphQL</em> — trao quyền query tùy ý cho client <em>bên ngoài</em> là trao luôn bề mặt tấn công (query độc, cost khó lường) và làm rate-limiting/billing theo &ldquo;request&rdquo; mất nghĩa; chỉ hợp lý khi bạn đầu tư nghiêm túc vào persisted query + cost analysis. <em>Kafka/AMQP ra ngoài</em> — expose broker cho bên thứ ba là ác mộng bảo mật và versioning; nếu đối tác cần event, dùng webhook (REST đảo chiều) hoặc gateway chuyên biệt.</p><h3 id=52-dashboard-realtime--sse-hoặc-websocket-hoặc-graphql-subscription>5.2. Dashboard realtime → SSE hoặc WebSocket (hoặc GraphQL Subscription)<a hidden class=anchor aria-hidden=true href=#52-dashboard-realtime--sse-hoặc-websocket-hoặc-graphql-subscription>#</a></h3><p><strong>Vì sao SSE trước tiên:</strong> dashboard là dòng chảy một chiều — server có số liệu mới thì đẩy xuống. SSE chạy trên HTTP thuần: qua được LB, proxy, auth middleware hiện có; browser tự reconnect kèm <code>Last-Event-ID</code>; debug bằng curl. Chi phí vận hành thấp hơn WebSocket một bậc.</p><p><strong>Khi nào nâng lên WebSocket:</strong> client tương tác ngược liên tục (filter đẩy lên server theo từng thao tác, collaborative cursor) — tức hai chiều <em>thật sự</em>. <strong>GraphQL Subscription</strong> hợp lý khi hệ đã dùng GraphQL: client giữ một ngôn ngữ query duy nhất cho cả fetch lẫn stream (bên dưới nó vẫn cưỡi WS/SSE — bạn vẫn trả chi phí vận hành của tầng transport đó).</p><p><strong>Vì sao không:</strong> <em>REST polling</em> — chi phí scale theo tần suất hỏi chứ không theo tần suất có tin: 10K dashboard × poll 2s = 5K req/s để chở phần lớn câu trả lời &ldquo;chưa có gì mới&rdquo;. <em>Kafka trực tiếp xuống browser</em> — không có client browser tử tế, không có mô hình auth per-user hợp lý; đúng bài là consumer phía server đọc Kafka rồi phân phối qua SSE/WS.</p><h3 id=53-internal-microservice-đường-sync--grpc>5.3. Internal microservice, đường sync → gRPC<a hidden class=anchor aria-hidden=true href=#53-internal-microservice-đường-sync--grpc>#</a></h3><p><strong>Vì sao gRPC:</strong> bạn kiểm soát cả hai đầu — tính phổ quát của REST không mua được gì, còn cái giá của nó (JSON marshal, header lặp, contract lỏng) thì vẫn phải trả ở mọi request. gRPC cho protobuf (nhỏ, nhanh, schema bắt buộc + codegen đa ngôn ngữ → contract là code, lệch là fail lúc build chứ không phải 2 giờ sáng), HTTP/2 multiplexing, deadline propagation xuyên call-chain (điều REST phải tự chế) và streaming sẵn có.</p><p><strong>Vì sao không:</strong> <em>REST internal</em> — chấp nhận được ở tải thấp, nhưng ở hàng chục nghìn req/s, chi phí JSON và thiếu deadline/streaming là tiền thật (xem anti-pattern 3). <em>GraphQL service-to-service</em> — xem anti-pattern 4. <em>Message queue</em> — nếu caller cần kết quả để đi tiếp thì bọc async chỉ là giả trang cho sync với latency và độ phức tạp cộng thêm. Lưu ý vận hành duy nhất phải nhớ: HTTP/2 dồn request vào ít connection → L4 LB mất tác dụng, cần L7 LB (Envoy/mesh) hoặc client-side LB ngay từ đầu.</p><h3 id=54-analytics--clickstream-pipeline--kafka>5.4. Analytics / clickstream pipeline → Kafka<a hidden class=anchor aria-hidden=true href=#54-analytics--clickstream-pipeline--kafka>#</a></h3><p><strong>Vì sao Kafka:</strong> đúng nguyên bài toán mở đầu Chương 9 — hàng triệu event/s, nhiều consumer đọc cùng dữ liệu với tốc độ khác nhau, cần replay để backfill. Distributed log là <em>mô hình</em> đúng; Kafka là hiện thân trưởng thành nhất (ecosystem Connect/Flink/Debezium, kỹ năng thị trường).</p><p><strong>Vì sao không:</strong> <em>RabbitMQ</em> — fan-out N consumer là N bản copy dữ liệu, backlog lớn đè chết broker giữ per-message state, không replay (chi tiết Chương 9 mục 6.3). <em>REST/gRPC bắn thẳng vào warehouse</em> — mất buffer hấp thụ tải, mất fan-out, mọi consumer hạ nguồn coupling trực tiếp vào producer. <em>NATS Core</em> — at-most-once, mất là mất; analytics cần bảo toàn dữ liệu.</p><h3 id=55-notification-email-push-sms--rabbitmq-hoặc-sqs>5.5. Notification (email, push, SMS) → RabbitMQ (hoặc SQS)<a hidden class=anchor aria-hidden=true href=#55-notification-email-push-sms--rabbitmq-hoặc-sqs>#</a></h3><p><strong>Vì sao queue:</strong> notification là <em>task</em>: mỗi cái đúng một worker xử lý, cần retry có kiểm soát, DLQ cho cái hỏng, delay (&ldquo;gửi sau 30 phút&rdquo;), priority (OTP trước newsletter) — toàn bộ là ngữ nghĩa first-class của smart broker. Latency deliver per-message thấp, ops nhẹ hơn Kafka rõ rệt.</p><p><strong>Vì sao không:</strong> <em>Kafka</em> — delay per-message và priority là thứ Kafka làm rất gượng (đắp topic-per-delay-bucket, tự viết scheduler); retention + replay chẳng để làm gì với task &ldquo;gửi xong là xong&rdquo;; bạn trả chi phí vận hành cụm log phân tán để mua những tính năng không dùng. <em>Gọi provider trực tiếp bằng REST từ request path</em> — provider chậm/hỏng kéo sập luồng chính của bạn; queue là tấm đệm cách ly đúng nghĩa.</p><h3 id=56-video-streaming--grpcwebsocket-cho-control-plane--hlsdash-qua-cdn-cho-media>5.6. Video streaming → gRPC/WebSocket cho control plane + HLS/DASH qua CDN cho media<a hidden class=anchor aria-hidden=true href=#56-video-streaming--grpcwebsocket-cho-control-plane--hlsdash-qua-cdn-cho-media>#</a></h3><p>Scenario này đáng một mục riêng vì nó minh họa nguyên lý <strong>tách control plane khỏi data plane</strong> — và vì &ldquo;stream video qua WebSocket/gRPC&rdquo; là ý tưởng nghe hợp lý một cách nguy hiểm.</p><p><strong>Kiến trúc đúng:</strong> tín hiệu điều khiển (play/pause/seek, DRM license, analytics, adaptive bitrate signaling) đi qua gRPC/WebSocket/REST — nhỏ, cần latency thấp, stateful. Còn <strong>media bytes</strong> đi qua <strong>HLS/DASH</strong>: video cắt thành segment vài giây, phát qua <strong>HTTP GET tĩnh trên CDN</strong>.</p><p><strong>Vì sao KHÔNG stream video qua gRPC/WebSocket cho end-user:</strong> (1) media chiếm >99% băng thông — đẩy nó qua connection stateful nghĩa là <em>server của bạn</em> gánh toàn bộ băng thông đó, trong khi segment HTTP tĩnh được CDN cache ở edge: một segment phổ biến phát cho một triệu người mà origin trả bytes đúng một lần; (2) connection dài xuyên qua LB/proxy/mobile network mong manh — HTTP range request + retry per-segment tự phục hồi, còn đứt WebSocket là dựng lại state; (3) adaptive bitrate (client tự đổi độ phân giải theo mạng) là thiết kế gốc của HLS/DASH, tự chế trên gRPC là viết lại nửa giao thức. Ngoại lệ tồn tại và nên biết tên: <strong>WebRTC</strong> cho hội thoại hai chiều latency &lt; 500ms (video call) — một bài toán khác hẳn video-on-demand/live broadcast.</p><h3 id=57-iot--mqttnats-ở-edge--kafka-ở-tầng-ingest>5.7. IoT → MQTT/NATS ở edge + Kafka ở tầng ingest<a hidden class=anchor aria-hidden=true href=#57-iot--mqttnats-ở-edge--kafka-ở-tầng-ingest>#</a></h3><p><strong>Vì sao kiến trúc hai tầng:</strong> thiết bị IoT có RAM tính bằng KB–MB, mạng chập chờn, nằm sau NAT. MQTT/NATS được thiết kế đúng cho điều đó: client footprint vài chục KB, QoS level, last-will message, broker/leaf node chạy được trên gateway ở hiện trường, hoạt động ngắt mạng rồi đồng bộ lại. Kafka client thì nặng, giao thức đòi kết nối tới nhiều broker, hoàn toàn sai cỡ cho thiết bị. Ngược lại ở trung tâm, khi 500K thiết bị đổ telemetry về, bạn cần đúng thứ Kafka giỏi: buffer khổng lồ, fan-out cho nhiều pipeline, replay. Bridge MQTT→Kafka (hoặc NATS leaf → JetStream → Kafka Connect) là pattern chuẩn ngành.</p><p><strong>Vì sao không:</strong> <em>Kafka đến tận thiết bị</em> — sai footprint, sai mô hình mạng. <em>Chỉ MQTT toàn hệ</em> — broker MQTT không phải backbone phân tích: retention, partition parallelism, ecosystem xử lý stream đều thiếu. <em>REST từ thiết bị</em> — chi phí TLS handshake + header per-reading đắt gấp nhiều lần payload vài chục byte, và không có ngữ nghĩa offline-queue.</p><h2 id=6-anti-pattern-chung>6. Anti-pattern chung<a hidden class=anchor aria-hidden=true href=#6-anti-pattern-chung>#</a></h2><ol><li><strong>Một công nghệ cho mọi thứ (&ldquo;golden hammer&rdquo;).</strong> Tổ chức &ldquo;all-in Kafka&rdquo; bắt cả notification, RPC, config distribution chui qua log; tổ chức &ldquo;all-in REST&rdquo; polling nhau tới chết. Dấu hiệu nhận biết: nghe thấy câu &ldquo;mình đã có X rồi, cứ dùng X&rdquo; trong buổi design review mà không ai liệt kê ràng buộc của bài toán. Một hệ thống trưởng thành có 3–4 model cùng tồn tại, mỗi cái đúng chỗ — đó không phải là thiếu kỷ luật, đó <em>là</em> kỷ luật.</li><li><strong>Kafka làm request-response.</strong> Produce request vào topic A, block chờ reply trên topic B với correlation id. Bạn vừa tự chế: timeout semantics, mapping reply-về-đúng-instance (khi service scale ra N pod, reply partition rơi vào pod khác), cleanup khi caller chết. Latency = produce batch + fetch poll + produce reply + fetch poll — hàng chục ms cho việc gRPC làm trong 2ms. Nếu cần audit trail của request, log nó <em>bên cạnh</em> đường RPC, đừng biến log <em>thành</em> đường RPC.</li><li><strong>REST cho internal high-throughput.</strong> Đường nội bộ 50K req/s bằng JSON-over-HTTP/1.1: 30–40% CPU cho marshal/unmarshal, connection pool phình, không deadline propagation nên một dependency chậm rụng dây chuyền không kiểm soát. Đây là loại nợ âm thầm nhất vì <em>nó chạy được</em> — chỉ là đắt gấp ba và mong manh gấp đôi mức cần thiết.</li><li><strong>GraphQL cho service-to-service.</strong> Hai service backend nói chuyện qua GraphQL: bạn trả chi phí parse query, resolver indirection, và N+1 tiềm ẩn để mua sự linh hoạt &ldquo;client tự chọn field&rdquo; — thứ vô nghĩa khi cả hai đầu do một tổ chức kiểm soát và có thể định nghĩa contract chính xác bằng protobuf. GraphQL giải bài toán <em>nhiều loại client bên ngoài với nhu cầu data khác nhau</em>; giữa hai service, bài toán đó không tồn tại.</li><li><strong>WebSocket cho thứ SSE làm được.</strong> Feed một chiều (notification, price tick, progress bar) chạy WebSocket: bạn ôm vào sticky session, custom heartbeat, tự viết reconnect + resume, proxy/firewall traversal — để dùng đúng một nửa chiều của giao thức. SSE cho tất cả những thứ đó bằng hạ tầng HTTP sẵn có. Quy tắc: <strong>hai chiều thật sự mới WebSocket; còn lại SSE trước, nâng cấp khi bị chứng minh là thiếu.</strong></li><li><strong>Chọn model theo benchmark thay vì theo ngữ nghĩa.</strong> &ldquo;NATS 10 triệu msg/s&rdquo; không liên quan khi bài toán của bạn cần durability mà NATS Core không hứa. Ngữ nghĩa (delivery guarantee, ordering, replay) là ràng buộc cứng; hiệu năng chỉ là ràng buộc khi <em>đo được</em> là thiếu.</li><li><strong>Thêm tầng messaging để &ldquo;decouple&rdquo; hai service vốn dĩ coupling về nghiệp vụ.</strong> Nếu A không thể hoàn thành việc của nó khi chưa biết kết quả từ B, chèn queue vào giữa không xóa được sự phụ thuộc — chỉ giấu nó sau một tầng latency và một chế độ hỏng hóc mới (message kẹt, DLQ đầy). Decoupling bằng hạ tầng chỉ có tác dụng khi nghiệp vụ đã cho phép async.</li></ol><h2 id=7-khi-nào-không-cần-framework-này--và-checklist-cuối>7. Khi nào KHÔNG cần framework này — và checklist cuối<a hidden class=anchor aria-hidden=true href=#7-khi-nào-không-cần-framework-này--và-checklist-cuối>#</a></h2><p>Nói thẳng cho đủ hai mặt: nếu hệ của bạn là một monolith với 5K user, hai service và một background job — <strong>REST + một work queue quản lý (SQS/RabbitMQ) là đủ</strong>, và việc dừng ở đó là quyết định kiến trúc <em>tốt</em>, không phải thiếu tầm nhìn. Framework này dành cho lúc ràng buộc thật xuất hiện: consumer đa dạng, throughput có số liệu, realtime có yêu cầu cụ thể. Đừng nhập khẩu độ phức tạp trước khi bài toán nhập khẩu nó cho bạn.</p><h3 id=checklist--architect-phải-tự-trả-lời-trước-khi-chọn-công-nghệ>Checklist — architect phải tự trả lời TRƯỚC khi chọn công nghệ<a hidden class=anchor aria-hidden=true href=#checklist--architect-phải-tự-trả-lời-trước-khi-chọn-công-nghệ>#</a></h3><p>Ghi câu trả lời vào ADR (Architecture Decision Record). Câu nào trả lời &ldquo;chưa biết&rdquo; thì đi tìm số liệu, đừng đoán.</p><p><strong>Về consumer và contract</strong></p><ul><li><input disabled type=checkbox> Ai tiêu thụ: browser, mobile, internal service, thiết bị, đối tác bên ngoài? Tôi có kiểm soát được client không?</li><li><input disabled type=checkbox> Contract sẽ tiến hóa thế nào? Ai bị vỡ khi tôi đổi schema, và tôi phát hiện điều đó lúc build hay lúc runtime?</li></ul><p><strong>Về ngữ nghĩa giao tiếp</strong></p><ul><li><input disabled type=checkbox> Caller có cần kết quả để đi tiếp không (sync), hay chỉ cần bảo đảm việc sẽ xảy ra (async)?</li><li><input disabled type=checkbox> Một chiều hay hai chiều? Nếu tôi nghĩ là hai chiều — chiều ngược lại có <em>thật sự</em> tồn tại hay chỉ là ACK?</li><li><input disabled type=checkbox> Delivery guarantee nào là ràng buộc nghiệp vụ: mất được không (at-most-once)? trùng được không (at-least-once + idempotency)? Ai trả tiền cho idempotency?</li><li><input disabled type=checkbox> Ordering cần ở phạm vi nào — toàn cục (nghi ngờ lại đi), per-aggregate, hay không cần?</li><li><input disabled type=checkbox> Có cần đọc lại quá khứ không: replay, backfill, audit, thêm consumer mới sau 6 tháng?</li></ul><p><strong>Về tải và vận hành</strong></p><ul><li><input disabled type=checkbox> Throughput hiện tại và ước lượng 2–3 năm (số, không phải cảm giác)? Peak gấp mấy lần trung bình?</li><li><input disabled type=checkbox> Latency budget end-to-end là bao nhiêu, đo ở percentile nào?</li><li><input disabled type=checkbox> Team đã vận hành hệ stateful nào chưa? Ai on-call cho broker lúc 3 giờ sáng? Ngân sách managed service có không?</li><li><input disabled type=checkbox> Khi hệ này hỏng, blast radius là gì — và tôi sẽ <em>nhìn thấy</em> nó hỏng bằng metric nào ngay từ ngày đầu?</li><li><input disabled type=checkbox> Phương án đơn giản hơn gần nhất là gì, và chính xác thì nó thiếu điều kiện nào nên tôi mới phải phức tạp hơn?</li></ul><p>Câu cuối cùng là câu quan trọng nhất trong toàn bộ chương. Nếu bạn không nêu được <em>điều kiện cụ thể</em> mà phương án đơn giản hơn không thỏa mãn, bạn chưa có lý do để chọn phương án phức tạp — bạn chỉ đang có hứng thú với nó. Kiến trúc tốt không phải là chọn công nghệ mạnh nhất; là chọn công nghệ <em>vừa đúng</em> với hình dạng bài toán, rồi ghi lại lý do để người kế nhiệm (thường là chính bạn, 18 tháng sau) hiểu vì sao.</p><hr><p><a href=/series/backend-communication-architect/09-event-streaming/>← Chương trước</a> | Mục lục | <a href=/series/backend-communication-architect/11-api-design/>Chương sau →</a></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/communication/>Communication</a></li><li><a href=https://thanhhv.github.io/tags/api/>Api</a></li><li><a href=https://thanhhv.github.io/tags/architecture/>Architecture</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/backend-communication-architect/09-event-streaming/><span class=title>« Prev</span><br><span>Chương 9: Event Streaming — Log phân tán và xử lý sự kiện quy mô lớn</span>
-</a><a class=next href=https://thanhhv.github.io/series/backend-communication-architect/11-api-design/><span class=title>Next »</span><br><span>Chương 11: API Design — Thiết kế API cho tuổi thọ 10 năm</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f&amp;hashtags=backend%2ccommunication%2capi%2carchitecture"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;summary=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f&title=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+</script><p>Diễn giải từng câu hỏi — vì flowchart chỉ là bản nén của lập luận:</p>
+<ol>
+<li><strong>Consumer là ai?</strong> Câu hỏi loại trừ mạnh nhất. Browser loại gRPC thuần (cần grpc-web + proxy) và loại kết nối trực tiếp vào broker. Đối tác public loại mọi thứ đòi client đặc thù. Internal service mở ra toàn bộ phổ lựa chọn. Thiết bị IoT (RAM ít, mạng chập chờn, NAT) đòi protocol nhẹ có QoS kiểu MQTT/NATS.</li>
+<li><strong>Cần kết quả ngay hay chấp nhận async?</strong> Ranh giới lớn nhất về ngữ nghĩa. Caller <em>chờ để làm gì tiếp</em> → request-response (REST/GraphQL/gRPC). Caller chỉ cần <em>bảo đảm việc sẽ được làm</em> → messaging, và bạn nhận về decoupling + độ bền + hấp thụ tải đột biến, trả giá bằng eventual consistency và độ khó debug.</li>
+<li><strong>Một chiều hay hai chiều?</strong> Trong nhánh realtime: chỉ server đẩy xuống → SSE (rẻ hơn hẳn về ops); hai chiều thật sự → WebSocket. Đảo lại cũng đúng: chọn WebSocket cho việc một chiều là mua độ phức tạp không dùng đến (xem anti-pattern 5).</li>
+<li><strong>Task hay event? Cần replay/audit không?</strong> Message &ldquo;tiêu thụ xong biến mất&rdquo; (gửi email, resize ảnh) → queue. Message là <em>dữ kiện</em> nhiều bên đọc, đọc lại được để backfill/sửa bug/audit → log. Đây là ranh giới RabbitMQ/Kafka đã phân tích sâu ở Chương 8–9.</li>
+<li><strong>Throughput cỡ nào?</strong> Đo hoặc ước lượng có căn cứ, cho 2–3 năm. Dưới vài nghìn msg/s, gần như mọi lựa chọn đều chạy — hãy chọn cái <em>rẻ nhất để vận hành</em>. Trên vài chục nghìn msg/s với retention, phổ lựa chọn co về Kafka (hoặc hệ nói Kafka protocol).</li>
+<li><strong>Team maturity — van an toàn cuối.</strong> Công nghệ đúng mà team không vận hành nổi là công nghệ sai. Lối thoát luôn có hai cửa: lùi về phương án đơn giản hơn, hoặc giữ phương án và mua managed service. Điều duy nhất không được làm là tự vận hành nửa vời một hệ stateful phức tạp.</li>
+</ol>
+<h2 id="5-khi-nào-nên-dùng-gì--theo-scenario">5. Khi nào nên dùng gì — theo scenario<a hidden class="anchor" aria-hidden="true" href="#5-khi-nào-nên-dùng-gì--theo-scenario">#</a></h2>
+<p>Mỗi scenario dưới đây trả lời hai câu: <strong>vì sao chọn</strong> và — quan trọng không kém — <strong>vì sao KHÔNG chọn các phương án còn lại</strong>.</p>
+<h3 id="51-public-api-cho-đối-tác--rest--openapi">5.1. Public API cho đối tác → REST (+ OpenAPI)<a hidden class="anchor" aria-hidden="true" href="#51-public-api-cho-đối-tác--rest--openapi">#</a></h3>
+<p><strong>Vì sao REST:</strong> đối tác của bạn dùng mọi ngôn ngữ, mọi trình độ, mọi firewall. REST/JSON chạy được từ curl đến mainframe; HTTP cache + CDN giảm tải miễn phí; hạ tầng debug/monitoring/gateway/rate-limit cho REST trưởng thành hơn mọi thứ khác cộng lại. Với public API, <strong>tính phổ quát và độ ổn định của contract quan trọng hơn hiệu năng</strong> — bạn không kiểm soát client, nên hãy chọn thứ không đòi hỏi gì từ client.</p>
+<p><strong>Vì sao không:</strong> <em>gRPC</em> — bắt đối tác cài toolchain protobuf và xuyên proxy HTTP/2 là rào cản thương mại, không chỉ kỹ thuật. <em>GraphQL</em> — trao quyền query tùy ý cho client <em>bên ngoài</em> là trao luôn bề mặt tấn công (query độc, cost khó lường) và làm rate-limiting/billing theo &ldquo;request&rdquo; mất nghĩa; chỉ hợp lý khi bạn đầu tư nghiêm túc vào persisted query + cost analysis. <em>Kafka/AMQP ra ngoài</em> — expose broker cho bên thứ ba là ác mộng bảo mật và versioning; nếu đối tác cần event, dùng webhook (REST đảo chiều) hoặc gateway chuyên biệt.</p>
+<h3 id="52-dashboard-realtime--sse-hoặc-websocket-hoặc-graphql-subscription">5.2. Dashboard realtime → SSE hoặc WebSocket (hoặc GraphQL Subscription)<a hidden class="anchor" aria-hidden="true" href="#52-dashboard-realtime--sse-hoặc-websocket-hoặc-graphql-subscription">#</a></h3>
+<p><strong>Vì sao SSE trước tiên:</strong> dashboard là dòng chảy một chiều — server có số liệu mới thì đẩy xuống. SSE chạy trên HTTP thuần: qua được LB, proxy, auth middleware hiện có; browser tự reconnect kèm <code>Last-Event-ID</code>; debug bằng curl. Chi phí vận hành thấp hơn WebSocket một bậc.</p>
+<p><strong>Khi nào nâng lên WebSocket:</strong> client tương tác ngược liên tục (filter đẩy lên server theo từng thao tác, collaborative cursor) — tức hai chiều <em>thật sự</em>. <strong>GraphQL Subscription</strong> hợp lý khi hệ đã dùng GraphQL: client giữ một ngôn ngữ query duy nhất cho cả fetch lẫn stream (bên dưới nó vẫn cưỡi WS/SSE — bạn vẫn trả chi phí vận hành của tầng transport đó).</p>
+<p><strong>Vì sao không:</strong> <em>REST polling</em> — chi phí scale theo tần suất hỏi chứ không theo tần suất có tin: 10K dashboard × poll 2s = 5K req/s để chở phần lớn câu trả lời &ldquo;chưa có gì mới&rdquo;. <em>Kafka trực tiếp xuống browser</em> — không có client browser tử tế, không có mô hình auth per-user hợp lý; đúng bài là consumer phía server đọc Kafka rồi phân phối qua SSE/WS.</p>
+<h3 id="53-internal-microservice-đường-sync--grpc">5.3. Internal microservice, đường sync → gRPC<a hidden class="anchor" aria-hidden="true" href="#53-internal-microservice-đường-sync--grpc">#</a></h3>
+<p><strong>Vì sao gRPC:</strong> bạn kiểm soát cả hai đầu — tính phổ quát của REST không mua được gì, còn cái giá của nó (JSON marshal, header lặp, contract lỏng) thì vẫn phải trả ở mọi request. gRPC cho protobuf (nhỏ, nhanh, schema bắt buộc + codegen đa ngôn ngữ → contract là code, lệch là fail lúc build chứ không phải 2 giờ sáng), HTTP/2 multiplexing, deadline propagation xuyên call-chain (điều REST phải tự chế) và streaming sẵn có.</p>
+<p><strong>Vì sao không:</strong> <em>REST internal</em> — chấp nhận được ở tải thấp, nhưng ở hàng chục nghìn req/s, chi phí JSON và thiếu deadline/streaming là tiền thật (xem anti-pattern 3). <em>GraphQL service-to-service</em> — xem anti-pattern 4. <em>Message queue</em> — nếu caller cần kết quả để đi tiếp thì bọc async chỉ là giả trang cho sync với latency và độ phức tạp cộng thêm. Lưu ý vận hành duy nhất phải nhớ: HTTP/2 dồn request vào ít connection → L4 LB mất tác dụng, cần L7 LB (Envoy/mesh) hoặc client-side LB ngay từ đầu.</p>
+<h3 id="54-analytics--clickstream-pipeline--kafka">5.4. Analytics / clickstream pipeline → Kafka<a hidden class="anchor" aria-hidden="true" href="#54-analytics--clickstream-pipeline--kafka">#</a></h3>
+<p><strong>Vì sao Kafka:</strong> đúng nguyên bài toán mở đầu Chương 9 — hàng triệu event/s, nhiều consumer đọc cùng dữ liệu với tốc độ khác nhau, cần replay để backfill. Distributed log là <em>mô hình</em> đúng; Kafka là hiện thân trưởng thành nhất (ecosystem Connect/Flink/Debezium, kỹ năng thị trường).</p>
+<p><strong>Vì sao không:</strong> <em>RabbitMQ</em> — fan-out N consumer là N bản copy dữ liệu, backlog lớn đè chết broker giữ per-message state, không replay (chi tiết Chương 9 mục 6.3). <em>REST/gRPC bắn thẳng vào warehouse</em> — mất buffer hấp thụ tải, mất fan-out, mọi consumer hạ nguồn coupling trực tiếp vào producer. <em>NATS Core</em> — at-most-once, mất là mất; analytics cần bảo toàn dữ liệu.</p>
+<h3 id="55-notification-email-push-sms--rabbitmq-hoặc-sqs">5.5. Notification (email, push, SMS) → RabbitMQ (hoặc SQS)<a hidden class="anchor" aria-hidden="true" href="#55-notification-email-push-sms--rabbitmq-hoặc-sqs">#</a></h3>
+<p><strong>Vì sao queue:</strong> notification là <em>task</em>: mỗi cái đúng một worker xử lý, cần retry có kiểm soát, DLQ cho cái hỏng, delay (&ldquo;gửi sau 30 phút&rdquo;), priority (OTP trước newsletter) — toàn bộ là ngữ nghĩa first-class của smart broker. Latency deliver per-message thấp, ops nhẹ hơn Kafka rõ rệt.</p>
+<p><strong>Vì sao không:</strong> <em>Kafka</em> — delay per-message và priority là thứ Kafka làm rất gượng (đắp topic-per-delay-bucket, tự viết scheduler); retention + replay chẳng để làm gì với task &ldquo;gửi xong là xong&rdquo;; bạn trả chi phí vận hành cụm log phân tán để mua những tính năng không dùng. <em>Gọi provider trực tiếp bằng REST từ request path</em> — provider chậm/hỏng kéo sập luồng chính của bạn; queue là tấm đệm cách ly đúng nghĩa.</p>
+<h3 id="56-video-streaming--grpcwebsocket-cho-control-plane--hlsdash-qua-cdn-cho-media">5.6. Video streaming → gRPC/WebSocket cho control plane + HLS/DASH qua CDN cho media<a hidden class="anchor" aria-hidden="true" href="#56-video-streaming--grpcwebsocket-cho-control-plane--hlsdash-qua-cdn-cho-media">#</a></h3>
+<p>Scenario này đáng một mục riêng vì nó minh họa nguyên lý <strong>tách control plane khỏi data plane</strong> — và vì &ldquo;stream video qua WebSocket/gRPC&rdquo; là ý tưởng nghe hợp lý một cách nguy hiểm.</p>
+<p><strong>Kiến trúc đúng:</strong> tín hiệu điều khiển (play/pause/seek, DRM license, analytics, adaptive bitrate signaling) đi qua gRPC/WebSocket/REST — nhỏ, cần latency thấp, stateful. Còn <strong>media bytes</strong> đi qua <strong>HLS/DASH</strong>: video cắt thành segment vài giây, phát qua <strong>HTTP GET tĩnh trên CDN</strong>.</p>
+<p><strong>Vì sao KHÔNG stream video qua gRPC/WebSocket cho end-user:</strong> (1) media chiếm &gt;99% băng thông — đẩy nó qua connection stateful nghĩa là <em>server của bạn</em> gánh toàn bộ băng thông đó, trong khi segment HTTP tĩnh được CDN cache ở edge: một segment phổ biến phát cho một triệu người mà origin trả bytes đúng một lần; (2) connection dài xuyên qua LB/proxy/mobile network mong manh — HTTP range request + retry per-segment tự phục hồi, còn đứt WebSocket là dựng lại state; (3) adaptive bitrate (client tự đổi độ phân giải theo mạng) là thiết kế gốc của HLS/DASH, tự chế trên gRPC là viết lại nửa giao thức. Ngoại lệ tồn tại và nên biết tên: <strong>WebRTC</strong> cho hội thoại hai chiều latency &lt; 500ms (video call) — một bài toán khác hẳn video-on-demand/live broadcast.</p>
+<h3 id="57-iot--mqttnats-ở-edge--kafka-ở-tầng-ingest">5.7. IoT → MQTT/NATS ở edge + Kafka ở tầng ingest<a hidden class="anchor" aria-hidden="true" href="#57-iot--mqttnats-ở-edge--kafka-ở-tầng-ingest">#</a></h3>
+<p><strong>Vì sao kiến trúc hai tầng:</strong> thiết bị IoT có RAM tính bằng KB–MB, mạng chập chờn, nằm sau NAT. MQTT/NATS được thiết kế đúng cho điều đó: client footprint vài chục KB, QoS level, last-will message, broker/leaf node chạy được trên gateway ở hiện trường, hoạt động ngắt mạng rồi đồng bộ lại. Kafka client thì nặng, giao thức đòi kết nối tới nhiều broker, hoàn toàn sai cỡ cho thiết bị. Ngược lại ở trung tâm, khi 500K thiết bị đổ telemetry về, bạn cần đúng thứ Kafka giỏi: buffer khổng lồ, fan-out cho nhiều pipeline, replay. Bridge MQTT→Kafka (hoặc NATS leaf → JetStream → Kafka Connect) là pattern chuẩn ngành.</p>
+<p><strong>Vì sao không:</strong> <em>Kafka đến tận thiết bị</em> — sai footprint, sai mô hình mạng. <em>Chỉ MQTT toàn hệ</em> — broker MQTT không phải backbone phân tích: retention, partition parallelism, ecosystem xử lý stream đều thiếu. <em>REST từ thiết bị</em> — chi phí TLS handshake + header per-reading đắt gấp nhiều lần payload vài chục byte, và không có ngữ nghĩa offline-queue.</p>
+<h2 id="6-anti-pattern-chung">6. Anti-pattern chung<a hidden class="anchor" aria-hidden="true" href="#6-anti-pattern-chung">#</a></h2>
+<ol>
+<li><strong>Một công nghệ cho mọi thứ (&ldquo;golden hammer&rdquo;).</strong> Tổ chức &ldquo;all-in Kafka&rdquo; bắt cả notification, RPC, config distribution chui qua log; tổ chức &ldquo;all-in REST&rdquo; polling nhau tới chết. Dấu hiệu nhận biết: nghe thấy câu &ldquo;mình đã có X rồi, cứ dùng X&rdquo; trong buổi design review mà không ai liệt kê ràng buộc của bài toán. Một hệ thống trưởng thành có 3–4 model cùng tồn tại, mỗi cái đúng chỗ — đó không phải là thiếu kỷ luật, đó <em>là</em> kỷ luật.</li>
+<li><strong>Kafka làm request-response.</strong> Produce request vào topic A, block chờ reply trên topic B với correlation id. Bạn vừa tự chế: timeout semantics, mapping reply-về-đúng-instance (khi service scale ra N pod, reply partition rơi vào pod khác), cleanup khi caller chết. Latency = produce batch + fetch poll + produce reply + fetch poll — hàng chục ms cho việc gRPC làm trong 2ms. Nếu cần audit trail của request, log nó <em>bên cạnh</em> đường RPC, đừng biến log <em>thành</em> đường RPC.</li>
+<li><strong>REST cho internal high-throughput.</strong> Đường nội bộ 50K req/s bằng JSON-over-HTTP/1.1: 30–40% CPU cho marshal/unmarshal, connection pool phình, không deadline propagation nên một dependency chậm rụng dây chuyền không kiểm soát. Đây là loại nợ âm thầm nhất vì <em>nó chạy được</em> — chỉ là đắt gấp ba và mong manh gấp đôi mức cần thiết.</li>
+<li><strong>GraphQL cho service-to-service.</strong> Hai service backend nói chuyện qua GraphQL: bạn trả chi phí parse query, resolver indirection, và N+1 tiềm ẩn để mua sự linh hoạt &ldquo;client tự chọn field&rdquo; — thứ vô nghĩa khi cả hai đầu do một tổ chức kiểm soát và có thể định nghĩa contract chính xác bằng protobuf. GraphQL giải bài toán <em>nhiều loại client bên ngoài với nhu cầu data khác nhau</em>; giữa hai service, bài toán đó không tồn tại.</li>
+<li><strong>WebSocket cho thứ SSE làm được.</strong> Feed một chiều (notification, price tick, progress bar) chạy WebSocket: bạn ôm vào sticky session, custom heartbeat, tự viết reconnect + resume, proxy/firewall traversal — để dùng đúng một nửa chiều của giao thức. SSE cho tất cả những thứ đó bằng hạ tầng HTTP sẵn có. Quy tắc: <strong>hai chiều thật sự mới WebSocket; còn lại SSE trước, nâng cấp khi bị chứng minh là thiếu.</strong></li>
+<li><strong>Chọn model theo benchmark thay vì theo ngữ nghĩa.</strong> &ldquo;NATS 10 triệu msg/s&rdquo; không liên quan khi bài toán của bạn cần durability mà NATS Core không hứa. Ngữ nghĩa (delivery guarantee, ordering, replay) là ràng buộc cứng; hiệu năng chỉ là ràng buộc khi <em>đo được</em> là thiếu.</li>
+<li><strong>Thêm tầng messaging để &ldquo;decouple&rdquo; hai service vốn dĩ coupling về nghiệp vụ.</strong> Nếu A không thể hoàn thành việc của nó khi chưa biết kết quả từ B, chèn queue vào giữa không xóa được sự phụ thuộc — chỉ giấu nó sau một tầng latency và một chế độ hỏng hóc mới (message kẹt, DLQ đầy). Decoupling bằng hạ tầng chỉ có tác dụng khi nghiệp vụ đã cho phép async.</li>
+</ol>
+<h2 id="7-khi-nào-không-cần-framework-này--và-checklist-cuối">7. Khi nào KHÔNG cần framework này — và checklist cuối<a hidden class="anchor" aria-hidden="true" href="#7-khi-nào-không-cần-framework-này--và-checklist-cuối">#</a></h2>
+<p>Nói thẳng cho đủ hai mặt: nếu hệ của bạn là một monolith với 5K user, hai service và một background job — <strong>REST + một work queue quản lý (SQS/RabbitMQ) là đủ</strong>, và việc dừng ở đó là quyết định kiến trúc <em>tốt</em>, không phải thiếu tầm nhìn. Framework này dành cho lúc ràng buộc thật xuất hiện: consumer đa dạng, throughput có số liệu, realtime có yêu cầu cụ thể. Đừng nhập khẩu độ phức tạp trước khi bài toán nhập khẩu nó cho bạn.</p>
+<h3 id="checklist--architect-phải-tự-trả-lời-trước-khi-chọn-công-nghệ">Checklist — architect phải tự trả lời TRƯỚC khi chọn công nghệ<a hidden class="anchor" aria-hidden="true" href="#checklist--architect-phải-tự-trả-lời-trước-khi-chọn-công-nghệ">#</a></h3>
+<p>Ghi câu trả lời vào ADR (Architecture Decision Record). Câu nào trả lời &ldquo;chưa biết&rdquo; thì đi tìm số liệu, đừng đoán.</p>
+<p><strong>Về consumer và contract</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Ai tiêu thụ: browser, mobile, internal service, thiết bị, đối tác bên ngoài? Tôi có kiểm soát được client không?</li>
+<li><input disabled="" type="checkbox"> Contract sẽ tiến hóa thế nào? Ai bị vỡ khi tôi đổi schema, và tôi phát hiện điều đó lúc build hay lúc runtime?</li>
+</ul>
+<p><strong>Về ngữ nghĩa giao tiếp</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Caller có cần kết quả để đi tiếp không (sync), hay chỉ cần bảo đảm việc sẽ xảy ra (async)?</li>
+<li><input disabled="" type="checkbox"> Một chiều hay hai chiều? Nếu tôi nghĩ là hai chiều — chiều ngược lại có <em>thật sự</em> tồn tại hay chỉ là ACK?</li>
+<li><input disabled="" type="checkbox"> Delivery guarantee nào là ràng buộc nghiệp vụ: mất được không (at-most-once)? trùng được không (at-least-once + idempotency)? Ai trả tiền cho idempotency?</li>
+<li><input disabled="" type="checkbox"> Ordering cần ở phạm vi nào — toàn cục (nghi ngờ lại đi), per-aggregate, hay không cần?</li>
+<li><input disabled="" type="checkbox"> Có cần đọc lại quá khứ không: replay, backfill, audit, thêm consumer mới sau 6 tháng?</li>
+</ul>
+<p><strong>Về tải và vận hành</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Throughput hiện tại và ước lượng 2–3 năm (số, không phải cảm giác)? Peak gấp mấy lần trung bình?</li>
+<li><input disabled="" type="checkbox"> Latency budget end-to-end là bao nhiêu, đo ở percentile nào?</li>
+<li><input disabled="" type="checkbox"> Team đã vận hành hệ stateful nào chưa? Ai on-call cho broker lúc 3 giờ sáng? Ngân sách managed service có không?</li>
+<li><input disabled="" type="checkbox"> Khi hệ này hỏng, blast radius là gì — và tôi sẽ <em>nhìn thấy</em> nó hỏng bằng metric nào ngay từ ngày đầu?</li>
+<li><input disabled="" type="checkbox"> Phương án đơn giản hơn gần nhất là gì, và chính xác thì nó thiếu điều kiện nào nên tôi mới phải phức tạp hơn?</li>
+</ul>
+<p>Câu cuối cùng là câu quan trọng nhất trong toàn bộ chương. Nếu bạn không nêu được <em>điều kiện cụ thể</em> mà phương án đơn giản hơn không thỏa mãn, bạn chưa có lý do để chọn phương án phức tạp — bạn chỉ đang có hứng thú với nó. Kiến trúc tốt không phải là chọn công nghệ mạnh nhất; là chọn công nghệ <em>vừa đúng</em> với hình dạng bài toán, rồi ghi lại lý do để người kế nhiệm (thường là chính bạn, 18 tháng sau) hiểu vì sao.</p>
+<hr>
+<p><a href="/series/backend-communication-architect/09-event-streaming/">← Chương trước</a> | Mục lục | <a href="/series/backend-communication-architect/11-api-design/">Chương sau →</a></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/communication/">Communication</a></li>
+      <li><a href="http://localhost:1313/tags/api/">Api</a></li>
+      <li><a href="http://localhost:1313/tags/architecture/">Architecture</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/backend-communication-architect/09-event-streaming/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 9: Event Streaming — Log phân tán và xử lý sự kiện quy mô lớn</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/backend-communication-architect/11-api-design/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 11: API Design — Thiết kế API cho tuổi thọ 10 năm</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f&amp;hashtags=backend%2ccommunication%2capi%2carchitecture">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;summary=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f&title=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: So sánh Communication Pattern và Framework quyết định on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%3a%20So%20s%c3%a1nh%20Communication%20Pattern%20v%c3%a0%20Framework%20quy%e1%ba%bft%20%c4%91%e1%bb%8bnh&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fbackend-communication-architect%2f10-so-sanh-communication-pattern%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

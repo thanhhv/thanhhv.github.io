@@ -1,12 +1,20 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps | Thanh HV's Blog</title>
-<meta name=keywords content="backend,software-design,design-patterns"><meta name=description content="Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm &ldquo;một tí&rdquo;.
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, software-design, design-patterns">
+<meta name="description" content="Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm &ldquo;một tí&rdquo;.
 Mỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.
 
 A. Long Method
 Ví dụ
 // ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-    // ...15 dòng parse + validate JSON...
+    // ...15 dòng parse &#43; validate JSON...
     // ...10 dòng check tồn kho, gọi inventory service...
     // ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship...
     // ...15 dòng ghi DB trong transaction, xử lý rollback...
@@ -14,99 +22,494 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
     // ...10 dòng build response...
 }
 Nguyên nhân
-Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng &ldquo;tiện thể nhét vào đây vì context sẵn rồi&rdquo;. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/software-design/level-3-refactoring/01-smells-phinh-to/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/software-design/level-3-refactoring/01-smells-phinh-to/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/software-design/level-3-refactoring/01-smells-phinh-to/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content='3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps'><meta property="og:description" content="Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm “một tí”.
-Mỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.
-A. Long Method Ví dụ // ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) { // ...15 dòng parse + validate JSON... // ...10 dòng check tồn kho, gọi inventory service... // ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship... // ...15 dòng ghi DB trong transaction, xử lý rollback... // ...10 dòng gửi event Kafka, log, metric... // ...10 dòng build response... } Nguyên nhân Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng “tiện thể nhét vào đây vì context sẵn rồi”. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-17T09:20:00+07:00"><meta property="article:modified_time" content="2026-07-17T09:20:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Software-Design"><meta property="article:tag" content="Design-Patterns"><meta name=twitter:card content="summary"><meta name=twitter:title content='3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps'><meta name=twitter:description content="Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm &ldquo;một tí&rdquo;.
-Mỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.
+Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng &ldquo;tiện thể nhét vào đây vì context sẵn rồi&rdquo;. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/software-design/level-3-refactoring/01-smells-phinh-to/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/software-design/level-3-refactoring/01-smells-phinh-to/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-A. Long Method
-Ví dụ
-// ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase
-func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-    // ...15 dòng parse + validate JSON...
-    // ...10 dòng check tồn kho, gọi inventory service...
-    // ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship...
-    // ...15 dòng ghi DB trong transaction, xử lý rollback...
-    // ...10 dòng gửi event Kafka, log, metric...
-    // ...10 dòng build response...
-}
-Nguyên nhân
-Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng &ldquo;tiện thể nhét vào đây vì context sẵn rồi&rdquo;. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Software Design \u0026 Design Patterns","item":"https://thanhhv.github.io/series/software-design/"},{"@type":"ListItem","position":3,"name":"3.1 — Code Smells nhóm \"phình to\": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps","item":"https://thanhhv.github.io/series/software-design/level-3-refactoring/01-smells-phinh-to/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"3.1 — Code Smells nhóm \"phình to\": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps","name":"3.1 — Code Smells nhóm \u0022phình to\u0022: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps","description":"Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm \u0026ldquo;một tí\u0026rdquo;.\nMỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.\nA. Long Method Ví dụ // ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) { // ...15 dòng parse + validate JSON... // ...10 dòng check tồn kho, gọi inventory service... // ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship... // ...15 dòng ghi DB trong transaction, xử lý rollback... // ...10 dòng gửi event Kafka, log, metric... // ...10 dòng build response... } Nguyên nhân Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng \u0026ldquo;tiện thể nhét vào đây vì context sẵn rồi\u0026rdquo;. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân.\n","keywords":["backend","software-design","design-patterns"],"articleBody":"Nhóm smell này chung một bệnh sinh: một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm “một tí”.\nMỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.\nA. Long Method Ví dụ // ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) { // ...15 dòng parse + validate JSON... // ...10 dòng check tồn kho, gọi inventory service... // ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship... // ...15 dòng ghi DB trong transaction, xử lý rollback... // ...10 dòng gửi event Kafka, log, metric... // ...10 dòng build response... } Nguyên nhân Không ai viết hàm 150 dòng — hàm 20 dòng lớn lên thành 150 qua hai năm, mỗi PR thêm 5-10 dòng “tiện thể nhét vào đây vì context sẵn rồi”. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn dễ hơn tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân.\nHậu quả Đọc phải giữ toàn bộ 150 dòng trong đầu (biến khai báo dòng 12 được gán lại dòng 90, dùng dòng 140); test chỉ vào được từ cổng HTTP — muốn test riêng logic tính giá phải dựng cả request giả + DB + Kafka; hai dev sửa hai đoạn khác nhau của cùng hàm → conflict; và các đoạn logic không tái sử dụng được (muốn tính giá ở batch job → copy).\nRefactoring phù hợp Extract Method (3.3) theo nguyên tắc mỗi hàm một mức trừu tượng:\n// ✅ hàm gốc trở thành MỤC LỤC — đọc 5 giây hiểu luồng func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) { req, err := parseCreateOrderRequest(r) if err != nil { respondError(w, http.StatusBadRequest, err); return } if err := h.inventory.Reserve(r.Context(), req.Items); err != nil { respondError(w, http.StatusConflict, err); return } quote := h.pricer.Quote(req.Items, req.CustomerID, req.CouponCode) o, err := h.orders.Create(r.Context(), req, quote) if err != nil { respondError(w, http.StatusInternalServerError, err); return } h.events.OrderCreated(r.Context(), o) respondJSON(w, http.StatusCreated, toOrderResponse(o)) } Tín hiệu chỉ điểm chỗ cắt: comment “// bước 1: …” (mỗi comment phân đoạn là một tên hàm đang chờ được đặt), dòng trắng chia cụm, và biến chỉ dùng trong một cụm.\nKhi nào KHÔNG phải smell Đếm dòng là thước đo hạng hai; thước đo hạng nhất là số mức trừu tượng trộn lẫn. Hàm 60 dòng làm một việc ở một mức (bảng switch ánh xạ dài, hàm dựng SQL query phức tạp nhưng tuyến tính, table-driven test) — hoàn toàn ổn. Ngược lại hàm 15 dòng trộn parse + business + I/O vẫn cần mổ. Và đừng chẻ quá tay: 30 hàm 3 dòng gọi dây chuyền còn khó đọc hơn một hàm 40 dòng mạch lạc — chẻ đến khi mỗi tên hàm nói được một điều có nghĩa, rồi dừng.\nB. Large Class \u0026 God Object Ví dụ // ❌ \"class lớn\" phiên bản Go: struct + 47 method trải trên 6 file type OrderManager struct { db, redis, kafka, s3, mailer, sms, pdf, logger /* 8 dependency */ } // order_manager.go: CreateOrder, UpdateOrder, CancelOrder, ... // order_manager_pricing.go: CalcDiscount, ApplyCoupon, EstimateShipping, ... // order_manager_export.go: ExportPDF, ExportExcel, GenerateInvoice, ... // order_manager_notify.go: SendConfirmation, SendReminder, ... // order_manager_report.go: DailyStats, RevenueByRegion, ... God Object là thể nặng của Large Class: object mà mọi luồng nghiệp vụ đều phải đi qua nó, nó biết mọi bảng DB, giữ mọi dependency, và tên của nó thường kết thúc bằng Manager, Service, Processor, Handler, Util — những cái tên trống nghĩa vì nó làm quá nhiều thứ để đặt tên cụ thể.\nNguyên nhân Ba lực cộng hưởng: (1) chi phí kích hoạt — tạo package/struct mới đòi nghĩ tên, nghĩ ranh giới, còn thêm method vào chỗ cũ thì miễn phí; (2) tổ chức code theo danh từ to (“mọi thứ liên quan order”) thay vì theo lý do thay đổi — cohesion chủ đề giả (chương 1.3); (3) DI thuận tay: struct đã có sẵn 8 dependency, thêm method mới dùng luôn, khỏi wiring.\nHậu quả Là điểm hội tụ của mọi thay đổi → conflict git hằng tuần, không ai nắm hết, mọi PR đều đụng nó nên mọi PR đều rủi ro; test dựng cả 8 dependency cho method dùng 1; không tách được team (“phần của ai?” — của tất cả, tức là của không ai); và nó hút thêm code mới theo quán tính — God Object chỉ to lên, không bao giờ tự nhỏ đi.\nRefactoring phù hợp Extract Class (3.3), cắt theo cụm dependency × cụm lý do thay đổi — hai tín hiệu này thường trùng nhau và chỉ thẳng đường ranh:\nOrderManager (47 methods, 8 deps) → order.Service (Create/Update/Cancel — cần db, kafka) → pricing.Engine (CalcDiscount/Coupon — cần db, redis) ← đã gặp ở 2.5 → invoice.Exporter (PDF/Excel — cần s3, pdf) → notify.Service (confirmation/reminder — cần mailer, sms) → orderreport.Query (stats — cần db replica)Chiến thuật an toàn: tách dần từng cụm — cụm export ít coupling nhất tách trước; OrderManager tạm giữ vai facade ủy quyền sang class mới (giữ caller cũ không vỡ), teo dần rồi xóa. Đúng nhịp “chuỗi bước nhỏ” của chương 3.0.\nKhi nào KHÔNG phải smell Package order gom nhiều file quanh một domain là functional cohesion tốt — đừng nhầm “package nhiều code” với God Object; tiêu chí là một struct/một điểm nghẽn chứ không phải tổng số dòng. Và ở app nhỏ 2.000 dòng, một Service struct 15 method là hoàn toàn lành mạnh — God Object là bệnh của quy mô.\nC. Primitive Obsession Ví dụ // ❌ mọi thứ là string và int64 func Transfer(fromAccount string, toAccount string, amount int64, currency string) error // Và hóa đơn của nó, trả dần ở mọi call site: Transfer(toAcc, fromAcc, amt, \"VND\") // đảo ngược from/to — compile ngon, tiền đi nhầm chiều Transfer(from, to, amtUSD, \"VND\") // số tiền USD dán nhãn VND if email != \"\" \u0026\u0026 strings.Contains(email, \"@\") { } // validation rải rác, mỗi nơi một kiểu Nguyên nhân Primitive luôn sẵn — string không cần khai báo type mới; và cảm giác “chỉ là cái email thôi, cần gì type riêng”. Nhưng mỗi primitive trần là một khái niệm nghiệp vụ chưa được đặt tên: “email đã validate”, “số tiền gắn liền currency”, “ID của account (khác ID của order!)”.\nHậu quả Compiler — công cụ kiểm lỗi mạnh nhất, miễn phí nhất — bị vô hiệu hóa: mọi string hoán đổi được cho nhau. Validation lặp và lệch nhau khắp nơi (DRY vi phạm ở mức tri thức). Nghiệp vụ ngầm không có chỗ sống: tiền VND không có phần thập phân, so sánh hai Money khác currency phải là lỗi — logic này rải trong if lẻ tẻ hoặc tệ hơn, trong đầu dev.\nRefactoring phù hợp Replace Primitive with Value Object — đã gặp Money ở chương 1.5, giờ thành hệ thống:\n// ✅ mỗi khái niệm một type — compiler thành người gác nghiệp vụ type AccountID string // named type: AccountID và OrderID không gán lẫn được type Email struct{ addr string } func ParseEmail(s string) (Email, error) { // validate MỘT LẦN ở biên if !emailRx.MatchString(s) { return Email{}, fmt.Errorf(\"invalid email %q\", s) } return Email{addr: strings.ToLower(s)}, nil } // Email tồn tại ⟹ đã hợp lệ. Mọi hàm nhận Email khỏi validate lại. func Transfer(from, to AccountID, amount Money) error // currency sống trong Money Nguyên tắc đi kèm: Parse, don’t validate — biên hệ thống (HTTP handler, consumer) parse primitive thô thành value object; từ đó vào trong, type system bảo đảm tính hợp lệ, code lõi không còn phòng thủ lặt vặt. TypeScript không có named type thật (type alias là structural) — dùng branded type: type AccountID = string \u0026 { readonly __brand: \"AccountID\" } — cùng hiệu quả compile-time.\nKhi nào KHÔNG phải smell Giá trị cục bộ, đi qua 1-2 hàm, không mang invariant: limit int của một query, retries int của một vòng lặp — bọc type là nghi lễ. Value object đáng giá khi khái niệm xuyên nhiều tầng hoặc mang luật riêng. Và trong Go, named type (type AccountID string) gần như miễn phí — với ID, ngưỡng dùng nên rất thấp.\nD. Data Clumps Ví dụ // ❌ bộ ba (street, district, city) đi tour khắp codebase func ValidateAddress(street, district, city string) error func ShippingFee(street, district, city string, weight float64) int64 func SaveCustomer(name, phone, street, district, city string) error func FormatLabel(name, phone, street, district, city string) string Nguyên nhân \u0026 nhận diện Vài mảnh dữ liệu luôn xuất hiện cùng nhau nhưng chưa ai đặt tên cho cụm — một khái niệm domain đang tồn tại ẩn danh. Phép thử của Fowler: xóa một mảnh, các mảnh còn lại còn nghĩa không? district đứng một mình vô nghĩa → chúng là một cụm. Họ hàng gần của Primitive Obsession (cụm primitive thay vì một primitive) và là nguyên nhân trực tiếp của Long Parameter List.\nHậu quả Chữ ký hàm dài và giòn — thêm ward (phường) vào địa chỉ = sửa 15 chữ ký + mọi call site (Shotgun Surgery); các tham số cùng type đứng cạnh nhau chờ bị truyền nhầm thứ tự; và logic của cụm (format địa chỉ, so sánh 2 địa chỉ) không có nhà, rải khắp nơi.\nRefactoring phù hợp Introduce Parameter Object (3.3):\n// ✅ khái niệm ẩn danh được đặt tên — và lập tức thành nam châm hút hành vi về đúng nhà type Address struct { Street, Ward, District, City string } func (a Address) Validate() error { /* ... */ } func (a Address) OneLine() string { /* ... */ } func (a Address) SameDistrict(b Address) bool { /* ... */ } func ShippingFee(addr Address, weight float64) int64 func SaveCustomer(name, phone string, addr Address) error Hiệu ứng dây chuyền đáng giá nhất: sau khi cụm có tên, các hàm thao tác trên cụm tự tìm về làm method — Feature Envy (3.2) quanh cụm đó tự tan. Thêm ward giờ là thay đổi một struct.\nKhi nào KHÔNG phải smell Hai tham số đi cùng nhau đúng một lần — chưa đủ án; Rule of Three áp dụng ở đây. Và đừng gom những thứ tình cờ đi cùng trong một chữ ký nhưng không phải một khái niệm (ctx + logger không phải data clump — chúng là hai mối quan tâm độc lập).\nTổng kết chương — bảng tra nhanh Smell Câu hỏi chẩn đoán Thuốc chính Ngưỡng báo động Long Method Hàm này trộn mấy mức trừu tượng? Extract Method Comment “bước 1/2/3”, biến sống cục bộ theo cụm Large Class / God Object Struct này có mấy lý do thay đổi, mấy cụm dependency? Extract Class Tên kết thúc bằng Manager/Util; mọi PR đều đụng nó Primitive Obsession String/int này mang khái niệm nghiệp vụ nào? Replace Primitive with Value Object Validation lặp; tham số cùng type kề nhau Data Clumps Cụm tham số này có phải một khái niệm ẩn danh? Introduce Parameter Object 3+ tham số luôn đi cùng nhau ở 3+ chữ ký Tiếp theo: 3.2 — Code Smells nhóm coupling\n","wordCount":"1907","inLanguage":"en","datePublished":"2026-07-17T09:20:00+07:00","dateModified":"2026-07-17T09:20:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/software-design/level-3-refactoring/01-smells-phinh-to/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/software-design/>Software Design & Design Patterns</a></div><h1 class="post-title entry-hint-parent">3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps</h1><div class=post-meta><span title='2026-07-17 09:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</div></header><div class=post-content><p>Nhóm smell này chung một bệnh sinh: <strong>một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm</strong> — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm &ldquo;một tí&rdquo;.</p><p>Mỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.</p><hr><h2 id=a-long-method>A. Long Method<a hidden class=anchor aria-hidden=true href=#a-long-method>#</a></h2><h3 id=ví-dụ>Ví dụ<a hidden class=anchor aria-hidden=true href=#ví-dụ>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Handler</span>) <span style=color:#a6e22e>CreateOrder</span>(<span style=color:#a6e22e>w</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>ResponseWriter</span>, <span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Request</span>) {
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...15 dòng parse + validate JSON...</span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...10 dòng check tồn kho, gọi inventory service...</span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship...</span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...15 dòng ghi DB trong transaction, xử lý rollback...</span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...10 dòng gửi event Kafka, log, metric...</span>
-</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...10 dòng build response...</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h3 id=nguyên-nhân>Nguyên nhân<a hidden class=anchor aria-hidden=true href=#nguyên-nhân>#</a></h3><p>Không ai <em>viết</em> hàm 150 dòng — hàm 20 dòng <em>lớn lên</em> thành 150 qua hai năm, mỗi PR thêm 5-10 dòng &ldquo;tiện thể nhét vào đây vì context sẵn rồi&rdquo;. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn <em>dễ hơn</em> tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân.</p><h3 id=hậu-quả>Hậu quả<a hidden class=anchor aria-hidden=true href=#hậu-quả>#</a></h3><p>Đọc phải giữ toàn bộ 150 dòng trong đầu (biến khai báo dòng 12 được gán lại dòng 90, dùng dòng 140); test chỉ vào được từ cổng HTTP — muốn test riêng logic tính giá phải dựng cả request giả + DB + Kafka; hai dev sửa hai đoạn khác nhau của cùng hàm → conflict; và các đoạn logic không tái sử dụng được (muốn tính giá ở batch job → copy).</p><h3 id=refactoring-phù-hợp>Refactoring phù hợp<a hidden class=anchor aria-hidden=true href=#refactoring-phù-hợp>#</a></h3><p><strong>Extract Method</strong> (3.3) theo nguyên tắc <em>mỗi hàm một mức trừu tượng</em>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ✅ hàm gốc trở thành MỤC LỤC — đọc 5 giây hiểu luồng</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Handler</span>) <span style=color:#a6e22e>CreateOrder</span>(<span style=color:#a6e22e>w</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>ResponseWriter</span>, <span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Request</span>) {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>req</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>parseCreateOrderRequest</span>(<span style=color:#a6e22e>r</span>)
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#a6e22e>respondError</span>(<span style=color:#a6e22e>w</span>, <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>StatusBadRequest</span>, <span style=color:#a6e22e>err</span>); <span style=color:#66d9ef>return</span> }
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>inventory</span>.<span style=color:#a6e22e>Reserve</span>(<span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Context</span>(), <span style=color:#a6e22e>req</span>.<span style=color:#a6e22e>Items</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>respondError</span>(<span style=color:#a6e22e>w</span>, <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>StatusConflict</span>, <span style=color:#a6e22e>err</span>); <span style=color:#66d9ef>return</span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>quote</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>pricer</span>.<span style=color:#a6e22e>Quote</span>(<span style=color:#a6e22e>req</span>.<span style=color:#a6e22e>Items</span>, <span style=color:#a6e22e>req</span>.<span style=color:#a6e22e>CustomerID</span>, <span style=color:#a6e22e>req</span>.<span style=color:#a6e22e>CouponCode</span>)
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>o</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>orders</span>.<span style=color:#a6e22e>Create</span>(<span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Context</span>(), <span style=color:#a6e22e>req</span>, <span style=color:#a6e22e>quote</span>)
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#a6e22e>respondError</span>(<span style=color:#a6e22e>w</span>, <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>StatusInternalServerError</span>, <span style=color:#a6e22e>err</span>); <span style=color:#66d9ef>return</span> }
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>events</span>.<span style=color:#a6e22e>OrderCreated</span>(<span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Context</span>(), <span style=color:#a6e22e>o</span>)
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>respondJSON</span>(<span style=color:#a6e22e>w</span>, <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>StatusCreated</span>, <span style=color:#a6e22e>toOrderResponse</span>(<span style=color:#a6e22e>o</span>))
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Tín hiệu chỉ điểm chỗ cắt: <strong>comment &ldquo;// bước 1: &mldr;&rdquo;</strong> (mỗi comment phân đoạn là một tên hàm đang chờ được đặt), <strong>dòng trắng chia cụm</strong>, và <strong>biến chỉ dùng trong một cụm</strong>.</p><h3 id=khi-nào-không-phải-smell>Khi nào KHÔNG phải smell<a hidden class=anchor aria-hidden=true href=#khi-nào-không-phải-smell>#</a></h3><p>Đếm dòng là thước đo hạng hai; thước đo hạng nhất là <strong>số mức trừu tượng trộn lẫn</strong>. Hàm 60 dòng làm <em>một việc ở một mức</em> (bảng switch ánh xạ dài, hàm dựng SQL query phức tạp nhưng tuyến tính, table-driven test) — hoàn toàn ổn. Ngược lại hàm 15 dòng trộn parse + business + I/O vẫn cần mổ. Và đừng chẻ quá tay: 30 hàm 3 dòng gọi dây chuyền còn khó đọc hơn một hàm 40 dòng mạch lạc — chẻ đến khi <em>mỗi tên hàm nói được một điều có nghĩa</em>, rồi dừng.</p><hr><h2 id=b-large-class--god-object>B. Large Class & God Object<a hidden class=anchor aria-hidden=true href=#b-large-class--god-object>#</a></h2><h3 id=ví-dụ-1>Ví dụ<a hidden class=anchor aria-hidden=true href=#ví-dụ-1>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ❌ &#34;class lớn&#34; phiên bản Go: struct + 47 method trải trên 6 file</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>OrderManager</span> <span style=color:#66d9ef>struct</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>db</span>, <span style=color:#a6e22e>redis</span>, <span style=color:#a6e22e>kafka</span>, <span style=color:#a6e22e>s3</span>, <span style=color:#a6e22e>mailer</span>, <span style=color:#a6e22e>sms</span>, <span style=color:#a6e22e>pdf</span>, <span style=color:#a6e22e>logger</span> <span style=color:#75715e>/* 8 dependency */</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span><span style=color:#75715e>// order_manager.go:        CreateOrder, UpdateOrder, CancelOrder, ...</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// order_manager_pricing.go: CalcDiscount, ApplyCoupon, EstimateShipping, ...</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// order_manager_export.go:  ExportPDF, ExportExcel, GenerateInvoice, ...</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// order_manager_notify.go:  SendConfirmation, SendReminder, ...</span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// order_manager_report.go:  DailyStats, RevenueByRegion, ...</span>
-</span></span></code></pre></div><p>God Object là thể nặng của Large Class: object mà <strong>mọi luồng nghiệp vụ đều phải đi qua nó</strong>, nó biết mọi bảng DB, giữ mọi dependency, và tên của nó thường kết thúc bằng <code>Manager</code>, <code>Service</code>, <code>Processor</code>, <code>Handler</code>, <code>Util</code> — những cái tên trống nghĩa vì nó làm quá nhiều thứ để đặt tên cụ thể.</p><h3 id=nguyên-nhân-1>Nguyên nhân<a hidden class=anchor aria-hidden=true href=#nguyên-nhân-1>#</a></h3><p>Ba lực cộng hưởng: (1) chi phí kích hoạt — tạo package/struct mới đòi nghĩ tên, nghĩ ranh giới, còn thêm method vào chỗ cũ thì miễn phí; (2) tổ chức code theo <em>danh từ to</em> (&ldquo;mọi thứ liên quan order&rdquo;) thay vì theo <em>lý do thay đổi</em> — cohesion chủ đề giả (chương 1.3); (3) DI thuận tay: struct đã có sẵn 8 dependency, thêm method mới dùng luôn, khỏi wiring.</p><h3 id=hậu-quả-1>Hậu quả<a hidden class=anchor aria-hidden=true href=#hậu-quả-1>#</a></h3><p>Là điểm hội tụ của mọi thay đổi → conflict git hằng tuần, không ai nắm hết, mọi PR đều đụng nó nên mọi PR đều rủi ro; test dựng cả 8 dependency cho method dùng 1; không tách được team (&ldquo;phần của ai?&rdquo; — của tất cả, tức là của không ai); và nó <strong>hút</strong> thêm code mới theo quán tính — God Object chỉ to lên, không bao giờ tự nhỏ đi.</p><h3 id=refactoring-phù-hợp-1>Refactoring phù hợp<a hidden class=anchor aria-hidden=true href=#refactoring-phù-hợp-1>#</a></h3><p><strong>Extract Class</strong> (3.3), cắt theo <strong>cụm dependency × cụm lý do thay đổi</strong> — hai tín hiệu này thường trùng nhau và chỉ thẳng đường ranh:</p><pre tabindex=0><code>OrderManager (47 methods, 8 deps)
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/software-design/">Software Design &amp; Design Patterns</a></div>
+    <h1 class="post-title entry-hint-parent">
+      3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps
+    </h1>
+    <div class="post-meta"><span title='2026-07-17 09:20:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min
+
+</div>
+  </header> 
+  <div class="post-content"><p>Nhóm smell này chung một bệnh sinh: <strong>một đơn vị code (hàm, struct, kiểu dữ liệu) ôm nhiều hơn mức nó nên ôm</strong> — cohesion giảm dần mà không ai để ý, vì mỗi lần chỉ thêm &ldquo;một tí&rdquo;.</p>
+<p>Mỗi smell trình bày theo khung: ví dụ → nguyên nhân → hậu quả → refactoring phù hợp → khi nào KHÔNG phải smell.</p>
+<hr>
+<h2 id="a-long-method">A. Long Method<a hidden class="anchor" aria-hidden="true" href="#a-long-method">#</a></h2>
+<h3 id="ví-dụ">Ví dụ<a hidden class="anchor" aria-hidden="true" href="#ví-dụ">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ❌ handler 150 dòng — rút gọn còn khung xương, bạn đã thấy nó ở mọi codebase</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">CreateOrder</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...15 dòng parse + validate JSON...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...10 dòng check tồn kho, gọi inventory service...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...20 dòng tính giá: giảm giá theo hạng thành viên, mã coupon, phí ship...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...15 dòng ghi DB trong transaction, xử lý rollback...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...10 dòng gửi event Kafka, log, metric...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...10 dòng build response...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="nguyên-nhân">Nguyên nhân<a hidden class="anchor" aria-hidden="true" href="#nguyên-nhân">#</a></h3>
+<p>Không ai <em>viết</em> hàm 150 dòng — hàm 20 dòng <em>lớn lên</em> thành 150 qua hai năm, mỗi PR thêm 5-10 dòng &ldquo;tiện thể nhét vào đây vì context sẵn rồi&rdquo;. Lực hấp dẫn tự nhiên: thêm code vào hàm có sẵn luôn <em>dễ hơn</em> tạo cấu trúc mới. Long Method là default của entropy, không phải lỗi cá nhân.</p>
+<h3 id="hậu-quả">Hậu quả<a hidden class="anchor" aria-hidden="true" href="#hậu-quả">#</a></h3>
+<p>Đọc phải giữ toàn bộ 150 dòng trong đầu (biến khai báo dòng 12 được gán lại dòng 90, dùng dòng 140); test chỉ vào được từ cổng HTTP — muốn test riêng logic tính giá phải dựng cả request giả + DB + Kafka; hai dev sửa hai đoạn khác nhau của cùng hàm → conflict; và các đoạn logic không tái sử dụng được (muốn tính giá ở batch job → copy).</p>
+<h3 id="refactoring-phù-hợp">Refactoring phù hợp<a hidden class="anchor" aria-hidden="true" href="#refactoring-phù-hợp">#</a></h3>
+<p><strong>Extract Method</strong> (3.3) theo nguyên tắc <em>mỗi hàm một mức trừu tượng</em>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ✅ hàm gốc trở thành MỤC LỤC — đọc 5 giây hiểu luồng</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">CreateOrder</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">parseCreateOrderRequest</span>(<span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#a6e22e">respondError</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusBadRequest</span>, <span style="color:#a6e22e">err</span>); <span style="color:#66d9ef">return</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">Reserve</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>(), <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">Items</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">respondError</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusConflict</span>, <span style="color:#a6e22e">err</span>); <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">quote</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">pricer</span>.<span style="color:#a6e22e">Quote</span>(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">Items</span>, <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">CustomerID</span>, <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">CouponCode</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">o</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>(), <span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">quote</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#a6e22e">respondError</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusInternalServerError</span>, <span style="color:#a6e22e">err</span>); <span style="color:#66d9ef">return</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">events</span>.<span style="color:#a6e22e">OrderCreated</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>(), <span style="color:#a6e22e">o</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">respondJSON</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusCreated</span>, <span style="color:#a6e22e">toOrderResponse</span>(<span style="color:#a6e22e">o</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Tín hiệu chỉ điểm chỗ cắt: <strong>comment &ldquo;// bước 1: &hellip;&rdquo;</strong> (mỗi comment phân đoạn là một tên hàm đang chờ được đặt), <strong>dòng trắng chia cụm</strong>, và <strong>biến chỉ dùng trong một cụm</strong>.</p>
+<h3 id="khi-nào-không-phải-smell">Khi nào KHÔNG phải smell<a hidden class="anchor" aria-hidden="true" href="#khi-nào-không-phải-smell">#</a></h3>
+<p>Đếm dòng là thước đo hạng hai; thước đo hạng nhất là <strong>số mức trừu tượng trộn lẫn</strong>. Hàm 60 dòng làm <em>một việc ở một mức</em> (bảng switch ánh xạ dài, hàm dựng SQL query phức tạp nhưng tuyến tính, table-driven test) — hoàn toàn ổn. Ngược lại hàm 15 dòng trộn parse + business + I/O vẫn cần mổ. Và đừng chẻ quá tay: 30 hàm 3 dòng gọi dây chuyền còn khó đọc hơn một hàm 40 dòng mạch lạc — chẻ đến khi <em>mỗi tên hàm nói được một điều có nghĩa</em>, rồi dừng.</p>
+<hr>
+<h2 id="b-large-class--god-object">B. Large Class &amp; God Object<a hidden class="anchor" aria-hidden="true" href="#b-large-class--god-object">#</a></h2>
+<h3 id="ví-dụ-1">Ví dụ<a hidden class="anchor" aria-hidden="true" href="#ví-dụ-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ❌ &#34;class lớn&#34; phiên bản Go: struct + 47 method trải trên 6 file</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderManager</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">redis</span>, <span style="color:#a6e22e">kafka</span>, <span style="color:#a6e22e">s3</span>, <span style="color:#a6e22e">mailer</span>, <span style="color:#a6e22e">sms</span>, <span style="color:#a6e22e">pdf</span>, <span style="color:#a6e22e">logger</span> <span style="color:#75715e">/* 8 dependency */</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// order_manager.go:        CreateOrder, UpdateOrder, CancelOrder, ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// order_manager_pricing.go: CalcDiscount, ApplyCoupon, EstimateShipping, ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// order_manager_export.go:  ExportPDF, ExportExcel, GenerateInvoice, ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// order_manager_notify.go:  SendConfirmation, SendReminder, ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// order_manager_report.go:  DailyStats, RevenueByRegion, ...</span>
+</span></span></code></pre></div><p>God Object là thể nặng của Large Class: object mà <strong>mọi luồng nghiệp vụ đều phải đi qua nó</strong>, nó biết mọi bảng DB, giữ mọi dependency, và tên của nó thường kết thúc bằng <code>Manager</code>, <code>Service</code>, <code>Processor</code>, <code>Handler</code>, <code>Util</code> — những cái tên trống nghĩa vì nó làm quá nhiều thứ để đặt tên cụ thể.</p>
+<h3 id="nguyên-nhân-1">Nguyên nhân<a hidden class="anchor" aria-hidden="true" href="#nguyên-nhân-1">#</a></h3>
+<p>Ba lực cộng hưởng: (1) chi phí kích hoạt — tạo package/struct mới đòi nghĩ tên, nghĩ ranh giới, còn thêm method vào chỗ cũ thì miễn phí; (2) tổ chức code theo <em>danh từ to</em> (&ldquo;mọi thứ liên quan order&rdquo;) thay vì theo <em>lý do thay đổi</em> — cohesion chủ đề giả (chương 1.3); (3) DI thuận tay: struct đã có sẵn 8 dependency, thêm method mới dùng luôn, khỏi wiring.</p>
+<h3 id="hậu-quả-1">Hậu quả<a hidden class="anchor" aria-hidden="true" href="#hậu-quả-1">#</a></h3>
+<p>Là điểm hội tụ của mọi thay đổi → conflict git hằng tuần, không ai nắm hết, mọi PR đều đụng nó nên mọi PR đều rủi ro; test dựng cả 8 dependency cho method dùng 1; không tách được team (&ldquo;phần của ai?&rdquo; — của tất cả, tức là của không ai); và nó <strong>hút</strong> thêm code mới theo quán tính — God Object chỉ to lên, không bao giờ tự nhỏ đi.</p>
+<h3 id="refactoring-phù-hợp-1">Refactoring phù hợp<a hidden class="anchor" aria-hidden="true" href="#refactoring-phù-hợp-1">#</a></h3>
+<p><strong>Extract Class</strong> (3.3), cắt theo <strong>cụm dependency × cụm lý do thay đổi</strong> — hai tín hiệu này thường trùng nhau và chỉ thẳng đường ranh:</p>
+<pre tabindex="0"><code>OrderManager (47 methods, 8 deps)
     → order.Service      (Create/Update/Cancel — cần db, kafka)
     → pricing.Engine     (CalcDiscount/Coupon — cần db, redis)     ← đã gặp ở 2.5
     → invoice.Exporter   (PDF/Excel — cần s3, pdf)
     → notify.Service     (confirmation/reminder — cần mailer, sms)
-    → orderreport.Query  (stats — cần db replica)</code></pre><p>Chiến thuật an toàn: <strong>tách dần từng cụm</strong> — cụm export ít coupling nhất tách trước; <code>OrderManager</code> tạm giữ vai facade ủy quyền sang class mới (giữ caller cũ không vỡ), teo dần rồi xóa. Đúng nhịp &ldquo;chuỗi bước nhỏ&rdquo; của chương 3.0.</p><h3 id=khi-nào-không-phải-smell-1>Khi nào KHÔNG phải smell<a hidden class=anchor aria-hidden=true href=#khi-nào-không-phải-smell-1>#</a></h3><p>Package <code>order</code> <em>gom nhiều file</em> quanh một domain là functional cohesion tốt — đừng nhầm &ldquo;package nhiều code&rdquo; với God Object; tiêu chí là <em>một struct/một điểm nghẽn</em> chứ không phải tổng số dòng. Và ở app nhỏ 2.000 dòng, một <code>Service</code> struct 15 method là hoàn toàn lành mạnh — God Object là bệnh của quy mô.</p><hr><h2 id=c-primitive-obsession>C. Primitive Obsession<a hidden class=anchor aria-hidden=true href=#c-primitive-obsession>#</a></h2><h3 id=ví-dụ-2>Ví dụ<a hidden class=anchor aria-hidden=true href=#ví-dụ-2>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ❌ mọi thứ là string và int64</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Transfer</span>(<span style=color:#a6e22e>fromAccount</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>toAccount</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>amount</span> <span style=color:#66d9ef>int64</span>, <span style=color:#a6e22e>currency</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span>
-</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Và hóa đơn của nó, trả dần ở mọi call site:</span>
-</span></span><span style=display:flex><span><span style=color:#a6e22e>Transfer</span>(<span style=color:#a6e22e>toAcc</span>, <span style=color:#a6e22e>fromAcc</span>, <span style=color:#a6e22e>amt</span>, <span style=color:#e6db74>&#34;VND&#34;</span>)        <span style=color:#75715e>// đảo ngược from/to — compile ngon, tiền đi nhầm chiều</span>
-</span></span><span style=display:flex><span><span style=color:#a6e22e>Transfer</span>(<span style=color:#a6e22e>from</span>, <span style=color:#a6e22e>to</span>, <span style=color:#a6e22e>amtUSD</span>, <span style=color:#e6db74>&#34;VND&#34;</span>)           <span style=color:#75715e>// số tiền USD dán nhãn VND</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>email</span> <span style=color:#f92672>!=</span> <span style=color:#e6db74>&#34;&#34;</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#a6e22e>strings</span>.<span style=color:#a6e22e>Contains</span>(<span style=color:#a6e22e>email</span>, <span style=color:#e6db74>&#34;@&#34;</span>) { }   <span style=color:#75715e>// validation rải rác, mỗi nơi một kiểu</span>
-</span></span></code></pre></div><h3 id=nguyên-nhân-2>Nguyên nhân<a hidden class=anchor aria-hidden=true href=#nguyên-nhân-2>#</a></h3><p>Primitive luôn sẵn — <code>string</code> không cần khai báo type mới; và cảm giác &ldquo;chỉ là cái email thôi, cần gì type riêng&rdquo;. Nhưng mỗi primitive trần là một <strong>khái niệm nghiệp vụ chưa được đặt tên</strong>: &ldquo;email đã validate&rdquo;, &ldquo;số tiền gắn liền currency&rdquo;, &ldquo;ID của account (khác ID của order!)&rdquo;.</p><h3 id=hậu-quả-2>Hậu quả<a hidden class=anchor aria-hidden=true href=#hậu-quả-2>#</a></h3><p>Compiler — công cụ kiểm lỗi mạnh nhất, miễn phí nhất — bị vô hiệu hóa: mọi string hoán đổi được cho nhau. Validation lặp và lệch nhau khắp nơi (DRY vi phạm ở mức tri thức). Nghiệp vụ ngầm không có chỗ sống: tiền VND không có phần thập phân, so sánh hai Money khác currency phải là lỗi — logic này rải trong if lẻ tẻ hoặc tệ hơn, trong đầu dev.</p><h3 id=refactoring-phù-hợp-2>Refactoring phù hợp<a hidden class=anchor aria-hidden=true href=#refactoring-phù-hợp-2>#</a></h3><p><strong>Replace Primitive with Value Object</strong> — đã gặp <code>Money</code> ở chương 1.5, giờ thành hệ thống:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ✅ mỗi khái niệm một type — compiler thành người gác nghiệp vụ</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>AccountID</span> <span style=color:#66d9ef>string</span>          <span style=color:#75715e>// named type: AccountID và OrderID không gán lẫn được</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Email</span> <span style=color:#66d9ef>struct</span>{ <span style=color:#a6e22e>addr</span> <span style=color:#66d9ef>string</span> }
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ParseEmail</span>(<span style=color:#a6e22e>s</span> <span style=color:#66d9ef>string</span>) (<span style=color:#a6e22e>Email</span>, <span style=color:#66d9ef>error</span>) {  <span style=color:#75715e>// validate MỘT LẦN ở biên</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>emailRx</span>.<span style=color:#a6e22e>MatchString</span>(<span style=color:#a6e22e>s</span>) {
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Email</span>{}, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;invalid email %q&#34;</span>, <span style=color:#a6e22e>s</span>)
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Email</span>{<span style=color:#a6e22e>addr</span>: <span style=color:#a6e22e>strings</span>.<span style=color:#a6e22e>ToLower</span>(<span style=color:#a6e22e>s</span>)}, <span style=color:#66d9ef>nil</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span><span style=color:#75715e>// Email tồn tại ⟹ đã hợp lệ. Mọi hàm nhận Email khỏi validate lại.</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Transfer</span>(<span style=color:#a6e22e>from</span>, <span style=color:#a6e22e>to</span> <span style=color:#a6e22e>AccountID</span>, <span style=color:#a6e22e>amount</span> <span style=color:#a6e22e>Money</span>) <span style=color:#66d9ef>error</span>   <span style=color:#75715e>// currency sống trong Money</span>
-</span></span></code></pre></div><p>Nguyên tắc đi kèm: <strong>Parse, don&rsquo;t validate</strong> — biên hệ thống (HTTP handler, consumer) parse primitive thô thành value object; từ đó vào trong, type system bảo đảm tính hợp lệ, code lõi không còn phòng thủ lặt vặt. TypeScript không có named type thật (type alias là structural) — dùng branded type: <code>type AccountID = string & { readonly __brand: "AccountID" }</code> — cùng hiệu quả compile-time.</p><h3 id=khi-nào-không-phải-smell-2>Khi nào KHÔNG phải smell<a hidden class=anchor aria-hidden=true href=#khi-nào-không-phải-smell-2>#</a></h3><p>Giá trị cục bộ, đi qua 1-2 hàm, không mang invariant: <code>limit int</code> của một query, <code>retries int</code> của một vòng lặp — bọc type là nghi lễ. Value object đáng giá khi khái niệm <strong>xuyên nhiều tầng</strong> hoặc <strong>mang luật riêng</strong>. Và trong Go, named type (<code>type AccountID string</code>) gần như miễn phí — với ID, ngưỡng dùng nên rất thấp.</p><hr><h2 id=d-data-clumps>D. Data Clumps<a hidden class=anchor aria-hidden=true href=#d-data-clumps>#</a></h2><h3 id=ví-dụ-3>Ví dụ<a hidden class=anchor aria-hidden=true href=#ví-dụ-3>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ❌ bộ ba (street, district, city) đi tour khắp codebase</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ValidateAddress</span>(<span style=color:#a6e22e>street</span>, <span style=color:#a6e22e>district</span>, <span style=color:#a6e22e>city</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ShippingFee</span>(<span style=color:#a6e22e>street</span>, <span style=color:#a6e22e>district</span>, <span style=color:#a6e22e>city</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>weight</span> <span style=color:#66d9ef>float64</span>) <span style=color:#66d9ef>int64</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>SaveCustomer</span>(<span style=color:#a6e22e>name</span>, <span style=color:#a6e22e>phone</span>, <span style=color:#a6e22e>street</span>, <span style=color:#a6e22e>district</span>, <span style=color:#a6e22e>city</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>error</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>FormatLabel</span>(<span style=color:#a6e22e>name</span>, <span style=color:#a6e22e>phone</span>, <span style=color:#a6e22e>street</span>, <span style=color:#a6e22e>district</span>, <span style=color:#a6e22e>city</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>string</span>
-</span></span></code></pre></div><h3 id=nguyên-nhân--nhận-diện>Nguyên nhân & nhận diện<a hidden class=anchor aria-hidden=true href=#nguyên-nhân--nhận-diện>#</a></h3><p>Vài mảnh dữ liệu <strong>luôn xuất hiện cùng nhau</strong> nhưng chưa ai đặt tên cho cụm — một khái niệm domain đang tồn tại <em>ẩn danh</em>. Phép thử của Fowler: <em>xóa một mảnh, các mảnh còn lại còn nghĩa không?</em> <code>district</code> đứng một mình vô nghĩa → chúng là một cụm. Họ hàng gần của Primitive Obsession (cụm primitive thay vì một primitive) và là nguyên nhân trực tiếp của Long Parameter List.</p><h3 id=hậu-quả-3>Hậu quả<a hidden class=anchor aria-hidden=true href=#hậu-quả-3>#</a></h3><p>Chữ ký hàm dài và giòn — thêm <code>ward</code> (phường) vào địa chỉ = sửa 15 chữ ký + mọi call site (Shotgun Surgery); các tham số cùng type đứng cạnh nhau chờ bị truyền nhầm thứ tự; và logic của cụm (format địa chỉ, so sánh 2 địa chỉ) không có nhà, rải khắp nơi.</p><h3 id=refactoring-phù-hợp-3>Refactoring phù hợp<a hidden class=anchor aria-hidden=true href=#refactoring-phù-hợp-3>#</a></h3><p><strong>Introduce Parameter Object</strong> (3.3):</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ✅ khái niệm ẩn danh được đặt tên — và lập tức thành nam châm hút hành vi về đúng nhà</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Address</span> <span style=color:#66d9ef>struct</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>Street</span>, <span style=color:#a6e22e>Ward</span>, <span style=color:#a6e22e>District</span>, <span style=color:#a6e22e>City</span> <span style=color:#66d9ef>string</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>a</span> <span style=color:#a6e22e>Address</span>) <span style=color:#a6e22e>Validate</span>() <span style=color:#66d9ef>error</span>        { <span style=color:#75715e>/* ... */</span> }
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>a</span> <span style=color:#a6e22e>Address</span>) <span style=color:#a6e22e>OneLine</span>() <span style=color:#66d9ef>string</span>        { <span style=color:#75715e>/* ... */</span> }
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>a</span> <span style=color:#a6e22e>Address</span>) <span style=color:#a6e22e>SameDistrict</span>(<span style=color:#a6e22e>b</span> <span style=color:#a6e22e>Address</span>) <span style=color:#66d9ef>bool</span> { <span style=color:#75715e>/* ... */</span> }
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ShippingFee</span>(<span style=color:#a6e22e>addr</span> <span style=color:#a6e22e>Address</span>, <span style=color:#a6e22e>weight</span> <span style=color:#66d9ef>float64</span>) <span style=color:#66d9ef>int64</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>SaveCustomer</span>(<span style=color:#a6e22e>name</span>, <span style=color:#a6e22e>phone</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>addr</span> <span style=color:#a6e22e>Address</span>) <span style=color:#66d9ef>error</span>
-</span></span></code></pre></div><p>Hiệu ứng dây chuyền đáng giá nhất: sau khi cụm có tên, các hàm thao tác trên cụm <strong>tự tìm về</strong> làm method — Feature Envy (3.2) quanh cụm đó tự tan. Thêm <code>ward</code> giờ là thay đổi một struct.</p><h3 id=khi-nào-không-phải-smell-3>Khi nào KHÔNG phải smell<a hidden class=anchor aria-hidden=true href=#khi-nào-không-phải-smell-3>#</a></h3><p>Hai tham số đi cùng nhau đúng một lần — chưa đủ án; Rule of Three áp dụng ở đây. Và đừng gom những thứ <em>tình cờ</em> đi cùng trong một chữ ký nhưng không phải một khái niệm (<code>ctx</code> + <code>logger</code> không phải data clump — chúng là hai mối quan tâm độc lập).</p><hr><h2 id=tổng-kết-chương--bảng-tra-nhanh>Tổng kết chương — bảng tra nhanh<a hidden class=anchor aria-hidden=true href=#tổng-kết-chương--bảng-tra-nhanh>#</a></h2><table><thead><tr><th>Smell</th><th>Câu hỏi chẩn đoán</th><th>Thuốc chính</th><th>Ngưỡng báo động</th></tr></thead><tbody><tr><td>Long Method</td><td>Hàm này trộn mấy mức trừu tượng?</td><td>Extract Method</td><td>Comment &ldquo;bước 1/2/3&rdquo;, biến sống cục bộ theo cụm</td></tr><tr><td>Large Class / God Object</td><td>Struct này có mấy <em>lý do thay đổi</em>, mấy cụm dependency?</td><td>Extract Class</td><td>Tên kết thúc bằng Manager/Util; mọi PR đều đụng nó</td></tr><tr><td>Primitive Obsession</td><td>String/int này mang khái niệm nghiệp vụ nào?</td><td>Replace Primitive with Value Object</td><td>Validation lặp; tham số cùng type kề nhau</td></tr><tr><td>Data Clumps</td><td>Cụm tham số này có phải một khái niệm ẩn danh?</td><td>Introduce Parameter Object</td><td>3+ tham số luôn đi cùng nhau ở 3+ chữ ký</td></tr></tbody></table><hr><p><em>Tiếp theo: <a href=/series/software-design/level-3-refactoring/02-smells-coupling/>3.2 — Code Smells nhóm coupling</a></em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/software-design/>Software-Design</a></li><li><a href=https://thanhhv.github.io/tags/design-patterns/>Design-Patterns</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/software-design/level-3-refactoring/00-technical-debt-legacy-code/><span class=title>« Prev</span><br><span>3.0 — Technical Debt & Legacy Code: kinh tế học của việc refactor</span>
-</a><a class=next href=https://thanhhv.github.io/series/software-design/level-3-refactoring/02-smells-coupling/><span class=title>Next »</span><br><span>3.2 — Code Smells nhóm coupling: Duplicate Code, Shotgun Surgery, Feature Envy, Message Chains, Middle Man</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label='share 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on x' href="https://x.com/intent/tweet/?text=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f&amp;hashtags=backend%2csoftware-design%2cdesign-patterns"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label='share 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on linkedin' href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f&amp;title=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;summary=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label='share 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on reddit' href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f&title=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label='share 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on facebook' href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label='share 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on whatsapp' href="https://api.whatsapp.com/send?text=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label='share 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on telegram' href="https://telegram.me/share/url?text=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label='share 3.1 — Code Smells nhóm "phình to": Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on ycombinator' href="https://news.ycombinator.com/submitlink?t=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+    → orderreport.Query  (stats — cần db replica)</code></pre><p>Chiến thuật an toàn: <strong>tách dần từng cụm</strong> — cụm export ít coupling nhất tách trước; <code>OrderManager</code> tạm giữ vai facade ủy quyền sang class mới (giữ caller cũ không vỡ), teo dần rồi xóa. Đúng nhịp &ldquo;chuỗi bước nhỏ&rdquo; của chương 3.0.</p>
+<h3 id="khi-nào-không-phải-smell-1">Khi nào KHÔNG phải smell<a hidden class="anchor" aria-hidden="true" href="#khi-nào-không-phải-smell-1">#</a></h3>
+<p>Package <code>order</code> <em>gom nhiều file</em> quanh một domain là functional cohesion tốt — đừng nhầm &ldquo;package nhiều code&rdquo; với God Object; tiêu chí là <em>một struct/một điểm nghẽn</em> chứ không phải tổng số dòng. Và ở app nhỏ 2.000 dòng, một <code>Service</code> struct 15 method là hoàn toàn lành mạnh — God Object là bệnh của quy mô.</p>
+<hr>
+<h2 id="c-primitive-obsession">C. Primitive Obsession<a hidden class="anchor" aria-hidden="true" href="#c-primitive-obsession">#</a></h2>
+<h3 id="ví-dụ-2">Ví dụ<a hidden class="anchor" aria-hidden="true" href="#ví-dụ-2">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ❌ mọi thứ là string và int64</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Transfer</span>(<span style="color:#a6e22e">fromAccount</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">toAccount</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">currency</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Và hóa đơn của nó, trả dần ở mọi call site:</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Transfer</span>(<span style="color:#a6e22e">toAcc</span>, <span style="color:#a6e22e">fromAcc</span>, <span style="color:#a6e22e">amt</span>, <span style="color:#e6db74">&#34;VND&#34;</span>)        <span style="color:#75715e">// đảo ngược from/to — compile ngon, tiền đi nhầm chiều</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Transfer</span>(<span style="color:#a6e22e">from</span>, <span style="color:#a6e22e">to</span>, <span style="color:#a6e22e">amtUSD</span>, <span style="color:#e6db74">&#34;VND&#34;</span>)           <span style="color:#75715e">// số tiền USD dán nhãn VND</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">email</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Contains</span>(<span style="color:#a6e22e">email</span>, <span style="color:#e6db74">&#34;@&#34;</span>) { }   <span style="color:#75715e">// validation rải rác, mỗi nơi một kiểu</span>
+</span></span></code></pre></div><h3 id="nguyên-nhân-2">Nguyên nhân<a hidden class="anchor" aria-hidden="true" href="#nguyên-nhân-2">#</a></h3>
+<p>Primitive luôn sẵn — <code>string</code> không cần khai báo type mới; và cảm giác &ldquo;chỉ là cái email thôi, cần gì type riêng&rdquo;. Nhưng mỗi primitive trần là một <strong>khái niệm nghiệp vụ chưa được đặt tên</strong>: &ldquo;email đã validate&rdquo;, &ldquo;số tiền gắn liền currency&rdquo;, &ldquo;ID của account (khác ID của order!)&rdquo;.</p>
+<h3 id="hậu-quả-2">Hậu quả<a hidden class="anchor" aria-hidden="true" href="#hậu-quả-2">#</a></h3>
+<p>Compiler — công cụ kiểm lỗi mạnh nhất, miễn phí nhất — bị vô hiệu hóa: mọi string hoán đổi được cho nhau. Validation lặp và lệch nhau khắp nơi (DRY vi phạm ở mức tri thức). Nghiệp vụ ngầm không có chỗ sống: tiền VND không có phần thập phân, so sánh hai Money khác currency phải là lỗi — logic này rải trong if lẻ tẻ hoặc tệ hơn, trong đầu dev.</p>
+<h3 id="refactoring-phù-hợp-2">Refactoring phù hợp<a hidden class="anchor" aria-hidden="true" href="#refactoring-phù-hợp-2">#</a></h3>
+<p><strong>Replace Primitive with Value Object</strong> — đã gặp <code>Money</code> ở chương 1.5, giờ thành hệ thống:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ✅ mỗi khái niệm một type — compiler thành người gác nghiệp vụ</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AccountID</span> <span style="color:#66d9ef">string</span>          <span style="color:#75715e">// named type: AccountID và OrderID không gán lẫn được</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Email</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">addr</span> <span style="color:#66d9ef">string</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ParseEmail</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">Email</span>, <span style="color:#66d9ef">error</span>) {  <span style="color:#75715e">// validate MỘT LẦN ở biên</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">emailRx</span>.<span style="color:#a6e22e">MatchString</span>(<span style="color:#a6e22e">s</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Email</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;invalid email %q&#34;</span>, <span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Email</span>{<span style="color:#a6e22e">addr</span>: <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">ToLower</span>(<span style="color:#a6e22e">s</span>)}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Email tồn tại ⟹ đã hợp lệ. Mọi hàm nhận Email khỏi validate lại.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Transfer</span>(<span style="color:#a6e22e">from</span>, <span style="color:#a6e22e">to</span> <span style="color:#a6e22e">AccountID</span>, <span style="color:#a6e22e">amount</span> <span style="color:#a6e22e">Money</span>) <span style="color:#66d9ef">error</span>   <span style="color:#75715e">// currency sống trong Money</span>
+</span></span></code></pre></div><p>Nguyên tắc đi kèm: <strong>Parse, don&rsquo;t validate</strong> — biên hệ thống (HTTP handler, consumer) parse primitive thô thành value object; từ đó vào trong, type system bảo đảm tính hợp lệ, code lõi không còn phòng thủ lặt vặt. TypeScript không có named type thật (type alias là structural) — dùng branded type: <code>type AccountID = string &amp; { readonly __brand: &quot;AccountID&quot; }</code> — cùng hiệu quả compile-time.</p>
+<h3 id="khi-nào-không-phải-smell-2">Khi nào KHÔNG phải smell<a hidden class="anchor" aria-hidden="true" href="#khi-nào-không-phải-smell-2">#</a></h3>
+<p>Giá trị cục bộ, đi qua 1-2 hàm, không mang invariant: <code>limit int</code> của một query, <code>retries int</code> của một vòng lặp — bọc type là nghi lễ. Value object đáng giá khi khái niệm <strong>xuyên nhiều tầng</strong> hoặc <strong>mang luật riêng</strong>. Và trong Go, named type (<code>type AccountID string</code>) gần như miễn phí — với ID, ngưỡng dùng nên rất thấp.</p>
+<hr>
+<h2 id="d-data-clumps">D. Data Clumps<a hidden class="anchor" aria-hidden="true" href="#d-data-clumps">#</a></h2>
+<h3 id="ví-dụ-3">Ví dụ<a hidden class="anchor" aria-hidden="true" href="#ví-dụ-3">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ❌ bộ ba (street, district, city) đi tour khắp codebase</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ValidateAddress</span>(<span style="color:#a6e22e">street</span>, <span style="color:#a6e22e">district</span>, <span style="color:#a6e22e">city</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ShippingFee</span>(<span style="color:#a6e22e">street</span>, <span style="color:#a6e22e">district</span>, <span style="color:#a6e22e">city</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">weight</span> <span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">SaveCustomer</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">phone</span>, <span style="color:#a6e22e">street</span>, <span style="color:#a6e22e">district</span>, <span style="color:#a6e22e">city</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">FormatLabel</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">phone</span>, <span style="color:#a6e22e">street</span>, <span style="color:#a6e22e">district</span>, <span style="color:#a6e22e">city</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">string</span>
+</span></span></code></pre></div><h3 id="nguyên-nhân--nhận-diện">Nguyên nhân &amp; nhận diện<a hidden class="anchor" aria-hidden="true" href="#nguyên-nhân--nhận-diện">#</a></h3>
+<p>Vài mảnh dữ liệu <strong>luôn xuất hiện cùng nhau</strong> nhưng chưa ai đặt tên cho cụm — một khái niệm domain đang tồn tại <em>ẩn danh</em>. Phép thử của Fowler: <em>xóa một mảnh, các mảnh còn lại còn nghĩa không?</em> <code>district</code> đứng một mình vô nghĩa → chúng là một cụm. Họ hàng gần của Primitive Obsession (cụm primitive thay vì một primitive) và là nguyên nhân trực tiếp của Long Parameter List.</p>
+<h3 id="hậu-quả-3">Hậu quả<a hidden class="anchor" aria-hidden="true" href="#hậu-quả-3">#</a></h3>
+<p>Chữ ký hàm dài và giòn — thêm <code>ward</code> (phường) vào địa chỉ = sửa 15 chữ ký + mọi call site (Shotgun Surgery); các tham số cùng type đứng cạnh nhau chờ bị truyền nhầm thứ tự; và logic của cụm (format địa chỉ, so sánh 2 địa chỉ) không có nhà, rải khắp nơi.</p>
+<h3 id="refactoring-phù-hợp-3">Refactoring phù hợp<a hidden class="anchor" aria-hidden="true" href="#refactoring-phù-hợp-3">#</a></h3>
+<p><strong>Introduce Parameter Object</strong> (3.3):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ✅ khái niệm ẩn danh được đặt tên — và lập tức thành nam châm hút hành vi về đúng nhà</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Address</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Street</span>, <span style="color:#a6e22e">Ward</span>, <span style="color:#a6e22e">District</span>, <span style="color:#a6e22e">City</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#a6e22e">Address</span>) <span style="color:#a6e22e">Validate</span>() <span style="color:#66d9ef">error</span>        { <span style="color:#75715e">/* ... */</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#a6e22e">Address</span>) <span style="color:#a6e22e">OneLine</span>() <span style="color:#66d9ef">string</span>        { <span style="color:#75715e">/* ... */</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#a6e22e">Address</span>) <span style="color:#a6e22e">SameDistrict</span>(<span style="color:#a6e22e">b</span> <span style="color:#a6e22e">Address</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#75715e">/* ... */</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ShippingFee</span>(<span style="color:#a6e22e">addr</span> <span style="color:#a6e22e">Address</span>, <span style="color:#a6e22e">weight</span> <span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">SaveCustomer</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">phone</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">addr</span> <span style="color:#a6e22e">Address</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p>Hiệu ứng dây chuyền đáng giá nhất: sau khi cụm có tên, các hàm thao tác trên cụm <strong>tự tìm về</strong> làm method — Feature Envy (3.2) quanh cụm đó tự tan. Thêm <code>ward</code> giờ là thay đổi một struct.</p>
+<h3 id="khi-nào-không-phải-smell-3">Khi nào KHÔNG phải smell<a hidden class="anchor" aria-hidden="true" href="#khi-nào-không-phải-smell-3">#</a></h3>
+<p>Hai tham số đi cùng nhau đúng một lần — chưa đủ án; Rule of Three áp dụng ở đây. Và đừng gom những thứ <em>tình cờ</em> đi cùng trong một chữ ký nhưng không phải một khái niệm (<code>ctx</code> + <code>logger</code> không phải data clump — chúng là hai mối quan tâm độc lập).</p>
+<hr>
+<h2 id="tổng-kết-chương--bảng-tra-nhanh">Tổng kết chương — bảng tra nhanh<a hidden class="anchor" aria-hidden="true" href="#tổng-kết-chương--bảng-tra-nhanh">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Smell</th>
+          <th>Câu hỏi chẩn đoán</th>
+          <th>Thuốc chính</th>
+          <th>Ngưỡng báo động</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Long Method</td>
+          <td>Hàm này trộn mấy mức trừu tượng?</td>
+          <td>Extract Method</td>
+          <td>Comment &ldquo;bước 1/2/3&rdquo;, biến sống cục bộ theo cụm</td>
+      </tr>
+      <tr>
+          <td>Large Class / God Object</td>
+          <td>Struct này có mấy <em>lý do thay đổi</em>, mấy cụm dependency?</td>
+          <td>Extract Class</td>
+          <td>Tên kết thúc bằng Manager/Util; mọi PR đều đụng nó</td>
+      </tr>
+      <tr>
+          <td>Primitive Obsession</td>
+          <td>String/int này mang khái niệm nghiệp vụ nào?</td>
+          <td>Replace Primitive with Value Object</td>
+          <td>Validation lặp; tham số cùng type kề nhau</td>
+      </tr>
+      <tr>
+          <td>Data Clumps</td>
+          <td>Cụm tham số này có phải một khái niệm ẩn danh?</td>
+          <td>Introduce Parameter Object</td>
+          <td>3+ tham số luôn đi cùng nhau ở 3+ chữ ký</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<p><em>Tiếp theo: <a href="/series/software-design/level-3-refactoring/02-smells-coupling/">3.2 — Code Smells nhóm coupling</a></em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/software-design/">Software-Design</a></li>
+      <li><a href="http://localhost:1313/tags/design-patterns/">Design-Patterns</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/software-design/level-3-refactoring/00-technical-debt-legacy-code/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>3.0 — Technical Debt &amp; Legacy Code: kinh tế học của việc refactor</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/software-design/level-3-refactoring/02-smells-coupling/">
+    <span class="title">Next »</span>
+    <br>
+    <span>3.2 — Code Smells nhóm coupling: Duplicate Code, Shotgun Surgery, Feature Envy, Message Chains, Middle Man</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on x"
+            href="https://x.com/intent/tweet/?text=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f&amp;hashtags=backend%2csoftware-design%2cdesign-patterns">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f&amp;title=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;summary=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f&title=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on whatsapp"
+            href="https://api.whatsapp.com/send?text=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on telegram"
+            href="https://telegram.me/share/url?text=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share 3.1 — Code Smells nhóm &#34;phình to&#34;: Long Method, Large Class, God Object, Primitive Obsession, Data Clumps on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=3.1%20%e2%80%94%20Code%20Smells%20nh%c3%b3m%20%22ph%c3%acnh%20to%22%3a%20Long%20Method%2c%20Large%20Class%2c%20God%20Object%2c%20Primitive%20Obsession%2c%20Data%20Clumps&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-3-refactoring%2f01-smells-phinh-to%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

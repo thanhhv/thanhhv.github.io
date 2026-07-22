@@ -1,7 +1,129 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 11 — Network Stack: hành trình một packet xuyên kernel | Thanh HV's Blog</title>
-<meta name=keywords content="backend,linux,operating-system"><meta name=description content="1. Problem Statement
-NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn một thứ hoàn toàn khác: &ldquo;một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng&rdquo;. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó hai lần (vào và ra)."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/linux-os-for-backend/11-network-stack/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/linux-os-for-backend/11-network-stack/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/linux-os-for-backend/11-network-stack/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 11 — Network Stack: hành trình một packet xuyên kernel"><meta property="og:description" content="1. Problem Statement NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn một thứ hoàn toàn khác: “một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng”. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó hai lần (vào và ra)."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-02-21T18:00:00+07:00"><meta property="article:modified_time" content="2026-02-21T18:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Linux"><meta property="article:tag" content="Operating-System"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 11 — Network Stack: hành trình một packet xuyên kernel"><meta name=twitter:description content="1. Problem Statement
-NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn một thứ hoàn toàn khác: &ldquo;một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng&rdquo;. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó hai lần (vào và ra)."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Operating Systems cho Backend Engineer","item":"https://thanhhv.github.io/series/linux-os-for-backend/"},{"@type":"ListItem","position":3,"name":"Chương 11 — Network Stack: hành trình một packet xuyên kernel","item":"https://thanhhv.github.io/series/linux-os-for-backend/11-network-stack/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 11 — Network Stack: hành trình một packet xuyên kernel","name":"Chương 11 — Network Stack: hành trình một packet xuyên kernel","description":"1. Problem Statement NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn một thứ hoàn toàn khác: \u0026ldquo;một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng\u0026rdquo;. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó hai lần (vào và ra).\n","keywords":["backend","linux","operating-system"],"articleBody":"1. Problem Statement NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn một thứ hoàn toàn khác: “một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng”. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó hai lần (vào và ra).\nNếu không có: mỗi app tự viết TCP (sai, không tương thích, không chia sẻ được NIC), hoặc thế giới không có Internet như ta biết.\n2. Tại sao nó tồn tại trong kernel (mà không phải thư viện) Chia sẻ + ghép kênh: một NIC, nghìn socket của trăm process — phải có trọng tài phân phối packet theo (protocol, IP, port). Bảo mật: quyền bind port \u003c 1024, firewall (netfilter), không cho process đọc traffic của nhau. Hiệu năng: xử lý trong interrupt/softirq ngay khi packet đến, không đợi app được schedule. Ngoại lệ chứng minh quy tắc: DPDK/XDP bypass kernel khi cần triệu packet/giây — trả giá bằng việc tự làm lại tất cả những điều trên. 3. Internal Architecture ỨNG DỤNG socket API: socket/bind/listen/accept/connect/send/recv ─────────────────────────┬───────────────────────────────────────────── KERNEL ▼ ┌── Socket layer ──────────────────────────────────────────────┐ │ struct socket ↔ struct sock (TCP: tcp_sock) │ │ SEND BUFFER (sk_sndbuf) │ RECEIVE BUFFER (sk_rcvbuf) │ ← nơi app └────────────┬─────────────────────────▲───────────────────────┘ gặp kernel ┌── TCP ─────▼─────────────────────────┴───────────────────────┐ │ state machine, seq/ack, retransmit (RTO), congestion control │ │ (cubic mặc định / bbr), flow control (rwnd), Nagle, ... │ └────────────┬─────────────────────────▲───────────────────────┘ ┌── IP ──────▼─────────────────────────┴───────────────────────┐ │ routing (FIB lookup), netfilter hooks (iptables/nftables), │ │ fragmentation │ └────────────┬─────────────────────────▲───────────────────────┘ ┌── Device ──▼─────────────────────────┴───────────────────────┐ │ qdisc (fq_codel...), driver, RING BUFFER tx/rx │ └────────────┬─────────────────────────▲───────────────────────┘ ─────────────────────────┼───────────────┼───────────────────────── HARDWARE NIC ──DMA + interrupt/NAPI── (RSS: nhiều queue → nhiều CPU)Dữ liệu trong kernel di chuyển dưới dạng sk_buff (skb) — struct mô tả packet với con trỏ head/data/tail: các tầng thêm/bớt header bằng cách dịch con trỏ, không copy — bài học zero-copy nội bộ đầu tiên.\n3.1. Đường nhận (RX) — từ dây đồng đến recv() 1. Frame đến NIC → NIC DMA vào RX ring buffer (RAM) → interrupt (lần đầu) 2. NAPI: kernel TẮT interrupt của NIC, chuyển sang POLL trong softirq NET_RX (tải cao = poll gộp nhiều frame/lần — đúng trade-off interrupt vs poll, chương 02) 3. GRO: gộp các segment liên tiếp thành super-packet (đỡ n lần xử lý stack) 4. IP: checksum, route → \"cho máy này\" → TCP 5. TCP: tra socket theo 4-tuple → đúng connection - đúng thứ tự → xếp vào receive buffer; sai thứ tự → out-of-order queue - cập nhật rwnd, gửi ACK (có thể delayed) 6. Socket có data → ep_poll_callback → đánh thức epoll/app (chương 10) 7. App: recv() → copy_to_user từ receive buffer → app có dữ liệuHai điểm production ngay từ đường RX: RX ring đầy (app/softirq không kịp gặt) → NIC vứt frame → ethtool -S eth0 | grep -i drop; một CPU gánh mọi softirq (không RSS/RPS) → %si 100% một core trong khi core khác rảnh — trần throughput vô hình.\n3.2. Đường gửi (TX) và các bộ đệm send() không gửi packet — nó copy vào send buffer rồi về. TCP quyết định khi nào dữ liệu thực sự rời máy, dựa trên: cwnd (congestion), rwnd (bên nhận), Nagle (gom byte nhỏ — tương tác thảm họa với delayed ACK: cụm 40ms latency; RPC framework tắt bằng TCP_NODELAY gần như mặc định). Xuống dưới: TSO/GSO đẩy việc cắt segment cho NIC làm bằng phần cứng.\nChuỗi backpressure tự nhiên: app ghi nhanh hơn mạng rút → send buffer đầy → send() block (hoặc EAGAIN) → app phải chậm lại. Service proxy/streaming phải thiết kế cho tín hiệu này (client chậm kéo lùi upstream — hoặc buffer nổ memory).\n3.3. accept queue và backlog — cửa ải bị bỏ quên SYN đến ──► SYN QUEUE (half-open, ──3-way xong──► ACCEPT QUEUE ──accept()──► app chống đầy bằng syncookies) (size = min(backlog, somaxconn)) ĐẦY? → drop/RST ← \"connection refused /timeout\" khi app chậm acceptHai hàng đợi này là hai case sự cố riêng (SYN flood \u0026 backlog full — chương 16). Số phải nhớ: net.core.somaxconn (mặc định lịch sử 128, hiện 4096) kẹp trên tham số backlog mà app truyền vào listen() — chỉnh một trong hai là chưa đủ.\n3.4. Zero copy: sendfile và splice Bài toán: gửi file 1GB ra socket. Đường ngây thơ read()+write(): disk→page cache→copy sang user buf→copy về socket buf→NIC. Hai lần CPU copy + 4 lần vượt biên hoàn toàn vô nghĩa — user space không nhìn nội dung, chỉ trung chuyển.\nsendfile(out_sock, in_fd, off, len): dữ liệu đi page cache → socket thẳng trong kernel; với NIC scatter-gather thì 0 lần CPU copy — NIC DMA trực tiếp từ page cache. Kafka phục vụ consumer và Nginx serve static file sống bằng syscall này (chương 17). splice: tổng quát hóa qua pipe — trung chuyển giữa hai fd bất kỳ bằng cách chuyển tham chiếu page, không chuyển data. Proxy dùng để nối hai socket. Benchmark đại diện (file 10GB nóng cache → localhost): read+write ~2.5GB/s, CPU 90%; sendfile ~8-9GB/s, CPU 25% — khác biệt chính là hai lần copy và syscall per-chunk. 4. Cách hoạt động — TCP connection nhìn từ kernel, trọn vòng đời client connect() ─SYN→ server (kernel TỰ trả SYN+ACK, app chưa biết gì) ←SYN+ACK─ ─ACK→ connection vào accept queue → app accept() → có fd [trao đổi: send/recv chỉ chạm BUFFER; TCP lo seq/ack/retransmit ngầm] app close() ─FIN→ ... ←FIN─ ─ACK→ → bên đóng trước vào TIME_WAIT 60s ← giữ chỗ chống lẫn packet cũTIME_WAIT là nguồn hiểu lầm kinh niên: hàng chục nghìn TIME_WAIT gần như vô hại với server (vài trăm byte/entry) — vấn đề thật chỉ có ở phía client tạo connection dồn dập tới cùng đích (cạn ephemeral port): fix đúng là net.ipv4.tcp_tw_reuse=1 + connection pool/keep-alive; tcp_tw_recycle đã bị xóa khỏi kernel vì phá NAT — blog nào còn khuyên là blog đó hết hạn.\nĐiều đáng khắc sâu: TCP state machine sống trong kernel, độc lập với app. App treo GC 30 giây? Kernel vẫn ACK, vẫn giữ connection sống. App chết? Kernel gửi RST/FIN. Đây là lý do healthcheck tầng TCP (“port mở”) gần như vô giá trị — phải check tầng ứng dụng.\n5. Trade-off Quyết định Được Mất Stack trong kernel Chia sẻ, an toàn, app đơn giản Copy user↔kernel; syscall; trần ~triệu pps/core → DPDK/XDP cho ai cần hơn Buffer mọi tầng Hấp thụ burst, throughput Bufferbloat — latency ẩn trong hàng đợi; “send xong” ≠ “đã tới nơi” TCP tự động hết App khỏi lo mất mát/nghẽn Hành vi ngầm khó thấy: Nagle, delayed ACK, RTO min 200ms, cwnd reset khi idle Autotuning buffer (tcp_rmem/wmem) Tự thích nghi BDP Mặc định trần có thể thấp cho đường dài băng rộng (điều duy nhất thường đáng tăng) syncookies Sống sót SYN flood Mất một số TCP option khi kích hoạt — chỉ là chế độ khẩn 6. Production ss là công cụ số một (thay netstat): ss -tnp state established '( dport = :5432 )'; ss -tmi xem buffer/cwnd/rtt từng connection; Recv-Q/Send-Q cột đầu — Recv-Q cao = app đọc chậm, Send-Q cao = mạng/bên kia chậm. Với listen socket: Recv-Q/Send-Q = độ đầy/size accept queue. Drop \u0026 retransmit: nstat -az | grep -Ei 'retrans|drop|overflow' (TcpRetransSegs, ListenOverflows, ListenDrops — hai cái sau chính là backlog full); ethtool -S cho drop mức NIC. Latency phân đoạn: RTT trong ss -i; eBPF tcprtt, tcpretrans, tcpdrop — thấy từng sự kiện với stack trace, trả lời “mạng hay app”. Sysctl đáng biết (đo trước khi chỉnh — chương 17 có bảng đầy đủ): net.core.somaxconn, net.ipv4.tcp_max_syn_backlog, net.ipv4.ip_local_port_range, net.ipv4.tcp_rmem/wmem (max), net.core.netdev_max_backlog, congestion control (bbr cho đường dài/lossy — đo với workload thật). Capture có kỷ luật: tcpdump -w với filter chặt + -c giới hạn; phân tích offline bằng tshark/wireshark. Trên máy 10Gbps, tcpdump không filter tự nó là sự cố. 7. Anti-pattern Không dùng connection pool/keep-alive — mỗi request một handshake (+TLS!) rồi đổ lỗi “mạng chậm”; đồng thời tự tạo bão TIME_WAIT phía client. Chỉnh sysctl network hàng loạt theo “gist tuning tối thượng” — có dòng vô hại, có dòng (tcp_tw_recycle xưa, buffer max khổng lồ gây bufferbloat) gây sự cố tinh vi. Bỏ qua TCP_NODELAY cho protocol request-response nhỏ → cụm 40ms bí ẩn ở p99. Đọc “connection refused” mà chỉ nghi app — không kiểm tra ListenOverflows (accept queue đầy do app chậm accept sau GC pause là kịch bản rất phổ biến). Load balancer healthcheck TCP-open trong khi app đã treo — traffic vẫn đổ vào xác sống. 8. Failure Analysis — case mẫu: timeout lác đác giờ cao điểm, mạng “bình thường” Triệu chứng: 0.5% request timeout lúc peak; ping/iperf giữa các máy đẹp; team mạng và team app đổ lỗi nhau hai tuần. Điều tra: nstat trên server app: TcpExtListenOverflows tăng đều đúng khung giờ sự cố. ss -lnt: listen socket Recv-Q chạm Send-Q (=128). App là Java, GC pause p99 ~800ms lúc peak. Root cause: GC pause → thread accept đứng → accept queue (128, vì somaxconn mặc định cũ) đầy trong milli-giây ở 5k conn/s → kernel drop SYN-ACK-hoàn-tất → client timeout. Không packet nào “mất trên mạng” cả — chúng chết ở cửa. Fix: somaxconn + backlog app → 4096 (mua thời gian sống qua pause); tuning GC giảm pause; sau đó chuyển service sang G1/ZGC. Prevention: alert trên ListenOverflows \u003e 0 (mọi máy, mọi lúc — số này phải là 0 tuyệt đối), dashboard GC pause cạnh connection rate. 9. Khi nào không nên tối ưu Nếu retransmit ~0, ListenOverflows = 0, RTT ổn, buffer autotuning chưa chạm trần — network stack không phải vấn đề của bạn, và BBR/sysctl/zero-copy sẽ không cứu được cái N+1 query đang chiếm 400ms trong request 450ms. Zero-copy chỉ có nghĩa khi CPU copy đo được là thành phần lớn (proxy/file server băng thông cao). Kernel bypass (DPDK/XDP) là bước cuối cùng có chi phí vận hành khổng lồ — dành cho tầng hạ tầng (LB, DDoS scrubbing), không phải service nghiệp vụ.\nChương tiếp theo: đã đủ nền để nói chuyện đo đạc nghiêm túc: Chương 12: Linux Performance Tools — cơ chế hoạt động của perf, eBPF, ftrace và bộ đồ nghề cổ điển.\n","wordCount":"1746","inLanguage":"en","datePublished":"2026-02-21T18:00:00+07:00","dateModified":"2026-02-21T18:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/linux-os-for-backend/11-network-stack/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/linux-os-for-backend/>Operating Systems cho Backend Engineer</a></div><h1 class="post-title entry-hint-parent">Chương 11 — Network Stack: hành trình một packet xuyên kernel</h1><div class=post-meta><span title='2026-02-21 18:00:00 +0700 +07'>February 21, 2026</span>&nbsp;·&nbsp;9 min</div></header><div class=post-content><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>NIC là phần cứng nhận/gửi <strong>frame Ethernet thô</strong>. Ứng dụng muốn một thứ hoàn toàn khác: &ldquo;một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng&rdquo;. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó <strong>hai lần</strong> (vào và ra).</p><p>Nếu không có: mỗi app tự viết TCP (sai, không tương thích, không chia sẻ được NIC), hoặc thế giới không có Internet như ta biết.</p><h2 id=2-tại-sao-nó-tồn-tại-trong-kernel-mà-không-phải-thư-viện>2. Tại sao nó tồn tại trong kernel (mà không phải thư viện)<a hidden class=anchor aria-hidden=true href=#2-tại-sao-nó-tồn-tại-trong-kernel-mà-không-phải-thư-viện>#</a></h2><ul><li><strong>Chia sẻ + ghép kênh</strong>: một NIC, nghìn socket của trăm process — phải có trọng tài phân phối packet theo (protocol, IP, port).</li><li><strong>Bảo mật</strong>: quyền bind port &lt; 1024, firewall (netfilter), không cho process đọc traffic của nhau.</li><li><strong>Hiệu năng</strong>: xử lý trong interrupt/softirq ngay khi packet đến, không đợi app được schedule.</li><li>Ngoại lệ chứng minh quy tắc: DPDK/XDP bypass kernel khi cần triệu packet/giây — trả giá bằng việc tự làm lại tất cả những điều trên.</li></ul><h2 id=3-internal-architecture>3. Internal Architecture<a hidden class=anchor aria-hidden=true href=#3-internal-architecture>#</a></h2><pre tabindex=0><code>  ỨNG DỤNG          socket API: socket/bind/listen/accept/connect/send/recv
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Chương 11 — Network Stack: hành trình một packet xuyên kernel | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, linux, operating-system">
+<meta name="description" content="1. Problem Statement
+NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn một thứ hoàn toàn khác: &ldquo;một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng&rdquo;. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó hai lần (vào và ra).">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/linux-os-for-backend/11-network-stack/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/linux-os-for-backend/11-network-stack/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/linux-os-for-backend/">Operating Systems cho Backend Engineer</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Chương 11 — Network Stack: hành trình một packet xuyên kernel
+    </h1>
+    <div class="post-meta"><span title='2026-02-21 18:00:00 +0700 +07'>February 21, 2026</span>&nbsp;·&nbsp;9 min
+
+</div>
+  </header> 
+  <div class="post-content"><h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<p>NIC là phần cứng nhận/gửi <strong>frame Ethernet thô</strong>. Ứng dụng muốn một thứ hoàn toàn khác: &ldquo;một kết nối đáng tin cậy tới host X, gửi byte theo thứ tự, đừng làm mất, đừng làm nghẽn mạng&rdquo;. Khoảng cách giữa hai thế giới đó — checksum, định tuyến, phân mảnh, retransmit, congestion control, ghép kênh theo port — chính là network stack trong kernel. Đây là mã đường-nóng lớn nhất và được tối ưu khốc liệt nhất của Linux: mọi request tới backend của bạn đi qua nó <strong>hai lần</strong> (vào và ra).</p>
+<p>Nếu không có: mỗi app tự viết TCP (sai, không tương thích, không chia sẻ được NIC), hoặc thế giới không có Internet như ta biết.</p>
+<h2 id="2-tại-sao-nó-tồn-tại-trong-kernel-mà-không-phải-thư-viện">2. Tại sao nó tồn tại trong kernel (mà không phải thư viện)<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-nó-tồn-tại-trong-kernel-mà-không-phải-thư-viện">#</a></h2>
+<ul>
+<li><strong>Chia sẻ + ghép kênh</strong>: một NIC, nghìn socket của trăm process — phải có trọng tài phân phối packet theo (protocol, IP, port).</li>
+<li><strong>Bảo mật</strong>: quyền bind port &lt; 1024, firewall (netfilter), không cho process đọc traffic của nhau.</li>
+<li><strong>Hiệu năng</strong>: xử lý trong interrupt/softirq ngay khi packet đến, không đợi app được schedule.</li>
+<li>Ngoại lệ chứng minh quy tắc: DPDK/XDP bypass kernel khi cần triệu packet/giây — trả giá bằng việc tự làm lại tất cả những điều trên.</li>
+</ul>
+<h2 id="3-internal-architecture">3. Internal Architecture<a hidden class="anchor" aria-hidden="true" href="#3-internal-architecture">#</a></h2>
+<pre tabindex="0"><code>  ỨNG DỤNG          socket API: socket/bind/listen/accept/connect/send/recv
 ─────────────────────────┬─────────────────────────────────────────────
   KERNEL                 ▼
   ┌── Socket layer ──────────────────────────────────────────────┐
@@ -20,7 +142,9 @@ NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn mộ
   │ qdisc (fq_codel...), driver, RING BUFFER tx/rx               │
   └────────────┬─────────────────────────▲───────────────────────┘
 ─────────────────────────┼───────────────┼─────────────────────────
-  HARDWARE      NIC ──DMA + interrupt/NAPI──  (RSS: nhiều queue → nhiều CPU)</code></pre><p>Dữ liệu trong kernel di chuyển dưới dạng <strong>sk_buff (skb)</strong> — struct mô tả packet với con trỏ head/data/tail: các tầng thêm/bớt header bằng cách <strong>dịch con trỏ, không copy</strong> — bài học zero-copy nội bộ đầu tiên.</p><h3 id=31-đường-nhận-rx--từ-dây-đồng-đến-recv>3.1. Đường nhận (RX) — từ dây đồng đến <code>recv()</code><a hidden class=anchor aria-hidden=true href=#31-đường-nhận-rx--từ-dây-đồng-đến-recv>#</a></h3><pre tabindex=0><code>1. Frame đến NIC → NIC DMA vào RX ring buffer (RAM) → interrupt (lần đầu)
+  HARDWARE      NIC ──DMA + interrupt/NAPI──  (RSS: nhiều queue → nhiều CPU)</code></pre><p>Dữ liệu trong kernel di chuyển dưới dạng <strong>sk_buff (skb)</strong> — struct mô tả packet với con trỏ head/data/tail: các tầng thêm/bớt header bằng cách <strong>dịch con trỏ, không copy</strong> — bài học zero-copy nội bộ đầu tiên.</p>
+<h3 id="31-đường-nhận-rx--từ-dây-đồng-đến-recv">3.1. Đường nhận (RX) — từ dây đồng đến <code>recv()</code><a hidden class="anchor" aria-hidden="true" href="#31-đường-nhận-rx--từ-dây-đồng-đến-recv">#</a></h3>
+<pre tabindex="0"><code>1. Frame đến NIC → NIC DMA vào RX ring buffer (RAM) → interrupt (lần đầu)
 2. NAPI: kernel TẮT interrupt của NIC, chuyển sang POLL trong softirq NET_RX
    (tải cao = poll gộp nhiều frame/lần — đúng trade-off interrupt vs poll, chương 02)
 3. GRO: gộp các segment liên tiếp thành super-packet (đỡ n lần xử lý stack)
@@ -29,17 +153,314 @@ NIC là phần cứng nhận/gửi frame Ethernet thô. Ứng dụng muốn mộ
    - đúng thứ tự → xếp vào receive buffer; sai thứ tự → out-of-order queue
    - cập nhật rwnd, gửi ACK (có thể delayed)
 6. Socket có data → ep_poll_callback → đánh thức epoll/app (chương 10)
-7. App: recv() → copy_to_user từ receive buffer → app có dữ liệu</code></pre><p>Hai điểm production ngay từ đường RX: <strong>RX ring đầy</strong> (app/softirq không kịp gặt) → NIC vứt frame → <code>ethtool -S eth0 | grep -i drop</code>; <strong>một CPU gánh mọi softirq</strong> (không RSS/RPS) → <code>%si</code> 100% một core trong khi core khác rảnh — trần throughput vô hình.</p><h3 id=32-đường-gửi-tx-và-các-bộ-đệm>3.2. Đường gửi (TX) và các bộ đệm<a hidden class=anchor aria-hidden=true href=#32-đường-gửi-tx-và-các-bộ-đệm>#</a></h3><p><code>send()</code> <strong>không gửi packet</strong> — nó copy vào send buffer rồi về. TCP quyết định <em>khi nào</em> dữ liệu thực sự rời máy, dựa trên: cwnd (congestion), rwnd (bên nhận), Nagle (gom byte nhỏ — tương tác thảm họa với delayed ACK: cụm 40ms latency; RPC framework tắt bằng <code>TCP_NODELAY</code> gần như mặc định). Xuống dưới: TSO/GSO đẩy việc cắt segment cho NIC làm bằng phần cứng.</p><p><strong>Chuỗi backpressure tự nhiên</strong>: app ghi nhanh hơn mạng rút → send buffer đầy → <code>send()</code> block (hoặc EAGAIN) → app phải chậm lại. Service proxy/streaming <em>phải</em> thiết kế cho tín hiệu này (client chậm kéo lùi upstream — hoặc buffer nổ memory).</p><h3 id=33-accept-queue-và-backlog--cửa-ải-bị-bỏ-quên>3.3. accept queue và backlog — cửa ải bị bỏ quên<a hidden class=anchor aria-hidden=true href=#33-accept-queue-và-backlog--cửa-ải-bị-bỏ-quên>#</a></h3><pre tabindex=0><code>SYN đến ──► SYN QUEUE (half-open,       ──3-way xong──► ACCEPT QUEUE ──accept()──► app
+7. App: recv() → copy_to_user từ receive buffer → app có dữ liệu</code></pre><p>Hai điểm production ngay từ đường RX: <strong>RX ring đầy</strong> (app/softirq không kịp gặt) → NIC vứt frame → <code>ethtool -S eth0 | grep -i drop</code>; <strong>một CPU gánh mọi softirq</strong> (không RSS/RPS) → <code>%si</code> 100% một core trong khi core khác rảnh — trần throughput vô hình.</p>
+<h3 id="32-đường-gửi-tx-và-các-bộ-đệm">3.2. Đường gửi (TX) và các bộ đệm<a hidden class="anchor" aria-hidden="true" href="#32-đường-gửi-tx-và-các-bộ-đệm">#</a></h3>
+<p><code>send()</code> <strong>không gửi packet</strong> — nó copy vào send buffer rồi về. TCP quyết định <em>khi nào</em> dữ liệu thực sự rời máy, dựa trên: cwnd (congestion), rwnd (bên nhận), Nagle (gom byte nhỏ — tương tác thảm họa với delayed ACK: cụm 40ms latency; RPC framework tắt bằng <code>TCP_NODELAY</code> gần như mặc định). Xuống dưới: TSO/GSO đẩy việc cắt segment cho NIC làm bằng phần cứng.</p>
+<p><strong>Chuỗi backpressure tự nhiên</strong>: app ghi nhanh hơn mạng rút → send buffer đầy → <code>send()</code> block (hoặc EAGAIN) → app phải chậm lại. Service proxy/streaming <em>phải</em> thiết kế cho tín hiệu này (client chậm kéo lùi upstream — hoặc buffer nổ memory).</p>
+<h3 id="33-accept-queue-và-backlog--cửa-ải-bị-bỏ-quên">3.3. accept queue và backlog — cửa ải bị bỏ quên<a hidden class="anchor" aria-hidden="true" href="#33-accept-queue-và-backlog--cửa-ải-bị-bỏ-quên">#</a></h3>
+<pre tabindex="0"><code>SYN đến ──► SYN QUEUE (half-open,       ──3-way xong──► ACCEPT QUEUE ──accept()──► app
             chống đầy bằng syncookies)      (size = min(backlog, somaxconn))
                                              ĐẦY? → drop/RST ← &#34;connection refused
-                                                     /timeout&#34; khi app chậm accept</code></pre><p>Hai hàng đợi này là hai case sự cố riêng (SYN flood & backlog full — chương 16). Số phải nhớ: <code>net.core.somaxconn</code> (mặc định lịch sử 128, hiện 4096) <strong>kẹp trên</strong> tham số backlog mà app truyền vào <code>listen()</code> — chỉnh một trong hai là chưa đủ.</p><h3 id=34-zero-copy-sendfile-và-splice>3.4. Zero copy: sendfile và splice<a hidden class=anchor aria-hidden=true href=#34-zero-copy-sendfile-và-splice>#</a></h3><p>Bài toán: gửi file 1GB ra socket. Đường ngây thơ <code>read()+write()</code>: disk→page cache→<strong>copy sang user buf</strong>→<strong>copy về socket buf</strong>→NIC. Hai lần CPU copy + 4 lần vượt biên hoàn toàn vô nghĩa — user space không nhìn nội dung, chỉ trung chuyển.</p><ul><li><strong><code>sendfile(out_sock, in_fd, off, len)</code></strong>: dữ liệu đi page cache → socket thẳng trong kernel; với NIC scatter-gather thì <em>0 lần CPU copy</em> — NIC DMA trực tiếp từ page cache. Kafka phục vụ consumer và Nginx serve static file sống bằng syscall này (chương 17).</li><li><strong><code>splice</code></strong>: tổng quát hóa qua pipe — trung chuyển giữa hai fd bất kỳ bằng cách chuyển <em>tham chiếu page</em>, không chuyển data. Proxy dùng để nối hai socket.</li><li>Benchmark đại diện (file 10GB nóng cache → localhost): read+write ~2.5GB/s, CPU 90%; sendfile ~8-9GB/s, CPU 25% — khác biệt chính là hai lần copy và syscall per-chunk.</li></ul><h2 id=4-cách-hoạt-động--tcp-connection-nhìn-từ-kernel-trọn-vòng-đời>4. Cách hoạt động — TCP connection nhìn từ kernel, trọn vòng đời<a hidden class=anchor aria-hidden=true href=#4-cách-hoạt-động--tcp-connection-nhìn-từ-kernel-trọn-vòng-đời>#</a></h2><pre tabindex=0><code>client connect() ─SYN→ server (kernel TỰ trả SYN+ACK, app chưa biết gì)
+                                                     /timeout&#34; khi app chậm accept</code></pre><p>Hai hàng đợi này là hai case sự cố riêng (SYN flood &amp; backlog full — chương 16). Số phải nhớ: <code>net.core.somaxconn</code> (mặc định lịch sử 128, hiện 4096) <strong>kẹp trên</strong> tham số backlog mà app truyền vào <code>listen()</code> — chỉnh một trong hai là chưa đủ.</p>
+<h3 id="34-zero-copy-sendfile-và-splice">3.4. Zero copy: sendfile và splice<a hidden class="anchor" aria-hidden="true" href="#34-zero-copy-sendfile-và-splice">#</a></h3>
+<p>Bài toán: gửi file 1GB ra socket. Đường ngây thơ <code>read()+write()</code>: disk→page cache→<strong>copy sang user buf</strong>→<strong>copy về socket buf</strong>→NIC. Hai lần CPU copy + 4 lần vượt biên hoàn toàn vô nghĩa — user space không nhìn nội dung, chỉ trung chuyển.</p>
+<ul>
+<li><strong><code>sendfile(out_sock, in_fd, off, len)</code></strong>: dữ liệu đi page cache → socket thẳng trong kernel; với NIC scatter-gather thì <em>0 lần CPU copy</em> — NIC DMA trực tiếp từ page cache. Kafka phục vụ consumer và Nginx serve static file sống bằng syscall này (chương 17).</li>
+<li><strong><code>splice</code></strong>: tổng quát hóa qua pipe — trung chuyển giữa hai fd bất kỳ bằng cách chuyển <em>tham chiếu page</em>, không chuyển data. Proxy dùng để nối hai socket.</li>
+<li>Benchmark đại diện (file 10GB nóng cache → localhost): read+write ~2.5GB/s, CPU 90%; sendfile ~8-9GB/s, CPU 25% — khác biệt chính là hai lần copy và syscall per-chunk.</li>
+</ul>
+<h2 id="4-cách-hoạt-động--tcp-connection-nhìn-từ-kernel-trọn-vòng-đời">4. Cách hoạt động — TCP connection nhìn từ kernel, trọn vòng đời<a hidden class="anchor" aria-hidden="true" href="#4-cách-hoạt-động--tcp-connection-nhìn-từ-kernel-trọn-vòng-đời">#</a></h2>
+<pre tabindex="0"><code>client connect() ─SYN→ server (kernel TỰ trả SYN+ACK, app chưa biết gì)
         ←SYN+ACK─
         ─ACK→    connection vào accept queue → app accept() → có fd
 [trao đổi: send/recv chỉ chạm BUFFER; TCP lo seq/ack/retransmit ngầm]
 app close() ─FIN→ ... ←FIN─ ─ACK→
-        → bên đóng trước vào TIME_WAIT 60s ← giữ chỗ chống lẫn packet cũ</code></pre><p>TIME_WAIT là nguồn hiểu lầm kinh niên: hàng chục nghìn TIME_WAIT <strong>gần như vô hại với server</strong> (vài trăm byte/entry) — vấn đề thật chỉ có ở phía <strong>client</strong> tạo connection dồn dập tới cùng đích (cạn ephemeral port): fix đúng là <code>net.ipv4.tcp_tw_reuse=1</code> + connection pool/keep-alive; <code>tcp_tw_recycle</code> đã bị xóa khỏi kernel vì phá NAT — blog nào còn khuyên là blog đó hết hạn.</p><p>Điều đáng khắc sâu: <strong>TCP state machine sống trong kernel, độc lập với app</strong>. App treo GC 30 giây? Kernel vẫn ACK, vẫn giữ connection sống. App chết? Kernel gửi RST/FIN. Đây là lý do healthcheck tầng TCP (&ldquo;port mở&rdquo;) gần như vô giá trị — phải check tầng ứng dụng.</p><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><table><thead><tr><th>Quyết định</th><th>Được</th><th>Mất</th></tr></thead><tbody><tr><td>Stack trong kernel</td><td>Chia sẻ, an toàn, app đơn giản</td><td>Copy user↔kernel; syscall; trần ~triệu pps/core → DPDK/XDP cho ai cần hơn</td></tr><tr><td>Buffer mọi tầng</td><td>Hấp thụ burst, throughput</td><td>Bufferbloat — latency ẩn trong hàng đợi; &ldquo;send xong&rdquo; ≠ &ldquo;đã tới nơi&rdquo;</td></tr><tr><td>TCP tự động hết</td><td>App khỏi lo mất mát/nghẽn</td><td>Hành vi ngầm khó thấy: Nagle, delayed ACK, RTO min 200ms, cwnd reset khi idle</td></tr><tr><td>Autotuning buffer (<code>tcp_rmem/wmem</code>)</td><td>Tự thích nghi BDP</td><td>Mặc định trần có thể thấp cho đường dài băng rộng (điều duy nhất thường đáng tăng)</td></tr><tr><td>syncookies</td><td>Sống sót SYN flood</td><td>Mất một số TCP option khi kích hoạt — chỉ là chế độ khẩn</td></tr></tbody></table><h2 id=6-production>6. Production<a hidden class=anchor aria-hidden=true href=#6-production>#</a></h2><ul><li><strong><code>ss</code> là công cụ số một</strong> (thay netstat): <code>ss -tnp state established '( dport = :5432 )'</code>; <code>ss -tmi</code> xem buffer/cwnd/rtt từng connection; Recv-Q/Send-Q cột đầu — Recv-Q cao = app đọc chậm, Send-Q cao = mạng/bên kia chậm. Với listen socket: Recv-Q/Send-Q = độ đầy/size accept queue.</li><li>Drop & retransmit: <code>nstat -az | grep -Ei 'retrans|drop|overflow'</code> (TcpRetransSegs, ListenOverflows, ListenDrops — hai cái sau chính là backlog full); <code>ethtool -S</code> cho drop mức NIC.</li><li>Latency phân đoạn: RTT trong <code>ss -i</code>; eBPF <code>tcprtt</code>, <code>tcpretrans</code>, <code>tcpdrop</code> — thấy từng sự kiện với stack trace, trả lời &ldquo;mạng hay app&rdquo;.</li><li>Sysctl đáng biết (đo trước khi chỉnh — chương 17 có bảng đầy đủ): <code>net.core.somaxconn</code>, <code>net.ipv4.tcp_max_syn_backlog</code>, <code>net.ipv4.ip_local_port_range</code>, <code>net.ipv4.tcp_rmem/wmem</code> (max), <code>net.core.netdev_max_backlog</code>, congestion control (<code>bbr</code> cho đường dài/lossy — đo với workload thật).</li><li>Capture có kỷ luật: <code>tcpdump -w</code> với filter chặt + <code>-c</code> giới hạn; phân tích offline bằng tshark/wireshark. Trên máy 10Gbps, tcpdump không filter tự nó là sự cố.</li></ul><h2 id=7-anti-pattern>7. Anti-pattern<a hidden class=anchor aria-hidden=true href=#7-anti-pattern>#</a></h2><ul><li>Không dùng connection pool/keep-alive — mỗi request một handshake (+TLS!) rồi đổ lỗi &ldquo;mạng chậm&rdquo;; đồng thời tự tạo bão TIME_WAIT phía client.</li><li>Chỉnh sysctl network hàng loạt theo &ldquo;gist tuning tối thượng&rdquo; — có dòng vô hại, có dòng (<code>tcp_tw_recycle</code> xưa, buffer max khổng lồ gây bufferbloat) gây sự cố tinh vi.</li><li>Bỏ qua <code>TCP_NODELAY</code> cho protocol request-response nhỏ → cụm 40ms bí ẩn ở p99.</li><li>Đọc &ldquo;connection refused&rdquo; mà chỉ nghi app — không kiểm tra ListenOverflows (accept queue đầy do app chậm accept sau GC pause là kịch bản rất phổ biến).</li><li>Load balancer healthcheck TCP-open trong khi app đã treo — traffic vẫn đổ vào xác sống.</li></ul><h2 id=8-failure-analysis--case-mẫu-timeout-lác-đác-giờ-cao-điểm-mạng-bình-thường>8. Failure Analysis — case mẫu: timeout lác đác giờ cao điểm, mạng &ldquo;bình thường&rdquo;<a hidden class=anchor aria-hidden=true href=#8-failure-analysis--case-mẫu-timeout-lác-đác-giờ-cao-điểm-mạng-bình-thường>#</a></h2><ul><li><strong>Triệu chứng</strong>: 0.5% request timeout lúc peak; ping/iperf giữa các máy đẹp; team mạng và team app đổ lỗi nhau hai tuần.</li><li><strong>Điều tra</strong>: <code>nstat</code> trên server app: <code>TcpExtListenOverflows</code> tăng đều đúng khung giờ sự cố. <code>ss -lnt</code>: listen socket Recv-Q chạm Send-Q (=128). App là Java, GC pause p99 ~800ms lúc peak.</li><li><strong>Root cause</strong>: GC pause → thread accept đứng → accept queue (128, vì somaxconn mặc định cũ) đầy trong milli-giây ở 5k conn/s → kernel drop SYN-ACK-hoàn-tất → client timeout. Không packet nào &ldquo;mất trên mạng&rdquo; cả — chúng chết ở cửa.</li><li><strong>Fix</strong>: somaxconn + backlog app → 4096 (mua thời gian sống qua pause); tuning GC giảm pause; sau đó chuyển service sang G1/ZGC. <strong>Prevention</strong>: alert trên ListenOverflows > 0 (mọi máy, mọi lúc — số này phải là 0 tuyệt đối), dashboard GC pause cạnh connection rate.</li></ul><h2 id=9-khi-nào-không-nên-tối-ưu>9. Khi nào không nên tối ưu<a hidden class=anchor aria-hidden=true href=#9-khi-nào-không-nên-tối-ưu>#</a></h2><p>Nếu retransmit ~0, ListenOverflows = 0, RTT ổn, buffer autotuning chưa chạm trần — network stack không phải vấn đề của bạn, và BBR/sysctl/zero-copy sẽ không cứu được cái N+1 query đang chiếm 400ms trong request 450ms. Zero-copy chỉ có nghĩa khi CPU copy đo được là thành phần lớn (proxy/file server băng thông cao). Kernel bypass (DPDK/XDP) là bước cuối cùng có chi phí vận hành khổng lồ — dành cho tầng hạ tầng (LB, DDoS scrubbing), không phải service nghiệp vụ.</p><hr><p><strong>Chương tiếp theo</strong>: đã đủ nền để nói chuyện đo đạc nghiêm túc: <a href=/series/linux-os-for-backend/12-performance-tools/>Chương 12: Linux Performance Tools</a> — cơ chế hoạt động của perf, eBPF, ftrace và bộ đồ nghề cổ điển.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/linux/>Linux</a></li><li><a href=https://thanhhv.github.io/tags/operating-system/>Operating-System</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/linux-os-for-backend/10-io-models/><span class=title>« Prev</span><br><span>Chương 10 — IO Models: từ blocking đến io_uring, tiến hóa của câu hỏi "chờ thế nào"</span>
-</a><a class=next href=https://thanhhv.github.io/series/linux-os-for-backend/12-performance-tools/><span class=title>Next »</span><br><span>Chương 12 — Linux Performance Tools: công cụ hoạt động thế nào, không chỉ dùng thế nào</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f&amp;hashtags=backend%2clinux%2coperating-system"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f&amp;title=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;summary=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f&title=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&u=https%3a%2f%2fthanhhv.github.io%2fseries%2flinux-os-for-backend%2f11-network-stack%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+        → bên đóng trước vào TIME_WAIT 60s ← giữ chỗ chống lẫn packet cũ</code></pre><p>TIME_WAIT là nguồn hiểu lầm kinh niên: hàng chục nghìn TIME_WAIT <strong>gần như vô hại với server</strong> (vài trăm byte/entry) — vấn đề thật chỉ có ở phía <strong>client</strong> tạo connection dồn dập tới cùng đích (cạn ephemeral port): fix đúng là <code>net.ipv4.tcp_tw_reuse=1</code> + connection pool/keep-alive; <code>tcp_tw_recycle</code> đã bị xóa khỏi kernel vì phá NAT — blog nào còn khuyên là blog đó hết hạn.</p>
+<p>Điều đáng khắc sâu: <strong>TCP state machine sống trong kernel, độc lập với app</strong>. App treo GC 30 giây? Kernel vẫn ACK, vẫn giữ connection sống. App chết? Kernel gửi RST/FIN. Đây là lý do healthcheck tầng TCP (&ldquo;port mở&rdquo;) gần như vô giá trị — phải check tầng ứng dụng.</p>
+<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Quyết định</th>
+          <th>Được</th>
+          <th>Mất</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Stack trong kernel</td>
+          <td>Chia sẻ, an toàn, app đơn giản</td>
+          <td>Copy user↔kernel; syscall; trần ~triệu pps/core → DPDK/XDP cho ai cần hơn</td>
+      </tr>
+      <tr>
+          <td>Buffer mọi tầng</td>
+          <td>Hấp thụ burst, throughput</td>
+          <td>Bufferbloat — latency ẩn trong hàng đợi; &ldquo;send xong&rdquo; ≠ &ldquo;đã tới nơi&rdquo;</td>
+      </tr>
+      <tr>
+          <td>TCP tự động hết</td>
+          <td>App khỏi lo mất mát/nghẽn</td>
+          <td>Hành vi ngầm khó thấy: Nagle, delayed ACK, RTO min 200ms, cwnd reset khi idle</td>
+      </tr>
+      <tr>
+          <td>Autotuning buffer (<code>tcp_rmem/wmem</code>)</td>
+          <td>Tự thích nghi BDP</td>
+          <td>Mặc định trần có thể thấp cho đường dài băng rộng (điều duy nhất thường đáng tăng)</td>
+      </tr>
+      <tr>
+          <td>syncookies</td>
+          <td>Sống sót SYN flood</td>
+          <td>Mất một số TCP option khi kích hoạt — chỉ là chế độ khẩn</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="6-production">6. Production<a hidden class="anchor" aria-hidden="true" href="#6-production">#</a></h2>
+<ul>
+<li><strong><code>ss</code> là công cụ số một</strong> (thay netstat): <code>ss -tnp state established '( dport = :5432 )'</code>; <code>ss -tmi</code> xem buffer/cwnd/rtt từng connection; Recv-Q/Send-Q cột đầu — Recv-Q cao = app đọc chậm, Send-Q cao = mạng/bên kia chậm. Với listen socket: Recv-Q/Send-Q = độ đầy/size accept queue.</li>
+<li>Drop &amp; retransmit: <code>nstat -az | grep -Ei 'retrans|drop|overflow'</code> (TcpRetransSegs, ListenOverflows, ListenDrops — hai cái sau chính là backlog full); <code>ethtool -S</code> cho drop mức NIC.</li>
+<li>Latency phân đoạn: RTT trong <code>ss -i</code>; eBPF <code>tcprtt</code>, <code>tcpretrans</code>, <code>tcpdrop</code> — thấy từng sự kiện với stack trace, trả lời &ldquo;mạng hay app&rdquo;.</li>
+<li>Sysctl đáng biết (đo trước khi chỉnh — chương 17 có bảng đầy đủ): <code>net.core.somaxconn</code>, <code>net.ipv4.tcp_max_syn_backlog</code>, <code>net.ipv4.ip_local_port_range</code>, <code>net.ipv4.tcp_rmem/wmem</code> (max), <code>net.core.netdev_max_backlog</code>, congestion control (<code>bbr</code> cho đường dài/lossy — đo với workload thật).</li>
+<li>Capture có kỷ luật: <code>tcpdump -w</code> với filter chặt + <code>-c</code> giới hạn; phân tích offline bằng tshark/wireshark. Trên máy 10Gbps, tcpdump không filter tự nó là sự cố.</li>
+</ul>
+<h2 id="7-anti-pattern">7. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#7-anti-pattern">#</a></h2>
+<ul>
+<li>Không dùng connection pool/keep-alive — mỗi request một handshake (+TLS!) rồi đổ lỗi &ldquo;mạng chậm&rdquo;; đồng thời tự tạo bão TIME_WAIT phía client.</li>
+<li>Chỉnh sysctl network hàng loạt theo &ldquo;gist tuning tối thượng&rdquo; — có dòng vô hại, có dòng (<code>tcp_tw_recycle</code> xưa, buffer max khổng lồ gây bufferbloat) gây sự cố tinh vi.</li>
+<li>Bỏ qua <code>TCP_NODELAY</code> cho protocol request-response nhỏ → cụm 40ms bí ẩn ở p99.</li>
+<li>Đọc &ldquo;connection refused&rdquo; mà chỉ nghi app — không kiểm tra ListenOverflows (accept queue đầy do app chậm accept sau GC pause là kịch bản rất phổ biến).</li>
+<li>Load balancer healthcheck TCP-open trong khi app đã treo — traffic vẫn đổ vào xác sống.</li>
+</ul>
+<h2 id="8-failure-analysis--case-mẫu-timeout-lác-đác-giờ-cao-điểm-mạng-bình-thường">8. Failure Analysis — case mẫu: timeout lác đác giờ cao điểm, mạng &ldquo;bình thường&rdquo;<a hidden class="anchor" aria-hidden="true" href="#8-failure-analysis--case-mẫu-timeout-lác-đác-giờ-cao-điểm-mạng-bình-thường">#</a></h2>
+<ul>
+<li><strong>Triệu chứng</strong>: 0.5% request timeout lúc peak; ping/iperf giữa các máy đẹp; team mạng và team app đổ lỗi nhau hai tuần.</li>
+<li><strong>Điều tra</strong>: <code>nstat</code> trên server app: <code>TcpExtListenOverflows</code> tăng đều đúng khung giờ sự cố. <code>ss -lnt</code>: listen socket Recv-Q chạm Send-Q (=128). App là Java, GC pause p99 ~800ms lúc peak.</li>
+<li><strong>Root cause</strong>: GC pause → thread accept đứng → accept queue (128, vì somaxconn mặc định cũ) đầy trong milli-giây ở 5k conn/s → kernel drop SYN-ACK-hoàn-tất → client timeout. Không packet nào &ldquo;mất trên mạng&rdquo; cả — chúng chết ở cửa.</li>
+<li><strong>Fix</strong>: somaxconn + backlog app → 4096 (mua thời gian sống qua pause); tuning GC giảm pause; sau đó chuyển service sang G1/ZGC. <strong>Prevention</strong>: alert trên ListenOverflows &gt; 0 (mọi máy, mọi lúc — số này phải là 0 tuyệt đối), dashboard GC pause cạnh connection rate.</li>
+</ul>
+<h2 id="9-khi-nào-không-nên-tối-ưu">9. Khi nào không nên tối ưu<a hidden class="anchor" aria-hidden="true" href="#9-khi-nào-không-nên-tối-ưu">#</a></h2>
+<p>Nếu retransmit ~0, ListenOverflows = 0, RTT ổn, buffer autotuning chưa chạm trần — network stack không phải vấn đề của bạn, và BBR/sysctl/zero-copy sẽ không cứu được cái N+1 query đang chiếm 400ms trong request 450ms. Zero-copy chỉ có nghĩa khi CPU copy đo được là thành phần lớn (proxy/file server băng thông cao). Kernel bypass (DPDK/XDP) là bước cuối cùng có chi phí vận hành khổng lồ — dành cho tầng hạ tầng (LB, DDoS scrubbing), không phải service nghiệp vụ.</p>
+<hr>
+<p><strong>Chương tiếp theo</strong>: đã đủ nền để nói chuyện đo đạc nghiêm túc: <a href="/series/linux-os-for-backend/12-performance-tools/">Chương 12: Linux Performance Tools</a> — cơ chế hoạt động của perf, eBPF, ftrace và bộ đồ nghề cổ điển.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/linux/">Linux</a></li>
+      <li><a href="http://localhost:1313/tags/operating-system/">Operating-System</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/linux-os-for-backend/10-io-models/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Chương 10 — IO Models: từ blocking đến io_uring, tiến hóa của câu hỏi &#34;chờ thế nào&#34;</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/linux-os-for-backend/12-performance-tools/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Chương 12 — Linux Performance Tools: công cụ hoạt động thế nào, không chỉ dùng thế nào</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on x"
+            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f&amp;hashtags=backend%2clinux%2coperating-system">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f&amp;title=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;summary=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f&title=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on whatsapp"
+            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on telegram"
+            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 11 — Network Stack: hành trình một packet xuyên kernel on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2011%20%e2%80%94%20Network%20Stack%3a%20h%c3%a0nh%20tr%c3%acnh%20m%e1%bb%99t%20packet%20xuy%c3%aan%20kernel&u=http%3a%2f%2flocalhost%3a1313%2fseries%2flinux-os-for-backend%2f11-network-stack%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

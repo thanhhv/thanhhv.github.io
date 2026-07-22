@@ -1,64 +1,504 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Clean-Architecture | Thanh HV's Blog</title>
-<meta name=keywords content><meta name=description content><meta name=author content><link rel=canonical href=https://thanhhv.github.io/tags/clean-architecture/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate type=application/rss+xml href=https://thanhhv.github.io/tags/clean-architecture/index.xml><link rel=alternate hreflang=en href=https://thanhhv.github.io/tags/clean-architecture/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/tags/clean-architecture/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Clean-Architecture"><meta property="og:locale" content="en-us"><meta property="og:type" content="website"><meta name=twitter:card content="summary"><meta name=twitter:title content="Clean-Architecture"><meta name=twitter:description content></head><body class=list id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><header class=page-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/tags/>Tags</a></div><h1>Clean-Architecture</h1></header><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 14 — Level 4 Principal: Evolutionary Architecture, Refactor Legacy, Tổ chức & Hiệu năng</h2></header><div class=entry-content><p>Level 4 – Principal · Ở cấp này, kiến trúc không còn là bài toán code — nó là bài toán thời gian (hệ thống tiến hóa), con người (team, ownership) và kinh tế (chi phí, rủi ro, thứ tự đầu tư).
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Clean-Architecture | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/tags/clean-architecture/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/clean-architecture/index.xml">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/clean-architecture/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="list" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main"> 
+<header class="page-header"><div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/tags/">Tags</a></div>
+  <h1>
+    Clean-Architecture
+  </h1>
+</header>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 14 — Level 4 Principal: Evolutionary Architecture, Refactor Legacy, Tổ chức &amp; Hiệu năng
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 4 – Principal · Ở cấp này, kiến trúc không còn là bài toán code — nó là bài toán thời gian (hệ thống tiến hóa), con người (team, ownership) và kinh tế (chi phí, rủi ro, thứ tự đầu tư).
 1. Evolutionary Architecture — thiết kế cho sự thay đổi của chính kiến trúc Sai lầm cấp principal phổ biến nhất: thiết kế “kiến trúc đích” 5 năm rồi ép hệ thống về nó. Thực tế: nghiệp vụ, tổ chức và công nghệ đều thay đổi nhanh hơn kế hoạch 5 năm. Kiến trúc tiến hóa (Ford/Parsons/Kua) đảo cách đặt vấn đề: thay vì đoán đích đúng, tối ưu chi phí đổi hướng.
-...</p></div><footer class=entry-footer><span title='2026-07-08 15:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to Chương 14 — Level 4 Principal: Evolutionary Architecture, Refactor Legacy, Tổ chức & Hiệu năng" href=https://thanhhv.github.io/series/clean-architect/14-principal/01-evolutionary-architecture-va-migration/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 13 — So sánh khách quan: Clean vs Layered vs Hexagonal vs Onion vs MVC vs Modular Monolith vs DDD</h2></header><div class=entry-content><p>Level 3–4 · Mục tiêu: thoát khỏi tranh cãi danh pháp, chọn theo bài toán.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 15:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 14 — Level 4 Principal: Evolutionary Architecture, Refactor Legacy, Tổ chức & Hiệu năng" href="http://localhost:1313/series/clean-architect/14-principal/01-evolutionary-architecture-va-migration/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 13 — So sánh khách quan: Clean vs Layered vs Hexagonal vs Onion vs MVC vs Modular Monolith vs DDD
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3–4 · Mục tiêu: thoát khỏi tranh cãi danh pháp, chọn theo bài toán.
 1. Khung so sánh Mỗi “kiến trúc” thực chất trả lời một tập câu hỏi khác nhau — so sánh chỉ công bằng khi đặt đúng tầng câu hỏi:
 Tầng tổ chức phụ thuộc trong một đơn vị deploy: Layered, Hexagonal, Onion, Clean. Tầng tổ chức delivery/UI: MVC. Tầng topology hệ thống: Modular Monolith (và Microservices). Tầng mô hình hóa nghiệp vụ: DDD. Chúng không loại trừ nhau — một hệ thống có thể đồng thời là: modular monolith (topology) × Clean Architecture (phụ thuộc) × DDD (mô hình) × MVC (trong tầng delivery).
-...</p></div><footer class=entry-footer><span title='2026-07-08 14:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Chương 13 — So sánh khách quan: Clean vs Layered vs Hexagonal vs Onion vs MVC vs Modular Monolith vs DDD" href=https://thanhhv.github.io/series/clean-architect/13-so-sanh/01-so-sanh-cac-kien-truc/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 12.3 — E-commerce · Giai đoạn 3: Tách service khi tổ chức đòi hỏi</h2></header><div class=entry-content><p>Năm thứ 4: 40 engineer, 6 team, 500 nghìn đơn/ngày. Đây là chương về lý do đúng và lý do sai để tách, cùng kỹ thuật tách không ngừng hệ thống.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 14:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 13 — So sánh khách quan: Clean vs Layered vs Hexagonal vs Onion vs MVC vs Modular Monolith vs DDD" href="http://localhost:1313/series/clean-architect/13-so-sanh/01-so-sanh-cac-kien-truc/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 12.3 — E-commerce · Giai đoạn 3: Tách service khi tổ chức đòi hỏi
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Năm thứ 4: 40 engineer, 6 team, 500 nghìn đơn/ngày. Đây là chương về lý do đúng và lý do sai để tách, cùng kỹ thuật tách không ngừng hệ thống.
 1. Khi nào monolith thật sự hết vai trò Lý do đúng (xuất hiện ở công ty này):
-Deploy coupling thành nút cổ chai tổ chức: 6 team xếp hàng chung một release train; một bug của team Catalog rollback cả deploy chứa hotfix của team Payment. Chi phí phối hợp tăng theo bình phương số team. Chênh lệch tải & tài nguyên: đường search catalog cần 40 pod CPU cao vào giờ vàng; đường payment cần ổn định tuyệt đối và audit riêng (PCI-DSS) — chung binary nghĩa là scale cả cụm theo nhu cầu của phần nóng nhất, và mọi engineer đều “ở trong phạm vi audit”. Bán kính sự cố: memory leak trong module notification OOM-kill cả tiến trình chứa payment. Lý do sai (đã bị bác trong design review): “microservices hiện đại hơn”, “để dùng ngôn ngữ mới”, “CV-driven”. Phép thử: nếu tách xong mà số team, quy trình deploy và yêu cầu scale y nguyên — bạn vừa mua độ trễ mạng và partial failure mà không mua được gì.
-...</p></div><footer class=entry-footer><span title='2026-07-08 13:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Chương 12.3 — E-commerce · Giai đoạn 3: Tách service khi tổ chức đòi hỏi" href=https://thanhhv.github.io/series/clean-architect/12-vi-du-ecommerce/03-giai-doan-3-tach-service/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 12.2 — E-commerce · Giai đoạn 2: Modular Monolith</h2></header><div class=entry-content><p>18 tháng sau: 12 engineer chia 3 team, 50 nghìn đơn/ngày. Các vết nứt giai đoạn 1 giờ đau thật. Câu trả lời KHÔNG phải microservices — mà là siết ranh giới trong chính monolith.
-Bối cảnh và triệu chứng Team Payment muốn thêm VNPay + trả góp; mỗi lần sửa đụng order.Service.Place — file mà team Order cũng đang sửa hàng ngày. Merge conflict, release phải phối hợp. Marketing cần: gửi email sau đặt hàng, cộng điểm loyalty, đồng bộ CRM — ba team khác nhau cùng đòi chen code vào Place(). Hàm 40 dòng thành 180 dòng. Sự cố “charge rồi mất đơn” xảy ra thật 7 lần trong tháng cao điểm — mỗi lần một buổi điều tra + hoàn tiền thủ công. Query dashboard người bán làm chậm cả đường ghi (chung DB, khóa lẫn nhau). Chẩn đoán đúng bệnh trước khi kê đơn: vấn đề là ranh giới module chưa đủ chặt và coupling thời gian trong Place() — không phải “vì chưa có microservices”. Tách process bây giờ sẽ nhân các vấn đề trên với độ trễ mạng và partial failure. Modular monolith: giữ một binary, nâng ranh giới lên chuẩn “như thể sắp tách”.
-...</p></div><footer class=entry-footer><span title='2026-07-08 12:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Chương 12.2 — E-commerce · Giai đoạn 2: Modular Monolith" href=https://thanhhv.github.io/series/clean-architect/12-vi-du-ecommerce/02-giai-doan-2-modular-monolith/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 12.1 — E-commerce từng bước · Giai đoạn 1: Monolith khởi đầu đúng cách</h2></header><div class=entry-content><p>Ví dụ tổng hợp · Ba giai đoạn của cùng một hệ thống: (1) monolith gọn, (2) modular monolith khi nghiệp vụ dày lên, (3) tách service khi tổ chức đòi hỏi. Mỗi giai đoạn là quyết định có bối cảnh — không phải giai đoạn sau “xịn hơn” giai đoạn trước.
+Deploy coupling thành nút cổ chai tổ chức: 6 team xếp hàng chung một release train; một bug của team Catalog rollback cả deploy chứa hotfix của team Payment. Chi phí phối hợp tăng theo bình phương số team. Chênh lệch tải &amp; tài nguyên: đường search catalog cần 40 pod CPU cao vào giờ vàng; đường payment cần ổn định tuyệt đối và audit riêng (PCI-DSS) — chung binary nghĩa là scale cả cụm theo nhu cầu của phần nóng nhất, và mọi engineer đều “ở trong phạm vi audit”. Bán kính sự cố: memory leak trong module notification OOM-kill cả tiến trình chứa payment. Lý do sai (đã bị bác trong design review): “microservices hiện đại hơn”, “để dùng ngôn ngữ mới”, “CV-driven”. Phép thử: nếu tách xong mà số team, quy trình deploy và yêu cầu scale y nguyên — bạn vừa mua độ trễ mạng và partial failure mà không mua được gì.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 13:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 12.3 — E-commerce · Giai đoạn 3: Tách service khi tổ chức đòi hỏi" href="http://localhost:1313/series/clean-architect/12-vi-du-ecommerce/03-giai-doan-3-tach-service/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 12.2 — E-commerce · Giai đoạn 2: Modular Monolith
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> 18 tháng sau: 12 engineer chia 3 team, 50 nghìn đơn/ngày. Các vết nứt giai đoạn 1 giờ đau thật. Câu trả lời KHÔNG phải microservices — mà là siết ranh giới trong chính monolith.
+Bối cảnh và triệu chứng Team Payment muốn thêm VNPay &#43; trả góp; mỗi lần sửa đụng order.Service.Place — file mà team Order cũng đang sửa hàng ngày. Merge conflict, release phải phối hợp. Marketing cần: gửi email sau đặt hàng, cộng điểm loyalty, đồng bộ CRM — ba team khác nhau cùng đòi chen code vào Place(). Hàm 40 dòng thành 180 dòng. Sự cố “charge rồi mất đơn” xảy ra thật 7 lần trong tháng cao điểm — mỗi lần một buổi điều tra &#43; hoàn tiền thủ công. Query dashboard người bán làm chậm cả đường ghi (chung DB, khóa lẫn nhau). Chẩn đoán đúng bệnh trước khi kê đơn: vấn đề là ranh giới module chưa đủ chặt và coupling thời gian trong Place() — không phải “vì chưa có microservices”. Tách process bây giờ sẽ nhân các vấn đề trên với độ trễ mạng và partial failure. Modular monolith: giữ một binary, nâng ranh giới lên chuẩn “như thể sắp tách”.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 12:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 12.2 — E-commerce · Giai đoạn 2: Modular Monolith" href="http://localhost:1313/series/clean-architect/12-vi-du-ecommerce/02-giai-doan-2-modular-monolith/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 12.1 — E-commerce từng bước · Giai đoạn 1: Monolith khởi đầu đúng cách
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Ví dụ tổng hợp · Ba giai đoạn của cùng một hệ thống: (1) monolith gọn, (2) modular monolith khi nghiệp vụ dày lên, (3) tách service khi tổ chức đòi hỏi. Mỗi giai đoạn là quyết định có bối cảnh — không phải giai đoạn sau “xịn hơn” giai đoạn trước.
 Bối cảnh giai đoạn 1 Startup 3 engineer, 3 tháng để ra MVP bán hàng: đăng ký user, danh mục sản phẩm, đặt hàng, thanh toán qua một cổng (giả định “MoPay”). Chưa rõ nghiệp vụ sẽ phát triển hướng nào.
-...</p></div><footer class=entry-footer><span title='2026-07-08 11:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to Chương 12.1 — E-commerce từng bước · Giai đoạn 1: Monolith khởi đầu đúng cách" href=https://thanhhv.github.io/series/clean-architect/12-vi-du-ecommerce/01-giai-doan-1-monolith/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 11 — Production Concerns: Logging, Config, Observability, Shutdown, Retry, Idempotency</h2></header><div class=entry-content><p>Level 3–4 · Kiến trúc đẹp mà không vận hành được là bài tập trên giấy. Chương này trả lời: các concern vận hành nằm ở vòng nào, và viết thế nào để chúng không ăn mòn ranh giới.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 11:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 12.1 — E-commerce từng bước · Giai đoạn 1: Monolith khởi đầu đúng cách" href="http://localhost:1313/series/clean-architect/12-vi-du-ecommerce/01-giai-doan-1-monolith/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 11 — Production Concerns: Logging, Config, Observability, Shutdown, Retry, Idempotency
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3–4 · Kiến trúc đẹp mà không vận hành được là bài tập trên giấy. Chương này trả lời: các concern vận hành nằm ở vòng nào, và viết thế nào để chúng không ăn mòn ranh giới.
 Nguyên tắc chung của cả chương: concern vận hành là cross-cutting → sống ở adapter/middleware/decorator/composition root; vòng trong cùng lắm biết khái niệm (context, error), không bao giờ biết công cụ (Prometheus, OTel, Viper).
-...</p></div><footer class=entry-footer><span title='2026-07-08 10:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to Chương 11 — Production Concerns: Logging, Config, Observability, Shutdown, Retry, Idempotency" href=https://thanhhv.github.io/series/clean-architect/11-production/01-production-concerns/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 10 — Clean Architecture & CQRS: Đường ghi và đường đọc</h2></header><div class=entry-content><p>Level 3 – Senior · CQRS thường bị hiểu là “kiến trúc phức tạp với event sourcing và 2 database”. Bản chất nó khiêm tốn và hữu ích hơn nhiều.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 10:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 11 — Production Concerns: Logging, Config, Observability, Shutdown, Retry, Idempotency" href="http://localhost:1313/series/clean-architect/11-production/01-production-concerns/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 10 — Clean Architecture &amp; CQRS: Đường ghi và đường đọc
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3 – Senior · CQRS thường bị hiểu là “kiến trúc phức tạp với event sourcing và 2 database”. Bản chất nó khiêm tốn và hữu ích hơn nhiều.
 1. Problem Statement Hai áp lực kéo model về hai hướng ngược nhau:
-Đường ghi (command) cần model giàu: aggregate, bất biến, rule — Order.AddLine() phải kiểm tra trạng thái, tính lại tổng (chương 9). Đường đọc (query) cần dữ liệu phẳng, join sẵn, đúng hình dạng màn hình: “danh sách đơn + tên khách + số item + trạng thái thanh toán, phân trang, lọc theo 5 tiêu chí”. Ép một model phục vụ cả hai tạo ra hai loại đau: (a) đường đọc qua aggregate: load N aggregate đầy đủ + N query phụ để render một cái bảng — chậm và code repository mọc FindAllWithCustomerNameAndPaymentStatus(...) vô tận; (b) aggregate phình theo nhu cầu đọc: thêm field chỉ để hiển thị, bất biến loãng dần.
-...</p></div><footer class=entry-footer><span title='2026-07-08 09:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Chương 10 — Clean Architecture & CQRS: Đường ghi và đường đọc" href=https://thanhhv.github.io/series/clean-architect/10-cqrs/01-clean-architecture-va-cqrs/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong</h2></header><div class=entry-content><p>Level 3 – Senior · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.
+Đường ghi (command) cần model giàu: aggregate, bất biến, rule — Order.AddLine() phải kiểm tra trạng thái, tính lại tổng (chương 9). Đường đọc (query) cần dữ liệu phẳng, join sẵn, đúng hình dạng màn hình: “danh sách đơn &#43; tên khách &#43; số item &#43; trạng thái thanh toán, phân trang, lọc theo 5 tiêu chí”. Ép một model phục vụ cả hai tạo ra hai loại đau: (a) đường đọc qua aggregate: load N aggregate đầy đủ &#43; N query phụ để render một cái bảng — chậm và code repository mọc FindAllWithCustomerNameAndPaymentStatus(...) vô tận; (b) aggregate phình theo nhu cầu đọc: thêm field chỉ để hiển thị, bất biến loãng dần.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 09:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 10 — Clean Architecture & CQRS: Đường ghi và đường đọc" href="http://localhost:1313/series/clean-architect/10-cqrs/01-clean-architecture-va-cqrs/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 9 — Clean Architecture &amp; DDD: Lấp đầy vòng trong
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3 – Senior · Clean Architecture cho bạn cái vỏ (ranh giới, hướng phụ thuộc); DDD cho bạn cái ruột (mô hình hóa nghiệp vụ bên trong vòng domain). Thiếu một trong hai: vỏ đẹp ruột rỗng, hoặc mô hình hay bị hạ tầng ăn mòn.
 1. Problem Statement Clean Architecture nói “đặt business rule vào vòng trong” nhưng không nói business rule trông như thế nào. Hệ quả phổ biến: team dựng đủ 4 tầng, rồi vòng domain chỉ chứa struct trần (anemic model), toàn bộ logic dồn vào “service” — tức Transaction Script khoác áo Clean Architecture, trả phí kiến trúc mà không nhận mô hình.
-...</p></div><footer class=entry-footer><span title='2026-07-08 08:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong" href=https://thanhhv.github.io/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 8 — Testing Strategy: Unit, Integration, Mock vs Fake, Testcontainers</h2></header><div class=entry-content><p>Level 3 – Senior · Testability không phải phần thưởng phụ của Clean Architecture — nó là bằng chứng kiến trúc đúng. Kiến trúc không test được là kiến trúc sai, bất kể sơ đồ đẹp đến đâu.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 08:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 9 — Clean Architecture & DDD: Lấp đầy vòng trong" href="http://localhost:1313/series/clean-architect/09-ddd/01-clean-architecture-va-ddd/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 8 — Testing Strategy: Unit, Integration, Mock vs Fake, Testcontainers
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3 – Senior · Testability không phải phần thưởng phụ của Clean Architecture — nó là bằng chứng kiến trúc đúng. Kiến trúc không test được là kiến trúc sai, bất kể sơ đồ đẹp đến đâu.
 1. Problem Statement Hai thái cực thất bại phổ biến:
 Test kim tự tháp ngược: 500 E2E test dựng cả hệ thống, chạy 40 phút, flaky 5% — CI thành xổ số, dev tắt test để merge. Nguyên nhân gốc: nghiệp vụ dính hạ tầng nên chỉ có thể test kiểu E2E. Mock hóa toàn phần: mock mọi thứ kể cả struct nội bộ, assert từng lời gọi hàm — test khẳng định code viết như thế nào thay vì hệ thống làm gì. Refactor giữ nguyên hành vi vẫn vỡ 200 test → test trở thành lực cản refactor, phản bội chính mục đích của nó. Chiến lược đúng bám vào cấu trúc các vòng: mỗi vòng một loại test, chi phí thấp nhất có thể cho độ tin cần thiết.
-...</p></div><footer class=entry-footer><span title='2026-07-08 07:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to Chương 8 — Testing Strategy: Unit, Integration, Mock vs Fake, Testcontainers" href=https://thanhhv.github.io/series/clean-architect/08-testing/01-testing-strategy/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 7 — Integration: Kafka, RabbitMQ, Redis, External API, Event Publishing</h2></header><div class=entry-content><p>Level 3 – Senior · Ranh giới với thế giới bên ngoài — nơi lỗi, độ trễ và bất nhất là chuyện thường ngày.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 07:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 8 — Testing Strategy: Unit, Integration, Mock vs Fake, Testcontainers" href="http://localhost:1313/series/clean-architect/08-testing/01-testing-strategy/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 7 — Integration: Kafka, RabbitMQ, Redis, External API, Event Publishing
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3 – Senior · Ranh giới với thế giới bên ngoài — nơi lỗi, độ trễ và bất nhất là chuyện thường ngày.
 1. Problem Statement Hệ thống thực không sống một mình: nó gọi cổng thanh toán, phát event cho hệ thống khác, cache bằng Redis, nhận lệnh từ queue. Ba rủi ro kiến trúc:
 Kiến thức về hệ ngoài rò vào nghiệp vụ: use case biết tên topic Kafka, format JSON của đối tác, TTL Redis → đổi đối tác/hạ tầng là mổ nghiệp vụ. Đặc tính mạng rò vào nghiệp vụ: retry, timeout, circuit breaker viết lẫn trong use case → quy trình nghiệp vụ chìm trong code chống lỗi. Bất nhất dữ liệu: ghi DB xong, publish event fail — hai hệ thống từ nay lệch nhau vĩnh viễn (bài toán dual-write). Cấu trúc lời giải cho cả ba giống nhau — cũng là cấu trúc của cả tài liệu này: vòng trong khai báo cổng theo ngôn ngữ nghiệp vụ; adapter vòng ngoài gánh mọi đặc tính của công nghệ cụ thể.
-...</p></div><footer class=entry-footer><span title='2026-07-08 06:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to Chương 7 — Integration: Kafka, RabbitMQ, Redis, External API, Event Publishing" href=https://thanhhv.github.io/series/clean-architect/07-integration/01-integration/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 6 — Delivery Layer: HTTP, gRPC, GraphQL, CLI, Worker</h2></header><div class=entry-content><p>Level 2–3 · Bài kiểm tra thật sự của Clean Architecture: cùng một use case phục vụ N cách vào mà không đổi một dòng nghiệp vụ.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 06:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 7 — Integration: Kafka, RabbitMQ, Redis, External API, Event Publishing" href="http://localhost:1313/series/clean-architect/07-integration/01-integration/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 6 — Delivery Layer: HTTP, gRPC, GraphQL, CLI, Worker
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2–3 · Bài kiểm tra thật sự của Clean Architecture: cùng một use case phục vụ N cách vào mà không đổi một dòng nghiệp vụ.
 1. Problem Statement Hệ thống trưởng thành hiếm khi chỉ có một cửa vào. Cùng nghiệp vụ “đổi điểm”: mobile app gọi REST, service nội bộ gọi gRPC, chiến dịch marketing chạy batch qua CLI, và một Kafka consumer đổi điểm tự động khi có event mua hàng. Nếu nghiệp vụ viết trong HTTP handler, ba cửa còn lại chỉ có hai lựa chọn tồi: copy-paste logic, hoặc giả lập HTTP request nội bộ (gọi chính API của mình) — cả hai đều là nợ.
-...</p></div><footer class=entry-footer><span title='2026-07-08 05:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Chương 6 — Delivery Layer: HTTP, gRPC, GraphQL, CLI, Worker" href=https://thanhhv.github.io/series/clean-architect/06-delivery/01-delivery-layer/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 5 — Data Access: Repository, Transaction, Unit of Work, ORM vs SQL</h2></header><div class=entry-content><p>Level 3 – Senior · Data access là nơi Clean Architecture bị thử thách gay gắt nhất trong thực tế — transaction, N+1, mapping — và là nơi nhiều dự án gãy.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 05:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 6 — Delivery Layer: HTTP, gRPC, GraphQL, CLI, Worker" href="http://localhost:1313/series/clean-architect/06-delivery/01-delivery-layer/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 5 — Data Access: Repository, Transaction, Unit of Work, ORM vs SQL
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 3 – Senior · Data access là nơi Clean Architecture bị thử thách gay gắt nhất trong thực tế — transaction, N&#43;1, mapping — và là nơi nhiều dự án gãy.
 1. Problem Statement Ba bài toán mà mọi hệ thống phải giải, và giải sai thì Dependency Rule sụp:
 Nghiệp vụ cần dữ liệu nhưng không được biết SQL — ai đứng giữa? (Repository) Một use case ghi nhiều bảng phải atomic — transaction là khái niệm hạ tầng, sao use case điều khiển được nó mà không import database/sql? (bài toán khó nhất chương) Model của DB và model của domain khác nhau đến đâu thì tách? (ORM vs SQL, mapping) 2. Repository Pattern — bản chất thật Repository không phải “class bọc mấy câu SQL”. Định nghĩa gốc (Evans/Fowler): ảo giác một collection trong bộ nhớ chứa các domain object — nghiệp vụ “lấy ra, thao tác, đặt lại”, không biết đằng sau là Postgres hay RAM.
-...</p></div><footer class=entry-footer><span title='2026-07-08 04:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer><a class=entry-link aria-label="post link to Chương 5 — Data Access: Repository, Transaction, Unit of Work, ORM vs SQL" href=https://thanhhv.github.io/series/clean-architect/05-data-access/01-repository-transaction/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 4 — Dependency Injection trong Go: Manual, Wire, Fx và Interface Placement</h2></header><div class=entry-content><p>Level 2–3 · DI là cơ chế thi công của Dependency Rule: mọi mũi tên đã đảo ở thiết kế phải được nối lại ở runtime — chương này bàn nối ở đâu, bằng gì.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 04:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;8 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 5 — Data Access: Repository, Transaction, Unit of Work, ORM vs SQL" href="http://localhost:1313/series/clean-architect/05-data-access/01-repository-transaction/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 4 — Dependency Injection trong Go: Manual, Wire, Fx và Interface Placement
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2–3 · DI là cơ chế thi công của Dependency Rule: mọi mũi tên đã đảo ở thiết kế phải được nối lại ở runtime — chương này bàn nối ở đâu, bằng gì.
 1. Problem Statement Sau khi áp dụng DIP, các component chỉ biết interface. Nhưng lúc chạy, ai đó phải quyết định order.Service dùng postgres.WalletRepo hay mongo.WalletRepo, và tạo chúng theo đúng thứ tự với đúng config. Câu hỏi của chương: việc lắp ráp đó viết thế nào để (a) tường minh, (b) không rò rỉ kiến thức lắp ráp vào nghiệp vụ, (c) không thành 500 dòng spaghetti trong main.go khi hệ thống lớn?
-...</p></div><footer class=entry-footer><span title='2026-07-08 03:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer><a class=entry-link aria-label="post link to Chương 4 — Dependency Injection trong Go: Manual, Wire, Fx và Interface Placement" href=https://thanhhv.github.io/series/clean-architect/04-dependency-injection/01-di-trong-go/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 3.1 — Tổ chức Package trong Go: cmd/, internal/, pkg/ và các trường phái</h2></header><div class=entry-content><p>Level 2–3 · Chương này trả lời câu hỏi thực dụng nhất: “project của tôi nên có cấu trúc thư mục thế nào?” — nhưng bằng nguyên lý, không bằng template.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 03:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;7 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 4 — Dependency Injection trong Go: Manual, Wire, Fx và Interface Placement" href="http://localhost:1313/series/clean-architect/04-dependency-injection/01-di-trong-go/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 3.1 — Tổ chức Package trong Go: cmd/, internal/, pkg/ và các trường phái
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2–3 · Chương này trả lời câu hỏi thực dụng nhất: “project của tôi nên có cấu trúc thư mục thế nào?” — nhưng bằng nguyên lý, không bằng template.
 1. Problem Statement Go không quy định cấu trúc project (khác Rails/Django). Tự do này tạo ra hai thái cực lỗi:
 Thiếu cấu trúc: mọi thứ trong một package main 20.000 dòng, hoặc chia file tùy hứng — không có ranh giới nào để compiler bảo vệ. Thừa cấu trúc: bê nguyên template “golang-standard-project-layout” hay “clean-architecture-template” trên GitHub về cho một service 3 endpoint — 40 thư mục, mỗi feature chạm 9 file, team ghét kiến trúc từ đó. Cả hai đều xuất phát từ việc coi cấu trúc thư mục là mục tiêu thay vì hệ quả của các quyết định ranh giới (chương 1.1) và hướng phụ thuộc (chương 2.2).
-...</p></div><footer class=entry-footer><span title='2026-07-08 02:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to Chương 3.1 — Tổ chức Package trong Go: cmd/, internal/, pkg/ và các trường phái" href=https://thanhhv.github.io/series/clean-architect/03-go-project-structure/01-package-organization/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework</h2></header><div class=entry-content><p>Level 2 – Engineering · Chương này dựng một service hoàn chỉnh, chạy được, minh họa cả bốn vòng.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 02:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 3.1 — Tổ chức Package trong Go: cmd/, internal/, pkg/ và các trường phái" href="http://localhost:1313/series/clean-architect/03-go-project-structure/01-package-organization/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2 – Engineering · Chương này dựng một service hoàn chỉnh, chạy được, minh họa cả bốn vòng.
 Bài toán xuyên suốt: service quản lý ví điểm thưởng (loyalty wallet) — nghiệp vụ đủ thật để có rule, đủ nhỏ để đọc hết:
 Khách tích điểm khi mua hàng (1 điểm / 10.000 VND, hạng GOLD nhân đôi). Đổi điểm lấy voucher; không cho âm điểm; mỗi ngày đổi tối đa 3 lần. 1. Vòng 1 — Entities (Enterprise Business Rules) Bản chất Entity chứa quy tắc đúng bất kể ứng dụng nào dùng nó — quy tắc sẽ tồn tại kể cả khi công ty vận hành bằng giấy bút: “điểm không âm”, “GOLD nhân đôi”. Nó không biết use case nào gọi nó, không biết dữ liệu từ đâu đến.
-...</p></div><footer class=entry-footer><span title='2026-07-08 01:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;11 min</footer><a class=entry-link aria-label="post link to Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework" href=https://thanhhv.github.io/series/clean-architect/02-clean-architecture-core/03-cac-layer/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 2.2 — Dependency Rule: Luật duy nhất</h2></header><div class=entry-content><p>Level 2 – Engineering · Nếu chỉ được nhớ một điều từ toàn bộ tài liệu, hãy nhớ chương này.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 01:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;11 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 2.3 — Bốn vòng trong Go: từ Entity đến Framework" href="http://localhost:1313/series/clean-architect/02-clean-architecture-core/03-cac-layer/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 2.2 — Dependency Rule: Luật duy nhất
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2 – Engineering · Nếu chỉ được nhớ một điều từ toàn bộ tài liệu, hãy nhớ chương này.
 1. Phát biểu Source code dependencies must point only inward, toward higher-level policies. Phụ thuộc mã nguồn chỉ được trỏ vào trong, về phía chính sách cấp cao hơn.
 “Biết” ở đây nghĩa là bất kỳ dạng nào sau: câu lệnh import; dùng kiểu dữ liệu của vòng ngoài trong chữ ký hàm/field; tham chiếu tên hàm, hằng số, biến; và cả những dạng không có import: hiểu ngầm về format JSON của API, về schema bảng, về tên topic Kafka, về mã lỗi HTTP. Dependency Rule cấm tất cả — vòng trong phải có thể compile, test, và đọc hiểu mà không cần vòng ngoài tồn tại.
-...</p></div><footer class=entry-footer><span title='2026-07-08 00:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;5 min</footer><a class=entry-link aria-label="post link to Chương 2.2 — Dependency Rule: Luật duy nhất" href=https://thanhhv.github.io/series/clean-architect/02-clean-architecture-core/02-dependency-rule/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 2.1 — Vì sao Clean Architecture ra đời</h2></header><div class=entry-content><p>Level 2 – Engineering · Yêu cầu: đã hoàn thành Level 1.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-08 00:00:00 +0700 +07'>July 8, 2026</span>&nbsp;·&nbsp;5 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 2.2 — Dependency Rule: Luật duy nhất" href="http://localhost:1313/series/clean-architect/02-clean-architecture-core/02-dependency-rule/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 2.1 — Vì sao Clean Architecture ra đời
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 2 – Engineering · Yêu cầu: đã hoàn thành Level 1.
 1. Problem Statement: câu chuyện lặp lại của mọi hệ thống Robert C. Martin công bố bài viết “The Clean Architecture” năm 2012, đúc kết từ hàng thập kỷ quan sát một vòng đời lặp đi lặp lại:
-Năm 1: team chọn framework hot nhất (Rails/Spring/Django — ngày nay có thể là một “boilerplate Gin + GORM”). Framework quyết định cấu trúc project. Tốc độ ban đầu tuyệt vời — CRUD sinh ra trong vài giờ.
-...</p></div><footer class=entry-footer><span title='2026-07-07 23:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;9 min</footer><a class=entry-link aria-label="post link to Chương 2.1 — Vì sao Clean Architecture ra đời" href=https://thanhhv.github.io/series/clean-architect/02-clean-architecture-core/01-vi-sao-clean-architecture-ra-doi/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 1.4 — Separation of Concerns & Composition over Inheritance</h2></header><div class=entry-content><p>Level 1 – Foundation · Hai nguyên lý cuối của phần nền tảng.
+Năm 1: team chọn framework hot nhất (Rails/Spring/Django — ngày nay có thể là một “boilerplate Gin &#43; GORM”). Framework quyết định cấu trúc project. Tốc độ ban đầu tuyệt vời — CRUD sinh ra trong vài giờ.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-07 23:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;9 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 2.1 — Vì sao Clean Architecture ra đời" href="http://localhost:1313/series/clean-architect/02-clean-architecture-core/01-vi-sao-clean-architecture-ra-doi/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 1.4 — Separation of Concerns &amp; Composition over Inheritance
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 1 – Foundation · Hai nguyên lý cuối của phần nền tảng.
 Phần A — Separation of Concerns (SoC) 1. Problem Statement Một hàm handler điển hình trong dự án “chạy được là được”:
 func CreateOrder(w http.ResponseWriter, r *http.Request) { // 1. Parse JSON (concern: giao thức) // 2. Validate input (concern: hợp lệ dữ liệu vào) // 3. Check quyền user (concern: bảo mật) // 4. Tính giá, áp khuyến mãi (concern: NGHIỆP VỤ) // 5. Mở transaction, ghi 3 bảng (concern: lưu trữ, nhất quán) // 6. Ghi log, đẩy metric (concern: vận hành) // 7. Render JSON response (concern: giao thức) } Bảy mối quan tâm (concern), bảy tốc độ thay đổi khác nhau, bảy loại chuyên môn khác nhau — trộn trong một hàm. Muốn sửa một concern phải đọc và hiểu cả bảy; muốn test concern 4 phải dựng đủ 1–7. Đây là dạng tổng quát của mọi vấn đề đã nêu ở các chương trước.
-...</p></div><footer class=entry-footer><span title='2026-07-07 22:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;6 min</footer><a class=entry-link aria-label="post link to Chương 1.4 — Separation of Concerns & Composition over Inheritance" href=https://thanhhv.github.io/series/clean-architect/01-foundation/04-separation-of-concerns/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc</h2></header><div class=entry-content><p>Level 1–2 Bridge · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-07 22:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;6 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 1.4 — Separation of Concerns & Composition over Inheritance" href="http://localhost:1313/series/clean-architect/01-foundation/04-separation-of-concerns/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 1–2 Bridge · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.
 1. Problem Statement Bài toán Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất.
-...</p></div><footer class=entry-footer><span title='2026-07-07 21:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;14 min</footer><a class=entry-link aria-label="post link to Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc" href=https://thanhhv.github.io/series/clean-architect/01-foundation/03-dependency-inversion/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 1.2 — SOLID trong Go: Năm quy tắc quản trị phụ thuộc</h2></header><div class=entry-content><p>Level 1 – Foundation · Yêu cầu: đã đọc Coupling & Cohesion
-1. Problem Statement Chương trước kết luận: kiến trúc tốt = coupling thấp + cohesion cao. Nhưng đó là đại lượng đo, không phải quy tắc hành động. Khi đứng trước một PR, engineer cần câu trả lời cụ thể: struct này nên tách không? Interface đặt ở đâu? Thêm case vào switch này có ổn không?
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-07 21:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;14 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc" href="http://localhost:1313/series/clean-architect/01-foundation/03-dependency-inversion/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 1.2 — SOLID trong Go: Năm quy tắc quản trị phụ thuộc
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 1 – Foundation · Yêu cầu: đã đọc Coupling &amp; Cohesion
+1. Problem Statement Chương trước kết luận: kiến trúc tốt = coupling thấp &#43; cohesion cao. Nhưng đó là đại lượng đo, không phải quy tắc hành động. Khi đứng trước một PR, engineer cần câu trả lời cụ thể: struct này nên tách không? Interface đặt ở đâu? Thêm case vào switch này có ổn không?
 SOLID (Robert C. Martin tổng hợp, đầu những năm 2000) là năm quy tắc hành động trả lời chính xác các câu hỏi đó. Không có SOLID, mỗi engineer quyết định theo cảm tính → codebase thành tập hợp các phong cách mâu thuẫn, review kiến trúc thành tranh cãi ý kiến cá nhân.
-...</p></div><footer class=entry-footer><span title='2026-07-07 20:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;12 min</footer><a class=entry-link aria-label="post link to Chương 1.2 — SOLID trong Go: Năm quy tắc quản trị phụ thuộc" href=https://thanhhv.github.io/series/clean-architect/01-foundation/02-solid/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Chương 1.1 — Coupling & Cohesion: Gốc rễ của mọi vấn đề kiến trúc</h2></header><div class=entry-content><p>Level 1 – Foundation · Đối tượng: Backend Engineer trở lên Đây là chương quan trọng nhất của toàn bộ tài liệu. Nếu bạn hiểu sâu coupling và cohesion, mọi pattern phía sau — SOLID, Dependency Rule, Clean Architecture, DDD — chỉ là hệ quả logic.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-07 20:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;12 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 1.2 — SOLID trong Go: Năm quy tắc quản trị phụ thuộc" href="http://localhost:1313/series/clean-architect/01-foundation/02-solid/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Chương 1.1 — Coupling &amp; Cohesion: Gốc rễ của mọi vấn đề kiến trúc
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Level 1 – Foundation · Đối tượng: Backend Engineer trở lên Đây là chương quan trọng nhất của toàn bộ tài liệu. Nếu bạn hiểu sâu coupling và cohesion, mọi pattern phía sau — SOLID, Dependency Rule, Clean Architecture, DDD — chỉ là hệ quả logic.
 1. Problem Statement Bài toán kinh doanh Hãy bắt đầu từ một tình huống có thật, không phải từ lý thuyết.
 Một công ty e-commerce có hệ thống đặt hàng viết bằng Go, chạy tốt trong 2 năm đầu. Đến năm thứ 3:
-...</p></div><footer class=entry-footer><span title='2026-07-07 19:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer><a class=entry-link aria-label="post link to Chương 1.1 — Coupling & Cohesion: Gốc rễ của mọi vấn đề kiến trúc" href=https://thanhhv.github.io/series/clean-architect/01-foundation/01-coupling-cohesion/></a></article><article class="post-entry tag-entry"><header class=entry-header><h2 class=entry-hint-parent>Clean Architecture với Golang — Từ First Principles đến Production</h2></header><div class=entry-content><p>Tài liệu chuyên sâu dành cho Backend Engineer → Software Architect. Ngôn ngữ minh họa: Go 1.22+, ưu tiên Standard Library. Triết lý: hiểu bản chất và trade-off, không sao chép template.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-07 19:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;19 min</footer>
+  <a class="entry-link" aria-label="post link to Chương 1.1 — Coupling & Cohesion: Gốc rễ của mọi vấn đề kiến trúc" href="http://localhost:1313/series/clean-architect/01-foundation/01-coupling-cohesion/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Clean Architecture với Golang — Từ First Principles đến Production
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p> Tài liệu chuyên sâu dành cho Backend Engineer → Software Architect. Ngôn ngữ minh họa: Go 1.22&#43;, ưu tiên Standard Library. Triết lý: hiểu bản chất và trade-off, không sao chép template.
 Cách đọc Tài liệu được viết theo chuỗi nhân quả — mỗi chương đứng trên chương trước:
 Business Problem → Vì sao code khó bảo trì → Coupling → Dependency → SOLID → Clean Architecture ra đời → Dependency Rule → Layer → Production → Trade-off → Khi nào KHÔNG nên áp dụngNgười mới nên đọc tuần tự. Người có kinh nghiệm có thể nhảy thẳng vào Level 3–4, nhưng nếu thấy một kết luận thiếu căn cứ — căn cứ nằm ở Level 1.
-...</p></div><footer class=entry-footer><span title='2026-07-07 18:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;4 min</footer><a class=entry-link aria-label="post link to Clean Architecture với Golang — Từ First Principles đến Production" href=https://thanhhv.github.io/series/clean-architect/00-muc-luc/></a></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script></body></html>
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-07-07 18:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;4 min</footer>
+  <a class="entry-link" aria-label="post link to Clean Architecture với Golang — Từ First Principles đến Production" href="http://localhost:1313/series/clean-architect/00-muc-luc/"></a>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+</body>
+
+</html>

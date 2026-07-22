@@ -1,5 +1,13 @@
-<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Bài 2 — Goroutine, Scheduler & GPM Model | Thanh HV's Blog</title>
-<meta name=keywords content="backend,golang"><meta name=description content="Concurrency — Goroutine, Scheduler và GPM Model
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Bài 2 — Goroutine, Scheduler &amp; GPM Model | Thanh HV&#39;s Blog</title>
+<meta name="keywords" content="backend, golang">
+<meta name="description" content="Concurrency — Goroutine, Scheduler và GPM Model
 
 1. Problem Statement
 Bài toán C10K → C10M
@@ -21,12 +29,12 @@ Các giải pháp cũ và giới hạn
   
       
           Thread pool (Java cổ điển)
-          Số thread cố định + queue
+          Số thread cố định &#43; queue
           Thread bị block bởi I/O vẫn chiếm chỗ; sizing pool là nghệ thuật đen
       
       
           Callback / event loop (Node.js, nginx)
-          1 thread + non-blocking I/O
+          1 thread &#43; non-blocking I/O
           Callback hell; 1 tính toán nặng chặn toàn bộ; code bất đồng bộ &ldquo;lây nhiễm&rdquo; (colored functions)
       
       
@@ -36,46 +44,184 @@ Các giải pháp cũ và giới hạn
       
   
 
-Go chọn hướng thứ ba: viết code tuần tự, blocking như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/nodejs-golang/02-go-concurrency-goroutine-scheduler/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/nodejs-golang/02-go-concurrency-goroutine-scheduler/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/nodejs-golang/02-go-concurrency-goroutine-scheduler/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Bài 2 — Goroutine, Scheduler & GPM Model"><meta property="og:description" content="Concurrency — Goroutine, Scheduler và GPM Model 1. Problem Statement Bài toán C10K → C10M Một server hiện đại cần phục vụ 10.000 → 10.000.000 kết nối đồng thời. Với mô hình “1 kết nối = 1 OS thread”:
-Memory: 10.000 thread × 8MB stack (mặc định Linux) = 80GB chỉ cho stack. Bất khả thi. Context switch: chuyển đổi thread qua kernel tốn 1-10µs (lưu/khôi phục register, TLB flush, cache pollution). Với 10K thread active, CPU dành phần lớn thời gian cho việc chuyển đổi thay vì làm việc. Scheduler kernel không biết gì về ngữ nghĩa ứng dụng — nó schedule công bằng theo time-slice, không theo “goroutine này đang chờ I/O”. Các giải pháp cũ và giới hạn Giải pháp Cách hoạt động Giới hạn Thread pool (Java cổ điển) Số thread cố định + queue Thread bị block bởi I/O vẫn chiếm chỗ; sizing pool là nghệ thuật đen Callback / event loop (Node.js, nginx) 1 thread + non-blocking I/O Callback hell; 1 tính toán nặng chặn toàn bộ; code bất đồng bộ “lây nhiễm” (colored functions) Async/await (C#, Rust, JS) Compiler biến đổi thành state machine Vẫn chia thế giới thành sync/async (“function coloring”); ecosystem phải async hết Go chọn hướng thứ ba: viết code tuần tự, blocking như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-06-05T08:00:00+07:00"><meta property="article:modified_time" content="2026-06-05T08:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Golang"><meta name=twitter:card content="summary"><meta name=twitter:title content="Bài 2 — Goroutine, Scheduler & GPM Model"><meta name=twitter:description content="Concurrency — Goroutine, Scheduler và GPM Model
+Go chọn hướng thứ ba: viết code tuần tự, blocking như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/series/nodejs-golang/02-go-concurrency-goroutine-scheduler/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/series/nodejs-golang/02-go-concurrency-goroutine-scheduler/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
 
-1. Problem Statement
-Bài toán C10K → C10M
-Một server hiện đại cần phục vụ 10.000 → 10.000.000 kết nối đồng thời. Với mô hình &ldquo;1 kết nối = 1 OS thread&rdquo;:
+    </style>
+</noscript>
+</head>
 
-Memory: 10.000 thread × 8MB stack (mặc định Linux) = 80GB chỉ cho stack. Bất khả thi.
-Context switch: chuyển đổi thread qua kernel tốn 1-10µs (lưu/khôi phục register, TLB flush, cache pollution). Với 10K thread active, CPU dành phần lớn thời gian cho việc chuyển đổi thay vì làm việc.
-Scheduler kernel không biết gì về ngữ nghĩa ứng dụng — nó schedule công bằng theo time-slice, không theo &ldquo;goroutine này đang chờ I/O&rdquo;.
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    }
 
-Các giải pháp cũ và giới hạn
+</script>
 
-  
-      
-          Giải pháp
-          Cách hoạt động
-          Giới hạn
-      
-  
-  
-      
-          Thread pool (Java cổ điển)
-          Số thread cố định + queue
-          Thread bị block bởi I/O vẫn chiếm chỗ; sizing pool là nghệ thuật đen
-      
-      
-          Callback / event loop (Node.js, nginx)
-          1 thread + non-blocking I/O
-          Callback hell; 1 tính toán nặng chặn toàn bộ; code bất đồng bộ &ldquo;lây nhiễm&rdquo; (colored functions)
-      
-      
-          Async/await (C#, Rust, JS)
-          Compiler biến đổi thành state machine
-          Vẫn chia thế giới thành sync/async (&ldquo;function coloring&rdquo;); ecosystem phải async hết
-      
-  
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about-me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/series/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
 
-Go chọn hướng thứ ba: viết code tuần tự, blocking như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"NodeJS \u0026 Golang","item":"https://thanhhv.github.io/series/nodejs-golang/"},{"@type":"ListItem","position":3,"name":"Bài 2 — Goroutine, Scheduler \u0026 GPM Model","item":"https://thanhhv.github.io/series/nodejs-golang/02-go-concurrency-goroutine-scheduler/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Bài 2 — Goroutine, Scheduler \u0026 GPM Model","name":"Bài 2 — Goroutine, Scheduler \u0026 GPM Model","description":"Concurrency — Goroutine, Scheduler và GPM Model 1. Problem Statement Bài toán C10K → C10M Một server hiện đại cần phục vụ 10.000 → 10.000.000 kết nối đồng thời. Với mô hình \u0026ldquo;1 kết nối = 1 OS thread\u0026rdquo;:\nMemory: 10.000 thread × 8MB stack (mặc định Linux) = 80GB chỉ cho stack. Bất khả thi. Context switch: chuyển đổi thread qua kernel tốn 1-10µs (lưu/khôi phục register, TLB flush, cache pollution). Với 10K thread active, CPU dành phần lớn thời gian cho việc chuyển đổi thay vì làm việc. Scheduler kernel không biết gì về ngữ nghĩa ứng dụng — nó schedule công bằng theo time-slice, không theo \u0026ldquo;goroutine này đang chờ I/O\u0026rdquo;. Các giải pháp cũ và giới hạn Giải pháp Cách hoạt động Giới hạn Thread pool (Java cổ điển) Số thread cố định + queue Thread bị block bởi I/O vẫn chiếm chỗ; sizing pool là nghệ thuật đen Callback / event loop (Node.js, nginx) 1 thread + non-blocking I/O Callback hell; 1 tính toán nặng chặn toàn bộ; code bất đồng bộ \u0026ldquo;lây nhiễm\u0026rdquo; (colored functions) Async/await (C#, Rust, JS) Compiler biến đổi thành state machine Vẫn chia thế giới thành sync/async (\u0026ldquo;function coloring\u0026rdquo;); ecosystem phải async hết Go chọn hướng thứ ba: viết code tuần tự, blocking như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go.\n","keywords":["backend","golang"],"articleBody":"Concurrency — Goroutine, Scheduler và GPM Model 1. Problem Statement Bài toán C10K → C10M Một server hiện đại cần phục vụ 10.000 → 10.000.000 kết nối đồng thời. Với mô hình “1 kết nối = 1 OS thread”:\nMemory: 10.000 thread × 8MB stack (mặc định Linux) = 80GB chỉ cho stack. Bất khả thi. Context switch: chuyển đổi thread qua kernel tốn 1-10µs (lưu/khôi phục register, TLB flush, cache pollution). Với 10K thread active, CPU dành phần lớn thời gian cho việc chuyển đổi thay vì làm việc. Scheduler kernel không biết gì về ngữ nghĩa ứng dụng — nó schedule công bằng theo time-slice, không theo “goroutine này đang chờ I/O”. Các giải pháp cũ và giới hạn Giải pháp Cách hoạt động Giới hạn Thread pool (Java cổ điển) Số thread cố định + queue Thread bị block bởi I/O vẫn chiếm chỗ; sizing pool là nghệ thuật đen Callback / event loop (Node.js, nginx) 1 thread + non-blocking I/O Callback hell; 1 tính toán nặng chặn toàn bộ; code bất đồng bộ “lây nhiễm” (colored functions) Async/await (C#, Rust, JS) Compiler biến đổi thành state machine Vẫn chia thế giới thành sync/async (“function coloring”); ecosystem phải async hết Go chọn hướng thứ ba: viết code tuần tự, blocking như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go.\n2. Goroutine — vì sao rẻ đến vậy go handleRequest(conn) // tạo goroutine: ~vài trăm ns, 2KB stack Ba con số quyết định:\nOS Thread Goroutine Stack khởi tạo 1-8MB (cố định, reserve) 2KB (grow động tới 1GB) Chi phí tạo ~10-50µs (syscall) ~200-500ns (user space) Context switch ~1-10µs (qua kernel) ~100-200ns (user space, chỉ lưu 3 register chính: PC, SP, DX) Goroutine context switch rẻ vì: (1) không vào kernel, (2) Go scheduler biết chính xác thời điểm switch (tại các điểm hợp tác — function call, channel op, syscall) nên chỉ cần lưu tối thiểu register, (3) không TLB flush vì cùng address space.\nHệ quả thiết kế: với Go, “mỗi request một goroutine” là pattern chuẩn — điều bị coi là anti-pattern chết người ở mô hình thread. net/http mặc định làm đúng như vậy.\n3. GPM Model — Scheduler bên trong 3.1. Ba thực thể G (Goroutine): đơn vị công việc — stack, PC, trạng thái M (Machine): OS thread thực sự thực thi code P (Processor): \"giấy phép chạy\" — context scheduling, tối đa GOMAXPROCS cái (mặc định = số CPU core) ┌─────────────────────────────────────────────────┐ │ Global Run Queue │ └─────────────────────────────────────────────────┘ ▲ ▲ ┌────┴────┐ ┌────┴────┐ │ P0 │ │ P1 │ ... (GOMAXPROCS P) │ LRQ: │ │ LRQ: │ │ G1→G2→G3│ │ G4→G5 │ LRQ = Local Run Queue (max 256 G) └────┬────┘ └────┬────┘ │ │ ┌────┴────┐ ┌────┴────┐ │ M0 │ │ M1 │ M gắn với P để chạy G └─────────┘ └─────────┘Tại sao cần P (tách khỏi M)? Đây là câu hỏi phỏng vấn senior kinh điển. Nếu chỉ có G và M (như Go trước 2012): mọi M tranh nhau một global queue → lock contention hủy diệt scalability. P mang theo local run queue và mcache (cache cấp phát memory) — M lấy G từ LRQ của P mà không cần lock. P còn là cơ chế giới hạn parallelism thực sự: dù có 1000 M (do syscall), chỉ GOMAXPROCS M được chạy Go code cùng lúc.\n3.2. Work stealing Khi P hết việc trong LRQ, theo thứ tự:\nLấy từ Global Run Queue (kiểm tra định kỳ mỗi 61 tick để tránh starvation). Kiểm tra netpoller (goroutine chờ I/O network đã sẵn sàng chưa). Steal một nửa LRQ của một P ngẫu nhiên khác. Work stealing giữ mọi core bận mà không cần bộ điều phối trung tâm — thiết kế phi tập trung, scale theo số core.\n3.3. Xử lý syscall blocking — phần tinh vi nhất Khi G thực hiện syscall blocking (đọc file, cgo call):\nTrước: P ── M1 ── G1 (vào syscall) Sau: G1 + M1 tách ra chờ syscall (M1 bị kernel block) P ── M2 (lấy từ pool hoặc tạo mới) ── G2 tiếp tục chạy Khi syscall xong: G1 vào lại run queue; M1 về poolĐây là lý do một service Go đọc file nhiều có thể có hàng trăm OS thread dù GOMAXPROCS=8 — hoàn toàn bình thường, nhưng cần biết khi đọc metrics.\nVới network I/O thì khác: Go không block M. Netpoller (epoll/kqueue/IOCP) đăng ký fd, G bị “park” (gỡ khỏi M, trạng thái waiting), M chạy G khác ngay. Khi fd sẵn sàng, netpoller đánh thức G. Đây chính là cách Go biến code blocking-style thành non-blocking thực thi — event loop giấu bên trong runtime, lập trình viên không bao giờ thấy nó.\n3.4. Preemption Go ≤1.13: goroutine chỉ nhường CPU tại function call (cooperative). Vòng lặp for {} không call gì có thể chiếm P vĩnh viễn, thậm chí chặn GC → cả process đứng hình.\nGo 1.14+ thêm asynchronous preemption: sysmon (goroutine giám sát nền) phát hiện G chạy quá ~10ms → gửi signal SIGURG → G bị ngắt tại điểm an toàn. Bài học lịch sử: hầu hết bug “service Go treo cứng” trước 2020 đến từ đây.\n4. Channel — chia sẻ bằng giao tiếp 4.1. Bản chất bên trong Channel là struct hchan: một ring buffer + hai hàng đợi goroutine chờ (sendq, recvq) + một mutex. Không ma thuật — chỉ là hàng đợi có khóa được tích hợp với scheduler:\nGửi vào channel đầy → G bị park vào sendq, nhường M cho G khác (không busy-wait, không tốn CPU). Nhận từ channel rỗng → park vào recvq. Tối ưu đáng chú ý: khi có receiver đang chờ, sender copy dữ liệu thẳng vào stack của receiver, bỏ qua buffer — tiết kiệm một lần copy. 4.2. Unbuffered vs Buffered — quyết định ngữ nghĩa, không phải hiệu năng ch := make(chan T) // unbuffered: gửi/nhận là điểm ĐỒNG BỘ HÓA ch := make(chan T, N) // buffered: tách rời sender/receiver tối đa N phần tử Unbuffered = bảo đảm bàn giao (guarantee of delivery): khi lệnh send trả về, receiver chắc chắn đã nhận. Dùng khi cần tín hiệu đồng bộ. Buffered = hàng đợi: hấp thụ burst, nhưng che giấu backpressure. Buffer đầy thì vẫn block — buffer chỉ trì hoãn, không giải quyết chênh lệch tốc độ (xem chương 4 về backpressure). Anti-pattern phổ biến: tăng buffer size để “fix” deadlock hoặc chậm. Buffer lớn chỉ giấu vấn đề đến khi production traffic cao hơn buffer — rồi nổ cùng lúc với hậu quả lớn hơn (memory phình + latency đuôi dài).\n4.3. Luật sống còn với channel (đúc kết production) Ai tạo/ghi channel, người đó close. Receiver không bao giờ close. Close một channel đang có sender khác → panic cả process. Gửi vào channel nil hoặc đã close → block vĩnh viễn / panic. Kiểm soát lifecycle chặt chẽ. Goroutine leak — bug số 1 trong code Go: goroutine block mãi mãi trên channel không ai đọc/ghi. Mỗi leak giữ stack + mọi thứ nó tham chiếu. Triệu chứng: memory tăng tuyến tính theo thời gian, runtime.NumGoroutine() tăng không giảm. Phòng ngừa: mọi goroutine phải có đường thoát (context cancel, timeout, close signal). // LEAK: nếu không ai đọc ch, goroutine kẹt vĩnh viễn go func() { ch \u003c- doWork() }() // ĐÚNG: luôn có đường thoát go func() { select { case ch \u003c- doWork(): case \u003c-ctx.Done(): // đường thoát khi caller bỏ cuộc } }() 5. Mutex, RWMutex, Atomic — khi nào dùng gì Nguyên tắc chọn (theo thứ tự ưu tiên thực dụng):\nChannel khi: chuyển quyền sở hữu dữ liệu, phân phối công việc, báo hiệu sự kiện, orchestration. Mutex khi: bảo vệ trạng thái nội bộ của một struct (cache, counter, map). Đơn giản hơn và nhanh hơn channel ~5-10x cho việc này (channel bên trong cũng có mutex + chi phí scheduling). RWMutex khi: đọc nhiều ghi ít (tỷ lệ đọc \u003e ~90%) VÀ critical section đọc đủ dài. Lưu ý: RWMutex có chi phí bookkeeping cao hơn Mutex; với critical section ngắn, Mutex thường thắng. Đo trước khi đổi. atomic khi: counter, flag, con trỏ swap đơn lẻ. Nhanh nhất (~vài ns) nhưng chỉ cho thao tác đơn. atomic.Value/atomic.Pointer[T] cho pattern “config reload không lock”. // Pattern production: config hot-reload không lock var config atomic.Pointer[Config] // reader (hàng triệu lần/s, không lock): cfg := config.Load() // writer (hiếm): config.Store(newCfg) Race detector: go test -race / go run -race. Chạy CI với -race là bắt buộc, không thương lượng. Data race trong Go là undefined behavior thật sự — có thể làm hỏng nội tạng map, con trỏ, gây crash không tái hiện được.\nAnti-pattern kinh điển: copy struct chứa mutex (mutex bị copy = hai khóa độc lập, mất tác dụng — go vet bắt được); lock rồi gọi hàm ngoài có thể lock lại cùng mutex (Go mutex không reentrant → deadlock).\n6. WaitGroup và Context 6.1. WaitGroup — chờ nhóm goroutine var wg sync.WaitGroup for _, task := range tasks { wg.Add(1) // Add TRƯỚC khi go — làm trong goroutine là race go func(t Task) { defer wg.Done() process(t) }(task) // Go \u003c1.22: phải truyền biến vào, tránh capture } wg.Wait() 6.2. Context — hợp đồng hủy bỏ của cả hệ sinh thái Problem: request đến API gateway → gọi 5 service → user đóng kết nối. Không có cơ chế chung, 5 call kia vẫn chạy hết, đốt tài nguyên vô ích. Nhân với 10K RPS → hệ thống làm việc vô ích khổng lồ, và khi downstream chậm, goroutine tồn đọng làm sập chính mình.\ncontext.Context là câu trả lời chuẩn hóa: mang deadline, cancellation signal, và request-scoped values xuyên qua ranh giới API và goroutine.\nfunc (s *Service) HandleOrder(ctx context.Context, req OrderReq) error { ctx, cancel := context.WithTimeout(ctx, 2*time.Second) defer cancel() // QUÊN dòng này = leak timer + context cha giữ tham chiếu if err := s.db.QueryContext(ctx, ...); err != nil { return fmt.Errorf(\"query order: %w\", err) } ... } Quy tắc production:\nctx là tham số đầu tiên của mọi hàm có I/O hoặc có thể chậm. Không giấu trong struct. Luôn defer cancel(). Cancellation là hợp tác: hàm phải chủ động kiểm tra ctx.Done() trong vòng lặp dài / giữa các bước. Context không “giết” goroutine — Go không có cơ chế kill goroutine từ bên ngoài, đây là quyết định thiết kế (kill cưỡng bức để lại trạng thái hỏng). context.Value chỉ cho request-scoped metadata (trace ID, user ID) — không truyền tham số nghiệp vụ qua đó (mất type safety, ẩn dependency). 7. Trade-off tổng hợp của mô hình Go Trục Go chọn Cái giá Blocking-style vs async/await Blocking-style, runtime lo phía dưới Runtime phức tạp; mất kiểm soát chi tiết lịch chạy Share memory vs message passing Cả hai, khuyến khích message passing Hai cơ chế = phải học khi nào dùng gì Kill goroutine vs hợp tác Hợp tác qua context Goroutine “cứng đầu” không thể dừng từ ngoài M:N scheduler vs 1:1 M:N Debugging khó hơn (stack trace hàng nghìn G); tương tác cgo/FFI phức tạp Nếu làm ngược lại? Nếu Go dùng async/await: ecosystem chia đôi sync/async như Rust/Python, mất tính đơn giản. Nếu 1:1 thread: mất khả năng chạy triệu concurrent task. Mô hình goroutine là lý do tồn tại của Go — bỏ nó thì Go chỉ là “C có GC”.\n8. Anti-patterns tổng hợp Goroutine không giới hạn: for _, x := range huge { go process(x) } — 10 triệu item = 10 triệu goroutine = OOM hoặc nghẹt downstream. Dùng worker pool / semaphore (chương 4). Goroutine leak do channel không có đường thoát (mục 4.3). Dùng channel làm mutex — vòng vo, chậm, khó đọc. Bảo vệ state thì dùng mutex. time.Sleep để “đồng bộ hóa” trong test hoặc code — flaky by design. Dùng channel/WaitGroup. Bỏ qua -race trong CI. Panic trong goroutine con không recover — panic ở bất kỳ goroutine nào không được recover sẽ sập cả process. Worker pool production phải có defer recover() ở đầu mỗi worker (và log + metric lại). Chương tiếp theo: 03 — Concurrency Patterns: Worker Pool, Pipeline, Fan-in/Fan-out, Backpressure\n","wordCount":"2061","inLanguage":"en","datePublished":"2026-06-05T08:00:00+07:00","dateModified":"2026-06-05T08:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/nodejs-golang/02-go-concurrency-goroutine-scheduler/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/nodejs-golang/>NodeJS & Golang</a></div><h1 class="post-title entry-hint-parent">Bài 2 — Goroutine, Scheduler & GPM Model</h1><div class=post-meta><span title='2026-06-05 08:00:00 +0700 +07'>June 5, 2026</span>&nbsp;·&nbsp;10 min</div></header><div class=post-content><h1 id=concurrency--goroutine-scheduler-và-gpm-model>Concurrency — Goroutine, Scheduler và GPM Model<a hidden class=anchor aria-hidden=true href=#concurrency--goroutine-scheduler-và-gpm-model>#</a></h1><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><h3 id=bài-toán-c10k--c10m>Bài toán C10K → C10M<a hidden class=anchor aria-hidden=true href=#bài-toán-c10k--c10m>#</a></h3><p>Một server hiện đại cần phục vụ 10.000 → 10.000.000 kết nối đồng thời. Với mô hình &ldquo;1 kết nối = 1 OS thread&rdquo;:</p><ul><li><strong>Memory:</strong> 10.000 thread × 8MB stack (mặc định Linux) = 80GB chỉ cho stack. Bất khả thi.</li><li><strong>Context switch:</strong> chuyển đổi thread qua kernel tốn 1-10µs (lưu/khôi phục register, TLB flush, cache pollution). Với 10K thread active, CPU dành phần lớn thời gian cho việc chuyển đổi thay vì làm việc.</li><li><strong>Scheduler kernel</strong> không biết gì về ngữ nghĩa ứng dụng — nó schedule công bằng theo time-slice, không theo &ldquo;goroutine này đang chờ I/O&rdquo;.</li></ul><h3 id=các-giải-pháp-cũ-và-giới-hạn>Các giải pháp cũ và giới hạn<a hidden class=anchor aria-hidden=true href=#các-giải-pháp-cũ-và-giới-hạn>#</a></h3><table><thead><tr><th>Giải pháp</th><th>Cách hoạt động</th><th>Giới hạn</th></tr></thead><tbody><tr><td>Thread pool (Java cổ điển)</td><td>Số thread cố định + queue</td><td>Thread bị block bởi I/O vẫn chiếm chỗ; sizing pool là nghệ thuật đen</td></tr><tr><td>Callback / event loop (Node.js, nginx)</td><td>1 thread + non-blocking I/O</td><td>Callback hell; 1 tính toán nặng chặn toàn bộ; code bất đồng bộ &ldquo;lây nhiễm&rdquo; (colored functions)</td></tr><tr><td>Async/await (C#, Rust, JS)</td><td>Compiler biến đổi thành state machine</td><td>Vẫn chia thế giới thành sync/async (&ldquo;function coloring&rdquo;); ecosystem phải async hết</td></tr></tbody></table><p><strong>Go chọn hướng thứ ba:</strong> viết code <strong>tuần tự, blocking</strong> như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go.</p><hr><h2 id=2-goroutine--vì-sao-rẻ-đến-vậy>2. Goroutine — vì sao rẻ đến vậy<a hidden class=anchor aria-hidden=true href=#2-goroutine--vì-sao-rẻ-đến-vậy>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>go</span> <span style=color:#a6e22e>handleRequest</span>(<span style=color:#a6e22e>conn</span>)   <span style=color:#75715e>// tạo goroutine: ~vài trăm ns, 2KB stack</span>
-</span></span></code></pre></div><p>Ba con số quyết định:</p><table><thead><tr><th></th><th>OS Thread</th><th>Goroutine</th></tr></thead><tbody><tr><td>Stack khởi tạo</td><td>1-8MB (cố định, reserve)</td><td>2KB (grow động tới 1GB)</td></tr><tr><td>Chi phí tạo</td><td>~10-50µs (syscall)</td><td>~200-500ns (user space)</td></tr><tr><td>Context switch</td><td>~1-10µs (qua kernel)</td><td>~100-200ns (user space, chỉ lưu 3 register chính: PC, SP, DX)</td></tr></tbody></table><p>Goroutine context switch rẻ vì: (1) không vào kernel, (2) Go scheduler biết chính xác thời điểm switch (tại các điểm hợp tác — function call, channel op, syscall) nên chỉ cần lưu tối thiểu register, (3) không TLB flush vì cùng address space.</p><p><strong>Hệ quả thiết kế:</strong> với Go, &ldquo;mỗi request một goroutine&rdquo; là pattern chuẩn — điều bị coi là anti-pattern chết người ở mô hình thread. <code>net/http</code> mặc định làm đúng như vậy.</p><hr><h2 id=3-gpm-model--scheduler-bên-trong>3. GPM Model — Scheduler bên trong<a hidden class=anchor aria-hidden=true href=#3-gpm-model--scheduler-bên-trong>#</a></h2><h3 id=31-ba-thực-thể>3.1. Ba thực thể<a hidden class=anchor aria-hidden=true href=#31-ba-thực-thể>#</a></h3><pre tabindex=0><code>G (Goroutine): đơn vị công việc — stack, PC, trạng thái
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/nodejs-golang/">NodeJS &amp; Golang</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Bài 2 — Goroutine, Scheduler &amp; GPM Model
+    </h1>
+    <div class="post-meta"><span title='2026-06-05 08:00:00 +0700 +07'>June 5, 2026</span>&nbsp;·&nbsp;10 min
+
+</div>
+  </header> 
+  <div class="post-content"><h1 id="concurrency--goroutine-scheduler-và-gpm-model">Concurrency — Goroutine, Scheduler và GPM Model<a hidden class="anchor" aria-hidden="true" href="#concurrency--goroutine-scheduler-và-gpm-model">#</a></h1>
+<hr>
+<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
+<h3 id="bài-toán-c10k--c10m">Bài toán C10K → C10M<a hidden class="anchor" aria-hidden="true" href="#bài-toán-c10k--c10m">#</a></h3>
+<p>Một server hiện đại cần phục vụ 10.000 → 10.000.000 kết nối đồng thời. Với mô hình &ldquo;1 kết nối = 1 OS thread&rdquo;:</p>
+<ul>
+<li><strong>Memory:</strong> 10.000 thread × 8MB stack (mặc định Linux) = 80GB chỉ cho stack. Bất khả thi.</li>
+<li><strong>Context switch:</strong> chuyển đổi thread qua kernel tốn 1-10µs (lưu/khôi phục register, TLB flush, cache pollution). Với 10K thread active, CPU dành phần lớn thời gian cho việc chuyển đổi thay vì làm việc.</li>
+<li><strong>Scheduler kernel</strong> không biết gì về ngữ nghĩa ứng dụng — nó schedule công bằng theo time-slice, không theo &ldquo;goroutine này đang chờ I/O&rdquo;.</li>
+</ul>
+<h3 id="các-giải-pháp-cũ-và-giới-hạn">Các giải pháp cũ và giới hạn<a hidden class="anchor" aria-hidden="true" href="#các-giải-pháp-cũ-và-giới-hạn">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Giải pháp</th>
+          <th>Cách hoạt động</th>
+          <th>Giới hạn</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Thread pool (Java cổ điển)</td>
+          <td>Số thread cố định + queue</td>
+          <td>Thread bị block bởi I/O vẫn chiếm chỗ; sizing pool là nghệ thuật đen</td>
+      </tr>
+      <tr>
+          <td>Callback / event loop (Node.js, nginx)</td>
+          <td>1 thread + non-blocking I/O</td>
+          <td>Callback hell; 1 tính toán nặng chặn toàn bộ; code bất đồng bộ &ldquo;lây nhiễm&rdquo; (colored functions)</td>
+      </tr>
+      <tr>
+          <td>Async/await (C#, Rust, JS)</td>
+          <td>Compiler biến đổi thành state machine</td>
+          <td>Vẫn chia thế giới thành sync/async (&ldquo;function coloring&rdquo;); ecosystem phải async hết</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Go chọn hướng thứ ba:</strong> viết code <strong>tuần tự, blocking</strong> như bình thường — runtime lo việc biến blocking thành non-blocking bên dưới. Không có async/await, không có màu hàm. Đây là điểm bán hàng lớn nhất của Go.</p>
+<hr>
+<h2 id="2-goroutine--vì-sao-rẻ-đến-vậy">2. Goroutine — vì sao rẻ đến vậy<a hidden class="anchor" aria-hidden="true" href="#2-goroutine--vì-sao-rẻ-đến-vậy">#</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#a6e22e">handleRequest</span>(<span style="color:#a6e22e">conn</span>)   <span style="color:#75715e">// tạo goroutine: ~vài trăm ns, 2KB stack</span>
+</span></span></code></pre></div><p>Ba con số quyết định:</p>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>OS Thread</th>
+          <th>Goroutine</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Stack khởi tạo</td>
+          <td>1-8MB (cố định, reserve)</td>
+          <td>2KB (grow động tới 1GB)</td>
+      </tr>
+      <tr>
+          <td>Chi phí tạo</td>
+          <td>~10-50µs (syscall)</td>
+          <td>~200-500ns (user space)</td>
+      </tr>
+      <tr>
+          <td>Context switch</td>
+          <td>~1-10µs (qua kernel)</td>
+          <td>~100-200ns (user space, chỉ lưu 3 register chính: PC, SP, DX)</td>
+      </tr>
+  </tbody>
+</table>
+<p>Goroutine context switch rẻ vì: (1) không vào kernel, (2) Go scheduler biết chính xác thời điểm switch (tại các điểm hợp tác — function call, channel op, syscall) nên chỉ cần lưu tối thiểu register, (3) không TLB flush vì cùng address space.</p>
+<p><strong>Hệ quả thiết kế:</strong> với Go, &ldquo;mỗi request một goroutine&rdquo; là pattern chuẩn — điều bị coi là anti-pattern chết người ở mô hình thread. <code>net/http</code> mặc định làm đúng như vậy.</p>
+<hr>
+<h2 id="3-gpm-model--scheduler-bên-trong">3. GPM Model — Scheduler bên trong<a hidden class="anchor" aria-hidden="true" href="#3-gpm-model--scheduler-bên-trong">#</a></h2>
+<h3 id="31-ba-thực-thể">3.1. Ba thực thể<a hidden class="anchor" aria-hidden="true" href="#31-ba-thực-thể">#</a></h3>
+<pre tabindex="0"><code>G (Goroutine): đơn vị công việc — stack, PC, trạng thái
 M (Machine):   OS thread thực sự thực thi code
 P (Processor): &#34;giấy phép chạy&#34; — context scheduling, tối đa GOMAXPROCS cái
                (mặc định = số CPU core)
@@ -92,48 +238,371 @@ P (Processor): &#34;giấy phép chạy&#34; — context scheduling, tối đa G
         │                    │
    ┌────┴────┐          ┌────┴────┐
    │   M0    │          │   M1    │   M gắn với P để chạy G
-   └─────────┘          └─────────┘</code></pre><p><strong>Tại sao cần P (tách khỏi M)?</strong> Đây là câu hỏi phỏng vấn senior kinh điển. Nếu chỉ có G và M (như Go trước 2012): mọi M tranh nhau một global queue → lock contention hủy diệt scalability. P mang theo <strong>local run queue</strong> và <strong>mcache</strong> (cache cấp phát memory) — M lấy G từ LRQ của P mà <strong>không cần lock</strong>. P còn là cơ chế giới hạn parallelism thực sự: dù có 1000 M (do syscall), chỉ GOMAXPROCS M được chạy Go code cùng lúc.</p><h3 id=32-work-stealing>3.2. Work stealing<a hidden class=anchor aria-hidden=true href=#32-work-stealing>#</a></h3><p>Khi P hết việc trong LRQ, theo thứ tự:</p><ol><li>Lấy từ Global Run Queue (kiểm tra định kỳ mỗi 61 tick để tránh starvation).</li><li>Kiểm tra netpoller (goroutine chờ I/O network đã sẵn sàng chưa).</li><li><strong>Steal một nửa</strong> LRQ của một P ngẫu nhiên khác.</li></ol><p>Work stealing giữ mọi core bận mà không cần bộ điều phối trung tâm — thiết kế phi tập trung, scale theo số core.</p><h3 id=33-xử-lý-syscall-blocking--phần-tinh-vi-nhất>3.3. Xử lý syscall blocking — phần tinh vi nhất<a hidden class=anchor aria-hidden=true href=#33-xử-lý-syscall-blocking--phần-tinh-vi-nhất>#</a></h3><p>Khi G thực hiện syscall blocking (đọc file, cgo call):</p><pre tabindex=0><code>Trước:  P ── M1 ── G1 (vào syscall)
+   └─────────┘          └─────────┘</code></pre><p><strong>Tại sao cần P (tách khỏi M)?</strong> Đây là câu hỏi phỏng vấn senior kinh điển. Nếu chỉ có G và M (như Go trước 2012): mọi M tranh nhau một global queue → lock contention hủy diệt scalability. P mang theo <strong>local run queue</strong> và <strong>mcache</strong> (cache cấp phát memory) — M lấy G từ LRQ của P mà <strong>không cần lock</strong>. P còn là cơ chế giới hạn parallelism thực sự: dù có 1000 M (do syscall), chỉ GOMAXPROCS M được chạy Go code cùng lúc.</p>
+<h3 id="32-work-stealing">3.2. Work stealing<a hidden class="anchor" aria-hidden="true" href="#32-work-stealing">#</a></h3>
+<p>Khi P hết việc trong LRQ, theo thứ tự:</p>
+<ol>
+<li>Lấy từ Global Run Queue (kiểm tra định kỳ mỗi 61 tick để tránh starvation).</li>
+<li>Kiểm tra netpoller (goroutine chờ I/O network đã sẵn sàng chưa).</li>
+<li><strong>Steal một nửa</strong> LRQ của một P ngẫu nhiên khác.</li>
+</ol>
+<p>Work stealing giữ mọi core bận mà không cần bộ điều phối trung tâm — thiết kế phi tập trung, scale theo số core.</p>
+<h3 id="33-xử-lý-syscall-blocking--phần-tinh-vi-nhất">3.3. Xử lý syscall blocking — phần tinh vi nhất<a hidden class="anchor" aria-hidden="true" href="#33-xử-lý-syscall-blocking--phần-tinh-vi-nhất">#</a></h3>
+<p>Khi G thực hiện syscall blocking (đọc file, cgo call):</p>
+<pre tabindex="0"><code>Trước:  P ── M1 ── G1 (vào syscall)
 Sau:    G1 + M1 tách ra chờ syscall (M1 bị kernel block)
         P  ── M2 (lấy từ pool hoặc tạo mới) ── G2 tiếp tục chạy
-Khi syscall xong: G1 vào lại run queue; M1 về pool</code></pre><p>Đây là lý do một service Go đọc file nhiều có thể có <strong>hàng trăm OS thread</strong> dù GOMAXPROCS=8 — hoàn toàn bình thường, nhưng cần biết khi đọc metrics.</p><p><strong>Với network I/O thì khác:</strong> Go không block M. Netpoller (epoll/kqueue/IOCP) đăng ký fd, G bị &ldquo;park&rdquo; (gỡ khỏi M, trạng thái waiting), M chạy G khác ngay. Khi fd sẵn sàng, netpoller đánh thức G. Đây chính là cách Go biến code blocking-style thành non-blocking thực thi — <strong>event loop giấu bên trong runtime</strong>, lập trình viên không bao giờ thấy nó.</p><h3 id=34-preemption>3.4. Preemption<a hidden class=anchor aria-hidden=true href=#34-preemption>#</a></h3><p>Go ≤1.13: goroutine chỉ nhường CPU tại function call (cooperative). Vòng lặp <code>for {}</code> không call gì có thể <strong>chiếm P vĩnh viễn</strong>, thậm chí chặn GC → cả process đứng hình.</p><p>Go 1.14+ thêm <strong>asynchronous preemption</strong>: sysmon (goroutine giám sát nền) phát hiện G chạy quá ~10ms → gửi signal SIGURG → G bị ngắt tại điểm an toàn. Bài học lịch sử: hầu hết bug &ldquo;service Go treo cứng&rdquo; trước 2020 đến từ đây.</p><hr><h2 id=4-channel--chia-sẻ-bằng-giao-tiếp>4. Channel — chia sẻ bằng giao tiếp<a hidden class=anchor aria-hidden=true href=#4-channel--chia-sẻ-bằng-giao-tiếp>#</a></h2><h3 id=41-bản-chất-bên-trong>4.1. Bản chất bên trong<a hidden class=anchor aria-hidden=true href=#41-bản-chất-bên-trong>#</a></h3><p>Channel là struct <code>hchan</code>: một <strong>ring buffer</strong> + hai hàng đợi goroutine chờ (sendq, recvq) + một mutex. Không ma thuật — chỉ là hàng đợi có khóa được tích hợp với scheduler:</p><ul><li>Gửi vào channel đầy → G bị park vào <code>sendq</code>, nhường M cho G khác (không busy-wait, không tốn CPU).</li><li>Nhận từ channel rỗng → park vào <code>recvq</code>.</li><li><strong>Tối ưu đáng chú ý:</strong> khi có receiver đang chờ, sender copy dữ liệu <strong>thẳng vào stack của receiver</strong>, bỏ qua buffer — tiết kiệm một lần copy.</li></ul><h3 id=42-unbuffered-vs-buffered--quyết-định-ngữ-nghĩa-không-phải-hiệu-năng>4.2. Unbuffered vs Buffered — quyết định ngữ nghĩa, không phải hiệu năng<a hidden class=anchor aria-hidden=true href=#42-unbuffered-vs-buffered--quyết-định-ngữ-nghĩa-không-phải-hiệu-năng>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#a6e22e>ch</span> <span style=color:#f92672>:=</span> make(<span style=color:#66d9ef>chan</span> <span style=color:#a6e22e>T</span>)     <span style=color:#75715e>// unbuffered: gửi/nhận là điểm ĐỒNG BỘ HÓA</span>
-</span></span><span style=display:flex><span><span style=color:#a6e22e>ch</span> <span style=color:#f92672>:=</span> make(<span style=color:#66d9ef>chan</span> <span style=color:#a6e22e>T</span>, <span style=color:#a6e22e>N</span>)  <span style=color:#75715e>// buffered: tách rời sender/receiver tối đa N phần tử</span>
-</span></span></code></pre></div><ul><li><strong>Unbuffered = bảo đảm bàn giao (guarantee of delivery):</strong> khi lệnh send trả về, receiver <em>chắc chắn đã nhận</em>. Dùng khi cần tín hiệu đồng bộ.</li><li><strong>Buffered = hàng đợi:</strong> hấp thụ burst, nhưng <strong>che giấu backpressure</strong>. Buffer đầy thì vẫn block — buffer chỉ trì hoãn, không giải quyết chênh lệch tốc độ (xem chương 4 về backpressure).</li></ul><p><strong>Anti-pattern phổ biến:</strong> tăng buffer size để &ldquo;fix&rdquo; deadlock hoặc chậm. Buffer lớn chỉ giấu vấn đề đến khi production traffic cao hơn buffer — rồi nổ cùng lúc với hậu quả lớn hơn (memory phình + latency đuôi dài).</p><h3 id=43-luật-sống-còn-với-channel-đúc-kết-production>4.3. Luật sống còn với channel (đúc kết production)<a hidden class=anchor aria-hidden=true href=#43-luật-sống-còn-với-channel-đúc-kết-production>#</a></h3><ol><li><strong>Ai tạo/ghi channel, người đó close.</strong> Receiver không bao giờ close. Close một channel đang có sender khác → panic cả process.</li><li>Gửi vào channel <code>nil</code> hoặc đã close → block vĩnh viễn / panic. Kiểm soát lifecycle chặt chẽ.</li><li><strong>Goroutine leak</strong> — bug số 1 trong code Go: goroutine block mãi mãi trên channel không ai đọc/ghi. Mỗi leak giữ stack + mọi thứ nó tham chiếu. Triệu chứng: memory tăng tuyến tính theo thời gian, <code>runtime.NumGoroutine()</code> tăng không giảm. Phòng ngừa: mọi goroutine phải có đường thoát (context cancel, timeout, close signal).</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// LEAK: nếu không ai đọc ch, goroutine kẹt vĩnh viễn</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() { <span style=color:#a6e22e>ch</span> <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>doWork</span>() }()
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span><span style=color:#75715e>// ĐÚNG: luôn có đường thoát</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>select</span> {
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>ch</span> <span style=color:#f92672>&lt;-</span> <span style=color:#a6e22e>doWork</span>():
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#f92672>&lt;-</span><span style=color:#a6e22e>ctx</span>.<span style=color:#a6e22e>Done</span>():   <span style=color:#75715e>// đường thoát khi caller bỏ cuộc</span>
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>}()
-</span></span></code></pre></div><hr><h2 id=5-mutex-rwmutex-atomic--khi-nào-dùng-gì>5. Mutex, RWMutex, Atomic — khi nào dùng gì<a hidden class=anchor aria-hidden=true href=#5-mutex-rwmutex-atomic--khi-nào-dùng-gì>#</a></h2><p>Nguyên tắc chọn (theo thứ tự ưu tiên thực dụng):</p><ol><li><strong>Channel</strong> khi: chuyển <em>quyền sở hữu</em> dữ liệu, phân phối công việc, báo hiệu sự kiện, orchestration.</li><li><strong>Mutex</strong> khi: bảo vệ <em>trạng thái nội bộ</em> của một struct (cache, counter, map). Đơn giản hơn và <strong>nhanh hơn channel ~5-10x</strong> cho việc này (channel bên trong cũng có mutex + chi phí scheduling).</li><li><strong>RWMutex</strong> khi: đọc nhiều ghi ít (tỷ lệ đọc > ~90%) VÀ critical section đọc đủ dài. Lưu ý: RWMutex có chi phí bookkeeping cao hơn Mutex; với critical section ngắn, Mutex thường thắng. <strong>Đo trước khi đổi.</strong></li><li><strong>atomic</strong> khi: counter, flag, con trỏ swap đơn lẻ. Nhanh nhất (~vài ns) nhưng chỉ cho thao tác đơn. <code>atomic.Value</code>/<code>atomic.Pointer[T]</code> cho pattern &ldquo;config reload không lock&rdquo;.</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Pattern production: config hot-reload không lock</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>config</span> <span style=color:#a6e22e>atomic</span>.<span style=color:#a6e22e>Pointer</span>[<span style=color:#a6e22e>Config</span>]
-</span></span><span style=display:flex><span><span style=color:#75715e>// reader (hàng triệu lần/s, không lock):</span>
-</span></span><span style=display:flex><span><span style=color:#a6e22e>cfg</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>config</span>.<span style=color:#a6e22e>Load</span>()
-</span></span><span style=display:flex><span><span style=color:#75715e>// writer (hiếm):</span>
-</span></span><span style=display:flex><span><span style=color:#a6e22e>config</span>.<span style=color:#a6e22e>Store</span>(<span style=color:#a6e22e>newCfg</span>)
-</span></span></code></pre></div><p><strong>Race detector:</strong> <code>go test -race</code> / <code>go run -race</code>. Chạy CI với <code>-race</code> là <strong>bắt buộc</strong>, không thương lượng. Data race trong Go là undefined behavior thật sự — có thể làm hỏng nội tạng map, con trỏ, gây crash không tái hiện được.</p><p><strong>Anti-pattern kinh điển:</strong> copy struct chứa mutex (mutex bị copy = hai khóa độc lập, mất tác dụng — <code>go vet</code> bắt được); lock rồi gọi hàm ngoài có thể lock lại cùng mutex (Go mutex <strong>không reentrant</strong> → deadlock).</p><hr><h2 id=6-waitgroup-và-context>6. WaitGroup và Context<a hidden class=anchor aria-hidden=true href=#6-waitgroup-và-context>#</a></h2><h3 id=61-waitgroup--chờ-nhóm-goroutine>6.1. WaitGroup — chờ nhóm goroutine<a hidden class=anchor aria-hidden=true href=#61-waitgroup--chờ-nhóm-goroutine>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>wg</span> <span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>WaitGroup</span>
-</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>task</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tasks</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#ae81ff>1</span>)                    <span style=color:#75715e>// Add TRƯỚC khi go — làm trong goroutine là race</span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#a6e22e>Task</span>) {
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Done</span>()
-</span></span><span style=display:flex><span>        <span style=color:#a6e22e>process</span>(<span style=color:#a6e22e>t</span>)
-</span></span><span style=display:flex><span>    }(<span style=color:#a6e22e>task</span>)                      <span style=color:#75715e>// Go &lt;1.22: phải truyền biến vào, tránh capture</span>
-</span></span><span style=display:flex><span>}
-</span></span><span style=display:flex><span><span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Wait</span>()
-</span></span></code></pre></div><h3 id=62-context--hợp-đồng-hủy-bỏ-của-cả-hệ-sinh-thái>6.2. Context — hợp đồng hủy bỏ của cả hệ sinh thái<a hidden class=anchor aria-hidden=true href=#62-context--hợp-đồng-hủy-bỏ-của-cả-hệ-sinh-thái>#</a></h3><p><strong>Problem:</strong> request đến API gateway → gọi 5 service → user đóng kết nối. Không có cơ chế chung, 5 call kia vẫn chạy hết, đốt tài nguyên vô ích. Nhân với 10K RPS → hệ thống làm việc vô ích khổng lồ, và khi downstream chậm, goroutine tồn đọng làm sập chính mình.</p><p><code>context.Context</code> là câu trả lời chuẩn hóa: mang <strong>deadline, cancellation signal, và request-scoped values</strong> xuyên qua ranh giới API và goroutine.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Service</span>) <span style=color:#a6e22e>HandleOrder</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>req</span> <span style=color:#a6e22e>OrderReq</span>) <span style=color:#66d9ef>error</span> {
-</span></span><span style=display:flex><span>    <span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>cancel</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>WithTimeout</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#ae81ff>2</span><span style=color:#f92672>*</span><span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Second</span>)
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>defer</span> <span style=color:#a6e22e>cancel</span>()   <span style=color:#75715e>// QUÊN dòng này = leak timer + context cha giữ tham chiếu</span>
-</span></span><span style=display:flex><span>
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>db</span>.<span style=color:#a6e22e>QueryContext</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#f92672>...</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
-</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;query order: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
-</span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#f92672>...</span>
-</span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>Quy tắc production:</p><ol><li><code>ctx</code> là <strong>tham số đầu tiên</strong> của mọi hàm có I/O hoặc có thể chậm. Không giấu trong struct.</li><li>Luôn <code>defer cancel()</code>.</li><li>Cancellation là <strong>hợp tác</strong>: hàm phải chủ động kiểm tra <code>ctx.Done()</code> trong vòng lặp dài / giữa các bước. Context không &ldquo;giết&rdquo; goroutine — Go không có cơ chế kill goroutine từ bên ngoài, đây là quyết định thiết kế (kill cưỡng bức để lại trạng thái hỏng).</li><li><code>context.Value</code> chỉ cho request-scoped metadata (trace ID, user ID) — <strong>không</strong> truyền tham số nghiệp vụ qua đó (mất type safety, ẩn dependency).</li></ol><hr><h2 id=7-trade-off-tổng-hợp-của-mô-hình-go>7. Trade-off tổng hợp của mô hình Go<a hidden class=anchor aria-hidden=true href=#7-trade-off-tổng-hợp-của-mô-hình-go>#</a></h2><table><thead><tr><th>Trục</th><th>Go chọn</th><th>Cái giá</th></tr></thead><tbody><tr><td>Blocking-style vs async/await</td><td>Blocking-style, runtime lo phía dưới</td><td>Runtime phức tạp; mất kiểm soát chi tiết lịch chạy</td></tr><tr><td>Share memory vs message passing</td><td>Cả hai, khuyến khích message passing</td><td>Hai cơ chế = phải học khi nào dùng gì</td></tr><tr><td>Kill goroutine vs hợp tác</td><td>Hợp tác qua context</td><td>Goroutine &ldquo;cứng đầu&rdquo; không thể dừng từ ngoài</td></tr><tr><td>M:N scheduler vs 1:1</td><td>M:N</td><td>Debugging khó hơn (stack trace hàng nghìn G); tương tác cgo/FFI phức tạp</td></tr></tbody></table><p><strong>Nếu làm ngược lại?</strong> Nếu Go dùng async/await: ecosystem chia đôi sync/async như Rust/Python, mất tính đơn giản. Nếu 1:1 thread: mất khả năng chạy triệu concurrent task. Mô hình goroutine là lý do tồn tại của Go — bỏ nó thì Go chỉ là &ldquo;C có GC&rdquo;.</p><hr><h2 id=8-anti-patterns-tổng-hợp>8. Anti-patterns tổng hợp<a hidden class=anchor aria-hidden=true href=#8-anti-patterns-tổng-hợp>#</a></h2><ol><li><strong>Goroutine không giới hạn:</strong> <code>for _, x := range huge { go process(x) }</code> — 10 triệu item = 10 triệu goroutine = OOM hoặc nghẹt downstream. Dùng worker pool / semaphore (chương 4).</li><li><strong>Goroutine leak</strong> do channel không có đường thoát (mục 4.3).</li><li><strong>Dùng channel làm mutex</strong> — vòng vo, chậm, khó đọc. Bảo vệ state thì dùng mutex.</li><li><strong><code>time.Sleep</code> để &ldquo;đồng bộ hóa&rdquo;</strong> trong test hoặc code — flaky by design. Dùng channel/WaitGroup.</li><li><strong>Bỏ qua <code>-race</code> trong CI.</strong></li><li><strong>Panic trong goroutine con không recover</strong> — panic ở bất kỳ goroutine nào không được recover sẽ <strong>sập cả process</strong>. Worker pool production phải có <code>defer recover()</code> ở đầu mỗi worker (và log + metric lại).</li></ol><hr><p><em>Chương tiếp theo: <a href=/series/nodejs-golang/03-go-concurrency-patterns/>03 — Concurrency Patterns: Worker Pool, Pipeline, Fan-in/Fan-out, Backpressure</a></em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/golang/>Golang</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/nodejs-golang/01-go-triet-ly-va-nen-tang/><span class=title>« Prev</span><br><span>Bài 1 — Triết Lý Go & Nền Tảng Ngôn Ngữ</span>
-</a><a class=next href=https://thanhhv.github.io/series/nodejs-golang/03-go-concurrency-patterns/><span class=title>Next »</span><br><span>Bài 3 — Concurrency Patterns</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on x" href="https://x.com/intent/tweet/?text=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f&amp;hashtags=backend%2cgolang"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f&amp;title=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;summary=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f&title=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on whatsapp" href="https://api.whatsapp.com/send?text=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on telegram" href="https://telegram.me/share/url?text=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on ycombinator" href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
-<span>Powered by
-<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
-        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
-</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
+Khi syscall xong: G1 vào lại run queue; M1 về pool</code></pre><p>Đây là lý do một service Go đọc file nhiều có thể có <strong>hàng trăm OS thread</strong> dù GOMAXPROCS=8 — hoàn toàn bình thường, nhưng cần biết khi đọc metrics.</p>
+<p><strong>Với network I/O thì khác:</strong> Go không block M. Netpoller (epoll/kqueue/IOCP) đăng ký fd, G bị &ldquo;park&rdquo; (gỡ khỏi M, trạng thái waiting), M chạy G khác ngay. Khi fd sẵn sàng, netpoller đánh thức G. Đây chính là cách Go biến code blocking-style thành non-blocking thực thi — <strong>event loop giấu bên trong runtime</strong>, lập trình viên không bao giờ thấy nó.</p>
+<h3 id="34-preemption">3.4. Preemption<a hidden class="anchor" aria-hidden="true" href="#34-preemption">#</a></h3>
+<p>Go ≤1.13: goroutine chỉ nhường CPU tại function call (cooperative). Vòng lặp <code>for {}</code> không call gì có thể <strong>chiếm P vĩnh viễn</strong>, thậm chí chặn GC → cả process đứng hình.</p>
+<p>Go 1.14+ thêm <strong>asynchronous preemption</strong>: sysmon (goroutine giám sát nền) phát hiện G chạy quá ~10ms → gửi signal SIGURG → G bị ngắt tại điểm an toàn. Bài học lịch sử: hầu hết bug &ldquo;service Go treo cứng&rdquo; trước 2020 đến từ đây.</p>
+<hr>
+<h2 id="4-channel--chia-sẻ-bằng-giao-tiếp">4. Channel — chia sẻ bằng giao tiếp<a hidden class="anchor" aria-hidden="true" href="#4-channel--chia-sẻ-bằng-giao-tiếp">#</a></h2>
+<h3 id="41-bản-chất-bên-trong">4.1. Bản chất bên trong<a hidden class="anchor" aria-hidden="true" href="#41-bản-chất-bên-trong">#</a></h3>
+<p>Channel là struct <code>hchan</code>: một <strong>ring buffer</strong> + hai hàng đợi goroutine chờ (sendq, recvq) + một mutex. Không ma thuật — chỉ là hàng đợi có khóa được tích hợp với scheduler:</p>
+<ul>
+<li>Gửi vào channel đầy → G bị park vào <code>sendq</code>, nhường M cho G khác (không busy-wait, không tốn CPU).</li>
+<li>Nhận từ channel rỗng → park vào <code>recvq</code>.</li>
+<li><strong>Tối ưu đáng chú ý:</strong> khi có receiver đang chờ, sender copy dữ liệu <strong>thẳng vào stack của receiver</strong>, bỏ qua buffer — tiết kiệm một lần copy.</li>
+</ul>
+<h3 id="42-unbuffered-vs-buffered--quyết-định-ngữ-nghĩa-không-phải-hiệu-năng">4.2. Unbuffered vs Buffered — quyết định ngữ nghĩa, không phải hiệu năng<a hidden class="anchor" aria-hidden="true" href="#42-unbuffered-vs-buffered--quyết-định-ngữ-nghĩa-không-phải-hiệu-năng">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">ch</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">T</span>)     <span style="color:#75715e">// unbuffered: gửi/nhận là điểm ĐỒNG BỘ HÓA</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ch</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">T</span>, <span style="color:#a6e22e">N</span>)  <span style="color:#75715e">// buffered: tách rời sender/receiver tối đa N phần tử</span>
+</span></span></code></pre></div><ul>
+<li><strong>Unbuffered = bảo đảm bàn giao (guarantee of delivery):</strong> khi lệnh send trả về, receiver <em>chắc chắn đã nhận</em>. Dùng khi cần tín hiệu đồng bộ.</li>
+<li><strong>Buffered = hàng đợi:</strong> hấp thụ burst, nhưng <strong>che giấu backpressure</strong>. Buffer đầy thì vẫn block — buffer chỉ trì hoãn, không giải quyết chênh lệch tốc độ (xem chương 4 về backpressure).</li>
+</ul>
+<p><strong>Anti-pattern phổ biến:</strong> tăng buffer size để &ldquo;fix&rdquo; deadlock hoặc chậm. Buffer lớn chỉ giấu vấn đề đến khi production traffic cao hơn buffer — rồi nổ cùng lúc với hậu quả lớn hơn (memory phình + latency đuôi dài).</p>
+<h3 id="43-luật-sống-còn-với-channel-đúc-kết-production">4.3. Luật sống còn với channel (đúc kết production)<a hidden class="anchor" aria-hidden="true" href="#43-luật-sống-còn-với-channel-đúc-kết-production">#</a></h3>
+<ol>
+<li><strong>Ai tạo/ghi channel, người đó close.</strong> Receiver không bao giờ close. Close một channel đang có sender khác → panic cả process.</li>
+<li>Gửi vào channel <code>nil</code> hoặc đã close → block vĩnh viễn / panic. Kiểm soát lifecycle chặt chẽ.</li>
+<li><strong>Goroutine leak</strong> — bug số 1 trong code Go: goroutine block mãi mãi trên channel không ai đọc/ghi. Mỗi leak giữ stack + mọi thứ nó tham chiếu. Triệu chứng: memory tăng tuyến tính theo thời gian, <code>runtime.NumGoroutine()</code> tăng không giảm. Phòng ngừa: mọi goroutine phải có đường thoát (context cancel, timeout, close signal).</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// LEAK: nếu không ai đọc ch, goroutine kẹt vĩnh viễn</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() { <span style="color:#a6e22e">ch</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">doWork</span>() }()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ĐÚNG: luôn có đường thoát</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">select</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">ch</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">doWork</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">Done</span>():   <span style="color:#75715e">// đường thoát khi caller bỏ cuộc</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}()
+</span></span></code></pre></div><hr>
+<h2 id="5-mutex-rwmutex-atomic--khi-nào-dùng-gì">5. Mutex, RWMutex, Atomic — khi nào dùng gì<a hidden class="anchor" aria-hidden="true" href="#5-mutex-rwmutex-atomic--khi-nào-dùng-gì">#</a></h2>
+<p>Nguyên tắc chọn (theo thứ tự ưu tiên thực dụng):</p>
+<ol>
+<li><strong>Channel</strong> khi: chuyển <em>quyền sở hữu</em> dữ liệu, phân phối công việc, báo hiệu sự kiện, orchestration.</li>
+<li><strong>Mutex</strong> khi: bảo vệ <em>trạng thái nội bộ</em> của một struct (cache, counter, map). Đơn giản hơn và <strong>nhanh hơn channel ~5-10x</strong> cho việc này (channel bên trong cũng có mutex + chi phí scheduling).</li>
+<li><strong>RWMutex</strong> khi: đọc nhiều ghi ít (tỷ lệ đọc &gt; ~90%) VÀ critical section đọc đủ dài. Lưu ý: RWMutex có chi phí bookkeeping cao hơn Mutex; với critical section ngắn, Mutex thường thắng. <strong>Đo trước khi đổi.</strong></li>
+<li><strong>atomic</strong> khi: counter, flag, con trỏ swap đơn lẻ. Nhanh nhất (~vài ns) nhưng chỉ cho thao tác đơn. <code>atomic.Value</code>/<code>atomic.Pointer[T]</code> cho pattern &ldquo;config reload không lock&rdquo;.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Pattern production: config hot-reload không lock</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">config</span> <span style="color:#a6e22e">atomic</span>.<span style="color:#a6e22e">Pointer</span>[<span style="color:#a6e22e">Config</span>]
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// reader (hàng triệu lần/s, không lock):</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cfg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">Load</span>()
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// writer (hiếm):</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">Store</span>(<span style="color:#a6e22e">newCfg</span>)
+</span></span></code></pre></div><p><strong>Race detector:</strong> <code>go test -race</code> / <code>go run -race</code>. Chạy CI với <code>-race</code> là <strong>bắt buộc</strong>, không thương lượng. Data race trong Go là undefined behavior thật sự — có thể làm hỏng nội tạng map, con trỏ, gây crash không tái hiện được.</p>
+<p><strong>Anti-pattern kinh điển:</strong> copy struct chứa mutex (mutex bị copy = hai khóa độc lập, mất tác dụng — <code>go vet</code> bắt được); lock rồi gọi hàm ngoài có thể lock lại cùng mutex (Go mutex <strong>không reentrant</strong> → deadlock).</p>
+<hr>
+<h2 id="6-waitgroup-và-context">6. WaitGroup và Context<a hidden class="anchor" aria-hidden="true" href="#6-waitgroup-và-context">#</a></h2>
+<h3 id="61-waitgroup--chờ-nhóm-goroutine">6.1. WaitGroup — chờ nhóm goroutine<a hidden class="anchor" aria-hidden="true" href="#61-waitgroup--chờ-nhóm-goroutine">#</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">wg</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">task</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">tasks</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">1</span>)                    <span style="color:#75715e">// Add TRƯỚC khi go — làm trong goroutine là race</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">t</span> <span style="color:#a6e22e">Task</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">process</span>(<span style="color:#a6e22e">t</span>)
+</span></span><span style="display:flex;"><span>    }(<span style="color:#a6e22e">task</span>)                      <span style="color:#75715e">// Go &lt;1.22: phải truyền biến vào, tránh capture</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span></code></pre></div><h3 id="62-context--hợp-đồng-hủy-bỏ-của-cả-hệ-sinh-thái">6.2. Context — hợp đồng hủy bỏ của cả hệ sinh thái<a hidden class="anchor" aria-hidden="true" href="#62-context--hợp-đồng-hủy-bỏ-của-cả-hệ-sinh-thái">#</a></h3>
+<p><strong>Problem:</strong> request đến API gateway → gọi 5 service → user đóng kết nối. Không có cơ chế chung, 5 call kia vẫn chạy hết, đốt tài nguyên vô ích. Nhân với 10K RPS → hệ thống làm việc vô ích khổng lồ, và khi downstream chậm, goroutine tồn đọng làm sập chính mình.</p>
+<p><code>context.Context</code> là câu trả lời chuẩn hóa: mang <strong>deadline, cancellation signal, và request-scoped values</strong> xuyên qua ranh giới API và goroutine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Service</span>) <span style="color:#a6e22e">HandleOrder</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">req</span> <span style="color:#a6e22e">OrderReq</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">cancel</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithTimeout</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#ae81ff">2</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">cancel</span>()   <span style="color:#75715e">// QUÊN dòng này = leak timer + context cha giữ tham chiếu</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">QueryContext</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#f92672">...</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;query order: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Quy tắc production:</p>
+<ol>
+<li><code>ctx</code> là <strong>tham số đầu tiên</strong> của mọi hàm có I/O hoặc có thể chậm. Không giấu trong struct.</li>
+<li>Luôn <code>defer cancel()</code>.</li>
+<li>Cancellation là <strong>hợp tác</strong>: hàm phải chủ động kiểm tra <code>ctx.Done()</code> trong vòng lặp dài / giữa các bước. Context không &ldquo;giết&rdquo; goroutine — Go không có cơ chế kill goroutine từ bên ngoài, đây là quyết định thiết kế (kill cưỡng bức để lại trạng thái hỏng).</li>
+<li><code>context.Value</code> chỉ cho request-scoped metadata (trace ID, user ID) — <strong>không</strong> truyền tham số nghiệp vụ qua đó (mất type safety, ẩn dependency).</li>
+</ol>
+<hr>
+<h2 id="7-trade-off-tổng-hợp-của-mô-hình-go">7. Trade-off tổng hợp của mô hình Go<a hidden class="anchor" aria-hidden="true" href="#7-trade-off-tổng-hợp-của-mô-hình-go">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th>Trục</th>
+          <th>Go chọn</th>
+          <th>Cái giá</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Blocking-style vs async/await</td>
+          <td>Blocking-style, runtime lo phía dưới</td>
+          <td>Runtime phức tạp; mất kiểm soát chi tiết lịch chạy</td>
+      </tr>
+      <tr>
+          <td>Share memory vs message passing</td>
+          <td>Cả hai, khuyến khích message passing</td>
+          <td>Hai cơ chế = phải học khi nào dùng gì</td>
+      </tr>
+      <tr>
+          <td>Kill goroutine vs hợp tác</td>
+          <td>Hợp tác qua context</td>
+          <td>Goroutine &ldquo;cứng đầu&rdquo; không thể dừng từ ngoài</td>
+      </tr>
+      <tr>
+          <td>M:N scheduler vs 1:1</td>
+          <td>M:N</td>
+          <td>Debugging khó hơn (stack trace hàng nghìn G); tương tác cgo/FFI phức tạp</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Nếu làm ngược lại?</strong> Nếu Go dùng async/await: ecosystem chia đôi sync/async như Rust/Python, mất tính đơn giản. Nếu 1:1 thread: mất khả năng chạy triệu concurrent task. Mô hình goroutine là lý do tồn tại của Go — bỏ nó thì Go chỉ là &ldquo;C có GC&rdquo;.</p>
+<hr>
+<h2 id="8-anti-patterns-tổng-hợp">8. Anti-patterns tổng hợp<a hidden class="anchor" aria-hidden="true" href="#8-anti-patterns-tổng-hợp">#</a></h2>
+<ol>
+<li><strong>Goroutine không giới hạn:</strong> <code>for _, x := range huge { go process(x) }</code> — 10 triệu item = 10 triệu goroutine = OOM hoặc nghẹt downstream. Dùng worker pool / semaphore (chương 4).</li>
+<li><strong>Goroutine leak</strong> do channel không có đường thoát (mục 4.3).</li>
+<li><strong>Dùng channel làm mutex</strong> — vòng vo, chậm, khó đọc. Bảo vệ state thì dùng mutex.</li>
+<li><strong><code>time.Sleep</code> để &ldquo;đồng bộ hóa&rdquo;</strong> trong test hoặc code — flaky by design. Dùng channel/WaitGroup.</li>
+<li><strong>Bỏ qua <code>-race</code> trong CI.</strong></li>
+<li><strong>Panic trong goroutine con không recover</strong> — panic ở bất kỳ goroutine nào không được recover sẽ <strong>sập cả process</strong>. Worker pool production phải có <code>defer recover()</code> ở đầu mỗi worker (và log + metric lại).</li>
+</ol>
+<hr>
+<p><em>Chương tiếp theo: <a href="/series/nodejs-golang/03-go-concurrency-patterns/">03 — Concurrency Patterns: Worker Pool, Pipeline, Fan-in/Fan-out, Backpressure</a></em></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
+      <li><a href="http://localhost:1313/tags/golang/">Golang</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:1313/series/nodejs-golang/01-go-triet-ly-va-nen-tang/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Bài 1 — Triết Lý Go &amp; Nền Tảng Ngôn Ngữ</span>
+  </a>
+  <a class="next" href="http://localhost:1313/series/nodejs-golang/03-go-concurrency-patterns/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Bài 3 — Concurrency Patterns</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on x"
+            href="https://x.com/intent/tweet/?text=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f&amp;hashtags=backend%2cgolang">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f&amp;title=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;summary=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on reddit"
+            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f&title=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on whatsapp"
+            href="https://api.whatsapp.com/send?text=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on telegram"
+            href="https://telegram.me/share/url?text=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Bài 2 — Goroutine, Scheduler & GPM Model on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=B%c3%a0i%202%20%e2%80%94%20Goroutine%2c%20Scheduler%20%26%20GPM%20Model&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fnodejs-golang%2f02-go-concurrency-goroutine-scheduler%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+  <script src="https://utteranc.es/client.js"
+          repo="thanhhv/blog-comments"
+          issue-term="pathname"
+          label="💬 comment"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>
