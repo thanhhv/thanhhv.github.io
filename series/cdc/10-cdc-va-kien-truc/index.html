@@ -1,162 +1,27 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, cdc, kafka, database">
-<meta name="description" content="Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì.">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/series/cdc/10-cdc-va-kien-truc/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/series/cdc/10-cdc-va-kien-truc/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
-
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:1313/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/cdc/">Change Data Capture</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS
-    </h1>
-    <div class="post-meta"><span title='2026-02-20 17:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;19 min
-
-</div>
-  </header> 
-  <div class="post-content"><p>Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: <strong>CDC đứng ở đâu trong kiến trúc tổng thể?</strong> Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó <em>không phải</em> là cái gì.</p>
-<p>Tôi đã chứng kiến không ít team dùng CDC như một chiếc búa vạn năng: dùng CDC event thô làm domain event, gọi CDC là &ldquo;event sourcing&rdquo;, hoặc kỳ vọng read model cập nhật tức thì như strong consistency. Cả ba đều là hiểu nhầm, và cả ba đều trả giá ở production. Chương này sẽ đi qua từng pattern, với câu hỏi xuyên suốt: <em>Tại sao? Đánh đổi gì? Làm sai thì hậu quả gì?</em></p>
-<h2 id="101-outbox-pattern--lời-giải-chuẩn-cho-bài-toán-dual-write">10.1. Outbox Pattern — lời giải chuẩn cho bài toán dual write<a hidden class="anchor" aria-hidden="true" href="#101-outbox-pattern--lời-giải-chuẩn-cho-bài-toán-dual-write">#</a></h2>
-<h3 id="1011-bài-toán-gốc-dual-write-không-atomic">10.1.1. Bài toán gốc: dual write không atomic<a hidden class="anchor" aria-hidden="true" href="#1011-bài-toán-gốc-dual-write-không-atomic">#</a></h3>
-<p>Hãy bắt đầu từ đoạn code mà hầu như service nào cũng từng có:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Transactional</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">createOrder</span>(Order order) {
-</span></span><span style="display:flex;"><span>    orderRepository.<span style="color:#a6e22e">save</span>(order);          <span style="color:#75715e">// ghi vào PostgreSQL</span>
-</span></span><span style="display:flex;"><span>    kafkaProducer.<span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#34;order-created&#34;</span>,   <span style="color:#75715e">// publish event lên Kafka</span>
-</span></span><span style="display:flex;"><span>        toEvent(order));
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Trông vô hại, nhưng đây là <strong>dual write</strong>: hai hệ thống lưu trữ độc lập (database và Kafka), không có transaction chung. Có bốn kịch bản:</p>
-<ol>
-<li>Cả hai thành công — mọi thứ ổn.</li>
-<li>DB commit thành công, Kafka send thất bại (broker down, timeout) — order tồn tại nhưng downstream không bao giờ biết. <strong>Mất event.</strong></li>
-<li>Kafka send thành công <em>trước khi</em> transaction commit, rồi transaction rollback — downstream nhận event về một order không tồn tại. <strong>Event ma.</strong></li>
-<li>Service crash giữa hai bước — không xác định được trạng thái.</li>
-</ol>
-<p>Bạn không thể sửa bằng cách đổi thứ tự hai lệnh — chỉ đổi kịch bản 2 thành kịch bản 3. Bạn cũng không thể sửa bằng retry đơn thuần, vì retry sau khi process crash đòi hỏi bạn phải <em>nhớ</em> rằng mình còn nợ một event — tức là phải ghi trạng thái đó vào đâu đó bền vững. Và &ldquo;đâu đó bền vững, cùng transaction với business data&rdquo; chính là&hellip; một cái bảng trong database. Đó là Outbox.</p>
-<p>Distributed transaction (XA/2PC) giữa DB và Kafka về lý thuyết giải được, nhưng thực tế Kafka không hỗ trợ XA, và ngay cả khi có, 2PC mang theo blocking, coordinator là single point of failure, và throughput sụt nghiêm trọng. Trong 20 năm làm nghề, tôi chưa thấy hệ thống nào dùng 2PC giữa OLTP database và message broker mà sống khỏe ở quy mô lớn.</p>
-<h3 id="1012-cơ-chế-outbox-một-transaction-hai-bảng">10.1.2. Cơ chế Outbox: một transaction, hai bảng<a hidden class="anchor" aria-hidden="true" href="#1012-cơ-chế-outbox-một-transaction-hai-bảng">#</a></h3>
-<p>Ý tưởng cốt lõi: <strong>thay vì ghi vào hai hệ thống, chỉ ghi vào một</strong> — database — trong <strong>cùng một transaction ACID</strong>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">BEGIN</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> orders (id, customer_id, total_amount, status)
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">VALUES</span> (<span style="color:#e6db74">&#39;ord-9f2a&#39;</span>, <span style="color:#e6db74">&#39;cus-771&#39;</span>, <span style="color:#ae81ff">1250000</span>, <span style="color:#e6db74">&#39;CREATED&#39;</span>);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> outbox_events (id, aggregate_type, aggregate_id, event_type, payload, created_at)
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">VALUES</span> (
-</span></span><span style="display:flex;"><span>    gen_random_uuid(),
-</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;order&#39;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;ord-9f2a&#39;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;OrderCreated&#39;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;{&#34;orderId&#34;:&#34;ord-9f2a&#34;,&#34;customerId&#34;:&#34;cus-771&#34;,&#34;totalAmount&#34;:1250000,&#34;items&#34;:[...]}&#39;</span>,
-</span></span><span style="display:flex;"><span>    now()
-</span></span><span style="display:flex;"><span>);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">COMMIT</span>;
-</span></span></code></pre></div><p>Atomic tuyệt đối: hoặc cả order lẫn event cùng tồn tại, hoặc cả hai cùng biến mất khi rollback. Không còn kịch bản 2, 3, 4.</p>
-<p>Vấn đề còn lại: làm sao đưa record từ <code>outbox_events</code> lên Kafka? Có hai cách:</p>
-<ul>
-<li><strong>Polling publisher</strong>: một job quét bảng outbox định kỳ, publish rồi đánh dấu/xóa. Hoạt động được, nhưng mang mọi nhược điểm của polling — độ trễ, tải query lặp, và phải tự xử lý thứ tự, concurrency giữa nhiều instance của publisher.</li>
-<li><strong>CDC đọc bảng outbox</strong>: Debezium capture INSERT vào <code>outbox_events</code> từ WAL/binlog, publish lên Kafka. Không thêm một dòng query nào vào database, độ trễ mili-giây, thứ tự đúng theo commit order, và tính đúng đắn (at-least-once) được bảo đảm bởi cơ chế offset của connector.</li>
-</ul>
-<p><strong>Outbox + CDC là combo chuẩn</strong> vì nó tách hai mối quan tâm một cách sạch sẽ: transaction ACID của database bảo đảm <em>atomicity</em> giữa business data và event; transaction log + CDC bảo đảm <em>delivery</em> của event. Mỗi thành phần làm đúng việc nó giỏi nhất.</p>
-<pre class="mermaid">sequenceDiagram
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS | Thanh HV's Blog</title>
+<meta name=keywords content="backend,cdc,kafka,database"><meta name=description content="Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS"><meta property="og:description" content="Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-02-20T17:00:00+07:00"><meta property="article:modified_time" content="2026-02-20T17:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Cdc"><meta property="article:tag" content="Kafka"><meta property="article:tag" content="Database"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS"><meta name=twitter:description content="Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Change Data Capture","item":"https://thanhhv.github.io/series/cdc/"},{"@type":"ListItem","position":3,"name":"Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS","item":"https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS","name":"Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS","description":"Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì.\n","keywords":["backend","cdc","kafka","database"],"articleBody":"Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: CDC đứng ở đâu trong kiến trúc tổng thể? Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó không phải là cái gì.\nTôi đã chứng kiến không ít team dùng CDC như một chiếc búa vạn năng: dùng CDC event thô làm domain event, gọi CDC là “event sourcing”, hoặc kỳ vọng read model cập nhật tức thì như strong consistency. Cả ba đều là hiểu nhầm, và cả ba đều trả giá ở production. Chương này sẽ đi qua từng pattern, với câu hỏi xuyên suốt: Tại sao? Đánh đổi gì? Làm sai thì hậu quả gì?\n10.1. Outbox Pattern — lời giải chuẩn cho bài toán dual write 10.1.1. Bài toán gốc: dual write không atomic Hãy bắt đầu từ đoạn code mà hầu như service nào cũng từng có:\n@Transactional public void createOrder(Order order) { orderRepository.save(order); // ghi vào PostgreSQL kafkaProducer.send(\"order-created\", // publish event lên Kafka toEvent(order)); } Trông vô hại, nhưng đây là dual write: hai hệ thống lưu trữ độc lập (database và Kafka), không có transaction chung. Có bốn kịch bản:\nCả hai thành công — mọi thứ ổn. DB commit thành công, Kafka send thất bại (broker down, timeout) — order tồn tại nhưng downstream không bao giờ biết. Mất event. Kafka send thành công trước khi transaction commit, rồi transaction rollback — downstream nhận event về một order không tồn tại. Event ma. Service crash giữa hai bước — không xác định được trạng thái. Bạn không thể sửa bằng cách đổi thứ tự hai lệnh — chỉ đổi kịch bản 2 thành kịch bản 3. Bạn cũng không thể sửa bằng retry đơn thuần, vì retry sau khi process crash đòi hỏi bạn phải nhớ rằng mình còn nợ một event — tức là phải ghi trạng thái đó vào đâu đó bền vững. Và “đâu đó bền vững, cùng transaction với business data” chính là… một cái bảng trong database. Đó là Outbox.\nDistributed transaction (XA/2PC) giữa DB và Kafka về lý thuyết giải được, nhưng thực tế Kafka không hỗ trợ XA, và ngay cả khi có, 2PC mang theo blocking, coordinator là single point of failure, và throughput sụt nghiêm trọng. Trong 20 năm làm nghề, tôi chưa thấy hệ thống nào dùng 2PC giữa OLTP database và message broker mà sống khỏe ở quy mô lớn.\n10.1.2. Cơ chế Outbox: một transaction, hai bảng Ý tưởng cốt lõi: thay vì ghi vào hai hệ thống, chỉ ghi vào một — database — trong cùng một transaction ACID:\nBEGIN; INSERT INTO orders (id, customer_id, total_amount, status) VALUES ('ord-9f2a', 'cus-771', 1250000, 'CREATED'); INSERT INTO outbox_events (id, aggregate_type, aggregate_id, event_type, payload, created_at) VALUES ( gen_random_uuid(), 'order', 'ord-9f2a', 'OrderCreated', '{\"orderId\":\"ord-9f2a\",\"customerId\":\"cus-771\",\"totalAmount\":1250000,\"items\":[...]}', now() ); COMMIT; Atomic tuyệt đối: hoặc cả order lẫn event cùng tồn tại, hoặc cả hai cùng biến mất khi rollback. Không còn kịch bản 2, 3, 4.\nVấn đề còn lại: làm sao đưa record từ outbox_events lên Kafka? Có hai cách:\nPolling publisher: một job quét bảng outbox định kỳ, publish rồi đánh dấu/xóa. Hoạt động được, nhưng mang mọi nhược điểm của polling — độ trễ, tải query lặp, và phải tự xử lý thứ tự, concurrency giữa nhiều instance của publisher. CDC đọc bảng outbox: Debezium capture INSERT vào outbox_events từ WAL/binlog, publish lên Kafka. Không thêm một dòng query nào vào database, độ trễ mili-giây, thứ tự đúng theo commit order, và tính đúng đắn (at-least-once) được bảo đảm bởi cơ chế offset của connector. Outbox + CDC là combo chuẩn vì nó tách hai mối quan tâm một cách sạch sẽ: transaction ACID của database bảo đảm atomicity giữa business data và event; transaction log + CDC bảo đảm delivery của event. Mỗi thành phần làm đúng việc nó giỏi nhất.\nsequenceDiagram participant App as \"Order Service\" participant DB as \"PostgreSQL\" participant Dbz as \"Debezium Connector\" participant K as \"Kafka\" participant C as \"Consumer downstream\" App-\u003e\u003eDB: BEGIN transaction App-\u003e\u003eDB: INSERT orders App-\u003e\u003eDB: INSERT outbox_events App-\u003e\u003eDB: COMMIT Note over DB: WAL ghi cả 2 INSERT trong 1 commit Dbz-\u003e\u003eDB: Đọc WAL qua replication slot Dbz-\u003e\u003eK: Publish domain event từ outbox record K-\u003e\u003eC: Consumer nhận OrderCreated Note over C: Consumer phải idempotent vì at-least-once 10.1.3. Debezium Outbox Event Router Nếu để nguyên, event từ Debezium sẽ mang hình dạng change event (envelope before/after/op/source) trên topic tên server.public.outbox_events — không phải thứ consumer muốn. Debezium có sẵn SMT EventRouter để “bóc” outbox record thành domain event đúng nghĩa:\n{ \"name\": \"outbox-connector\", \"config\": { \"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\", \"table.include.list\": \"public.outbox_events\", \"tombstones.on.delete\": \"false\", \"transforms\": \"outbox\", \"transforms.outbox.type\": \"io.debezium.transforms.outbox.EventRouter\", \"transforms.outbox.table.field.event.key\": \"aggregate_id\", \"transforms.outbox.route.by.field\": \"aggregate_type\", \"transforms.outbox.route.topic.replacement\": \"domain.events.${routedByValue}\", \"transforms.outbox.table.expand.json.payload\": \"true\" } } Kết quả: record với aggregate_type = 'order' được route sang topic domain.events.order, message key là aggregate_id (bảo đảm mọi event của cùng một order vào cùng partition — giữ thứ tự), payload là JSON domain event thuần, không còn envelope CDC. event_type được gắn vào header để consumer filter.\nHai chi tiết vận hành đáng chú ý:\nĐặt tombstones.on.delete=false — nếu bạn xóa record outbox sau khi publish, đừng để Debezium sinh tombstone event gây nhiễu. Debezium mặc định bỏ qua UPDATE/DELETE trên bảng outbox khi dùng EventRouter (nó chỉ quan tâm INSERT) — đây là hành vi đúng: outbox là append-only về mặt ngữ nghĩa. 10.1.4. Trade-off: bảng outbox phình to và chiến lược cleanup Không có gì miễn phí. Bảng outbox là bảng ghi nóng nhất hệ thống — mọi transaction nghiệp vụ đều chèn vào nó. Với 500 event/giây, payload trung bình 1 KB, bạn sinh ~43 GB/ngày (số liệu minh họa điển hình). Không cleanup, sau một tháng bạn có bảng hơn 1 TB với index bloat kéo mọi INSERT chậm lại.\nCác chiến lược cleanup, theo thứ tự tôi khuyên dùng:\nDELETE ngay trong cùng transaction (kỹ thuật “insert-then-delete”): INSERT rồi DELETE chính record đó trong cùng transaction. Nghe ngược đời, nhưng với PostgreSQL, cả INSERT lẫn DELETE đều được ghi vào WAL — Debezium vẫn thấy INSERT event. Bảng vật lý luôn gần như rỗng. Nhược điểm: sinh dead tuple, cần autovacuum khỏe; và bạn mất khả năng đối soát lại bảng outbox khi cần điều tra. Batch delete theo thời gian: job đêm xóa record cũ hơn N ngày (N = 3–7, đủ để đối soát và re-consume khi có sự cố). Nhớ delete theo batch nhỏ (10k–50k rows/lần) để tránh giữ lock và bloat WAL đột biến. Partition theo ngày + DROP PARTITION: sạch nhất về mặt vacuum (DROP không sinh dead tuple), nhưng lưu ý với PostgreSQL logical replication, thao tác quản lý partition cần được kiểm tra kỹ với version Debezium bạn dùng. Sai lầm tôi từng thấy: team để bảng outbox chạy 6 tháng không cleanup, autovacuum không theo kịp, INSERT p99 từ 2ms lên 40ms, kéo toàn bộ API checkout chậm theo. Outbox không cleanup là nợ kỹ thuật có lãi suất kép.\n10.1.5. CDC thuần vs Outbox: khi nào dùng cái nào Đây là quyết định kiến trúc thật sự, và tiêu chí phân định rõ ràng hơn nhiều người nghĩ:\nTiêu chí CDC thuần trên bảng nghiệp vụ Outbox + CDC Bản chất event Data change event — “row này đã đổi” Domain event — “nghiệp vụ này đã xảy ra” Contract với consumer Schema bảng nội bộ bị lộ ra ngoài Payload thiết kế có chủ đích, versioned Khi refactor schema DB Vỡ mọi consumer — coupling chặt Consumer không ảnh hưởng nếu contract giữ nguyên Business intent Mất — chỉ thấy state trước/sau Giữ nguyên — OrderCancelledByCustomer vs OrderCancelledByFraudCheck Effort phía producer Zero — không sửa code ứng dụng Phải sửa code: mọi nơi ghi data phải ghi kèm outbox Phù hợp cho Replication, data warehouse, cache/search sync, audit — các bài toán data integration Giao tiếp giữa các bounded context, microservices — các bài toán application integration Quy tắc tôi dùng: nếu consumer quan tâm đến “dữ liệu” — dùng CDC thuần; nếu consumer quan tâm đến “sự kiện nghiệp vụ” — dùng Outbox. Đồng bộ bảng products sang Elasticsearch? CDC thuần, vì bạn thực sự cần data. Thông báo cho Shipping Service rằng đơn hàng đã thanh toán? Outbox, vì Shipping không nên biết (và không nên vỡ khi bạn đổi) cấu trúc bảng orders.\nMột ví dụ cụ thể về cái giá của việc chọn sai: một team dùng CDC thuần trên bảng orders làm “event” cho 5 team khác consume. Sáu tháng sau họ cần tách cột status thành hai cột fulfillment_status và payment_status. Một thay đổi schema nội bộ hoàn toàn hợp lý — nhưng phải phối hợp release với 5 team, mất 2 tháng. Đó chính là coupling qua schema, thứ mà microservices sinh ra để tránh.\n10.2. Event Sourcing vs CDC — đừng nhầm lẫn Tôi nghe câu này thường xuyên: “Bọn em dùng Debezium nên coi như đã có Event Sourcing rồi.” Không. Đây là hiểu nhầm về bản chất, không phải về công cụ.\n10.2.1. Khác biệt bản chất: đâu là source of truth Event Sourcing: event là source of truth. State hiện tại là dẫn xuất — được tính bằng cách replay chuỗi event (AccountOpened, MoneyDeposited, MoneyWithdrawn). Ứng dụng ghi event trước tiên và duy nhất; muốn biết số dư, fold qua event stream (hoặc đọc snapshot — cũng là dẫn xuất). CDC: state trong database là source of truth. Event là dẫn xuất — được sinh ra từ việc quan sát state thay đổi. Ứng dụng ghi state; event chỉ là cái bóng của state. Chiều mũi tên ngược nhau hoàn toàn:\nEvent Sourcing: Event (gốc) ──replay──▶ State (dẫn xuất) CDC: State (gốc) ──capture──▶ Event (dẫn xuất)Hệ quả thực tế của khác biệt này:\nCDC event thiếu intent. UPDATE status từ ACTIVE sang SUSPENDED — vì khách yêu cầu, vì gian lận, hay vì lỗi vận hành sửa tay? CDC không biết. Event Sourcing biết, vì event là intent. CDC không capture thay đổi “trung gian” trong transaction theo cách bạn nghĩ — và ngược lại, nhiều UPDATE liên tiếp cùng một row vẫn sinh nhiều event, nhưng bạn không thể tái tạo lý do của từng bước. Replay có ý nghĩa khác nhau. Replay event-sourced stream tái tạo chính xác business history. Replay CDC topic chỉ tái tạo chuỗi state — đủ để rebuild read model, không đủ để trả lời câu hỏi nghiệp vụ như “bao nhiêu đơn bị hủy bởi fraud check trong Q1”. Event Sourcing là quyết định thiết kế ứng dụng (ảnh hưởng cách viết mọi dòng code domain); CDC là quyết định hạ tầng (ứng dụng không cần biết nó tồn tại). 10.2.2. CDC là con đường tiến hóa dần sang EDA Nói vậy không có nghĩa CDC “thua” Event Sourcing — chúng giải bài toán khác nhau, và CDC có một ưu thế chiến lược mà tôi đánh giá rất cao: nó cho phép hệ thống legacy tiến hóa sang event-driven architecture mà không cần rewrite.\nLộ trình tôi đã áp dụng nhiều lần:\nGiai đoạn 1: Bật CDC trên monolith database. Downstream mới (search, analytics, cache) consume change event. Monolith không đổi một dòng code. Team học vận hành Kafka/Connect trên luồng ít rủi ro. Giai đoạn 2: Với các luồng nghiệp vụ quan trọng, thêm Outbox vào monolith — bắt đầu phát domain event có chủ đích. CDC infrastructure tái sử dụng nguyên vẹn. Giai đoạn 3: Tách service mới, consume domain event từ outbox topic. Strangler pattern trên nền event. Giai đoạn 4 (nếu thật sự cần): một vài bounded context có yêu cầu audit/temporal mạnh chuyển hẳn sang Event Sourcing. Đa số context sẽ không bao giờ cần bước này — và đó là điều tốt. Event Sourcing toàn hệ thống là khoản đầu tư rất đắt (event versioning, snapshot, rebuild, tư duy team). CDC cho bạn 70% lợi ích event-driven với 20% chi phí. Đừng để sự “thuần khiết kiến trúc” quyết định thay ROI.\n10.3. CQRS và Materialized View — CDC là cỗ máy xây read model 10.3.1. CQRS không cần phải “to tát” CQRS ở dạng thực dụng nhất: write model tối ưu cho transaction, read model tối ưu cho query, hai model được đồng bộ bất đồng bộ. Không bắt buộc Event Sourcing, không bắt buộc tách service. Và CDC là cơ chế đồng bộ tự nhiên nhất: write model là các bảng normalized trong PostgreSQL; CDC stream mọi thay đổi; một consumer (hoặc stream processor) biến đổi và ghi vào read store denormalized.\nVì sao CDC thay vì để ứng dụng tự ghi read model? Vì (a) tránh dual write — như mục 10.1; (b) read model có thể rebuild từ đầu bằng snapshot + replay mà không đụng vào code ứng dụng; (c) thêm read model mới (ví dụ ngày mai cần thêm một view trên ClickHouse) không cần release lại write service.\n10.3.2. Ví dụ cụ thể: order + customer join thành view Bài toán kinh điển: trang quản trị cần query “danh sách đơn hàng kèm tên khách, tier khách, tổng chi tiêu — filter theo 10 tiêu chí, sort tùy ý”. Query này JOIN 3–4 bảng trên OLTP là tự sát ở quy mô lớn. Giải pháp: materialized view trên ClickHouse (analytics) hoặc Elasticsearch (search/filter).\ngraph LR A[\"PostgreSQL bảng orders\"] --\u003e B[\"Debezium\"] A2[\"PostgreSQL bảng customers\"] --\u003e B B --\u003e C[\"Kafka topic orders\"] B --\u003e D[\"Kafka topic customers\"] C --\u003e E[\"Stream processor join theo customer_id\"] D --\u003e E E --\u003e F[\"Kafka topic order_enriched\"] F --\u003e G[\"ClickHouse bảng order_view\"] F --\u003e H[\"Elasticsearch index order_search\"] G --\u003e I[\"Dashboard admin\"] H --\u003e IĐiểm kỹ thuật then chốt: join hai CDC stream là stateful. Khi event orders đến, dữ liệu customers tương ứng phải đã có sẵn ở đâu đó. Ba cách làm, theo mức độ phức tạp tăng dần:\nLookup trực tiếp khi consume: consumer nhận order event, query bảng customer (hoặc cache) để enrich. Đơn giản, nhưng tạo tải đọc lên DB và có race condition nếu customer chưa sync. Kafka Streams KTable-KTable join / Flink temporal join: materialize topic customers thành state store (RocksDB), join local. Đúng đắn hơn, nhưng bạn phải vận hành state — rebalance, restore, disk. Denormalize tại sink: ghi hai bảng riêng vào ClickHouse, JOIN lúc query (ClickHouse chịu JOIN tốt với dimension nhỏ) hoặc dùng dictionary cho bảng customers. Thực tế đây là cách tôi khuyên dùng đầu tiên vì ít moving part nhất. Với Elasticsearch, lưu ý mô hình document: mỗi order là một document chứa sẵn customer_name, customer_tier (denormalized). Khi customer đổi tên — hiếm — chấp nhận update-by-query bất đồng bộ, hoặc chấp nhận staleness cho các field ít quan trọng. Đánh đổi này cần được nêu rõ với product owner, đừng tự quyết trong im lặng.\n10.3.3. Search index, cache, analytics, audit — bốn ứng dụng kinh điển Search Index synchronization. Bài toán: dữ liệu trong DB, tìm kiếm trong Elasticsearch/OpenSearch. CDC bảo đảm mọi thay đổi — kể cả từ script vận hành, migration, service khác ghi thẳng DB — đều sync sang index, điều mà application-level sync không làm được. Delete cũng được xử lý tự nhiên qua tombstone/delete event. Điều cần chấp nhận: search index trễ hơn DB vài trăm ms tới vài giây; nghiệp vụ “tạo xong tìm thấy ngay” cần xử lý riêng (xem 10.4).\nCache Synchronization. Hai chiến lược:\nInvalidate: nhận CDC event → DELETE key trong Redis. Read tiếp theo là cache miss, đọc DB, nạp lại. An toàn hơn vì cache luôn được nạp từ nguồn mới nhất. Update: nhận CDC event → SET giá trị mới vào Redis. Tiết kiệm cache miss, nhưng mở ra race condition kinh điển: CDC consumer SET giá trị từ event tại thời điểm T1; đồng thời một request cache-miss đọc DB tại T2 \u003e T1 (giá trị mới hơn) nhưng SET vào Redis sau consumer — không sao; tệ hơn là chiều ngược lại: request đọc DB ra giá trị cũ tại T0, bị GC pause, SET vào cache sau khi CDC consumer đã SET giá trị mới — cache giữ giá trị cũ vô thời hạn. Phòng thủ: (a) version check — mỗi value kèm version/updated_at, SET chỉ khi version mới hơn (Redis Lua script để so sánh atomic); (b) luôn đặt TTL làm lưới an toàn cuối — kể cả khi logic sai, dữ liệu bẩn chỉ sống tối đa TTL; (c) nếu không muốn phức tạp, chọn invalidate — chậm hơn một cache miss nhưng khó sai hơn nhiều. Nguyên tắc của tôi: update-based cache sync chỉ khi đã có version check; còn lại dùng invalidate + TTL.\nAnalytics Pipeline. CDC → Kafka → warehouse/lakehouse cho phép dashboard “gần real-time” thay vì T+1. Chi tiết ở chương 12; ở đây chỉ ghi nhận vị trí của nó trong bức tranh: đây là ứng dụng CDC có ROI dễ chứng minh nhất, thường là dự án CDC đầu tiên nên làm.\nAudit Log từ CDC. Ưu điểm thật sự: không xâm lấn code — mọi thay đổi, kể cả UPDATE tay của DBA lúc 2 giờ sáng, đều bị ghi lại; không lệ thuộc developer nhớ gọi auditService.log(). Nhưng hạn chế phải nói thẳng: CDC event không có business context (thao tác này thuộc use case nào?) và thường không biết ai thực hiện — WAL không chứa application user, chỉ có DB user (thường là một connection pool user chung). Khắc phục một phần: ghi app_user_id, request_id vào cột riêng hoặc dùng cơ chế transaction metadata (ví dụ ghi một record “audit context” trong cùng transaction), nhưng như vậy lại xâm lấn code — mất luôn ưu điểm ban đầu. Kết luận thực dụng: CDC audit tốt cho forensic data trail (cái gì đổi, khi nào, từ giá trị nào sang giá trị nào); nếu compliance đòi ai và tại sao, bạn cần audit ở tầng application, hoặc kết hợp cả hai.\n10.4. Consistency: nói thẳng về eventual và read-your-own-writes 10.4.1. Consistency của từng pattern Mọi pattern trong chương này đều có chung một dòng chữ in nhỏ: downstream là eventually consistent. Cụ thể:\nPattern Điểm strong consistency Điểm eventual consistency Cửa sổ trễ điển hình (minh họa) Outbox + CDC Business data + outbox record (cùng transaction) Consumer nhận event 100ms – vài giây CQRS read model Write model Read model 200ms – vài giây; phút nếu backlog Cache sync DB Redis 50ms – 1s Search sync DB Elasticsearch 1s – 10s (do refresh interval) Analytics OLTP Warehouse giây – phút (micro-batch) Điều quan trọng không phải con số, mà là: cửa sổ trễ không có cận trên bảo đảm. Khi connector chết hoặc consumer backlog, “vài trăm ms” trở thành vài giờ. Kiến trúc của bạn phải đúng (không chỉ chấp nhận được) khi độ trễ là 1 giờ — nếu không, bạn đang xây trên cát. Đây là câu hỏi tôi luôn hỏi khi review design: “Nếu read model trễ 1 giờ, nghiệp vụ nào vỡ? Vỡ kiểu khó chịu hay kiểu mất tiền?”\n10.4.2. Read-your-own-writes problem Kịch bản: người dùng sửa địa chỉ giao hàng, bấm Lưu, trang reload — và thấy địa chỉ cũ, vì trang đọc từ read model chưa kịp sync. Với người dùng, đây không phải “eventual consistency” — đây là bug. Đây là vấn đề UX số một của mọi kiến trúc CQRS/CDC, và phải được thiết kế từ đầu chứ không vá sau.\nCác giải pháp, theo thứ tự nên cân nhắc:\nĐọc write model cho chính resource vừa ghi (read-after-write routing): sau khi user ghi thành công, các request đọc của chính user đó, cho chính resource đó trong N giây tiếp theo được route về primary DB. Đơn giản nhất nếu API gateway/service phân biệt được. Đánh đổi: thêm logic routing, và write model gánh thêm read. Trả về state trong write response: API ghi trả luôn representation mới; client dùng nó cập nhật UI (optimistic UI). Không đụng backend read path. Đánh đổi: chỉ giải quyết được màn hình hiện tại, không giải quyết user mở tab khác. Version-based read: write trả về version (hoặc LSN/offset); client gửi kèm min_version khi đọc; read model nếu chưa đạt version thì chờ hoặc fallback về primary. Đúng đắn nhất về mặt lý thuyết, phức tạp nhất về triển khai — chỉ đáng khi có nhiều read model và yêu cầu nghiêm ngặt. Session sticky vào cache tạm: ghi xong, đặt bản mới vào Redis theo session; read ưu tiên Redis session cache. Biến thể của cách 1. Chấp nhận và thiết kế UX phù hợp: hiển thị “Đang cập nhật…”, disable edit trong vài giây. Rẻ nhất, và với nhiều nghiệp vụ (analytics, search) là hoàn toàn đủ. Lưu ý tinh tế: read-your-own-writes chỉ là một trong họ vấn đề session consistency — còn có monotonic reads (user thấy dữ liệu mới rồi lại thấy dữ liệu cũ do hai request đập vào hai replica của read model có độ trễ khác nhau). Nếu read model có nhiều replica, hãy sticky session theo replica hoặc dùng version-based read.\n10.4.3. Điều CDC không bao giờ cho bạn Chốt lại phần consistency bằng ba giới hạn cứng, để không ai kỳ vọng nhầm:\nCDC không cho cross-system transaction. Không có cách nào để “DB commit và Elasticsearch index và Redis update” xảy ra atomic. Nếu nghiệp vụ đòi điều đó, nghiệp vụ phải được thiết kế lại (saga, compensation) hoặc dữ liệu phải ở cùng một chỗ. CDC không cho exactly-once end-to-end miễn phí. Pipeline là at-least-once; exactly-once effect phải do consumer idempotent tự kiến tạo (chương 11 và 13). CDC không thay thế thiết kế contract. Event từ CDC thuần là schema nội bộ — dùng nó làm public contract là anti-pattern (chương 13). Tóm tắt chương Dual write (ghi DB + publish Kafka trong code) là lỗi kiến trúc, không phải lỗi implementation — không retry nào sửa được. Outbox pattern giải quyết tận gốc: ghi business data và event record trong cùng transaction ACID, để CDC đảm nhận delivery. Debezium EventRouter biến outbox record thành domain event đúng nghĩa. Cái giá: sửa code producer + cleanup bảng outbox nghiêm túc. CDC thuần phát data change event (lộ schema nội bộ, zero effort) — phù hợp data integration. Outbox phát domain event (contract chủ đích, giữ business intent) — phù hợp giao tiếp giữa các service. Chọn theo việc consumer cần “dữ liệu” hay cần “sự kiện nghiệp vụ”. CDC không phải Event Sourcing: chiều mũi tên ngược nhau — Event Sourcing coi event là source of truth, CDC coi event là dẫn xuất của state. Nhưng CDC là con đường tiến hóa dần sang EDA cho hệ thống legacy mà không cần rewrite. CQRS + CDC: CDC là cỗ máy xây và rebuild read model (ClickHouse, Elasticsearch) mà không đụng code write service. Join stream là stateful — ưu tiên denormalize tại sink trước khi với tới Kafka Streams/Flink. Cache sync: mặc định dùng invalidate + TTL; chỉ dùng update khi có version check, vì race condition giữa cache update và read có thể để dữ liệu bẩn sống vô thời hạn. Mọi downstream của CDC là eventually consistent, không có cận trên độ trễ. Thiết kế phải trả lời được “nghiệp vụ nào vỡ nếu trễ 1 giờ”, và read-your-own-writes phải được xử lý chủ động (route về write model, trả state trong response, hoặc version-based read). Đọc tiếp Chương tiếp theo — Chương 11: Production Failure Cases — là chương quan trọng nhất của toàn bộ tài liệu: 20 sự cố production điển hình của pipeline CDC, từ replication slot làm đầy disk đến split-brain connector, mỗi case đi kèm cách điều tra bằng lệnh/query cụ thể, metric cần theo dõi và alert nên cấu hình. Nếu bạn chỉ đọc một chương trước khi vận hành CDC, hãy đọc chương đó.\n","wordCount":"4015","inLanguage":"en","datePublished":"2026-02-20T17:00:00+07:00","dateModified":"2026-02-20T17:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/cdc/10-cdc-va-kien-truc/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/cdc/>Change Data Capture</a></div><h1 class="post-title entry-hint-parent">Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS</h1><div class=post-meta><span title='2026-02-20 17:00:00 +0700 +07'>February 20, 2026</span>&nbsp;·&nbsp;19 min</div></header><div class=post-content><p>Đến chương này, chúng ta đã hiểu CDC hoạt động thế nào ở tầng cơ chế: transaction log, replication slot, connector, offset. Câu hỏi tiếp theo — và là câu hỏi mà một Tech Lead hay Solution Architect thực sự phải trả lời — là: <strong>CDC đứng ở đâu trong kiến trúc tổng thể?</strong> Nó thay thế cái gì, kết hợp với pattern nào, và quan trọng hơn: nó <em>không phải</em> là cái gì.</p><p>Tôi đã chứng kiến không ít team dùng CDC như một chiếc búa vạn năng: dùng CDC event thô làm domain event, gọi CDC là &ldquo;event sourcing&rdquo;, hoặc kỳ vọng read model cập nhật tức thì như strong consistency. Cả ba đều là hiểu nhầm, và cả ba đều trả giá ở production. Chương này sẽ đi qua từng pattern, với câu hỏi xuyên suốt: <em>Tại sao? Đánh đổi gì? Làm sai thì hậu quả gì?</em></p><h2 id=101-outbox-pattern--lời-giải-chuẩn-cho-bài-toán-dual-write>10.1. Outbox Pattern — lời giải chuẩn cho bài toán dual write<a hidden class=anchor aria-hidden=true href=#101-outbox-pattern--lời-giải-chuẩn-cho-bài-toán-dual-write>#</a></h2><h3 id=1011-bài-toán-gốc-dual-write-không-atomic>10.1.1. Bài toán gốc: dual write không atomic<a hidden class=anchor aria-hidden=true href=#1011-bài-toán-gốc-dual-write-không-atomic>#</a></h3><p>Hãy bắt đầu từ đoạn code mà hầu như service nào cũng từng có:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Transactional</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>createOrder</span>(Order order) {
+</span></span><span style=display:flex><span>    orderRepository.<span style=color:#a6e22e>save</span>(order);          <span style=color:#75715e>// ghi vào PostgreSQL</span>
+</span></span><span style=display:flex><span>    kafkaProducer.<span style=color:#a6e22e>send</span>(<span style=color:#e6db74>&#34;order-created&#34;</span>,   <span style=color:#75715e>// publish event lên Kafka</span>
+</span></span><span style=display:flex><span>        toEvent(order));
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Trông vô hại, nhưng đây là <strong>dual write</strong>: hai hệ thống lưu trữ độc lập (database và Kafka), không có transaction chung. Có bốn kịch bản:</p><ol><li>Cả hai thành công — mọi thứ ổn.</li><li>DB commit thành công, Kafka send thất bại (broker down, timeout) — order tồn tại nhưng downstream không bao giờ biết. <strong>Mất event.</strong></li><li>Kafka send thành công <em>trước khi</em> transaction commit, rồi transaction rollback — downstream nhận event về một order không tồn tại. <strong>Event ma.</strong></li><li>Service crash giữa hai bước — không xác định được trạng thái.</li></ol><p>Bạn không thể sửa bằng cách đổi thứ tự hai lệnh — chỉ đổi kịch bản 2 thành kịch bản 3. Bạn cũng không thể sửa bằng retry đơn thuần, vì retry sau khi process crash đòi hỏi bạn phải <em>nhớ</em> rằng mình còn nợ một event — tức là phải ghi trạng thái đó vào đâu đó bền vững. Và &ldquo;đâu đó bền vững, cùng transaction với business data&rdquo; chính là&mldr; một cái bảng trong database. Đó là Outbox.</p><p>Distributed transaction (XA/2PC) giữa DB và Kafka về lý thuyết giải được, nhưng thực tế Kafka không hỗ trợ XA, và ngay cả khi có, 2PC mang theo blocking, coordinator là single point of failure, và throughput sụt nghiêm trọng. Trong 20 năm làm nghề, tôi chưa thấy hệ thống nào dùng 2PC giữa OLTP database và message broker mà sống khỏe ở quy mô lớn.</p><h3 id=1012-cơ-chế-outbox-một-transaction-hai-bảng>10.1.2. Cơ chế Outbox: một transaction, hai bảng<a hidden class=anchor aria-hidden=true href=#1012-cơ-chế-outbox-một-transaction-hai-bảng>#</a></h3><p>Ý tưởng cốt lõi: <strong>thay vì ghi vào hai hệ thống, chỉ ghi vào một</strong> — database — trong <strong>cùng một transaction ACID</strong>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-sql data-lang=sql><span style=display:flex><span><span style=color:#66d9ef>BEGIN</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>INSERT</span> <span style=color:#66d9ef>INTO</span> orders (id, customer_id, total_amount, status)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>VALUES</span> (<span style=color:#e6db74>&#39;ord-9f2a&#39;</span>, <span style=color:#e6db74>&#39;cus-771&#39;</span>, <span style=color:#ae81ff>1250000</span>, <span style=color:#e6db74>&#39;CREATED&#39;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>INSERT</span> <span style=color:#66d9ef>INTO</span> outbox_events (id, aggregate_type, aggregate_id, event_type, payload, created_at)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>VALUES</span> (
+</span></span><span style=display:flex><span>    gen_random_uuid(),
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#39;order&#39;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#39;ord-9f2a&#39;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#39;OrderCreated&#39;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#e6db74>&#39;{&#34;orderId&#34;:&#34;ord-9f2a&#34;,&#34;customerId&#34;:&#34;cus-771&#34;,&#34;totalAmount&#34;:1250000,&#34;items&#34;:[...]}&#39;</span>,
+</span></span><span style=display:flex><span>    now()
+</span></span><span style=display:flex><span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>COMMIT</span>;
+</span></span></code></pre></div><p>Atomic tuyệt đối: hoặc cả order lẫn event cùng tồn tại, hoặc cả hai cùng biến mất khi rollback. Không còn kịch bản 2, 3, 4.</p><p>Vấn đề còn lại: làm sao đưa record từ <code>outbox_events</code> lên Kafka? Có hai cách:</p><ul><li><strong>Polling publisher</strong>: một job quét bảng outbox định kỳ, publish rồi đánh dấu/xóa. Hoạt động được, nhưng mang mọi nhược điểm của polling — độ trễ, tải query lặp, và phải tự xử lý thứ tự, concurrency giữa nhiều instance của publisher.</li><li><strong>CDC đọc bảng outbox</strong>: Debezium capture INSERT vào <code>outbox_events</code> từ WAL/binlog, publish lên Kafka. Không thêm một dòng query nào vào database, độ trễ mili-giây, thứ tự đúng theo commit order, và tính đúng đắn (at-least-once) được bảo đảm bởi cơ chế offset của connector.</li></ul><p><strong>Outbox + CDC là combo chuẩn</strong> vì nó tách hai mối quan tâm một cách sạch sẽ: transaction ACID của database bảo đảm <em>atomicity</em> giữa business data và event; transaction log + CDC bảo đảm <em>delivery</em> của event. Mỗi thành phần làm đúng việc nó giỏi nhất.</p><pre class=mermaid>sequenceDiagram
     participant App as &#34;Order Service&#34;
     participant DB as &#34;PostgreSQL&#34;
     participant Dbz as &#34;Debezium Connector&#34;
@@ -171,130 +36,29 @@
     Dbz-&gt;&gt;DB: Đọc WAL qua replication slot
     Dbz-&gt;&gt;K: Publish domain event từ outbox record
     K-&gt;&gt;C: Consumer nhận OrderCreated
-    Note over C: Consumer phải idempotent vì at-least-once</pre><style>
-  pre.mermaid {
-    background: transparent;
-    display: flex;
-    justify-content: center;
-    overflow-x: auto;
-  }
-</style>
-<script type="module">
+    Note over C: Consumer phải idempotent vì at-least-once</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({
     startOnLoad: true,
     theme: document.body.classList.contains("dark") ? "dark" : "default",
     securityLevel: "loose",
   });
-</script><h3 id="1013-debezium-outbox-event-router">10.1.3. Debezium Outbox Event Router<a hidden class="anchor" aria-hidden="true" href="#1013-debezium-outbox-event-router">#</a></h3>
-<p>Nếu để nguyên, event từ Debezium sẽ mang hình dạng change event (envelope <code>before/after/op/source</code>) trên topic tên <code>server.public.outbox_events</code> — không phải thứ consumer muốn. Debezium có sẵn SMT <code>EventRouter</code> để &ldquo;bóc&rdquo; outbox record thành domain event đúng nghĩa:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;outbox-connector&#34;</span>,
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;config&#34;</span>: {
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;connector.class&#34;</span>: <span style="color:#e6db74">&#34;io.debezium.connector.postgresql.PostgresConnector&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;table.include.list&#34;</span>: <span style="color:#e6db74">&#34;public.outbox_events&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;tombstones.on.delete&#34;</span>: <span style="color:#e6db74">&#34;false&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;transforms&#34;</span>: <span style="color:#e6db74">&#34;outbox&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;transforms.outbox.type&#34;</span>: <span style="color:#e6db74">&#34;io.debezium.transforms.outbox.EventRouter&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;transforms.outbox.table.field.event.key&#34;</span>: <span style="color:#e6db74">&#34;aggregate_id&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;transforms.outbox.route.by.field&#34;</span>: <span style="color:#e6db74">&#34;aggregate_type&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;transforms.outbox.route.topic.replacement&#34;</span>: <span style="color:#e6db74">&#34;domain.events.${routedByValue}&#34;</span>,
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;transforms.outbox.table.expand.json.payload&#34;</span>: <span style="color:#e6db74">&#34;true&#34;</span>
-</span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Kết quả: record với <code>aggregate_type = 'order'</code> được route sang topic <code>domain.events.order</code>, message key là <code>aggregate_id</code> (bảo đảm mọi event của cùng một order vào cùng partition — giữ thứ tự), payload là JSON domain event thuần, không còn envelope CDC. <code>event_type</code> được gắn vào header để consumer filter.</p>
-<p>Hai chi tiết vận hành đáng chú ý:</p>
-<ul>
-<li>Đặt <code>tombstones.on.delete=false</code> — nếu bạn xóa record outbox sau khi publish, đừng để Debezium sinh tombstone event gây nhiễu.</li>
-<li>Debezium mặc định <strong>bỏ qua UPDATE/DELETE trên bảng outbox</strong> khi dùng EventRouter (nó chỉ quan tâm INSERT) — đây là hành vi đúng: outbox là append-only về mặt ngữ nghĩa.</li>
-</ul>
-<h3 id="1014-trade-off-bảng-outbox-phình-to-và-chiến-lược-cleanup">10.1.4. Trade-off: bảng outbox phình to và chiến lược cleanup<a hidden class="anchor" aria-hidden="true" href="#1014-trade-off-bảng-outbox-phình-to-và-chiến-lược-cleanup">#</a></h3>
-<p>Không có gì miễn phí. Bảng outbox là bảng ghi nóng nhất hệ thống — mọi transaction nghiệp vụ đều chèn vào nó. Với 500 event/giây, payload trung bình 1 KB, bạn sinh ~43 GB/ngày (số liệu minh họa điển hình). Không cleanup, sau một tháng bạn có bảng hơn 1 TB với index bloat kéo mọi INSERT chậm lại.</p>
-<p>Các chiến lược cleanup, theo thứ tự tôi khuyên dùng:</p>
-<ol>
-<li><strong>DELETE ngay trong cùng transaction</strong> (kỹ thuật &ldquo;insert-then-delete&rdquo;): <code>INSERT</code> rồi <code>DELETE</code> chính record đó trong cùng transaction. Nghe ngược đời, nhưng với PostgreSQL, cả INSERT lẫn DELETE đều được ghi vào WAL — Debezium vẫn thấy INSERT event. Bảng vật lý luôn gần như rỗng. Nhược điểm: sinh dead tuple, cần autovacuum khỏe; và bạn mất khả năng đối soát lại bảng outbox khi cần điều tra.</li>
-<li><strong>Batch delete theo thời gian</strong>: job đêm xóa record cũ hơn N ngày (N = 3–7, đủ để đối soát và re-consume khi có sự cố). Nhớ delete theo batch nhỏ (10k–50k rows/lần) để tránh giữ lock và bloat WAL đột biến.</li>
-<li><strong>Partition theo ngày + DROP PARTITION</strong>: sạch nhất về mặt vacuum (DROP không sinh dead tuple), nhưng lưu ý với PostgreSQL logical replication, thao tác quản lý partition cần được kiểm tra kỹ với version Debezium bạn dùng.</li>
-</ol>
-<p>Sai lầm tôi từng thấy: team để bảng outbox chạy 6 tháng không cleanup, autovacuum không theo kịp, <code>INSERT</code> p99 từ 2ms lên 40ms, kéo toàn bộ API checkout chậm theo. Outbox không cleanup là nợ kỹ thuật có lãi suất kép.</p>
-<h3 id="1015-cdc-thuần-vs-outbox-khi-nào-dùng-cái-nào">10.1.5. CDC thuần vs Outbox: khi nào dùng cái nào<a hidden class="anchor" aria-hidden="true" href="#1015-cdc-thuần-vs-outbox-khi-nào-dùng-cái-nào">#</a></h3>
-<p>Đây là quyết định kiến trúc thật sự, và tiêu chí phân định rõ ràng hơn nhiều người nghĩ:</p>
-<table>
-  <thead>
-      <tr>
-          <th>Tiêu chí</th>
-          <th>CDC thuần trên bảng nghiệp vụ</th>
-          <th>Outbox + CDC</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Bản chất event</td>
-          <td><strong>Data change event</strong> — &ldquo;row này đã đổi&rdquo;</td>
-          <td><strong>Domain event</strong> — &ldquo;nghiệp vụ này đã xảy ra&rdquo;</td>
-      </tr>
-      <tr>
-          <td>Contract với consumer</td>
-          <td>Schema bảng nội bộ bị lộ ra ngoài</td>
-          <td>Payload thiết kế có chủ đích, versioned</td>
-      </tr>
-      <tr>
-          <td>Khi refactor schema DB</td>
-          <td>Vỡ mọi consumer — coupling chặt</td>
-          <td>Consumer không ảnh hưởng nếu contract giữ nguyên</td>
-      </tr>
-      <tr>
-          <td>Business intent</td>
-          <td>Mất — chỉ thấy state trước/sau</td>
-          <td>Giữ nguyên — <code>OrderCancelledByCustomer</code> vs <code>OrderCancelledByFraudCheck</code></td>
-      </tr>
-      <tr>
-          <td>Effort phía producer</td>
-          <td>Zero — không sửa code ứng dụng</td>
-          <td>Phải sửa code: mọi nơi ghi data phải ghi kèm outbox</td>
-      </tr>
-      <tr>
-          <td>Phù hợp cho</td>
-          <td>Replication, data warehouse, cache/search sync, audit — các bài toán <strong>data integration</strong></td>
-          <td>Giao tiếp giữa các bounded context, microservices — các bài toán <strong>application integration</strong></td>
-      </tr>
-  </tbody>
-</table>
-<p>Quy tắc tôi dùng: <strong>nếu consumer quan tâm đến &ldquo;dữ liệu&rdquo; — dùng CDC thuần; nếu consumer quan tâm đến &ldquo;sự kiện nghiệp vụ&rdquo; — dùng Outbox.</strong> Đồng bộ bảng <code>products</code> sang Elasticsearch? CDC thuần, vì bạn thực sự cần data. Thông báo cho Shipping Service rằng đơn hàng đã thanh toán? Outbox, vì Shipping không nên biết (và không nên vỡ khi bạn đổi) cấu trúc bảng <code>orders</code>.</p>
-<p>Một ví dụ cụ thể về cái giá của việc chọn sai: một team dùng CDC thuần trên bảng <code>orders</code> làm &ldquo;event&rdquo; cho 5 team khác consume. Sáu tháng sau họ cần tách cột <code>status</code> thành hai cột <code>fulfillment_status</code> và <code>payment_status</code>. Một thay đổi schema nội bộ hoàn toàn hợp lý — nhưng phải phối hợp release với 5 team, mất 2 tháng. Đó chính là <strong>coupling qua schema</strong>, thứ mà microservices sinh ra để tránh.</p>
-<h2 id="102-event-sourcing-vs-cdc--đừng-nhầm-lẫn">10.2. Event Sourcing vs CDC — đừng nhầm lẫn<a hidden class="anchor" aria-hidden="true" href="#102-event-sourcing-vs-cdc--đừng-nhầm-lẫn">#</a></h2>
-<p>Tôi nghe câu này thường xuyên: &ldquo;Bọn em dùng Debezium nên coi như đã có Event Sourcing rồi.&rdquo; Không. Đây là hiểu nhầm về <em>bản chất</em>, không phải về công cụ.</p>
-<h3 id="1021-khác-biệt-bản-chất-đâu-là-source-of-truth">10.2.1. Khác biệt bản chất: đâu là source of truth<a hidden class="anchor" aria-hidden="true" href="#1021-khác-biệt-bản-chất-đâu-là-source-of-truth">#</a></h3>
-<ul>
-<li><strong>Event Sourcing</strong>: event là <strong>source of truth</strong>. State hiện tại là <em>dẫn xuất</em> — được tính bằng cách replay chuỗi event (<code>AccountOpened</code>, <code>MoneyDeposited</code>, <code>MoneyWithdrawn</code>). Ứng dụng ghi event trước tiên và duy nhất; muốn biết số dư, fold qua event stream (hoặc đọc snapshot — cũng là dẫn xuất).</li>
-<li><strong>CDC</strong>: state trong database là <strong>source of truth</strong>. Event là <em>dẫn xuất</em> — được sinh ra từ việc quan sát state thay đổi. Ứng dụng ghi state; event chỉ là cái bóng của state.</li>
-</ul>
-<p>Chiều mũi tên ngược nhau hoàn toàn:</p>
-<pre tabindex="0"><code>Event Sourcing:  Event (gốc)  ──replay──▶  State (dẫn xuất)
-CDC:             State (gốc)  ──capture──▶  Event (dẫn xuất)</code></pre><p>Hệ quả thực tế của khác biệt này:</p>
-<ol>
-<li><strong>CDC event thiếu intent.</strong> UPDATE <code>status</code> từ <code>ACTIVE</code> sang <code>SUSPENDED</code> — vì khách yêu cầu, vì gian lận, hay vì lỗi vận hành sửa tay? CDC không biết. Event Sourcing biết, vì event <em>là</em> intent.</li>
-<li><strong>CDC không capture thay đổi &ldquo;trung gian&rdquo; trong transaction</strong> theo cách bạn nghĩ — và ngược lại, nhiều UPDATE liên tiếp cùng một row vẫn sinh nhiều event, nhưng bạn không thể tái tạo <em>lý do</em> của từng bước.</li>
-<li><strong>Replay có ý nghĩa khác nhau.</strong> Replay event-sourced stream tái tạo chính xác business history. Replay CDC topic chỉ tái tạo chuỗi state — đủ để rebuild read model, không đủ để trả lời câu hỏi nghiệp vụ như &ldquo;bao nhiêu đơn bị hủy bởi fraud check trong Q1&rdquo;.</li>
-<li><strong>Event Sourcing là quyết định thiết kế ứng dụng</strong> (ảnh hưởng cách viết mọi dòng code domain); <strong>CDC là quyết định hạ tầng</strong> (ứng dụng không cần biết nó tồn tại).</li>
-</ol>
-<h3 id="1022-cdc-là-con-đường-tiến-hóa-dần-sang-eda">10.2.2. CDC là con đường tiến hóa dần sang EDA<a hidden class="anchor" aria-hidden="true" href="#1022-cdc-là-con-đường-tiến-hóa-dần-sang-eda">#</a></h3>
-<p>Nói vậy không có nghĩa CDC &ldquo;thua&rdquo; Event Sourcing — chúng giải bài toán khác nhau, và CDC có một ưu thế chiến lược mà tôi đánh giá rất cao: <strong>nó cho phép hệ thống legacy tiến hóa sang event-driven architecture mà không cần rewrite</strong>.</p>
-<p>Lộ trình tôi đã áp dụng nhiều lần:</p>
-<ol>
-<li><strong>Giai đoạn 1</strong>: Bật CDC trên monolith database. Downstream mới (search, analytics, cache) consume change event. Monolith không đổi một dòng code. Team học vận hành Kafka/Connect trên luồng ít rủi ro.</li>
-<li><strong>Giai đoạn 2</strong>: Với các luồng nghiệp vụ quan trọng, thêm Outbox vào monolith — bắt đầu phát domain event có chủ đích. CDC infrastructure tái sử dụng nguyên vẹn.</li>
-<li><strong>Giai đoạn 3</strong>: Tách service mới, consume domain event từ outbox topic. Strangler pattern trên nền event.</li>
-<li><strong>Giai đoạn 4</strong> (nếu thật sự cần): một vài bounded context có yêu cầu audit/temporal mạnh chuyển hẳn sang Event Sourcing. Đa số context sẽ không bao giờ cần bước này — và đó là điều tốt.</li>
-</ol>
-<p>Event Sourcing toàn hệ thống là khoản đầu tư rất đắt (event versioning, snapshot, rebuild, tư duy team). CDC cho bạn 70% lợi ích event-driven với 20% chi phí. Đừng để sự &ldquo;thuần khiết kiến trúc&rdquo; quyết định thay ROI.</p>
-<h2 id="103-cqrs-và-materialized-view--cdc-là-cỗ-máy-xây-read-model">10.3. CQRS và Materialized View — CDC là cỗ máy xây read model<a hidden class="anchor" aria-hidden="true" href="#103-cqrs-và-materialized-view--cdc-là-cỗ-máy-xây-read-model">#</a></h2>
-<h3 id="1031-cqrs-không-cần-phải-to-tát">10.3.1. CQRS không cần phải &ldquo;to tát&rdquo;<a hidden class="anchor" aria-hidden="true" href="#1031-cqrs-không-cần-phải-to-tát">#</a></h3>
-<p>CQRS ở dạng thực dụng nhất: <strong>write model tối ưu cho transaction, read model tối ưu cho query, hai model được đồng bộ bất đồng bộ</strong>. Không bắt buộc Event Sourcing, không bắt buộc tách service. Và CDC là cơ chế đồng bộ tự nhiên nhất: write model là các bảng normalized trong PostgreSQL; CDC stream mọi thay đổi; một consumer (hoặc stream processor) biến đổi và ghi vào read store denormalized.</p>
-<p>Vì sao CDC thay vì để ứng dụng tự ghi read model? Vì (a) tránh dual write — như mục 10.1; (b) read model có thể <em>rebuild từ đầu</em> bằng snapshot + replay mà không đụng vào code ứng dụng; (c) thêm read model mới (ví dụ ngày mai cần thêm một view trên ClickHouse) không cần release lại write service.</p>
-<h3 id="1032-ví-dụ-cụ-thể-order--customer-join-thành-view">10.3.2. Ví dụ cụ thể: order + customer join thành view<a hidden class="anchor" aria-hidden="true" href="#1032-ví-dụ-cụ-thể-order--customer-join-thành-view">#</a></h3>
-<p>Bài toán kinh điển: trang quản trị cần query &ldquo;danh sách đơn hàng kèm tên khách, tier khách, tổng chi tiêu — filter theo 10 tiêu chí, sort tùy ý&rdquo;. Query này JOIN 3–4 bảng trên OLTP là tự sát ở quy mô lớn. Giải pháp: materialized view trên ClickHouse (analytics) hoặc Elasticsearch (search/filter).</p>
-<pre class="mermaid">graph LR
+</script><h3 id=1013-debezium-outbox-event-router>10.1.3. Debezium Outbox Event Router<a hidden class=anchor aria-hidden=true href=#1013-debezium-outbox-event-router>#</a></h3><p>Nếu để nguyên, event từ Debezium sẽ mang hình dạng change event (envelope <code>before/after/op/source</code>) trên topic tên <code>server.public.outbox_events</code> — không phải thứ consumer muốn. Debezium có sẵn SMT <code>EventRouter</code> để &ldquo;bóc&rdquo; outbox record thành domain event đúng nghĩa:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#f92672>&#34;name&#34;</span>: <span style=color:#e6db74>&#34;outbox-connector&#34;</span>,
+</span></span><span style=display:flex><span>  <span style=color:#f92672>&#34;config&#34;</span>: {
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;connector.class&#34;</span>: <span style=color:#e6db74>&#34;io.debezium.connector.postgresql.PostgresConnector&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;table.include.list&#34;</span>: <span style=color:#e6db74>&#34;public.outbox_events&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;tombstones.on.delete&#34;</span>: <span style=color:#e6db74>&#34;false&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;transforms&#34;</span>: <span style=color:#e6db74>&#34;outbox&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;transforms.outbox.type&#34;</span>: <span style=color:#e6db74>&#34;io.debezium.transforms.outbox.EventRouter&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;transforms.outbox.table.field.event.key&#34;</span>: <span style=color:#e6db74>&#34;aggregate_id&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;transforms.outbox.route.by.field&#34;</span>: <span style=color:#e6db74>&#34;aggregate_type&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;transforms.outbox.route.topic.replacement&#34;</span>: <span style=color:#e6db74>&#34;domain.events.${routedByValue}&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;transforms.outbox.table.expand.json.payload&#34;</span>: <span style=color:#e6db74>&#34;true&#34;</span>
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Kết quả: record với <code>aggregate_type = 'order'</code> được route sang topic <code>domain.events.order</code>, message key là <code>aggregate_id</code> (bảo đảm mọi event của cùng một order vào cùng partition — giữ thứ tự), payload là JSON domain event thuần, không còn envelope CDC. <code>event_type</code> được gắn vào header để consumer filter.</p><p>Hai chi tiết vận hành đáng chú ý:</p><ul><li>Đặt <code>tombstones.on.delete=false</code> — nếu bạn xóa record outbox sau khi publish, đừng để Debezium sinh tombstone event gây nhiễu.</li><li>Debezium mặc định <strong>bỏ qua UPDATE/DELETE trên bảng outbox</strong> khi dùng EventRouter (nó chỉ quan tâm INSERT) — đây là hành vi đúng: outbox là append-only về mặt ngữ nghĩa.</li></ul><h3 id=1014-trade-off-bảng-outbox-phình-to-và-chiến-lược-cleanup>10.1.4. Trade-off: bảng outbox phình to và chiến lược cleanup<a hidden class=anchor aria-hidden=true href=#1014-trade-off-bảng-outbox-phình-to-và-chiến-lược-cleanup>#</a></h3><p>Không có gì miễn phí. Bảng outbox là bảng ghi nóng nhất hệ thống — mọi transaction nghiệp vụ đều chèn vào nó. Với 500 event/giây, payload trung bình 1 KB, bạn sinh ~43 GB/ngày (số liệu minh họa điển hình). Không cleanup, sau một tháng bạn có bảng hơn 1 TB với index bloat kéo mọi INSERT chậm lại.</p><p>Các chiến lược cleanup, theo thứ tự tôi khuyên dùng:</p><ol><li><strong>DELETE ngay trong cùng transaction</strong> (kỹ thuật &ldquo;insert-then-delete&rdquo;): <code>INSERT</code> rồi <code>DELETE</code> chính record đó trong cùng transaction. Nghe ngược đời, nhưng với PostgreSQL, cả INSERT lẫn DELETE đều được ghi vào WAL — Debezium vẫn thấy INSERT event. Bảng vật lý luôn gần như rỗng. Nhược điểm: sinh dead tuple, cần autovacuum khỏe; và bạn mất khả năng đối soát lại bảng outbox khi cần điều tra.</li><li><strong>Batch delete theo thời gian</strong>: job đêm xóa record cũ hơn N ngày (N = 3–7, đủ để đối soát và re-consume khi có sự cố). Nhớ delete theo batch nhỏ (10k–50k rows/lần) để tránh giữ lock và bloat WAL đột biến.</li><li><strong>Partition theo ngày + DROP PARTITION</strong>: sạch nhất về mặt vacuum (DROP không sinh dead tuple), nhưng lưu ý với PostgreSQL logical replication, thao tác quản lý partition cần được kiểm tra kỹ với version Debezium bạn dùng.</li></ol><p>Sai lầm tôi từng thấy: team để bảng outbox chạy 6 tháng không cleanup, autovacuum không theo kịp, <code>INSERT</code> p99 từ 2ms lên 40ms, kéo toàn bộ API checkout chậm theo. Outbox không cleanup là nợ kỹ thuật có lãi suất kép.</p><h3 id=1015-cdc-thuần-vs-outbox-khi-nào-dùng-cái-nào>10.1.5. CDC thuần vs Outbox: khi nào dùng cái nào<a hidden class=anchor aria-hidden=true href=#1015-cdc-thuần-vs-outbox-khi-nào-dùng-cái-nào>#</a></h3><p>Đây là quyết định kiến trúc thật sự, và tiêu chí phân định rõ ràng hơn nhiều người nghĩ:</p><table><thead><tr><th>Tiêu chí</th><th>CDC thuần trên bảng nghiệp vụ</th><th>Outbox + CDC</th></tr></thead><tbody><tr><td>Bản chất event</td><td><strong>Data change event</strong> — &ldquo;row này đã đổi&rdquo;</td><td><strong>Domain event</strong> — &ldquo;nghiệp vụ này đã xảy ra&rdquo;</td></tr><tr><td>Contract với consumer</td><td>Schema bảng nội bộ bị lộ ra ngoài</td><td>Payload thiết kế có chủ đích, versioned</td></tr><tr><td>Khi refactor schema DB</td><td>Vỡ mọi consumer — coupling chặt</td><td>Consumer không ảnh hưởng nếu contract giữ nguyên</td></tr><tr><td>Business intent</td><td>Mất — chỉ thấy state trước/sau</td><td>Giữ nguyên — <code>OrderCancelledByCustomer</code> vs <code>OrderCancelledByFraudCheck</code></td></tr><tr><td>Effort phía producer</td><td>Zero — không sửa code ứng dụng</td><td>Phải sửa code: mọi nơi ghi data phải ghi kèm outbox</td></tr><tr><td>Phù hợp cho</td><td>Replication, data warehouse, cache/search sync, audit — các bài toán <strong>data integration</strong></td><td>Giao tiếp giữa các bounded context, microservices — các bài toán <strong>application integration</strong></td></tr></tbody></table><p>Quy tắc tôi dùng: <strong>nếu consumer quan tâm đến &ldquo;dữ liệu&rdquo; — dùng CDC thuần; nếu consumer quan tâm đến &ldquo;sự kiện nghiệp vụ&rdquo; — dùng Outbox.</strong> Đồng bộ bảng <code>products</code> sang Elasticsearch? CDC thuần, vì bạn thực sự cần data. Thông báo cho Shipping Service rằng đơn hàng đã thanh toán? Outbox, vì Shipping không nên biết (và không nên vỡ khi bạn đổi) cấu trúc bảng <code>orders</code>.</p><p>Một ví dụ cụ thể về cái giá của việc chọn sai: một team dùng CDC thuần trên bảng <code>orders</code> làm &ldquo;event&rdquo; cho 5 team khác consume. Sáu tháng sau họ cần tách cột <code>status</code> thành hai cột <code>fulfillment_status</code> và <code>payment_status</code>. Một thay đổi schema nội bộ hoàn toàn hợp lý — nhưng phải phối hợp release với 5 team, mất 2 tháng. Đó chính là <strong>coupling qua schema</strong>, thứ mà microservices sinh ra để tránh.</p><h2 id=102-event-sourcing-vs-cdc--đừng-nhầm-lẫn>10.2. Event Sourcing vs CDC — đừng nhầm lẫn<a hidden class=anchor aria-hidden=true href=#102-event-sourcing-vs-cdc--đừng-nhầm-lẫn>#</a></h2><p>Tôi nghe câu này thường xuyên: &ldquo;Bọn em dùng Debezium nên coi như đã có Event Sourcing rồi.&rdquo; Không. Đây là hiểu nhầm về <em>bản chất</em>, không phải về công cụ.</p><h3 id=1021-khác-biệt-bản-chất-đâu-là-source-of-truth>10.2.1. Khác biệt bản chất: đâu là source of truth<a hidden class=anchor aria-hidden=true href=#1021-khác-biệt-bản-chất-đâu-là-source-of-truth>#</a></h3><ul><li><strong>Event Sourcing</strong>: event là <strong>source of truth</strong>. State hiện tại là <em>dẫn xuất</em> — được tính bằng cách replay chuỗi event (<code>AccountOpened</code>, <code>MoneyDeposited</code>, <code>MoneyWithdrawn</code>). Ứng dụng ghi event trước tiên và duy nhất; muốn biết số dư, fold qua event stream (hoặc đọc snapshot — cũng là dẫn xuất).</li><li><strong>CDC</strong>: state trong database là <strong>source of truth</strong>. Event là <em>dẫn xuất</em> — được sinh ra từ việc quan sát state thay đổi. Ứng dụng ghi state; event chỉ là cái bóng của state.</li></ul><p>Chiều mũi tên ngược nhau hoàn toàn:</p><pre tabindex=0><code>Event Sourcing:  Event (gốc)  ──replay──▶  State (dẫn xuất)
+CDC:             State (gốc)  ──capture──▶  Event (dẫn xuất)</code></pre><p>Hệ quả thực tế của khác biệt này:</p><ol><li><strong>CDC event thiếu intent.</strong> UPDATE <code>status</code> từ <code>ACTIVE</code> sang <code>SUSPENDED</code> — vì khách yêu cầu, vì gian lận, hay vì lỗi vận hành sửa tay? CDC không biết. Event Sourcing biết, vì event <em>là</em> intent.</li><li><strong>CDC không capture thay đổi &ldquo;trung gian&rdquo; trong transaction</strong> theo cách bạn nghĩ — và ngược lại, nhiều UPDATE liên tiếp cùng một row vẫn sinh nhiều event, nhưng bạn không thể tái tạo <em>lý do</em> của từng bước.</li><li><strong>Replay có ý nghĩa khác nhau.</strong> Replay event-sourced stream tái tạo chính xác business history. Replay CDC topic chỉ tái tạo chuỗi state — đủ để rebuild read model, không đủ để trả lời câu hỏi nghiệp vụ như &ldquo;bao nhiêu đơn bị hủy bởi fraud check trong Q1&rdquo;.</li><li><strong>Event Sourcing là quyết định thiết kế ứng dụng</strong> (ảnh hưởng cách viết mọi dòng code domain); <strong>CDC là quyết định hạ tầng</strong> (ứng dụng không cần biết nó tồn tại).</li></ol><h3 id=1022-cdc-là-con-đường-tiến-hóa-dần-sang-eda>10.2.2. CDC là con đường tiến hóa dần sang EDA<a hidden class=anchor aria-hidden=true href=#1022-cdc-là-con-đường-tiến-hóa-dần-sang-eda>#</a></h3><p>Nói vậy không có nghĩa CDC &ldquo;thua&rdquo; Event Sourcing — chúng giải bài toán khác nhau, và CDC có một ưu thế chiến lược mà tôi đánh giá rất cao: <strong>nó cho phép hệ thống legacy tiến hóa sang event-driven architecture mà không cần rewrite</strong>.</p><p>Lộ trình tôi đã áp dụng nhiều lần:</p><ol><li><strong>Giai đoạn 1</strong>: Bật CDC trên monolith database. Downstream mới (search, analytics, cache) consume change event. Monolith không đổi một dòng code. Team học vận hành Kafka/Connect trên luồng ít rủi ro.</li><li><strong>Giai đoạn 2</strong>: Với các luồng nghiệp vụ quan trọng, thêm Outbox vào monolith — bắt đầu phát domain event có chủ đích. CDC infrastructure tái sử dụng nguyên vẹn.</li><li><strong>Giai đoạn 3</strong>: Tách service mới, consume domain event từ outbox topic. Strangler pattern trên nền event.</li><li><strong>Giai đoạn 4</strong> (nếu thật sự cần): một vài bounded context có yêu cầu audit/temporal mạnh chuyển hẳn sang Event Sourcing. Đa số context sẽ không bao giờ cần bước này — và đó là điều tốt.</li></ol><p>Event Sourcing toàn hệ thống là khoản đầu tư rất đắt (event versioning, snapshot, rebuild, tư duy team). CDC cho bạn 70% lợi ích event-driven với 20% chi phí. Đừng để sự &ldquo;thuần khiết kiến trúc&rdquo; quyết định thay ROI.</p><h2 id=103-cqrs-và-materialized-view--cdc-là-cỗ-máy-xây-read-model>10.3. CQRS và Materialized View — CDC là cỗ máy xây read model<a hidden class=anchor aria-hidden=true href=#103-cqrs-và-materialized-view--cdc-là-cỗ-máy-xây-read-model>#</a></h2><h3 id=1031-cqrs-không-cần-phải-to-tát>10.3.1. CQRS không cần phải &ldquo;to tát&rdquo;<a hidden class=anchor aria-hidden=true href=#1031-cqrs-không-cần-phải-to-tát>#</a></h3><p>CQRS ở dạng thực dụng nhất: <strong>write model tối ưu cho transaction, read model tối ưu cho query, hai model được đồng bộ bất đồng bộ</strong>. Không bắt buộc Event Sourcing, không bắt buộc tách service. Và CDC là cơ chế đồng bộ tự nhiên nhất: write model là các bảng normalized trong PostgreSQL; CDC stream mọi thay đổi; một consumer (hoặc stream processor) biến đổi và ghi vào read store denormalized.</p><p>Vì sao CDC thay vì để ứng dụng tự ghi read model? Vì (a) tránh dual write — như mục 10.1; (b) read model có thể <em>rebuild từ đầu</em> bằng snapshot + replay mà không đụng vào code ứng dụng; (c) thêm read model mới (ví dụ ngày mai cần thêm một view trên ClickHouse) không cần release lại write service.</p><h3 id=1032-ví-dụ-cụ-thể-order--customer-join-thành-view>10.3.2. Ví dụ cụ thể: order + customer join thành view<a hidden class=anchor aria-hidden=true href=#1032-ví-dụ-cụ-thể-order--customer-join-thành-view>#</a></h3><p>Bài toán kinh điển: trang quản trị cần query &ldquo;danh sách đơn hàng kèm tên khách, tier khách, tổng chi tiêu — filter theo 10 tiêu chí, sort tùy ý&rdquo;. Query này JOIN 3–4 bảng trên OLTP là tự sát ở quy mô lớn. Giải pháp: materialized view trên ClickHouse (analytics) hoặc Elasticsearch (search/filter).</p><pre class=mermaid>graph LR
     A[&#34;PostgreSQL bảng orders&#34;] --&gt; B[&#34;Debezium&#34;]
     A2[&#34;PostgreSQL bảng customers&#34;] --&gt; B
     B --&gt; C[&#34;Kafka topic orders&#34;]
@@ -305,319 +69,9 @@ CDC:             State (gốc)  ──capture──▶  Event (dẫn xuất)</co
     F --&gt; G[&#34;ClickHouse bảng order_view&#34;]
     F --&gt; H[&#34;Elasticsearch index order_search&#34;]
     G --&gt; I[&#34;Dashboard admin&#34;]
-    H --&gt; I</pre><p>Điểm kỹ thuật then chốt: <strong>join hai CDC stream là stateful</strong>. Khi event <code>orders</code> đến, dữ liệu <code>customers</code> tương ứng phải đã có sẵn ở đâu đó. Ba cách làm, theo mức độ phức tạp tăng dần:</p>
-<ol>
-<li><strong>Lookup trực tiếp khi consume</strong>: consumer nhận order event, query bảng customer (hoặc cache) để enrich. Đơn giản, nhưng tạo tải đọc lên DB và có race condition nếu customer chưa sync.</li>
-<li><strong>Kafka Streams KTable-KTable join / Flink temporal join</strong>: materialize topic <code>customers</code> thành state store (RocksDB), join local. Đúng đắn hơn, nhưng bạn phải vận hành state — rebalance, restore, disk.</li>
-<li><strong>Denormalize tại sink</strong>: ghi hai bảng riêng vào ClickHouse, JOIN lúc query (ClickHouse chịu JOIN tốt với dimension nhỏ) hoặc dùng dictionary cho bảng <code>customers</code>. Thực tế đây là cách tôi khuyên dùng đầu tiên vì ít moving part nhất.</li>
-</ol>
-<p>Với Elasticsearch, lưu ý mô hình document: mỗi order là một document chứa sẵn <code>customer_name</code>, <code>customer_tier</code> (denormalized). Khi customer đổi tên — hiếm — chấp nhận update-by-query bất đồng bộ, hoặc chấp nhận staleness cho các field ít quan trọng. Đánh đổi này cần được nêu rõ với product owner, đừng tự quyết trong im lặng.</p>
-<h3 id="1033-search-index-cache-analytics-audit--bốn-ứng-dụng-kinh-điển">10.3.3. Search index, cache, analytics, audit — bốn ứng dụng kinh điển<a hidden class="anchor" aria-hidden="true" href="#1033-search-index-cache-analytics-audit--bốn-ứng-dụng-kinh-điển">#</a></h3>
-<p><strong>Search Index synchronization.</strong> Bài toán: dữ liệu trong DB, tìm kiếm trong Elasticsearch/OpenSearch. CDC bảo đảm mọi thay đổi — kể cả từ script vận hành, migration, service khác ghi thẳng DB — đều sync sang index, điều mà application-level sync không làm được. Delete cũng được xử lý tự nhiên qua tombstone/delete event. Điều cần chấp nhận: search index trễ hơn DB vài trăm ms tới vài giây; nghiệp vụ &ldquo;tạo xong tìm thấy ngay&rdquo; cần xử lý riêng (xem 10.4).</p>
-<p><strong>Cache Synchronization.</strong> Hai chiến lược:</p>
-<ul>
-<li><em>Invalidate</em>: nhận CDC event → DELETE key trong Redis. Read tiếp theo là cache miss, đọc DB, nạp lại. An toàn hơn vì cache luôn được nạp từ nguồn mới nhất.</li>
-<li><em>Update</em>: nhận CDC event → SET giá trị mới vào Redis. Tiết kiệm cache miss, nhưng mở ra <strong>race condition kinh điển</strong>: CDC consumer SET giá trị từ event tại thời điểm T1; đồng thời một request cache-miss đọc DB tại T2 &gt; T1 (giá trị mới hơn) nhưng SET vào Redis <em>sau</em> consumer — không sao; tệ hơn là chiều ngược lại: request đọc DB ra giá trị cũ tại T0, bị GC pause, SET vào cache <em>sau khi</em> CDC consumer đã SET giá trị mới — cache giữ giá trị cũ <strong>vô thời hạn</strong>.</li>
-</ul>
-<p>Phòng thủ: (a) version check — mỗi value kèm version/updated_at, SET chỉ khi version mới hơn (Redis Lua script để so sánh atomic); (b) luôn đặt TTL làm lưới an toàn cuối — kể cả khi logic sai, dữ liệu bẩn chỉ sống tối đa TTL; (c) nếu không muốn phức tạp, chọn invalidate — chậm hơn một cache miss nhưng khó sai hơn nhiều. Nguyên tắc của tôi: <strong>update-based cache sync chỉ khi đã có version check; còn lại dùng invalidate + TTL.</strong></p>
-<p><strong>Analytics Pipeline.</strong> CDC → Kafka → warehouse/lakehouse cho phép dashboard &ldquo;gần real-time&rdquo; thay vì T+1. Chi tiết ở chương 12; ở đây chỉ ghi nhận vị trí của nó trong bức tranh: đây là ứng dụng CDC có ROI dễ chứng minh nhất, thường là dự án CDC đầu tiên nên làm.</p>
-<p><strong>Audit Log từ CDC.</strong> Ưu điểm thật sự: <em>không xâm lấn code</em> — mọi thay đổi, kể cả UPDATE tay của DBA lúc 2 giờ sáng, đều bị ghi lại; không lệ thuộc developer nhớ gọi <code>auditService.log()</code>. Nhưng hạn chế phải nói thẳng: CDC event <strong>không có business context</strong> (thao tác này thuộc use case nào?) và thường <strong>không biết ai thực hiện</strong> — WAL không chứa application user, chỉ có DB user (thường là một connection pool user chung). Khắc phục một phần: ghi <code>app_user_id</code>, <code>request_id</code> vào cột riêng hoặc dùng cơ chế transaction metadata (ví dụ ghi một record &ldquo;audit context&rdquo; trong cùng transaction), nhưng như vậy lại xâm lấn code — mất luôn ưu điểm ban đầu. Kết luận thực dụng: CDC audit tốt cho <em>forensic data trail</em> (cái gì đổi, khi nào, từ giá trị nào sang giá trị nào); nếu compliance đòi <em>ai và tại sao</em>, bạn cần audit ở tầng application, hoặc kết hợp cả hai.</p>
-<h2 id="104-consistency-nói-thẳng-về-eventual-và-read-your-own-writes">10.4. Consistency: nói thẳng về eventual và read-your-own-writes<a hidden class="anchor" aria-hidden="true" href="#104-consistency-nói-thẳng-về-eventual-và-read-your-own-writes">#</a></h2>
-<h3 id="1041-consistency-của-từng-pattern">10.4.1. Consistency của từng pattern<a hidden class="anchor" aria-hidden="true" href="#1041-consistency-của-từng-pattern">#</a></h3>
-<p>Mọi pattern trong chương này đều có chung một dòng chữ in nhỏ: <strong>downstream là eventually consistent</strong>. Cụ thể:</p>
-<table>
-  <thead>
-      <tr>
-          <th>Pattern</th>
-          <th>Điểm strong consistency</th>
-          <th>Điểm eventual consistency</th>
-          <th>Cửa sổ trễ điển hình (minh họa)</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Outbox + CDC</td>
-          <td>Business data + outbox record (cùng transaction)</td>
-          <td>Consumer nhận event</td>
-          <td>100ms – vài giây</td>
-      </tr>
-      <tr>
-          <td>CQRS read model</td>
-          <td>Write model</td>
-          <td>Read model</td>
-          <td>200ms – vài giây; phút nếu backlog</td>
-      </tr>
-      <tr>
-          <td>Cache sync</td>
-          <td>DB</td>
-          <td>Redis</td>
-          <td>50ms – 1s</td>
-      </tr>
-      <tr>
-          <td>Search sync</td>
-          <td>DB</td>
-          <td>Elasticsearch</td>
-          <td>1s – 10s (do refresh interval)</td>
-      </tr>
-      <tr>
-          <td>Analytics</td>
-          <td>OLTP</td>
-          <td>Warehouse</td>
-          <td>giây – phút (micro-batch)</td>
-      </tr>
-  </tbody>
-</table>
-<p>Điều quan trọng không phải con số, mà là: <strong>cửa sổ trễ không có cận trên bảo đảm</strong>. Khi connector chết hoặc consumer backlog, &ldquo;vài trăm ms&rdquo; trở thành vài giờ. Kiến trúc của bạn phải <em>đúng</em> (không chỉ <em>chấp nhận được</em>) khi độ trễ là 1 giờ — nếu không, bạn đang xây trên cát. Đây là câu hỏi tôi luôn hỏi khi review design: &ldquo;Nếu read model trễ 1 giờ, nghiệp vụ nào vỡ? Vỡ kiểu khó chịu hay kiểu mất tiền?&rdquo;</p>
-<h3 id="1042-read-your-own-writes-problem">10.4.2. Read-your-own-writes problem<a hidden class="anchor" aria-hidden="true" href="#1042-read-your-own-writes-problem">#</a></h3>
-<p>Kịch bản: người dùng sửa địa chỉ giao hàng, bấm Lưu, trang reload — và thấy địa chỉ <em>cũ</em>, vì trang đọc từ read model chưa kịp sync. Với người dùng, đây không phải &ldquo;eventual consistency&rdquo; — đây là <strong>bug</strong>. Đây là vấn đề UX số một của mọi kiến trúc CQRS/CDC, và phải được thiết kế từ đầu chứ không vá sau.</p>
-<p>Các giải pháp, theo thứ tự nên cân nhắc:</p>
-<ol>
-<li><strong>Đọc write model cho chính resource vừa ghi</strong> (read-after-write routing): sau khi user ghi thành công, các request đọc <em>của chính user đó, cho chính resource đó</em> trong N giây tiếp theo được route về primary DB. Đơn giản nhất nếu API gateway/service phân biệt được. Đánh đổi: thêm logic routing, và write model gánh thêm read.</li>
-<li><strong>Trả về state trong write response</strong>: API ghi trả luôn representation mới; client dùng nó cập nhật UI (optimistic UI). Không đụng backend read path. Đánh đổi: chỉ giải quyết được màn hình hiện tại, không giải quyết user mở tab khác.</li>
-<li><strong>Version-based read</strong>: write trả về <code>version</code> (hoặc LSN/offset); client gửi kèm <code>min_version</code> khi đọc; read model nếu chưa đạt version thì chờ hoặc fallback về primary. Đúng đắn nhất về mặt lý thuyết, phức tạp nhất về triển khai — chỉ đáng khi có nhiều read model và yêu cầu nghiêm ngặt.</li>
-<li><strong>Session sticky vào cache tạm</strong>: ghi xong, đặt bản mới vào Redis theo session; read ưu tiên Redis session cache. Biến thể của cách 1.</li>
-<li><strong>Chấp nhận và thiết kế UX phù hợp</strong>: hiển thị &ldquo;Đang cập nhật…&rdquo;, disable edit trong vài giây. Rẻ nhất, và với nhiều nghiệp vụ (analytics, search) là hoàn toàn đủ.</li>
-</ol>
-<p>Lưu ý tinh tế: read-your-own-writes chỉ là một trong họ vấn đề session consistency — còn có <em>monotonic reads</em> (user thấy dữ liệu mới rồi lại thấy dữ liệu cũ do hai request đập vào hai replica của read model có độ trễ khác nhau). Nếu read model có nhiều replica, hãy sticky session theo replica hoặc dùng version-based read.</p>
-<h3 id="1043-điều-cdc-không-bao-giờ-cho-bạn">10.4.3. Điều CDC không bao giờ cho bạn<a hidden class="anchor" aria-hidden="true" href="#1043-điều-cdc-không-bao-giờ-cho-bạn">#</a></h3>
-<p>Chốt lại phần consistency bằng ba giới hạn cứng, để không ai kỳ vọng nhầm:</p>
-<ol>
-<li><strong>CDC không cho cross-system transaction.</strong> Không có cách nào để &ldquo;DB commit và Elasticsearch index và Redis update&rdquo; xảy ra atomic. Nếu nghiệp vụ đòi điều đó, nghiệp vụ phải được thiết kế lại (saga, compensation) hoặc dữ liệu phải ở cùng một chỗ.</li>
-<li><strong>CDC không cho exactly-once end-to-end miễn phí.</strong> Pipeline là at-least-once; exactly-once <em>effect</em> phải do consumer idempotent tự kiến tạo (chương 11 và 13).</li>
-<li><strong>CDC không thay thế thiết kế contract.</strong> Event từ CDC thuần là schema nội bộ — dùng nó làm public contract là anti-pattern (chương 13).</li>
-</ol>
-<h2 id="tóm-tắt-chương">Tóm tắt chương<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt-chương">#</a></h2>
-<ul>
-<li><strong>Dual write</strong> (ghi DB + publish Kafka trong code) là lỗi kiến trúc, không phải lỗi implementation — không retry nào sửa được. <strong>Outbox pattern</strong> giải quyết tận gốc: ghi business data và event record trong cùng transaction ACID, để CDC đảm nhận delivery. Debezium EventRouter biến outbox record thành domain event đúng nghĩa. Cái giá: sửa code producer + cleanup bảng outbox nghiêm túc.</li>
-<li><strong>CDC thuần</strong> phát <em>data change event</em> (lộ schema nội bộ, zero effort) — phù hợp data integration. <strong>Outbox</strong> phát <em>domain event</em> (contract chủ đích, giữ business intent) — phù hợp giao tiếp giữa các service. Chọn theo việc consumer cần &ldquo;dữ liệu&rdquo; hay cần &ldquo;sự kiện nghiệp vụ&rdquo;.</li>
-<li><strong>CDC không phải Event Sourcing</strong>: chiều mũi tên ngược nhau — Event Sourcing coi event là source of truth, CDC coi event là dẫn xuất của state. Nhưng CDC là con đường tiến hóa dần sang EDA cho hệ thống legacy mà không cần rewrite.</li>
-<li><strong>CQRS + CDC</strong>: CDC là cỗ máy xây và rebuild read model (ClickHouse, Elasticsearch) mà không đụng code write service. Join stream là stateful — ưu tiên denormalize tại sink trước khi với tới Kafka Streams/Flink.</li>
-<li><strong>Cache sync</strong>: mặc định dùng invalidate + TTL; chỉ dùng update khi có version check, vì race condition giữa cache update và read có thể để dữ liệu bẩn sống vô thời hạn.</li>
-<li>Mọi downstream của CDC là <strong>eventually consistent, không có cận trên độ trễ</strong>. Thiết kế phải trả lời được &ldquo;nghiệp vụ nào vỡ nếu trễ 1 giờ&rdquo;, và <strong>read-your-own-writes</strong> phải được xử lý chủ động (route về write model, trả state trong response, hoặc version-based read).</li>
-</ul>
-<h2 id="đọc-tiếp">Đọc tiếp<a hidden class="anchor" aria-hidden="true" href="#đọc-tiếp">#</a></h2>
-<p>Chương tiếp theo — <strong>Chương 11: Production Failure Cases</strong> — là chương quan trọng nhất của toàn bộ tài liệu: 20 sự cố production điển hình của pipeline CDC, từ replication slot làm đầy disk đến split-brain connector, mỗi case đi kèm cách điều tra bằng lệnh/query cụ thể, metric cần theo dõi và alert nên cấu hình. Nếu bạn chỉ đọc một chương trước khi vận hành CDC, hãy đọc chương đó.</p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:1313/tags/cdc/">Cdc</a></li>
-      <li><a href="http://localhost:1313/tags/kafka/">Kafka</a></li>
-      <li><a href="http://localhost:1313/tags/database/">Database</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:1313/series/cdc/09-event-pipeline/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse</span>
-  </a>
-  <a class="next" href="http://localhost:1313/series/cdc/11-production-failure-cases/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Chương 11: Production Failure Cases</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on x"
-            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f&amp;hashtags=backend%2ccdc%2ckafka%2cdatabase">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;summary=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f&title=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on whatsapp"
-            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on telegram"
-            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+    H --&gt; I</pre><p>Điểm kỹ thuật then chốt: <strong>join hai CDC stream là stateful</strong>. Khi event <code>orders</code> đến, dữ liệu <code>customers</code> tương ứng phải đã có sẵn ở đâu đó. Ba cách làm, theo mức độ phức tạp tăng dần:</p><ol><li><strong>Lookup trực tiếp khi consume</strong>: consumer nhận order event, query bảng customer (hoặc cache) để enrich. Đơn giản, nhưng tạo tải đọc lên DB và có race condition nếu customer chưa sync.</li><li><strong>Kafka Streams KTable-KTable join / Flink temporal join</strong>: materialize topic <code>customers</code> thành state store (RocksDB), join local. Đúng đắn hơn, nhưng bạn phải vận hành state — rebalance, restore, disk.</li><li><strong>Denormalize tại sink</strong>: ghi hai bảng riêng vào ClickHouse, JOIN lúc query (ClickHouse chịu JOIN tốt với dimension nhỏ) hoặc dùng dictionary cho bảng <code>customers</code>. Thực tế đây là cách tôi khuyên dùng đầu tiên vì ít moving part nhất.</li></ol><p>Với Elasticsearch, lưu ý mô hình document: mỗi order là một document chứa sẵn <code>customer_name</code>, <code>customer_tier</code> (denormalized). Khi customer đổi tên — hiếm — chấp nhận update-by-query bất đồng bộ, hoặc chấp nhận staleness cho các field ít quan trọng. Đánh đổi này cần được nêu rõ với product owner, đừng tự quyết trong im lặng.</p><h3 id=1033-search-index-cache-analytics-audit--bốn-ứng-dụng-kinh-điển>10.3.3. Search index, cache, analytics, audit — bốn ứng dụng kinh điển<a hidden class=anchor aria-hidden=true href=#1033-search-index-cache-analytics-audit--bốn-ứng-dụng-kinh-điển>#</a></h3><p><strong>Search Index synchronization.</strong> Bài toán: dữ liệu trong DB, tìm kiếm trong Elasticsearch/OpenSearch. CDC bảo đảm mọi thay đổi — kể cả từ script vận hành, migration, service khác ghi thẳng DB — đều sync sang index, điều mà application-level sync không làm được. Delete cũng được xử lý tự nhiên qua tombstone/delete event. Điều cần chấp nhận: search index trễ hơn DB vài trăm ms tới vài giây; nghiệp vụ &ldquo;tạo xong tìm thấy ngay&rdquo; cần xử lý riêng (xem 10.4).</p><p><strong>Cache Synchronization.</strong> Hai chiến lược:</p><ul><li><em>Invalidate</em>: nhận CDC event → DELETE key trong Redis. Read tiếp theo là cache miss, đọc DB, nạp lại. An toàn hơn vì cache luôn được nạp từ nguồn mới nhất.</li><li><em>Update</em>: nhận CDC event → SET giá trị mới vào Redis. Tiết kiệm cache miss, nhưng mở ra <strong>race condition kinh điển</strong>: CDC consumer SET giá trị từ event tại thời điểm T1; đồng thời một request cache-miss đọc DB tại T2 > T1 (giá trị mới hơn) nhưng SET vào Redis <em>sau</em> consumer — không sao; tệ hơn là chiều ngược lại: request đọc DB ra giá trị cũ tại T0, bị GC pause, SET vào cache <em>sau khi</em> CDC consumer đã SET giá trị mới — cache giữ giá trị cũ <strong>vô thời hạn</strong>.</li></ul><p>Phòng thủ: (a) version check — mỗi value kèm version/updated_at, SET chỉ khi version mới hơn (Redis Lua script để so sánh atomic); (b) luôn đặt TTL làm lưới an toàn cuối — kể cả khi logic sai, dữ liệu bẩn chỉ sống tối đa TTL; (c) nếu không muốn phức tạp, chọn invalidate — chậm hơn một cache miss nhưng khó sai hơn nhiều. Nguyên tắc của tôi: <strong>update-based cache sync chỉ khi đã có version check; còn lại dùng invalidate + TTL.</strong></p><p><strong>Analytics Pipeline.</strong> CDC → Kafka → warehouse/lakehouse cho phép dashboard &ldquo;gần real-time&rdquo; thay vì T+1. Chi tiết ở chương 12; ở đây chỉ ghi nhận vị trí của nó trong bức tranh: đây là ứng dụng CDC có ROI dễ chứng minh nhất, thường là dự án CDC đầu tiên nên làm.</p><p><strong>Audit Log từ CDC.</strong> Ưu điểm thật sự: <em>không xâm lấn code</em> — mọi thay đổi, kể cả UPDATE tay của DBA lúc 2 giờ sáng, đều bị ghi lại; không lệ thuộc developer nhớ gọi <code>auditService.log()</code>. Nhưng hạn chế phải nói thẳng: CDC event <strong>không có business context</strong> (thao tác này thuộc use case nào?) và thường <strong>không biết ai thực hiện</strong> — WAL không chứa application user, chỉ có DB user (thường là một connection pool user chung). Khắc phục một phần: ghi <code>app_user_id</code>, <code>request_id</code> vào cột riêng hoặc dùng cơ chế transaction metadata (ví dụ ghi một record &ldquo;audit context&rdquo; trong cùng transaction), nhưng như vậy lại xâm lấn code — mất luôn ưu điểm ban đầu. Kết luận thực dụng: CDC audit tốt cho <em>forensic data trail</em> (cái gì đổi, khi nào, từ giá trị nào sang giá trị nào); nếu compliance đòi <em>ai và tại sao</em>, bạn cần audit ở tầng application, hoặc kết hợp cả hai.</p><h2 id=104-consistency-nói-thẳng-về-eventual-và-read-your-own-writes>10.4. Consistency: nói thẳng về eventual và read-your-own-writes<a hidden class=anchor aria-hidden=true href=#104-consistency-nói-thẳng-về-eventual-và-read-your-own-writes>#</a></h2><h3 id=1041-consistency-của-từng-pattern>10.4.1. Consistency của từng pattern<a hidden class=anchor aria-hidden=true href=#1041-consistency-của-từng-pattern>#</a></h3><p>Mọi pattern trong chương này đều có chung một dòng chữ in nhỏ: <strong>downstream là eventually consistent</strong>. Cụ thể:</p><table><thead><tr><th>Pattern</th><th>Điểm strong consistency</th><th>Điểm eventual consistency</th><th>Cửa sổ trễ điển hình (minh họa)</th></tr></thead><tbody><tr><td>Outbox + CDC</td><td>Business data + outbox record (cùng transaction)</td><td>Consumer nhận event</td><td>100ms – vài giây</td></tr><tr><td>CQRS read model</td><td>Write model</td><td>Read model</td><td>200ms – vài giây; phút nếu backlog</td></tr><tr><td>Cache sync</td><td>DB</td><td>Redis</td><td>50ms – 1s</td></tr><tr><td>Search sync</td><td>DB</td><td>Elasticsearch</td><td>1s – 10s (do refresh interval)</td></tr><tr><td>Analytics</td><td>OLTP</td><td>Warehouse</td><td>giây – phút (micro-batch)</td></tr></tbody></table><p>Điều quan trọng không phải con số, mà là: <strong>cửa sổ trễ không có cận trên bảo đảm</strong>. Khi connector chết hoặc consumer backlog, &ldquo;vài trăm ms&rdquo; trở thành vài giờ. Kiến trúc của bạn phải <em>đúng</em> (không chỉ <em>chấp nhận được</em>) khi độ trễ là 1 giờ — nếu không, bạn đang xây trên cát. Đây là câu hỏi tôi luôn hỏi khi review design: &ldquo;Nếu read model trễ 1 giờ, nghiệp vụ nào vỡ? Vỡ kiểu khó chịu hay kiểu mất tiền?&rdquo;</p><h3 id=1042-read-your-own-writes-problem>10.4.2. Read-your-own-writes problem<a hidden class=anchor aria-hidden=true href=#1042-read-your-own-writes-problem>#</a></h3><p>Kịch bản: người dùng sửa địa chỉ giao hàng, bấm Lưu, trang reload — và thấy địa chỉ <em>cũ</em>, vì trang đọc từ read model chưa kịp sync. Với người dùng, đây không phải &ldquo;eventual consistency&rdquo; — đây là <strong>bug</strong>. Đây là vấn đề UX số một của mọi kiến trúc CQRS/CDC, và phải được thiết kế từ đầu chứ không vá sau.</p><p>Các giải pháp, theo thứ tự nên cân nhắc:</p><ol><li><strong>Đọc write model cho chính resource vừa ghi</strong> (read-after-write routing): sau khi user ghi thành công, các request đọc <em>của chính user đó, cho chính resource đó</em> trong N giây tiếp theo được route về primary DB. Đơn giản nhất nếu API gateway/service phân biệt được. Đánh đổi: thêm logic routing, và write model gánh thêm read.</li><li><strong>Trả về state trong write response</strong>: API ghi trả luôn representation mới; client dùng nó cập nhật UI (optimistic UI). Không đụng backend read path. Đánh đổi: chỉ giải quyết được màn hình hiện tại, không giải quyết user mở tab khác.</li><li><strong>Version-based read</strong>: write trả về <code>version</code> (hoặc LSN/offset); client gửi kèm <code>min_version</code> khi đọc; read model nếu chưa đạt version thì chờ hoặc fallback về primary. Đúng đắn nhất về mặt lý thuyết, phức tạp nhất về triển khai — chỉ đáng khi có nhiều read model và yêu cầu nghiêm ngặt.</li><li><strong>Session sticky vào cache tạm</strong>: ghi xong, đặt bản mới vào Redis theo session; read ưu tiên Redis session cache. Biến thể của cách 1.</li><li><strong>Chấp nhận và thiết kế UX phù hợp</strong>: hiển thị &ldquo;Đang cập nhật…&rdquo;, disable edit trong vài giây. Rẻ nhất, và với nhiều nghiệp vụ (analytics, search) là hoàn toàn đủ.</li></ol><p>Lưu ý tinh tế: read-your-own-writes chỉ là một trong họ vấn đề session consistency — còn có <em>monotonic reads</em> (user thấy dữ liệu mới rồi lại thấy dữ liệu cũ do hai request đập vào hai replica của read model có độ trễ khác nhau). Nếu read model có nhiều replica, hãy sticky session theo replica hoặc dùng version-based read.</p><h3 id=1043-điều-cdc-không-bao-giờ-cho-bạn>10.4.3. Điều CDC không bao giờ cho bạn<a hidden class=anchor aria-hidden=true href=#1043-điều-cdc-không-bao-giờ-cho-bạn>#</a></h3><p>Chốt lại phần consistency bằng ba giới hạn cứng, để không ai kỳ vọng nhầm:</p><ol><li><strong>CDC không cho cross-system transaction.</strong> Không có cách nào để &ldquo;DB commit và Elasticsearch index và Redis update&rdquo; xảy ra atomic. Nếu nghiệp vụ đòi điều đó, nghiệp vụ phải được thiết kế lại (saga, compensation) hoặc dữ liệu phải ở cùng một chỗ.</li><li><strong>CDC không cho exactly-once end-to-end miễn phí.</strong> Pipeline là at-least-once; exactly-once <em>effect</em> phải do consumer idempotent tự kiến tạo (chương 11 và 13).</li><li><strong>CDC không thay thế thiết kế contract.</strong> Event từ CDC thuần là schema nội bộ — dùng nó làm public contract là anti-pattern (chương 13).</li></ol><h2 id=tóm-tắt-chương>Tóm tắt chương<a hidden class=anchor aria-hidden=true href=#tóm-tắt-chương>#</a></h2><ul><li><strong>Dual write</strong> (ghi DB + publish Kafka trong code) là lỗi kiến trúc, không phải lỗi implementation — không retry nào sửa được. <strong>Outbox pattern</strong> giải quyết tận gốc: ghi business data và event record trong cùng transaction ACID, để CDC đảm nhận delivery. Debezium EventRouter biến outbox record thành domain event đúng nghĩa. Cái giá: sửa code producer + cleanup bảng outbox nghiêm túc.</li><li><strong>CDC thuần</strong> phát <em>data change event</em> (lộ schema nội bộ, zero effort) — phù hợp data integration. <strong>Outbox</strong> phát <em>domain event</em> (contract chủ đích, giữ business intent) — phù hợp giao tiếp giữa các service. Chọn theo việc consumer cần &ldquo;dữ liệu&rdquo; hay cần &ldquo;sự kiện nghiệp vụ&rdquo;.</li><li><strong>CDC không phải Event Sourcing</strong>: chiều mũi tên ngược nhau — Event Sourcing coi event là source of truth, CDC coi event là dẫn xuất của state. Nhưng CDC là con đường tiến hóa dần sang EDA cho hệ thống legacy mà không cần rewrite.</li><li><strong>CQRS + CDC</strong>: CDC là cỗ máy xây và rebuild read model (ClickHouse, Elasticsearch) mà không đụng code write service. Join stream là stateful — ưu tiên denormalize tại sink trước khi với tới Kafka Streams/Flink.</li><li><strong>Cache sync</strong>: mặc định dùng invalidate + TTL; chỉ dùng update khi có version check, vì race condition giữa cache update và read có thể để dữ liệu bẩn sống vô thời hạn.</li><li>Mọi downstream của CDC là <strong>eventually consistent, không có cận trên độ trễ</strong>. Thiết kế phải trả lời được &ldquo;nghiệp vụ nào vỡ nếu trễ 1 giờ&rdquo;, và <strong>read-your-own-writes</strong> phải được xử lý chủ động (route về write model, trả state trong response, hoặc version-based read).</li></ul><h2 id=đọc-tiếp>Đọc tiếp<a hidden class=anchor aria-hidden=true href=#đọc-tiếp>#</a></h2><p>Chương tiếp theo — <strong>Chương 11: Production Failure Cases</strong> — là chương quan trọng nhất của toàn bộ tài liệu: 20 sự cố production điển hình của pipeline CDC, từ replication slot làm đầy disk đến split-brain connector, mỗi case đi kèm cách điều tra bằng lệnh/query cụ thể, metric cần theo dõi và alert nên cấu hình. Nếu bạn chỉ đọc một chương trước khi vận hành CDC, hãy đọc chương đó.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/cdc/>Cdc</a></li><li><a href=https://thanhhv.github.io/tags/kafka/>Kafka</a></li><li><a href=https://thanhhv.github.io/tags/database/>Database</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/cdc/09-event-pipeline/><span class=title>« Prev</span><br><span>Chương 9: Xây dựng Event Pipeline hoàn chỉnh — Kafka đến ClickHouse, Elasticsearch, Data Warehouse</span>
+</a><a class=next href=https://thanhhv.github.io/series/cdc/11-production-failure-cases/><span class=title>Next »</span><br><span>Chương 11: Production Failure Cases</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f&amp;hashtags=backend%2ccdc%2ckafka%2cdatabase"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;summary=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f&title=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10: CDC trong bức tranh kiến trúc — Outbox, Event Sourcing, CQRS on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%3a%20CDC%20trong%20b%e1%bb%a9c%20tranh%20ki%e1%ba%bfn%20tr%c3%bac%20%e2%80%94%20Outbox%2c%20Event%20Sourcing%2c%20CQRS&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fcdc%2f10-cdc-va-kien-truc%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

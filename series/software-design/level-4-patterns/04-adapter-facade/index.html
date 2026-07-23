@@ -1,490 +1,83 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>4.4 — Adapter &amp; Facade: hai cách thuần hóa code không phải của mình | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, software-design, design-patterns">
-<meta name="description" content="Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình | Thanh HV's Blog</title>
+<meta name=keywords content="backend,software-design,design-patterns"><meta name=description content="Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.
 
 Phần A — Adapter
 1. Problem Statement — code evolution
-Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/series/software-design/level-4-patterns/04-adapter-facade/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/series/software-design/level-4-patterns/04-adapter-facade/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
+Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:"><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/software-design/level-4-patterns/04-adapter-facade/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/software-design/level-4-patterns/04-adapter-facade/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/software-design/level-4-patterns/04-adapter-facade/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình"><meta property="og:description" content="Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.
+Phần A — Adapter 1. Problem Statement — code evolution Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:"><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-17T10:40:00+07:00"><meta property="article:modified_time" content="2026-07-17T10:40:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Software-Design"><meta property="article:tag" content="Design-Patterns"><meta name=twitter:card content="summary"><meta name=twitter:title content="4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình"><meta name=twitter:description content="Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.
 
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:1313/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/software-design/">Software Design &amp; Design Patterns</a></div>
-    <h1 class="post-title entry-hint-parent">
-      4.4 — Adapter &amp; Facade: hai cách thuần hóa code không phải của mình
-    </h1>
-    <div class="post-meta"><span title='2026-07-17 10:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min
-
-</div>
-  </header> 
-  <div class="post-content"><p>Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng <strong>ở ranh giới giữa code của bạn và code không phải của bạn</strong> (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi <strong>hình dạng</strong> một interface cho khớp ổ cắm có sẵn; Facade <strong>thu nhỏ</strong> cả một mê cung thành vài cánh cửa.</p>
-<hr>
-<h2 id="phần-a--adapter">Phần A — Adapter<a hidden class="anchor" aria-hidden="true" href="#phần-a--adapter">#</a></h2>
-<h3 id="1-problem-statement--code-evolution">1. Problem Statement — code evolution<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement--code-evolution">#</a></h3>
-<p>Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Notifier</span> <span style="color:#66d9ef">interface</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Send</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">Message</span>) <span style="color:#66d9ef">error</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Mọi thứ chạy ổn: retry wrapper, rate-limit wrapper, registry — cả một hệ sinh thái nội bộ nói chuyện qua <code>Notifier</code>. Rồi công ty ký hợp đồng dùng dịch vụ SMS bên thứ ba, SDK của họ trông thế này:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// SDK bên ngoài — KHÔNG SỬA ĐƯỢC, và tất nhiên không biết Notifier của bạn</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">VNSMSClient</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#75715e">/* ... */</span> }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">VNSMSClient</span>) <span style="color:#a6e22e">PushText</span>(<span style="color:#a6e22e">phone</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">content</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">opts</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">PushOpts</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">PushResult</span>, <span style="color:#66d9ef">error</span>)
-</span></span></code></pre></div><p>Lệch nhau đủ kiểu: tên method khác, không nhận <code>context</code>, tham số rời thay vì struct <code>Message</code>, trả thêm <code>*PushResult</code>. Hai lựa chọn tồi lộ ra ngay: <strong>sửa hệ của mình theo SDK</strong> (N chỗ gọi <code>Send</code> giờ phải biết <code>PushText</code> — đuôi vẫy chó); hoặc <strong>rải code dịch thuật tại từng chỗ gọi</strong> (dịch Message→phone/content lặp khắp nơi — Shotgun Surgery chờ sẵn khi đổi nhà cung cấp).</p>
-<h3 id="2-pattern--một-struct-dịch-thuật-đứng-đúng-một-chỗ">2. Pattern — một struct dịch thuật, đứng đúng một chỗ<a hidden class="anchor" aria-hidden="true" href="#2-pattern--một-struct-dịch-thuật-đứng-đúng-một-chỗ">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ✅ Adapter: type MỚI, của BẠN, khoác interface của bạn, ôm SDK của họ</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">VNSMSAdapter</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">client</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">vnsms</span>.<span style="color:#a6e22e">VNSMSClient</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sender</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">VNSMSAdapter</span>) <span style="color:#a6e22e">Send</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">Message</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// (1) dịch dữ liệu: Message → tham số SDK</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">opts</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">vnsms</span>.<span style="color:#a6e22e">PushOpts</span>{<span style="color:#a6e22e">Sender</span>: <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">sender</span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// (2) dịch NGỮ NGHĨA — phần dễ quên và quan trọng hơn phần dịch tên:</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">deadline</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">Deadline</span>(); <span style="color:#a6e22e">ok</span> {          <span style="color:#75715e">// SDK không biết context</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">TimeoutMs</span> = int(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Until</span>(<span style="color:#a6e22e">deadline</span>).<span style="color:#a6e22e">Milliseconds</span>())
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">res</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">PushText</span>(<span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">Recipient</span>.<span style="color:#a6e22e">Phone</span>, <span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">Body</span>, <span style="color:#a6e22e">opts</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;vnsms: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">Code</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">vnsms</span>.<span style="color:#a6e22e">CodeOK</span> {                    <span style="color:#75715e">// SDK báo lỗi qua result code,</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;vnsms: rejected: %s&#34;</span>, <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">Desc</span>)   <span style="color:#75715e">// hợp đồng của bạn báo qua error</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Toàn bộ tri thức &ldquo;nói chuyện với VNSMS thế nào&rdquo; sống trong <strong>một file</strong>; hệ thống của bạn không biết VNSMS tồn tại; ngày đổi nhà cung cấp — viết adapter mới, đổi một dòng wiring ở main. Đó là toàn bộ pattern: <strong>không có gì thông minh, và đó chính là điểm mạnh</strong> — adapter phải <em>ngu</em> một cách kỷ luật: chỉ dịch, không thêm nghiệp vụ, không retry (đã có wrapper riêng — chương 1.4), không cache.</p>
-<p>Chú ý mục (2): dịch <strong>ngữ nghĩa</strong> — context/deadline, quy ước lỗi (error vs result code vs exception), đơn vị (ms vs Duration), encoding, nil vs rỗng — mới là phần adapter dễ làm sai. Dịch tên method thì compiler ép bạn làm đúng; dịch ngữ nghĩa sai thì chỉ LSP (2.3) và production dạy bạn: adapter cũng là một implementation của interface, <strong>hợp đồng ngữ nghĩa của interface áp lên nó đầy đủ</strong> — kể cả contract test.</p>
-<h3 id="3-adapter-trong-go-teo-nhỏ--nhắc-lại-và-mở-rộng">3. Adapter trong Go teo nhỏ — nhắc lại và mở rộng<a hidden class="anchor" aria-hidden="true" href="#3-adapter-trong-go-teo-nhỏ--nhắc-lại-và-mở-rộng">#</a></h3>
-<p>Chương 1.5 đã nêu: implicit interface làm phần lớn nhu cầu adapt <em>biến mất</em> — nếu type bên thứ ba tình cờ có đúng method, nó thỏa mãn interface của bạn, không cần lớp dịch. Adapter chỉ còn cần khi <em>thật sự lệch hình dạng</em>. Và cho ca lệch nhẹ nhất — bạn có sẵn một <strong>hàm</strong> nhưng cần một <strong>interface</strong> — Go/stdlib có dạng adapter một dòng đáng học thuộc:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// http.HandlerFunc: ADAPTER TỪ FUNCTION SANG INTERFACE — 3 dòng trong stdlib</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">HandlerFunc</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">Request</span>)
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#a6e22e">HandlerFunc</span>) <span style="color:#a6e22e">ServeHTTP</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Request</span>) { <span style="color:#a6e22e">f</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>) }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// nhờ nó: mux.Handle(&#34;/x&#34;, http.HandlerFunc(myFunc)) — không cần khai struct nào</span>
-</span></span></code></pre></div><p>Mẫu &ldquo;function adapter&rdquo; này (<code>http.HandlerFunc</code>, <code>sort</code> trước generics&hellip;) là adapter được dùng nhiều nhất trong Go mà ít ai gọi tên. TypeScript: structural typing cũng xóa phần lớn nhu cầu; phần còn lại thường là hàm wrap 5 dòng thay vì class.</p>
-<h3 id="4-khi-nào-không-cần">4. Khi nào KHÔNG cần<a hidden class="anchor" aria-hidden="true" href="#4-khi-nào-không-cần">#</a></h3>
-<p>Chỉ một chỗ gọi SDK, và có thể mãi mãi chỉ một → gọi thẳng, bọc làm gì. Adapter trả lãi khi: interface của bạn có <em>hệ sinh thái</em> xung quanh (nhiều caller, nhiều wrapper), hoặc nhà cung cấp là thứ <em>sẽ đổi</em>. Ngoài ra cảnh giác <strong>adapter hai tầng tự tạo</strong>: tự định nghĩa interface &ldquo;trừu tượng hóa&rdquo; một SDK mà bạn chắc chắn không bao giờ đổi (AWS SDK cho hệ chạy 100% trên AWS) — bạn viết lớp dịch để dịch sang&hellip; chính nó, mọi thay đổi SDK vẫn xuyên qua đủ hai lớp. Trừu tượng hóa nhà cung cấp là quyết định chiến lược có giá, không phải phản xạ.</p>
-<hr>
-<h2 id="phần-b--facade">Phần B — Facade<a hidden class="anchor" aria-hidden="true" href="#phần-b--facade">#</a></h2>
-<h3 id="1-problem-statement--code-evolution-1">1. Problem Statement — code evolution<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement--code-evolution-1">#</a></h3>
-<p>Nghiệp vụ &ldquo;hoàn tất đơn hàng&rdquo; chạm 5 hệ con: trừ kho, tạo vận đơn, thu tiền, xuất hóa đơn, gửi thông báo. Handler HTTP hiện tại:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ❌ handler biết RUỘT của 5 hệ con — 70 dòng điều phối lộ thiên</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">CompleteOrder</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* parse */</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">Reserve</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Items</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#75715e">/* ... */</span> }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ship</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">shipping</span>.<span style="color:#a6e22e">CreateShipment</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Address</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Items</span>)   <span style="color:#75715e">// phải biết gọi SAU reserve</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">Release</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Items</span>)                             <span style="color:#75715e">// phải biết bù trừ!</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* ... */</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pay</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">payment</span>.<span style="color:#a6e22e">Charge</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Total</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">PaymentToken</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">shipping</span>.<span style="color:#a6e22e">Cancel</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">ship</span>.<span style="color:#a6e22e">ID</span>)                               <span style="color:#75715e">// bù trừ tầng nữa</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">inventory</span>.<span style="color:#a6e22e">Release</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Items</span>)
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* ... */</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">invoicing</span>.<span style="color:#a6e22e">Issue</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>, <span style="color:#a6e22e">pay</span>.<span style="color:#a6e22e">ReceiptID</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">h</span>.<span style="color:#a6e22e">notify</span>.<span style="color:#a6e22e">OrderCompleted</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* respond */</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Rồi yêu cầu đến: CLI admin cũng cần hoàn tất đơn; consumer Kafka xử lý đơn từ đối tác cũng cần. Copy 70 dòng điều phối — kèm toàn bộ tri thức thứ tự-và-bù-trừ — ra ba nơi? Đó là Duplicate Code loại nguy hiểm nhất: trùng lặp <em>quy trình nghiệp vụ</em>.</p>
-<h3 id="2-pattern--thu-quy-trình-về-một-cửa">2. Pattern — thu quy trình về một cửa<a hidden class="anchor" aria-hidden="true" href="#2-pattern--thu-quy-trình-về-một-cửa">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ✅ Facade: một type gói QUY TRÌNH, expose một cửa đơn giản</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderCompletion</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">inventory</span> <span style="color:#a6e22e">InventoryService</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">shipping</span>  <span style="color:#a6e22e">ShippingService</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">payment</span>   <span style="color:#a6e22e">PaymentService</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">invoicing</span> <span style="color:#a6e22e">InvoicingService</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">notify</span>    <span style="color:#a6e22e">Notifier</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">OrderCompletion</span>) <span style="color:#a6e22e">Complete</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Order</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">Receipt</span>, <span style="color:#66d9ef">error</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// toàn bộ thứ tự + bù trừ sống Ở ĐÂY, một nơi duy nhất</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* ...70 dòng cũ, giờ có một nhà... */</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Handler/CLI/consumer giờ gọi một dòng <code>completion.Complete(ctx, o)</code> — mỗi client mỏng đi 70 dòng, và tri thức quy trình có <strong>một</strong> chủ. Đây là Facade đúng nghĩa GoF: <em>interface đơn giản hóa cho một subsystem phức tạp</em> — không thêm chức năng mới, chỉ <strong>tái đóng gói cách dùng đúng</strong> thành API.</p>
-<p>Ba điều làm nên facade tốt:</p>
-<ul>
-<li><strong>Facade không độc quyền</strong>: GoF nhấn rõ — client <em>vẫn được</em> đi thẳng vào subsystem khi cần thao tác tinh (đường hiếm dùng đi cửa riêng, đường phổ thông đi facade). Facade là lối tắt, không phải bức tường. (Muốn bức tường thật — cấm đi thẳng — đó là bounded context + anti-corruption layer, Level 5.)</li>
-<li><strong>Facade mỏng về nghiệp vụ của chính nó</strong>: nó <em>điều phối</em> nghiệp vụ của các hệ con; nếu bạn thấy logic tính toán mọc bên trong facade, nó đang biến thành God Object có mã danh đẹp.</li>
-<li><strong>Facade là ứng viên interface tự nhiên</strong> cho consumer test cách ly: handler chỉ cần <code>interface { Complete(ctx, *Order) (*Receipt, error) }</code> — một method, fake 3 dòng (đúng bài ISP 2.4).</li>
-</ul>
-<p>Bạn có thể đã nhận ra: <code>OrderCompletion</code> chính là cái mà Clean Architecture gọi là <strong>use case / application service</strong> (Level 5). Đúng vậy — tầng use case <em>là</em> Facade được nâng lên thành nguyên tắc kiến trúc. Còn ghi chú từ 3.2 (&ldquo;God Object teo dần qua vỏ facade&rdquo;) là chiều ngược: facade làm <em>trạm trung chuyển tạm</em> trong refactor.</p>
-<h3 id="3-production-sightings--cả-hai-pattern">3. Production sightings — cả hai pattern<a hidden class="anchor" aria-hidden="true" href="#3-production-sightings--cả-hai-pattern">#</a></h3>
-<ul>
-<li><strong><code>http.Get/Post</code> (stdlib)</strong>: facade 1 dòng che subsystem <code>http.Client</code> + <code>Transport</code> + connection pool; cần chỉnh sâu thì tự dựng <code>Client</code> — đúng tinh thần &ldquo;lối tắt, không bức tường&rdquo;. Tương tự: <code>json.Marshal</code> (che <code>Encoder</code>/<code>Decoder</code>), <code>io.ReadAll</code>.</li>
-<li><strong><code>os/exec.Command</code></strong>: facade che fork/exec/pipe/wait — API mê cung của Unix process thành ba dòng.</li>
-<li><strong><code>database/sql</code> nhìn lại lần ba</strong>: với driver nó là registry (4.1), với app nó là <strong>facade khổng lồ</strong> — che pooling, retry, prepared statement cache sau <code>Query/Exec</code>. Một package, nhiều pattern — thực tế luôn như vậy.</li>
-<li><strong><code>sarama</code> → <code>franz-go</code> (Kafka client)</strong>: sarama nổi tiếng phơi mọi chi tiết protocol (client &ldquo;không facade&rdquo; — cực mạnh, cực khó dùng đúng); franz-go/confluent-kafka-go bọc consumer group lifecycle sau API gọn. So hai thư viện cùng domain thấy ngay giá của việc có/không có tầng facade.</li>
-<li><strong>Stripe/AWS SDK (adapter phía provider)</strong>: SDK chính là <em>facade chính chủ</em> trên REST API; còn code của bạn bọc SDK đó sau interface <code>PaymentGateway</code> — <strong>adapter chồng trên facade</strong>: chuyện thường ngày, mỗi lớp một việc (SDK: che HTTP; adapter: khớp hợp đồng nội bộ của bạn).</li>
-<li><strong>TS</strong>: <code>fetch</code> wrapper mà mọi codebase FE/BE đều có (<code>api.get&lt;T&gt;(path)</code>) — facade che headers/auth/retry/parse; axios interceptor cũng đứng cạnh đó.</li>
-</ul>
-<h3 id="4-so-sánh-khách-quan-adapter-vs-facade">4. So sánh khách quan: Adapter vs Facade<a hidden class="anchor" aria-hidden="true" href="#4-so-sánh-khách-quan-adapter-vs-facade">#</a></h3>
-<table>
-  <thead>
-      <tr>
-          <th></th>
-          <th>Adapter</th>
-          <th>Facade</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Bài toán</td>
-          <td>Interface có sẵn nhưng <strong>sai hình dạng</strong> so với ổ cắm</td>
-          <td>Subsystem đúng chức năng nhưng <strong>quá phức tạp để dùng trực tiếp</strong></td>
-      </tr>
-      <tr>
-          <td>Hình dạng interface mới</td>
-          <td><strong>Do bên nhận quyết định</strong> (khớp interface có sẵn của hệ bạn)</td>
-          <td><strong>Do bạn thiết kế mới</strong> (đơn giản hóa theo use case)</td>
-      </tr>
-      <tr>
-          <td>Tỉ lệ</td>
-          <td>1 interface ↔ 1 type được bọc</td>
-          <td>1 cửa ↔ N thành phần bên trong</td>
-      </tr>
-      <tr>
-          <td>Chứa tri thức gì</td>
-          <td>Dịch thuật (tên, dữ liệu, ngữ nghĩa)</td>
-          <td>Quy trình (thứ tự, phối hợp, bù trừ)</td>
-      </tr>
-      <tr>
-          <td>Thất bại khi</td>
-          <td>Dịch sai ngữ nghĩa (vi phạm LSP)</td>
-          <td>Phình thành God Object; hoặc thành Middle Man nếu subsystem vốn đã đơn giản</td>
-      </tr>
-      <tr>
-          <td>Câu thử nhanh</td>
-          <td>&ldquo;Tôi cần cái này <em>khớp ổ cắm kia</em>&rdquo;</td>
-          <td>&ldquo;Tôi cần cách dùng <em>đơn giản hơn</em> cho cụm này&rdquo;</td>
-      </tr>
-  </tbody>
-</table>
-<p>Hai pattern ghép với nhau tự nhiên và cũng dễ lẫn vào <strong>Decorator/Proxy</strong> — cùng là &ldquo;một type bọc type khác&rdquo;. Bảng phân biệt đầy đủ cả bốn nằm cuối chương sau, khi đủ mặt anh tài.</p>
-<hr>
-<p><em>Tiếp theo: <a href="/series/software-design/level-4-patterns/05-decorator-proxy/">4.5 — Decorator &amp; Proxy — và Middleware</a></em></p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:1313/tags/software-design/">Software-Design</a></li>
-      <li><a href="http://localhost:1313/tags/design-patterns/">Design-Patterns</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:1313/series/software-design/level-4-patterns/03-singleton-prototype/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>4.3 — Singleton &amp; Prototype: hai pattern thu hẹp đất sống</span>
-  </a>
-  <a class="next" href="http://localhost:1313/series/software-design/level-4-patterns/05-decorator-proxy/">
-    <span class="title">Next »</span>
-    <br>
-    <span>4.5 — Decorator &amp; Proxy — và Middleware, đứa con lớn nhất của chúng</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on x"
-            href="https://x.com/intent/tweet/?text=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f&amp;hashtags=backend%2csoftware-design%2cdesign-patterns">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f&amp;title=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;summary=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f&title=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on whatsapp"
-            href="https://api.whatsapp.com/send?text=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on telegram"
-            href="https://telegram.me/share/url?text=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+Phần A — Adapter
+1. Problem Statement — code evolution
+Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Software Design \u0026 Design Patterns","item":"https://thanhhv.github.io/series/software-design/"},{"@type":"ListItem","position":3,"name":"4.4 — Adapter \u0026 Facade: hai cách thuần hóa code không phải của mình","item":"https://thanhhv.github.io/series/software-design/level-4-patterns/04-adapter-facade/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"4.4 — Adapter \u0026 Facade: hai cách thuần hóa code không phải của mình","name":"4.4 — Adapter \u0026 Facade: hai cách thuần hóa code không phải của mình","description":"Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.\nPhần A — Adapter 1. Problem Statement — code evolution Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:\n","keywords":["backend","software-design","design-patterns"],"articleBody":"Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng ở ranh giới giữa code của bạn và code không phải của bạn (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi hình dạng một interface cho khớp ổ cắm có sẵn; Facade thu nhỏ cả một mê cung thành vài cánh cửa.\nPhần A — Adapter 1. Problem Statement — code evolution Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:\ntype Notifier interface { Send(ctx context.Context, msg Message) error } Mọi thứ chạy ổn: retry wrapper, rate-limit wrapper, registry — cả một hệ sinh thái nội bộ nói chuyện qua Notifier. Rồi công ty ký hợp đồng dùng dịch vụ SMS bên thứ ba, SDK của họ trông thế này:\n// SDK bên ngoài — KHÔNG SỬA ĐƯỢC, và tất nhiên không biết Notifier của bạn type VNSMSClient struct{ /* ... */ } func (c *VNSMSClient) PushText(phone string, content string, opts *PushOpts) (*PushResult, error) Lệch nhau đủ kiểu: tên method khác, không nhận context, tham số rời thay vì struct Message, trả thêm *PushResult. Hai lựa chọn tồi lộ ra ngay: sửa hệ của mình theo SDK (N chỗ gọi Send giờ phải biết PushText — đuôi vẫy chó); hoặc rải code dịch thuật tại từng chỗ gọi (dịch Message→phone/content lặp khắp nơi — Shotgun Surgery chờ sẵn khi đổi nhà cung cấp).\n2. Pattern — một struct dịch thuật, đứng đúng một chỗ // ✅ Adapter: type MỚI, của BẠN, khoác interface của bạn, ôm SDK của họ type VNSMSAdapter struct { client *vnsms.VNSMSClient sender string } func (a *VNSMSAdapter) Send(ctx context.Context, msg Message) error { // (1) dịch dữ liệu: Message → tham số SDK opts := \u0026vnsms.PushOpts{Sender: a.sender} // (2) dịch NGỮ NGHĨA — phần dễ quên và quan trọng hơn phần dịch tên: if deadline, ok := ctx.Deadline(); ok { // SDK không biết context opts.TimeoutMs = int(time.Until(deadline).Milliseconds()) } res, err := a.client.PushText(msg.Recipient.Phone, msg.Body, opts) if err != nil { return fmt.Errorf(\"vnsms: %w\", err) } if res.Code != vnsms.CodeOK { // SDK báo lỗi qua result code, return fmt.Errorf(\"vnsms: rejected: %s\", res.Desc) // hợp đồng của bạn báo qua error } return nil } Toàn bộ tri thức “nói chuyện với VNSMS thế nào” sống trong một file; hệ thống của bạn không biết VNSMS tồn tại; ngày đổi nhà cung cấp — viết adapter mới, đổi một dòng wiring ở main. Đó là toàn bộ pattern: không có gì thông minh, và đó chính là điểm mạnh — adapter phải ngu một cách kỷ luật: chỉ dịch, không thêm nghiệp vụ, không retry (đã có wrapper riêng — chương 1.4), không cache.\nChú ý mục (2): dịch ngữ nghĩa — context/deadline, quy ước lỗi (error vs result code vs exception), đơn vị (ms vs Duration), encoding, nil vs rỗng — mới là phần adapter dễ làm sai. Dịch tên method thì compiler ép bạn làm đúng; dịch ngữ nghĩa sai thì chỉ LSP (2.3) và production dạy bạn: adapter cũng là một implementation của interface, hợp đồng ngữ nghĩa của interface áp lên nó đầy đủ — kể cả contract test.\n3. Adapter trong Go teo nhỏ — nhắc lại và mở rộng Chương 1.5 đã nêu: implicit interface làm phần lớn nhu cầu adapt biến mất — nếu type bên thứ ba tình cờ có đúng method, nó thỏa mãn interface của bạn, không cần lớp dịch. Adapter chỉ còn cần khi thật sự lệch hình dạng. Và cho ca lệch nhẹ nhất — bạn có sẵn một hàm nhưng cần một interface — Go/stdlib có dạng adapter một dòng đáng học thuộc:\n// http.HandlerFunc: ADAPTER TỪ FUNCTION SANG INTERFACE — 3 dòng trong stdlib type HandlerFunc func(ResponseWriter, *Request) func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) { f(w, r) } // nhờ nó: mux.Handle(\"/x\", http.HandlerFunc(myFunc)) — không cần khai struct nào Mẫu “function adapter” này (http.HandlerFunc, sort trước generics…) là adapter được dùng nhiều nhất trong Go mà ít ai gọi tên. TypeScript: structural typing cũng xóa phần lớn nhu cầu; phần còn lại thường là hàm wrap 5 dòng thay vì class.\n4. Khi nào KHÔNG cần Chỉ một chỗ gọi SDK, và có thể mãi mãi chỉ một → gọi thẳng, bọc làm gì. Adapter trả lãi khi: interface của bạn có hệ sinh thái xung quanh (nhiều caller, nhiều wrapper), hoặc nhà cung cấp là thứ sẽ đổi. Ngoài ra cảnh giác adapter hai tầng tự tạo: tự định nghĩa interface “trừu tượng hóa” một SDK mà bạn chắc chắn không bao giờ đổi (AWS SDK cho hệ chạy 100% trên AWS) — bạn viết lớp dịch để dịch sang… chính nó, mọi thay đổi SDK vẫn xuyên qua đủ hai lớp. Trừu tượng hóa nhà cung cấp là quyết định chiến lược có giá, không phải phản xạ.\nPhần B — Facade 1. Problem Statement — code evolution Nghiệp vụ “hoàn tất đơn hàng” chạm 5 hệ con: trừ kho, tạo vận đơn, thu tiền, xuất hóa đơn, gửi thông báo. Handler HTTP hiện tại:\n// ❌ handler biết RUỘT của 5 hệ con — 70 dòng điều phối lộ thiên func (h *Handler) CompleteOrder(w http.ResponseWriter, r *http.Request) { /* parse */ if err := h.inventory.Reserve(ctx, o.Items); err != nil { /* ... */ } ship, err := h.shipping.CreateShipment(ctx, o.Address, o.Items) // phải biết gọi SAU reserve if err != nil { h.inventory.Release(ctx, o.Items) // phải biết bù trừ! /* ... */ } pay, err := h.payment.Charge(ctx, o.Total, o.PaymentToken) if err != nil { h.shipping.Cancel(ctx, ship.ID) // bù trừ tầng nữa h.inventory.Release(ctx, o.Items) /* ... */ } _ = h.invoicing.Issue(ctx, o, pay.ReceiptID) _ = h.notify.OrderCompleted(ctx, o) /* respond */ } Rồi yêu cầu đến: CLI admin cũng cần hoàn tất đơn; consumer Kafka xử lý đơn từ đối tác cũng cần. Copy 70 dòng điều phối — kèm toàn bộ tri thức thứ tự-và-bù-trừ — ra ba nơi? Đó là Duplicate Code loại nguy hiểm nhất: trùng lặp quy trình nghiệp vụ.\n2. Pattern — thu quy trình về một cửa // ✅ Facade: một type gói QUY TRÌNH, expose một cửa đơn giản type OrderCompletion struct { inventory InventoryService shipping ShippingService payment PaymentService invoicing InvoicingService notify Notifier } func (s *OrderCompletion) Complete(ctx context.Context, o *order.Order) (*Receipt, error) { // toàn bộ thứ tự + bù trừ sống Ở ĐÂY, một nơi duy nhất /* ...70 dòng cũ, giờ có một nhà... */ } Handler/CLI/consumer giờ gọi một dòng completion.Complete(ctx, o) — mỗi client mỏng đi 70 dòng, và tri thức quy trình có một chủ. Đây là Facade đúng nghĩa GoF: interface đơn giản hóa cho một subsystem phức tạp — không thêm chức năng mới, chỉ tái đóng gói cách dùng đúng thành API.\nBa điều làm nên facade tốt:\nFacade không độc quyền: GoF nhấn rõ — client vẫn được đi thẳng vào subsystem khi cần thao tác tinh (đường hiếm dùng đi cửa riêng, đường phổ thông đi facade). Facade là lối tắt, không phải bức tường. (Muốn bức tường thật — cấm đi thẳng — đó là bounded context + anti-corruption layer, Level 5.) Facade mỏng về nghiệp vụ của chính nó: nó điều phối nghiệp vụ của các hệ con; nếu bạn thấy logic tính toán mọc bên trong facade, nó đang biến thành God Object có mã danh đẹp. Facade là ứng viên interface tự nhiên cho consumer test cách ly: handler chỉ cần interface { Complete(ctx, *Order) (*Receipt, error) } — một method, fake 3 dòng (đúng bài ISP 2.4). Bạn có thể đã nhận ra: OrderCompletion chính là cái mà Clean Architecture gọi là use case / application service (Level 5). Đúng vậy — tầng use case là Facade được nâng lên thành nguyên tắc kiến trúc. Còn ghi chú từ 3.2 (“God Object teo dần qua vỏ facade”) là chiều ngược: facade làm trạm trung chuyển tạm trong refactor.\n3. Production sightings — cả hai pattern http.Get/Post (stdlib): facade 1 dòng che subsystem http.Client + Transport + connection pool; cần chỉnh sâu thì tự dựng Client — đúng tinh thần “lối tắt, không bức tường”. Tương tự: json.Marshal (che Encoder/Decoder), io.ReadAll. os/exec.Command: facade che fork/exec/pipe/wait — API mê cung của Unix process thành ba dòng. database/sql nhìn lại lần ba: với driver nó là registry (4.1), với app nó là facade khổng lồ — che pooling, retry, prepared statement cache sau Query/Exec. Một package, nhiều pattern — thực tế luôn như vậy. sarama → franz-go (Kafka client): sarama nổi tiếng phơi mọi chi tiết protocol (client “không facade” — cực mạnh, cực khó dùng đúng); franz-go/confluent-kafka-go bọc consumer group lifecycle sau API gọn. So hai thư viện cùng domain thấy ngay giá của việc có/không có tầng facade. Stripe/AWS SDK (adapter phía provider): SDK chính là facade chính chủ trên REST API; còn code của bạn bọc SDK đó sau interface PaymentGateway — adapter chồng trên facade: chuyện thường ngày, mỗi lớp một việc (SDK: che HTTP; adapter: khớp hợp đồng nội bộ của bạn). TS: fetch wrapper mà mọi codebase FE/BE đều có (api.get(path)) — facade che headers/auth/retry/parse; axios interceptor cũng đứng cạnh đó. 4. So sánh khách quan: Adapter vs Facade Adapter Facade Bài toán Interface có sẵn nhưng sai hình dạng so với ổ cắm Subsystem đúng chức năng nhưng quá phức tạp để dùng trực tiếp Hình dạng interface mới Do bên nhận quyết định (khớp interface có sẵn của hệ bạn) Do bạn thiết kế mới (đơn giản hóa theo use case) Tỉ lệ 1 interface ↔ 1 type được bọc 1 cửa ↔ N thành phần bên trong Chứa tri thức gì Dịch thuật (tên, dữ liệu, ngữ nghĩa) Quy trình (thứ tự, phối hợp, bù trừ) Thất bại khi Dịch sai ngữ nghĩa (vi phạm LSP) Phình thành God Object; hoặc thành Middle Man nếu subsystem vốn đã đơn giản Câu thử nhanh “Tôi cần cái này khớp ổ cắm kia” “Tôi cần cách dùng đơn giản hơn cho cụm này” Hai pattern ghép với nhau tự nhiên và cũng dễ lẫn vào Decorator/Proxy — cùng là “một type bọc type khác”. Bảng phân biệt đầy đủ cả bốn nằm cuối chương sau, khi đủ mặt anh tài.\nTiếp theo: 4.5 — Decorator \u0026 Proxy — và Middleware\n","wordCount":"1725","inLanguage":"en","datePublished":"2026-07-17T10:40:00+07:00","dateModified":"2026-07-17T10:40:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/software-design/level-4-patterns/04-adapter-facade/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/software-design/>Software Design & Design Patterns</a></div><h1 class="post-title entry-hint-parent">4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình</h1><div class=post-meta><span title='2026-07-17 10:40:00 +0700 +07'>July 17, 2026</span>&nbsp;·&nbsp;9 min</div></header><div class=post-content><p>Mở màn nhóm Structural bằng cặp pattern hay bị dùng lẫn tên nhất. Cả hai đều đứng <strong>ở ranh giới giữa code của bạn và code không phải của bạn</strong> (thư viện, hệ legacy, service ngoài) — nhưng giải hai bài toán khác hẳn: Adapter đổi <strong>hình dạng</strong> một interface cho khớp ổ cắm có sẵn; Facade <strong>thu nhỏ</strong> cả một mê cung thành vài cánh cửa.</p><hr><h2 id=phần-a--adapter>Phần A — Adapter<a hidden class=anchor aria-hidden=true href=#phần-a--adapter>#</a></h2><h3 id=1-problem-statement--code-evolution>1. Problem Statement — code evolution<a hidden class=anchor aria-hidden=true href=#1-problem-statement--code-evolution>#</a></h3><p>Hệ thống notification của bạn (từ chương 1.4) đã chuẩn hóa quanh interface:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Notifier</span> <span style=color:#66d9ef>interface</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>Send</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>msg</span> <span style=color:#a6e22e>Message</span>) <span style=color:#66d9ef>error</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Mọi thứ chạy ổn: retry wrapper, rate-limit wrapper, registry — cả một hệ sinh thái nội bộ nói chuyện qua <code>Notifier</code>. Rồi công ty ký hợp đồng dùng dịch vụ SMS bên thứ ba, SDK của họ trông thế này:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// SDK bên ngoài — KHÔNG SỬA ĐƯỢC, và tất nhiên không biết Notifier của bạn</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>VNSMSClient</span> <span style=color:#66d9ef>struct</span>{ <span style=color:#75715e>/* ... */</span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>c</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>VNSMSClient</span>) <span style=color:#a6e22e>PushText</span>(<span style=color:#a6e22e>phone</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>content</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>opts</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>PushOpts</span>) (<span style=color:#f92672>*</span><span style=color:#a6e22e>PushResult</span>, <span style=color:#66d9ef>error</span>)
+</span></span></code></pre></div><p>Lệch nhau đủ kiểu: tên method khác, không nhận <code>context</code>, tham số rời thay vì struct <code>Message</code>, trả thêm <code>*PushResult</code>. Hai lựa chọn tồi lộ ra ngay: <strong>sửa hệ của mình theo SDK</strong> (N chỗ gọi <code>Send</code> giờ phải biết <code>PushText</code> — đuôi vẫy chó); hoặc <strong>rải code dịch thuật tại từng chỗ gọi</strong> (dịch Message→phone/content lặp khắp nơi — Shotgun Surgery chờ sẵn khi đổi nhà cung cấp).</p><h3 id=2-pattern--một-struct-dịch-thuật-đứng-đúng-một-chỗ>2. Pattern — một struct dịch thuật, đứng đúng một chỗ<a hidden class=anchor aria-hidden=true href=#2-pattern--một-struct-dịch-thuật-đứng-đúng-một-chỗ>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ✅ Adapter: type MỚI, của BẠN, khoác interface của bạn, ôm SDK của họ</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>VNSMSAdapter</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>client</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>vnsms</span>.<span style=color:#a6e22e>VNSMSClient</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>sender</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>a</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>VNSMSAdapter</span>) <span style=color:#a6e22e>Send</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>msg</span> <span style=color:#a6e22e>Message</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// (1) dịch dữ liệu: Message → tham số SDK</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>opts</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>vnsms</span>.<span style=color:#a6e22e>PushOpts</span>{<span style=color:#a6e22e>Sender</span>: <span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>sender</span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// (2) dịch NGỮ NGHĨA — phần dễ quên và quan trọng hơn phần dịch tên:</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>deadline</span>, <span style=color:#a6e22e>ok</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>ctx</span>.<span style=color:#a6e22e>Deadline</span>(); <span style=color:#a6e22e>ok</span> {          <span style=color:#75715e>// SDK không biết context</span>
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>opts</span>.<span style=color:#a6e22e>TimeoutMs</span> = int(<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Until</span>(<span style=color:#a6e22e>deadline</span>).<span style=color:#a6e22e>Milliseconds</span>())
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>res</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>client</span>.<span style=color:#a6e22e>PushText</span>(<span style=color:#a6e22e>msg</span>.<span style=color:#a6e22e>Recipient</span>.<span style=color:#a6e22e>Phone</span>, <span style=color:#a6e22e>msg</span>.<span style=color:#a6e22e>Body</span>, <span style=color:#a6e22e>opts</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;vnsms: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>Code</span> <span style=color:#f92672>!=</span> <span style=color:#a6e22e>vnsms</span>.<span style=color:#a6e22e>CodeOK</span> {                    <span style=color:#75715e>// SDK báo lỗi qua result code,</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;vnsms: rejected: %s&#34;</span>, <span style=color:#a6e22e>res</span>.<span style=color:#a6e22e>Desc</span>)   <span style=color:#75715e>// hợp đồng của bạn báo qua error</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Toàn bộ tri thức &ldquo;nói chuyện với VNSMS thế nào&rdquo; sống trong <strong>một file</strong>; hệ thống của bạn không biết VNSMS tồn tại; ngày đổi nhà cung cấp — viết adapter mới, đổi một dòng wiring ở main. Đó là toàn bộ pattern: <strong>không có gì thông minh, và đó chính là điểm mạnh</strong> — adapter phải <em>ngu</em> một cách kỷ luật: chỉ dịch, không thêm nghiệp vụ, không retry (đã có wrapper riêng — chương 1.4), không cache.</p><p>Chú ý mục (2): dịch <strong>ngữ nghĩa</strong> — context/deadline, quy ước lỗi (error vs result code vs exception), đơn vị (ms vs Duration), encoding, nil vs rỗng — mới là phần adapter dễ làm sai. Dịch tên method thì compiler ép bạn làm đúng; dịch ngữ nghĩa sai thì chỉ LSP (2.3) và production dạy bạn: adapter cũng là một implementation của interface, <strong>hợp đồng ngữ nghĩa của interface áp lên nó đầy đủ</strong> — kể cả contract test.</p><h3 id=3-adapter-trong-go-teo-nhỏ--nhắc-lại-và-mở-rộng>3. Adapter trong Go teo nhỏ — nhắc lại và mở rộng<a hidden class=anchor aria-hidden=true href=#3-adapter-trong-go-teo-nhỏ--nhắc-lại-và-mở-rộng>#</a></h3><p>Chương 1.5 đã nêu: implicit interface làm phần lớn nhu cầu adapt <em>biến mất</em> — nếu type bên thứ ba tình cờ có đúng method, nó thỏa mãn interface của bạn, không cần lớp dịch. Adapter chỉ còn cần khi <em>thật sự lệch hình dạng</em>. Và cho ca lệch nhẹ nhất — bạn có sẵn một <strong>hàm</strong> nhưng cần một <strong>interface</strong> — Go/stdlib có dạng adapter một dòng đáng học thuộc:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// http.HandlerFunc: ADAPTER TỪ FUNCTION SANG INTERFACE — 3 dòng trong stdlib</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>HandlerFunc</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>ResponseWriter</span>, <span style=color:#f92672>*</span><span style=color:#a6e22e>Request</span>)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>f</span> <span style=color:#a6e22e>HandlerFunc</span>) <span style=color:#a6e22e>ServeHTTP</span>(<span style=color:#a6e22e>w</span> <span style=color:#a6e22e>ResponseWriter</span>, <span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Request</span>) { <span style=color:#a6e22e>f</span>(<span style=color:#a6e22e>w</span>, <span style=color:#a6e22e>r</span>) }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// nhờ nó: mux.Handle(&#34;/x&#34;, http.HandlerFunc(myFunc)) — không cần khai struct nào</span>
+</span></span></code></pre></div><p>Mẫu &ldquo;function adapter&rdquo; này (<code>http.HandlerFunc</code>, <code>sort</code> trước generics&mldr;) là adapter được dùng nhiều nhất trong Go mà ít ai gọi tên. TypeScript: structural typing cũng xóa phần lớn nhu cầu; phần còn lại thường là hàm wrap 5 dòng thay vì class.</p><h3 id=4-khi-nào-không-cần>4. Khi nào KHÔNG cần<a hidden class=anchor aria-hidden=true href=#4-khi-nào-không-cần>#</a></h3><p>Chỉ một chỗ gọi SDK, và có thể mãi mãi chỉ một → gọi thẳng, bọc làm gì. Adapter trả lãi khi: interface của bạn có <em>hệ sinh thái</em> xung quanh (nhiều caller, nhiều wrapper), hoặc nhà cung cấp là thứ <em>sẽ đổi</em>. Ngoài ra cảnh giác <strong>adapter hai tầng tự tạo</strong>: tự định nghĩa interface &ldquo;trừu tượng hóa&rdquo; một SDK mà bạn chắc chắn không bao giờ đổi (AWS SDK cho hệ chạy 100% trên AWS) — bạn viết lớp dịch để dịch sang&mldr; chính nó, mọi thay đổi SDK vẫn xuyên qua đủ hai lớp. Trừu tượng hóa nhà cung cấp là quyết định chiến lược có giá, không phải phản xạ.</p><hr><h2 id=phần-b--facade>Phần B — Facade<a hidden class=anchor aria-hidden=true href=#phần-b--facade>#</a></h2><h3 id=1-problem-statement--code-evolution-1>1. Problem Statement — code evolution<a hidden class=anchor aria-hidden=true href=#1-problem-statement--code-evolution-1>#</a></h3><p>Nghiệp vụ &ldquo;hoàn tất đơn hàng&rdquo; chạm 5 hệ con: trừ kho, tạo vận đơn, thu tiền, xuất hóa đơn, gửi thông báo. Handler HTTP hiện tại:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ❌ handler biết RUỘT của 5 hệ con — 70 dòng điều phối lộ thiên</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Handler</span>) <span style=color:#a6e22e>CompleteOrder</span>(<span style=color:#a6e22e>w</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>ResponseWriter</span>, <span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Request</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/* parse */</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>inventory</span>.<span style=color:#a6e22e>Reserve</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Items</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#75715e>/* ... */</span> }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>ship</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>shipping</span>.<span style=color:#a6e22e>CreateShipment</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Address</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Items</span>)   <span style=color:#75715e>// phải biết gọi SAU reserve</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>inventory</span>.<span style=color:#a6e22e>Release</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Items</span>)                             <span style=color:#75715e>// phải biết bù trừ!</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>/* ... */</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>pay</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>payment</span>.<span style=color:#a6e22e>Charge</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Total</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>PaymentToken</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>shipping</span>.<span style=color:#a6e22e>Cancel</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>ship</span>.<span style=color:#a6e22e>ID</span>)                               <span style=color:#75715e>// bù trừ tầng nữa</span>
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>inventory</span>.<span style=color:#a6e22e>Release</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Items</span>)
+</span></span><span style=display:flex><span>        <span style=color:#75715e>/* ... */</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>invoicing</span>.<span style=color:#a6e22e>Issue</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>, <span style=color:#a6e22e>pay</span>.<span style=color:#a6e22e>ReceiptID</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>h</span>.<span style=color:#a6e22e>notify</span>.<span style=color:#a6e22e>OrderCompleted</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>)
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/* respond */</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Rồi yêu cầu đến: CLI admin cũng cần hoàn tất đơn; consumer Kafka xử lý đơn từ đối tác cũng cần. Copy 70 dòng điều phối — kèm toàn bộ tri thức thứ tự-và-bù-trừ — ra ba nơi? Đó là Duplicate Code loại nguy hiểm nhất: trùng lặp <em>quy trình nghiệp vụ</em>.</p><h3 id=2-pattern--thu-quy-trình-về-một-cửa>2. Pattern — thu quy trình về một cửa<a hidden class=anchor aria-hidden=true href=#2-pattern--thu-quy-trình-về-một-cửa>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// ✅ Facade: một type gói QUY TRÌNH, expose một cửa đơn giản</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>OrderCompletion</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>inventory</span> <span style=color:#a6e22e>InventoryService</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>shipping</span>  <span style=color:#a6e22e>ShippingService</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>payment</span>   <span style=color:#a6e22e>PaymentService</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>invoicing</span> <span style=color:#a6e22e>InvoicingService</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>notify</span>    <span style=color:#a6e22e>Notifier</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>OrderCompletion</span>) <span style=color:#a6e22e>Complete</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>o</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Order</span>) (<span style=color:#f92672>*</span><span style=color:#a6e22e>Receipt</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// toàn bộ thứ tự + bù trừ sống Ở ĐÂY, một nơi duy nhất</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/* ...70 dòng cũ, giờ có một nhà... */</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Handler/CLI/consumer giờ gọi một dòng <code>completion.Complete(ctx, o)</code> — mỗi client mỏng đi 70 dòng, và tri thức quy trình có <strong>một</strong> chủ. Đây là Facade đúng nghĩa GoF: <em>interface đơn giản hóa cho một subsystem phức tạp</em> — không thêm chức năng mới, chỉ <strong>tái đóng gói cách dùng đúng</strong> thành API.</p><p>Ba điều làm nên facade tốt:</p><ul><li><strong>Facade không độc quyền</strong>: GoF nhấn rõ — client <em>vẫn được</em> đi thẳng vào subsystem khi cần thao tác tinh (đường hiếm dùng đi cửa riêng, đường phổ thông đi facade). Facade là lối tắt, không phải bức tường. (Muốn bức tường thật — cấm đi thẳng — đó là bounded context + anti-corruption layer, Level 5.)</li><li><strong>Facade mỏng về nghiệp vụ của chính nó</strong>: nó <em>điều phối</em> nghiệp vụ của các hệ con; nếu bạn thấy logic tính toán mọc bên trong facade, nó đang biến thành God Object có mã danh đẹp.</li><li><strong>Facade là ứng viên interface tự nhiên</strong> cho consumer test cách ly: handler chỉ cần <code>interface { Complete(ctx, *Order) (*Receipt, error) }</code> — một method, fake 3 dòng (đúng bài ISP 2.4).</li></ul><p>Bạn có thể đã nhận ra: <code>OrderCompletion</code> chính là cái mà Clean Architecture gọi là <strong>use case / application service</strong> (Level 5). Đúng vậy — tầng use case <em>là</em> Facade được nâng lên thành nguyên tắc kiến trúc. Còn ghi chú từ 3.2 (&ldquo;God Object teo dần qua vỏ facade&rdquo;) là chiều ngược: facade làm <em>trạm trung chuyển tạm</em> trong refactor.</p><h3 id=3-production-sightings--cả-hai-pattern>3. Production sightings — cả hai pattern<a hidden class=anchor aria-hidden=true href=#3-production-sightings--cả-hai-pattern>#</a></h3><ul><li><strong><code>http.Get/Post</code> (stdlib)</strong>: facade 1 dòng che subsystem <code>http.Client</code> + <code>Transport</code> + connection pool; cần chỉnh sâu thì tự dựng <code>Client</code> — đúng tinh thần &ldquo;lối tắt, không bức tường&rdquo;. Tương tự: <code>json.Marshal</code> (che <code>Encoder</code>/<code>Decoder</code>), <code>io.ReadAll</code>.</li><li><strong><code>os/exec.Command</code></strong>: facade che fork/exec/pipe/wait — API mê cung của Unix process thành ba dòng.</li><li><strong><code>database/sql</code> nhìn lại lần ba</strong>: với driver nó là registry (4.1), với app nó là <strong>facade khổng lồ</strong> — che pooling, retry, prepared statement cache sau <code>Query/Exec</code>. Một package, nhiều pattern — thực tế luôn như vậy.</li><li><strong><code>sarama</code> → <code>franz-go</code> (Kafka client)</strong>: sarama nổi tiếng phơi mọi chi tiết protocol (client &ldquo;không facade&rdquo; — cực mạnh, cực khó dùng đúng); franz-go/confluent-kafka-go bọc consumer group lifecycle sau API gọn. So hai thư viện cùng domain thấy ngay giá của việc có/không có tầng facade.</li><li><strong>Stripe/AWS SDK (adapter phía provider)</strong>: SDK chính là <em>facade chính chủ</em> trên REST API; còn code của bạn bọc SDK đó sau interface <code>PaymentGateway</code> — <strong>adapter chồng trên facade</strong>: chuyện thường ngày, mỗi lớp một việc (SDK: che HTTP; adapter: khớp hợp đồng nội bộ của bạn).</li><li><strong>TS</strong>: <code>fetch</code> wrapper mà mọi codebase FE/BE đều có (<code>api.get&lt;T>(path)</code>) — facade che headers/auth/retry/parse; axios interceptor cũng đứng cạnh đó.</li></ul><h3 id=4-so-sánh-khách-quan-adapter-vs-facade>4. So sánh khách quan: Adapter vs Facade<a hidden class=anchor aria-hidden=true href=#4-so-sánh-khách-quan-adapter-vs-facade>#</a></h3><table><thead><tr><th></th><th>Adapter</th><th>Facade</th></tr></thead><tbody><tr><td>Bài toán</td><td>Interface có sẵn nhưng <strong>sai hình dạng</strong> so với ổ cắm</td><td>Subsystem đúng chức năng nhưng <strong>quá phức tạp để dùng trực tiếp</strong></td></tr><tr><td>Hình dạng interface mới</td><td><strong>Do bên nhận quyết định</strong> (khớp interface có sẵn của hệ bạn)</td><td><strong>Do bạn thiết kế mới</strong> (đơn giản hóa theo use case)</td></tr><tr><td>Tỉ lệ</td><td>1 interface ↔ 1 type được bọc</td><td>1 cửa ↔ N thành phần bên trong</td></tr><tr><td>Chứa tri thức gì</td><td>Dịch thuật (tên, dữ liệu, ngữ nghĩa)</td><td>Quy trình (thứ tự, phối hợp, bù trừ)</td></tr><tr><td>Thất bại khi</td><td>Dịch sai ngữ nghĩa (vi phạm LSP)</td><td>Phình thành God Object; hoặc thành Middle Man nếu subsystem vốn đã đơn giản</td></tr><tr><td>Câu thử nhanh</td><td>&ldquo;Tôi cần cái này <em>khớp ổ cắm kia</em>&rdquo;</td><td>&ldquo;Tôi cần cách dùng <em>đơn giản hơn</em> cho cụm này&rdquo;</td></tr></tbody></table><p>Hai pattern ghép với nhau tự nhiên và cũng dễ lẫn vào <strong>Decorator/Proxy</strong> — cùng là &ldquo;một type bọc type khác&rdquo;. Bảng phân biệt đầy đủ cả bốn nằm cuối chương sau, khi đủ mặt anh tài.</p><hr><p><em>Tiếp theo: <a href=/series/software-design/level-4-patterns/05-decorator-proxy/>4.5 — Decorator & Proxy — và Middleware</a></em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/software-design/>Software-Design</a></li><li><a href=https://thanhhv.github.io/tags/design-patterns/>Design-Patterns</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/software-design/level-4-patterns/03-singleton-prototype/><span class=title>« Prev</span><br><span>4.3 — Singleton & Prototype: hai pattern thu hẹp đất sống</span>
+</a><a class=next href=https://thanhhv.github.io/series/software-design/level-4-patterns/05-decorator-proxy/><span class=title>Next »</span><br><span>4.5 — Decorator & Proxy — và Middleware, đứa con lớn nhất của chúng</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on x" href="https://x.com/intent/tweet/?text=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f&amp;hashtags=backend%2csoftware-design%2cdesign-patterns"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f&amp;title=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;summary=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f&title=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on whatsapp" href="https://api.whatsapp.com/send?text=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on telegram" href="https://telegram.me/share/url?text=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share 4.4 — Adapter & Facade: hai cách thuần hóa code không phải của mình on ycombinator" href="https://news.ycombinator.com/submitlink?t=4.4%20%e2%80%94%20Adapter%20%26%20Facade%3a%20hai%20c%c3%a1ch%20thu%e1%ba%a7n%20h%c3%b3a%20code%20kh%c3%b4ng%20ph%e1%ba%a3i%20c%e1%bb%a7a%20m%c3%acnh&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fsoftware-design%2flevel-4-patterns%2f04-adapter-facade%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

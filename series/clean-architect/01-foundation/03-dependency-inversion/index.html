@@ -1,522 +1,326 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, golang, clean-architecture">
-<meta name="description" content="
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc | Thanh HV's Blog</title>
+<meta name=keywords content="backend,golang,clean-architecture"><meta name=description content="
 Level 1–2 Bridge · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.
 
 1. Problem Statement
 Bài toán
-Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất.">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/series/clean-architect/01-foundation/03-dependency-inversion/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/series/clean-architect/01-foundation/03-dependency-inversion/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
+Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/clean-architect/01-foundation/03-dependency-inversion/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/clean-architect/01-foundation/03-dependency-inversion/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/clean-architect/01-foundation/03-dependency-inversion/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc"><meta property="og:description" content=" Level 1–2 Bridge · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.
+1. Problem Statement Bài toán Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-07T21:00:00+07:00"><meta property="article:modified_time" content="2026-07-07T21:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Golang"><meta property="article:tag" content="Clean-Architecture"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc"><meta name=twitter:description content="
+Level 1–2 Bridge · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.
 
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:1313/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/clean-architect/">Clean Architecture với Golang</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc
-    </h1>
-    <div class="post-meta"><span title='2026-07-07 21:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;14 min
-
-</div>
-  </header> 
-  <div class="post-content"><blockquote>
-<p><strong>Level 1–2 Bridge</strong> · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.</p></blockquote>
-<hr>
-<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
-<h3 id="bài-toán">Bài toán<a hidden class="anchor" aria-hidden="true" href="#bài-toán">#</a></h3>
-<p>Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: <strong>theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất.</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">order</span> <span style="color:#75715e">// business logic</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/postgres&#34;</span>   <span style="color:#75715e">// ← business biết Postgres</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/smtpmail&#34;</span>   <span style="color:#75715e">// ← business biết SMTP</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Service</span>) <span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#f92672">...</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// logic quý giá... bị hàn chết vào hạ tầng</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Hệ quả nếu không giải quyết:</p>
-<ul>
-<li><strong>Không thể unit test nghiệp vụ</strong> — mọi test kéo theo DB, SMTP.</li>
-<li><strong>Không thể thay hạ tầng</strong> — migrate Postgres → CockroachDB nghĩa là mổ vào code nghiệp vụ.</li>
-<li><strong>Không thể tái sử dụng nghiệp vụ</strong> — muốn gọi PlaceOrder từ Kafka consumer thay vì HTTP? Logic dính đầy mảnh HTTP.</li>
-<li><strong>Thay đổi hạ tầng lan vào nghiệp vụ</strong> — upgrade driver, đổi schema đều risk vỡ business rule.</li>
-</ul>
-<h3 id="cách-tiếp-cận-cũ-và-hạn-chế">Cách tiếp cận cũ và hạn chế<a hidden class="anchor" aria-hidden="true" href="#cách-tiếp-cận-cũ-và-hạn-chế">#</a></h3>
-<p><strong>Layered Architecture cổ điển</strong> (Presentation → Business → Data Access) đã nhận ra cần tách tầng, nhưng giữ nguyên hướng phụ thuộc chảy xuống: Business import Data Access. Tách tầng mà không đảo phụ thuộc chỉ <em>sắp xếp</em> coupling chứ không <em>cắt</em> nó — business vẫn biết hạ tầng, vẫn không test được độc lập, database vẫn là trung tâm hấp dẫn của toàn hệ thống.</p>
-<p>DIP là mảnh ghép còn thiếu: giữ layer, nhưng <strong>bẻ ngược mũi tên compile-time</strong>.</p>
-<h2 id="2-tại-sao-dip-tồn-tại">2. Tại sao DIP tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-dip-tồn-tại">#</a></h2>
-<ul>
-<li><strong>Business Problem</strong>: bảo vệ khoản đầu tư lớn nhất (business logic) khỏi vòng đời ngắn của công nghệ; giữ chi phí đổi công nghệ ở mức &ldquo;viết một adapter&rdquo; thay vì &ldquo;viết lại hệ thống&rdquo;.</li>
-<li><strong>Technical Problem</strong>: test nghiệp vụ phải chạy nhanh (mili-giây) và deterministic — bất khả thi khi nghiệp vụ import driver.</li>
-<li><strong>Design Problem</strong>: cần một cơ chế để <em>chính sách</em> (policy — cái gì, khi nào) và <em>cơ chế</em> (mechanism — bằng cách nào) tiến hóa độc lập.</li>
-</ul>
-<hr>
-<h2 id="3-giải-thích-bản-chất">3. Giải thích bản chất<a hidden class="anchor" aria-hidden="true" href="#3-giải-thích-bản-chất">#</a></h2>
-<h3 id="31-tách-hai-khái-niệm-bị-nhập-nhằng-control-flow-vs-source-dependency">3.1 Tách hai khái niệm bị nhập nhằng: control flow vs source dependency<a hidden class="anchor" aria-hidden="true" href="#31-tách-hai-khái-niệm-bị-nhập-nhằng-control-flow-vs-source-dependency">#</a></h3>
-<p>Đây là insight trung tâm, đáng đọc chậm:</p>
-<ul>
-<li><strong>Control flow (runtime)</strong>: lúc chạy, hàm nào gọi hàm nào. <code>Service.PlaceOrder</code> <em>sẽ luôn</em> gọi xuống code lưu Postgres — điều này không thể và không cần thay đổi.</li>
-<li><strong>Source dependency (compile-time)</strong>: package nào <em>biết tên</em> package nào qua <code>import</code>.</li>
-</ul>
-<p>Lập trình viên thường mặc định hai luồng này trùng nhau: muốn gọi thì phải import. <strong>Polymorphism (interface) phá vỡ sự mặc định đó</strong>: bạn có thể gọi một hàm mà không import package chứa nó — chỉ cần gọi qua interface do chính bạn định nghĩa.</p>
-<pre tabindex="0"><code>TRƯỚC (tự nhiên):                       SAU (đảo chiều):
+1. Problem Statement
+Bài toán
+Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Clean Architecture với Golang","item":"https://thanhhv.github.io/series/clean-architect/"},{"@type":"ListItem","position":3,"name":"Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc","item":"https://thanhhv.github.io/series/clean-architect/01-foundation/03-dependency-inversion/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc","name":"Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc","description":" Level 1–2 Bridge · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.\n1. Problem Statement Bài toán Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất.\n","keywords":["backend","golang","clean-architecture"],"articleBody":" Level 1–2 Bridge · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.\n1. Problem Statement Bài toán Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất.\npackage order // business logic import ( \"myapp/internal/postgres\" // ← business biết Postgres \"myapp/internal/smtpmail\" // ← business biết SMTP ) func (s *Service) PlaceOrder(...) error { // logic quý giá... bị hàn chết vào hạ tầng } Hệ quả nếu không giải quyết:\nKhông thể unit test nghiệp vụ — mọi test kéo theo DB, SMTP. Không thể thay hạ tầng — migrate Postgres → CockroachDB nghĩa là mổ vào code nghiệp vụ. Không thể tái sử dụng nghiệp vụ — muốn gọi PlaceOrder từ Kafka consumer thay vì HTTP? Logic dính đầy mảnh HTTP. Thay đổi hạ tầng lan vào nghiệp vụ — upgrade driver, đổi schema đều risk vỡ business rule. Cách tiếp cận cũ và hạn chế Layered Architecture cổ điển (Presentation → Business → Data Access) đã nhận ra cần tách tầng, nhưng giữ nguyên hướng phụ thuộc chảy xuống: Business import Data Access. Tách tầng mà không đảo phụ thuộc chỉ sắp xếp coupling chứ không cắt nó — business vẫn biết hạ tầng, vẫn không test được độc lập, database vẫn là trung tâm hấp dẫn của toàn hệ thống.\nDIP là mảnh ghép còn thiếu: giữ layer, nhưng bẻ ngược mũi tên compile-time.\n2. Tại sao DIP tồn tại Business Problem: bảo vệ khoản đầu tư lớn nhất (business logic) khỏi vòng đời ngắn của công nghệ; giữ chi phí đổi công nghệ ở mức “viết một adapter” thay vì “viết lại hệ thống”. Technical Problem: test nghiệp vụ phải chạy nhanh (mili-giây) và deterministic — bất khả thi khi nghiệp vụ import driver. Design Problem: cần một cơ chế để chính sách (policy — cái gì, khi nào) và cơ chế (mechanism — bằng cách nào) tiến hóa độc lập. 3. Giải thích bản chất 3.1 Tách hai khái niệm bị nhập nhằng: control flow vs source dependency Đây là insight trung tâm, đáng đọc chậm:\nControl flow (runtime): lúc chạy, hàm nào gọi hàm nào. Service.PlaceOrder sẽ luôn gọi xuống code lưu Postgres — điều này không thể và không cần thay đổi. Source dependency (compile-time): package nào biết tên package nào qua import. Lập trình viên thường mặc định hai luồng này trùng nhau: muốn gọi thì phải import. Polymorphism (interface) phá vỡ sự mặc định đó: bạn có thể gọi một hàm mà không import package chứa nó — chỉ cần gọi qua interface do chính bạn định nghĩa.\nTRƯỚC (tự nhiên): SAU (đảo chiều): order ──import──▶ postgres order ◀──import── postgres │ ▲ │ khai báo │ implement └── gọi Save() ────┘ │ OrderStore │ OrderStore ▼ │ control flow ──▶ trùng control flow runtime VẪN: source dep ──▶ trùng order ──gọi qua interface──▶ postgresControl flow không đổi. Chỉ có kiến thức đổi chỗ: trước đây order biết postgres; giờ postgres biết order, còn order không biết gì.\n3.2 Vì sao hướng này đúng? — Stable Dependencies Chương 1.1 đã thiết lập: phụ thuộc phải trỏ về phía ổn định. Xét độ ổn định thực nghiệm trong một hệ thống 5 năm tuổi:\nThành phần Tần suất thay đổi Lý do đổi Business rule cốt lõi (“đơn \u003e 500k freeship”) Thấp nhất Chỉ đổi khi doanh nghiệp đổi chính sách Use case (quy trình đặt hàng) Thấp Đổi khi quy trình đổi Schema DB, driver, ORM Trung bình–cao Tối ưu hóa, migrate, upgrade Framework HTTP, format API Cao Fashion công nghệ, client mới Mũi tên phải trỏ từ hàng dưới lên hàng trên. DIP là cơ chế hiện thực hóa điều đó.\n3.3 Abstraction thuộc về ai? — điểm bị hiểu sai nhiều nhất DIP nói “cả hai phụ thuộc abstraction”. Nhưng abstraction đặt ở package nào? Câu trả lời quyết định thành bại:\nInterface thuộc về phía cấp cao (consumer) — nó là nhu cầu của chính sách, không phải mô tả của cơ chế.\norder.OrderStore nghĩa là: “nghiệp vụ order cần một chỗ lưu đơn” — phát biểu từ góc nhìn nghiệp vụ, chỉ chứa những gì nghiệp vụ cần, dùng kiểu dữ liệu của nghiệp vụ. Nếu đặt interface ở package postgres, nó trở thành mô tả của Postgres repo, business phải import postgres để lấy nó → mũi tên trỏ sai, DIP thất bại dù “có interface”. Có interface không đồng nghĩa với có inversion. Vị trí của interface quyết định hướng của mũi tên.\nGo hỗ trợ điều này tốt hơn mọi ngôn ngữ mainstream: nhờ implicit interface satisfaction, package postgres thỏa mãn order.OrderStore mà không cần khai báo implements, thậm chí không cần import order nếu kiểu trùng — nhưng thực tế nó import order để dùng kiểu domain (order.Order), và đó chính xác là hướng mũi tên ta muốn.\n3.4 DIP bảo vệ điều gì, giảm coupling thế nào Bảo vệ: tính thuần khiết (purity) của tầng chính sách — không kiến thức hạ tầng, không side-effect ngoài ý muốn, test được bằng bộ nhớ. Giảm coupling: từ coupling với implementation cụ thể (hàng nghìn dòng, thay đổi thường xuyên, kéo theo transitive dependencies) xuống coupling với contract vài dòng do chính mình sở hữu. Kiến thức mà tầng nghiệp vụ phải mang giảm từ “toàn bộ Postgres” xuống “một interface 2 method”. 4. Cách hoạt động: xây dựng từng bước Bài toán xuyên suốt: đặt hàng — kiểm tra tồn kho, tạo đơn, gửi email xác nhận.\nBước 0 — Phiên bản chưa đảo (baseline) placeorder-v0/ └── internal/ ├── order/service.go # import postgres, smtpmail ✗ ├── postgres/repo.go └── smtpmail/sender.go// internal/order/service.go — V0: nghiệp vụ ôm hạ tầng package order import ( \"context\" \"myapp/internal/postgres\" // ✗ \"myapp/internal/smtpmail\" // ✗ ) type Service struct { repo *postgres.OrderRepo // kiểu cụ thể mail *smtpmail.Sender // kiểu cụ thể } func (s *Service) PlaceOrder(ctx context.Context, customerID string, items []postgres.ItemRow) error { // ✗✗ nghiệp vụ dùng kiểu của tầng DB (ItemRow) — leaky đến tận chữ ký hàm ... } Đếm kiến thức: order biết Postgres (schema, kiểu row), biết SMTP (địa chỉ server nằm trong Sender). Test PlaceOrder cần Postgres thật + SMTP thật hoặc build tag khéo léo. Không đạt.\nBước 1 — Nghiệp vụ tuyên bố nhu cầu bằng interface của chính nó // internal/order/order.go — kiểu domain, thuộc về nghiệp vụ package order import ( \"context\" \"errors\" \"time\" ) type Order struct { ID string CustomerID string Items []Item Total Money PlacedAt time.Time } type Item struct { SKU string Quantity int Price Money } type Money int64 var ( ErrEmptyOrder = errors.New(\"order: empty order\") ErrInsufficientStock = errors.New(\"order: insufficient stock\") ) // ==== NHU CẦU của nghiệp vụ — interface do nghiệp vụ sở hữu ==== // Repository: \"tôi cần chỗ lưu đơn hàng\" type Repository interface { Save(ctx context.Context, o Order) error } // StockChecker: \"tôi cần biết hàng còn không\" type StockChecker interface { Available(ctx context.Context, sku string) (int, error) } // Notifier: \"tôi cần báo cho khách\" — chú ý: KHÔNG phải EmailSender. // Nghiệp vụ không quy định kênh; email chỉ là một cơ chế. type Notifier interface { OrderPlaced(ctx context.Context, o Order) error } Ba interface này hẹp (1 method), dùng thuần kiểu domain, đặt tên theo vai trò trong nghiệp vụ chứ không theo công nghệ. Đây là những “cổng” (port) mà thế giới bên ngoài sẽ cắm vào.\nBước 2 — Use case chỉ phụ thuộc các cổng // internal/order/service.go — V1: thuần chính sách package order import ( \"context\" \"fmt\" \"time\" ) type Service struct { repo Repository stock StockChecker notify Notifier now func() time.Time // cả thời gian cũng là dependency — test được newID func() string } func NewService(repo Repository, stock StockChecker, notify Notifier, now func() time.Time, newID func() string) *Service { return \u0026Service{repo: repo, stock: stock, notify: notify, now: now, newID: newID} } func (s *Service) PlaceOrder(ctx context.Context, customerID string, items []Item) (Order, error) { if len(items) == 0 { return Order{}, ErrEmptyOrder } for _, it := range items { avail, err := s.stock.Available(ctx, it.SKU) if err != nil { return Order{}, fmt.Errorf(\"check stock %s: %w\", it.SKU, err) } if avail \u003c it.Quantity { return Order{}, fmt.Errorf(\"%w: sku %s\", ErrInsufficientStock, it.SKU) } } o := Order{ ID: s.newID(), CustomerID: customerID, Items: items, Total: total(items), PlacedAt: s.now(), } if err := s.repo.Save(ctx, o); err != nil { return Order{}, fmt.Errorf(\"save order: %w\", err) } // Quyết định thiết kế: gửi thông báo lỗi KHÔNG làm fail đơn — // đây là business rule, và giờ nó nằm đúng chỗ để đọc thấy được. if err := s.notify.OrderPlaced(ctx, o); err != nil { // log ở đây qua một logger được inject; đơn vẫn thành công _ = err } return o, nil } func total(items []Item) Money { var t Money for _, it := range items { t += it.Price * Money(it.Quantity) } return t } Kiểm tra: go list -deps ./internal/order → chỉ stdlib. Nghiệp vụ đạt độ thuần 100%.\nBước 3 — Hạ tầng implement các cổng (mũi tên đã đảo) // internal/postgres/order_repo.go package postgres import ( \"context\" \"database/sql\" \"encoding/json\" \"fmt\" \"myapp/internal/order\" // ← MŨI TÊN: hạ tầng import nghiệp vụ ) type OrderRepo struct{ db *sql.DB } func NewOrderRepo(db *sql.DB) *OrderRepo { return \u0026OrderRepo{db} } func (r *OrderRepo) Save(ctx context.Context, o order.Order) error { items, err := json.Marshal(o.Items) if err != nil { return fmt.Errorf(\"marshal items: %w\", err) } _, err = r.db.ExecContext(ctx, `INSERT INTO orders (id, customer_id, items, total, placed_at) VALUES ($1, $2, $3, $4, $5)`, o.ID, o.CustomerID, items, int64(o.Total), o.PlacedAt) if err != nil { return fmt.Errorf(\"insert order: %w\", err) } return nil } // internal/smtpmail/notifier.go package smtpmail import ( \"context\" \"fmt\" \"net/smtp\" \"myapp/internal/order\" ) type Notifier struct { addr, from string auth smtp.Auth // map customerID → email; thực tế sẽ inject một CustomerDirectory emailOf func(ctx context.Context, customerID string) (string, error) } func (n *Notifier) OrderPlaced(ctx context.Context, o order.Order) error { to, err := n.emailOf(ctx, o.CustomerID) if err != nil { return fmt.Errorf(\"resolve email: %w\", err) } body := fmt.Sprintf(\"Subject: Don hang %s\\r\\n\\r\\nTong tien: %d VND\\r\\n\", o.ID, o.Total) return smtp.SendMail(n.addr, n.auth, n.from, []string{to}, []byte(body)) } Bước 4 — Composition root nối dây // cmd/api/main.go package main import ( \"crypto/rand\" \"database/sql\" \"encoding/hex\" \"log\" \"time\" _ \"github.com/lib/pq\" \"myapp/internal/httpapi\" \"myapp/internal/order\" \"myapp/internal/postgres\" \"myapp/internal/smtpmail\" ) func main() { db, err := sql.Open(\"postgres\", mustEnv(\"DATABASE_URL\")) if err != nil { log.Fatal(err) } svc := order.NewService( postgres.NewOrderRepo(db), postgres.NewStockRepo(db), smtpmail.New(mustEnv(\"SMTP_ADDR\"), mustEnv(\"SMTP_FROM\")), time.Now, newID, ) log.Fatal(httpapi.New(svc).ListenAndServe(\":8080\")) } func newID() string { b := make([]byte, 16) rand.Read(b) return hex.EncodeToString(b) } Bước 5 — Unit test nghiệp vụ bằng fake trong bộ nhớ // internal/order/service_test.go package order_test import ( \"context\" \"errors\" \"testing\" \"time\" \"myapp/internal/order\" ) // Fake — implementation thật nhưng chạy trong RAM. Không cần mockgen. type fakeRepo struct{ saved []order.Order; failWith error } func (f *fakeRepo) Save(_ context.Context, o order.Order) error { if f.failWith != nil { return f.failWith } f.saved = append(f.saved, o) return nil } type fakeStock map[string]int func (f fakeStock) Available(_ context.Context, sku string) (int, error) { return f[sku], nil } type fakeNotifier struct{ notified int; failWith error } func (f *fakeNotifier) OrderPlaced(context.Context, order.Order) error { f.notified++ return f.failWith } func newSvc(repo *fakeRepo, stock fakeStock, n *fakeNotifier) *order.Service { return order.NewService(repo, stock, n, func() time.Time { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) }, func() string { return \"test-id-1\" }, ) } func TestPlaceOrder_ThanhCong(t *testing.T) { repo, notif := \u0026fakeRepo{}, \u0026fakeNotifier{} svc := newSvc(repo, fakeStock{\"SKU1\": 10}, notif) o, err := svc.PlaceOrder(context.Background(), \"cust-1\", []order.Item{{SKU: \"SKU1\", Quantity: 2, Price: 50_000}}) if err != nil { t.Fatal(err) } if o.Total != 100_000 { t.Fatalf(\"total = %d\", o.Total) } if len(repo.saved) != 1 { t.Fatal(\"order chua duoc luu\") } if notif.notified != 1 { t.Fatal(\"khach chua duoc bao\") } } func TestPlaceOrder_HetHang(t *testing.T) { svc := newSvc(\u0026fakeRepo{}, fakeStock{\"SKU1\": 1}, \u0026fakeNotifier{}) _, err := svc.PlaceOrder(context.Background(), \"cust-1\", []order.Item{{SKU: \"SKU1\", Quantity: 2, Price: 50_000}}) if !errors.Is(err, order.ErrInsufficientStock) { t.Fatalf(\"want ErrInsufficientStock, got %v\", err) } } func TestPlaceOrder_LoiGuiMail_DonVanThanhCong(t *testing.T) { repo := \u0026fakeRepo{} svc := newSvc(repo, fakeStock{\"SKU1\": 10}, \u0026fakeNotifier{failWith: errors.New(\"smtp down\")}) _, err := svc.PlaceOrder(context.Background(), \"cust-1\", []order.Item{{SKU: \"SKU1\", Quantity: 1, Price: 50_000}}) if err != nil { t.Fatalf(\"don phai thanh cong du mail loi, got %v\", err) } if len(repo.saved) != 1 { t.Fatal(\"order chua duoc luu\") } } Bộ test này chạy trong ~1ms, không network, không container, và test đúng business rule kể cả rule tinh tế “mail lỗi không fail đơn”. Ở V0, rule đó không thể test mà không dựng SMTP giả ở tầng network.\nSơ đồ tổng kết ┌──────────────────────┐ │ cmd/api/main │ (biết tất cả — chỉ để lắp ráp) └──┬──────┬──────┬──────┘ │ │ │ import ┌────────────▼─┐ ┌─▼──────────┐ ┌─▼──────────┐ │ httpapi │ │ postgres │ │ smtpmail │ └────────────┬─┘ └─┬──────────┘ └─┬──────────┘ import │ │ import │ import ▼ ▼ ▼ ┌──────────────────────────┐ │ order (domain) │ ← MỌI mũi tên trỏ VÀO │ Service + Repository + │ import: chỉ stdlib │ StockChecker + Notifier │ └──────────────────────────┘Đây, thu nhỏ, chính là Clean Architecture. Phần còn lại của tài liệu chỉ là mở rộng sơ đồ này ra nhiều tầng, nhiều module, nhiều pattern.\n5. Trade-off Được Mất Nghiệp vụ test bằng RAM, mili-giây Thêm ~30% số file (interface, adapter, wiring) Đổi hạ tầng = viết adapter mới Đọc code phải nhảy qua interface (IDE “go to implementation”) Nghiệp vụ tái dùng cho HTTP/gRPC/CLI/worker Người mới cần hiểu quy ước trước khi đóng góp Thay đổi hạ tầng không lan vào nghiệp vụ Interface là contract phải bảo trì: thêm method = sửa mọi impl + fake Compile-time enforcement bằng internal/ + linter Performance: gọi qua interface ngăn inline, thêm ~1–3ns/call Về performance: 1–3ns mỗi call qua interface so với 1–10ms mỗi query DB — nhiễu nền, không bao giờ là lý do từ chối DIP ở tầng use case. Nó chỉ đáng cân nhắc trong hot loop xử lý hàng triệu phần tử (lúc đó dùng kiểu cụ thể hoặc generics trong phạm vi hẹp).\nTrade-off thật sự nằm ở chi phí nhận thức: mỗi interface là một khái niệm thêm vào đầu người đọc. Vì thế: đảo phụ thuộc tại ranh giới kiến trúc (nghiệp vụ ↔ hạ tầng), không đảo giữa hai package nghiệp vụ cùng tầng, càng không đảo bên trong một package.\n6. Best Practices Interface ở phía consumer, đặt tên theo vai trò: order.Notifier, không phải smtp.IEmailService. Interface hẹp — bắt đầu 1 method; nhu cầu mới thì thêm interface mới hoặc compose. Chỉ dùng kiểu domain trong contract — thấy *sql.Row, *http.Request, pb.OrderProto trong interface của package nghiệp vụ là báo động đỏ. Dịch lỗi tại adapter: sql.ErrNoRows → order.ErrNotFound. Sentinel error của domain là một phần của contract. Inject cả non-determinism: time.Now, random ID, UUID — như ví dụ trên — để test deterministic. Kiểm tra compile-time implement đủ interface tại adapter: var _ order.Repository = (*OrderRepo)(nil) // vỡ build ngay nếu thiếu method Cưỡng chế hướng import bằng CI (depguard/gomodguard) — kiến trúc chỉ tồn tại nếu được enforce. 7. Anti-patterns Interface đặt cạnh implementation (postgres.Repository mà business import) — inversion giả. Đã phân tích ở 3.3. Interface “ăn theo” implementation: 12 method vì repo có 12 method. Vi phạm ISP, mock nặng nề. → interface theo nhu cầu use case. Đảo mọi thứ: interface cho cả hàm tính tổng, struct config… Chi phí nhận thức tăng, giá trị bằng 0. → chỉ đảo tại ranh giới nghiệp vụ/hạ tầng. Service Locator (container.Get(\"orderRepo\")): giấu dependency vào chuỗi string, mất kiểm tra compile-time, dependency graph trở nên vô hình. → constructor injection tường minh. Adapter gọi ngược use case: postgres.OrderRepo gọi order.Service.Validate() bên trong Save → vòng lặp logic, transaction lồng nhau khó lường. Adapter chỉ làm cơ chế, không làm chính sách. 8. Khi nào KHÔNG đảo phụ thuộc Giữa hai package cùng tầng nghiệp vụ ổn định: order gọi thẳng pricing.Calculate() — hàm thuần, cùng vòng đời, không cần interface ở giữa. Với stdlib ổn định: không ai cần ITimeProvider bọc time.Now trừ khi test cần điều khiển thời gian (như ví dụ trên — và khi đó inject func() time.Time là đủ, không cần interface). Tool nhỏ, script: toàn bộ chương trình là “tầng ngoài”, không có chính sách đáng bảo vệ. Khi chỉ có một implementation và không cần fake để test và không nằm trên ranh giới kiến trúc — cả ba điều kiện cùng lúc. Tóm tắt chương DIP tách control flow (không đổi) khỏi source dependency (bị đảo): hạ tầng import nghiệp vụ. Vị trí interface quyết định tất cả: interface là nhu cầu của consumer, sống trong package consumer, nói ngôn ngữ domain. Go hỗ trợ DIP hạng nhất: implicit satisfaction + consumer-side interface + internal/. Sơ đồ “mọi mũi tên trỏ vào domain” ở mục 4 chính là Clean Architecture thu nhỏ. Chương tiếp theo: Separation of Concerns \u0026 Composition — mảnh nền cuối trước khi vào Clean Architecture Core.\n","wordCount":"2871","inLanguage":"en","datePublished":"2026-07-07T21:00:00+07:00","dateModified":"2026-07-07T21:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/clean-architect/01-foundation/03-dependency-inversion/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/clean-architect/>Clean Architecture với Golang</a></div><h1 class="post-title entry-hint-parent">Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc</h1><div class=post-meta><span title='2026-07-07 21:00:00 +0700 +07'>July 7, 2026</span>&nbsp;·&nbsp;14 min</div></header><div class=post-content><blockquote><p><strong>Level 1–2 Bridge</strong> · Đây là chương kỹ thuật then chốt. Toàn bộ Clean Architecture đứng trên một cơ chế duy nhất được trình bày ở đây.</p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><h3 id=bài-toán>Bài toán<a hidden class=anchor aria-hidden=true href=#bài-toán>#</a></h3><p>Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách doanh nghiệp kiếm tiền, nó sống 10 năm trong khi framework HTTP sống 3 năm và fashion database đổi mỗi 5 năm. Vấn đề: <strong>theo cách viết code tự nhiên, thứ quý nhất lại phụ thuộc vào thứ dễ thay đổi nhất.</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>order</span> <span style=color:#75715e>// business logic</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/postgres&#34;</span>   <span style=color:#75715e>// ← business biết Postgres</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/smtpmail&#34;</span>   <span style=color:#75715e>// ← business biết SMTP</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Service</span>) <span style=color:#a6e22e>PlaceOrder</span>(<span style=color:#f92672>...</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// logic quý giá... bị hàn chết vào hạ tầng</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Hệ quả nếu không giải quyết:</p><ul><li><strong>Không thể unit test nghiệp vụ</strong> — mọi test kéo theo DB, SMTP.</li><li><strong>Không thể thay hạ tầng</strong> — migrate Postgres → CockroachDB nghĩa là mổ vào code nghiệp vụ.</li><li><strong>Không thể tái sử dụng nghiệp vụ</strong> — muốn gọi PlaceOrder từ Kafka consumer thay vì HTTP? Logic dính đầy mảnh HTTP.</li><li><strong>Thay đổi hạ tầng lan vào nghiệp vụ</strong> — upgrade driver, đổi schema đều risk vỡ business rule.</li></ul><h3 id=cách-tiếp-cận-cũ-và-hạn-chế>Cách tiếp cận cũ và hạn chế<a hidden class=anchor aria-hidden=true href=#cách-tiếp-cận-cũ-và-hạn-chế>#</a></h3><p><strong>Layered Architecture cổ điển</strong> (Presentation → Business → Data Access) đã nhận ra cần tách tầng, nhưng giữ nguyên hướng phụ thuộc chảy xuống: Business import Data Access. Tách tầng mà không đảo phụ thuộc chỉ <em>sắp xếp</em> coupling chứ không <em>cắt</em> nó — business vẫn biết hạ tầng, vẫn không test được độc lập, database vẫn là trung tâm hấp dẫn của toàn hệ thống.</p><p>DIP là mảnh ghép còn thiếu: giữ layer, nhưng <strong>bẻ ngược mũi tên compile-time</strong>.</p><h2 id=2-tại-sao-dip-tồn-tại>2. Tại sao DIP tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-dip-tồn-tại>#</a></h2><ul><li><strong>Business Problem</strong>: bảo vệ khoản đầu tư lớn nhất (business logic) khỏi vòng đời ngắn của công nghệ; giữ chi phí đổi công nghệ ở mức &ldquo;viết một adapter&rdquo; thay vì &ldquo;viết lại hệ thống&rdquo;.</li><li><strong>Technical Problem</strong>: test nghiệp vụ phải chạy nhanh (mili-giây) và deterministic — bất khả thi khi nghiệp vụ import driver.</li><li><strong>Design Problem</strong>: cần một cơ chế để <em>chính sách</em> (policy — cái gì, khi nào) và <em>cơ chế</em> (mechanism — bằng cách nào) tiến hóa độc lập.</li></ul><hr><h2 id=3-giải-thích-bản-chất>3. Giải thích bản chất<a hidden class=anchor aria-hidden=true href=#3-giải-thích-bản-chất>#</a></h2><h3 id=31-tách-hai-khái-niệm-bị-nhập-nhằng-control-flow-vs-source-dependency>3.1 Tách hai khái niệm bị nhập nhằng: control flow vs source dependency<a hidden class=anchor aria-hidden=true href=#31-tách-hai-khái-niệm-bị-nhập-nhằng-control-flow-vs-source-dependency>#</a></h3><p>Đây là insight trung tâm, đáng đọc chậm:</p><ul><li><strong>Control flow (runtime)</strong>: lúc chạy, hàm nào gọi hàm nào. <code>Service.PlaceOrder</code> <em>sẽ luôn</em> gọi xuống code lưu Postgres — điều này không thể và không cần thay đổi.</li><li><strong>Source dependency (compile-time)</strong>: package nào <em>biết tên</em> package nào qua <code>import</code>.</li></ul><p>Lập trình viên thường mặc định hai luồng này trùng nhau: muốn gọi thì phải import. <strong>Polymorphism (interface) phá vỡ sự mặc định đó</strong>: bạn có thể gọi một hàm mà không import package chứa nó — chỉ cần gọi qua interface do chính bạn định nghĩa.</p><pre tabindex=0><code>TRƯỚC (tự nhiên):                       SAU (đảo chiều):
 
  order ──import──▶ postgres              order ◀──import── postgres
    │                  ▲                    │ khai báo          │ implement
    └── gọi Save() ────┘                    │ OrderStore        │ OrderStore
                                            ▼                   │
  control flow  ──▶ trùng                 control flow runtime VẪN:
- source dep    ──▶ trùng                 order ──gọi qua interface──▶ postgres</code></pre><p>Control flow không đổi. Chỉ có <strong>kiến thức</strong> đổi chỗ: trước đây <code>order</code> biết <code>postgres</code>; giờ <code>postgres</code> biết <code>order</code>, còn <code>order</code> không biết gì.</p>
-<h3 id="32-vì-sao-hướng-này-đúng--stable-dependencies">3.2 Vì sao hướng này đúng? — Stable Dependencies<a hidden class="anchor" aria-hidden="true" href="#32-vì-sao-hướng-này-đúng--stable-dependencies">#</a></h3>
-<p>Chương 1.1 đã thiết lập: phụ thuộc phải trỏ về phía ổn định. Xét độ ổn định thực nghiệm trong một hệ thống 5 năm tuổi:</p>
-<table>
-  <thead>
-      <tr>
-          <th>Thành phần</th>
-          <th>Tần suất thay đổi</th>
-          <th>Lý do đổi</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Business rule cốt lõi (&ldquo;đơn &gt; 500k freeship&rdquo;)</td>
-          <td>Thấp nhất</td>
-          <td>Chỉ đổi khi doanh nghiệp đổi chính sách</td>
-      </tr>
-      <tr>
-          <td>Use case (quy trình đặt hàng)</td>
-          <td>Thấp</td>
-          <td>Đổi khi quy trình đổi</td>
-      </tr>
-      <tr>
-          <td>Schema DB, driver, ORM</td>
-          <td>Trung bình–cao</td>
-          <td>Tối ưu hóa, migrate, upgrade</td>
-      </tr>
-      <tr>
-          <td>Framework HTTP, format API</td>
-          <td>Cao</td>
-          <td>Fashion công nghệ, client mới</td>
-      </tr>
-  </tbody>
-</table>
-<p>Mũi tên phải trỏ từ hàng dưới lên hàng trên. DIP là cơ chế hiện thực hóa điều đó.</p>
-<h3 id="33-abstraction-thuộc-về-ai--điểm-bị-hiểu-sai-nhiều-nhất">3.3 Abstraction thuộc về ai? — điểm bị hiểu sai nhiều nhất<a hidden class="anchor" aria-hidden="true" href="#33-abstraction-thuộc-về-ai--điểm-bị-hiểu-sai-nhiều-nhất">#</a></h3>
-<p>DIP nói &ldquo;cả hai phụ thuộc abstraction&rdquo;. Nhưng abstraction đặt ở <strong>package nào</strong>? Câu trả lời quyết định thành bại:</p>
-<p><strong>Interface thuộc về phía cấp cao (consumer) — nó là <em>nhu cầu</em> của chính sách, không phải <em>mô tả</em> của cơ chế.</strong></p>
-<p><code>order.OrderStore</code> nghĩa là: <em>&ldquo;nghiệp vụ order cần một chỗ lưu đơn&rdquo;</em> — phát biểu từ góc nhìn nghiệp vụ, chỉ chứa những gì nghiệp vụ cần, dùng kiểu dữ liệu của nghiệp vụ. Nếu đặt interface ở package <code>postgres</code>, nó trở thành mô tả của Postgres repo, business phải import <code>postgres</code> để lấy nó → mũi tên trỏ sai, DIP thất bại dù &ldquo;có interface&rdquo;. Có interface không đồng nghĩa với có inversion. <strong>Vị trí của interface quyết định hướng của mũi tên.</strong></p>
-<p>Go hỗ trợ điều này tốt hơn mọi ngôn ngữ mainstream: nhờ <strong>implicit interface satisfaction</strong>, package <code>postgres</code> thỏa mãn <code>order.OrderStore</code> mà không cần khai báo <code>implements</code>, thậm chí không cần import <code>order</code> nếu kiểu trùng — nhưng thực tế nó import <code>order</code> để dùng kiểu domain (<code>order.Order</code>), và đó chính xác là hướng mũi tên ta muốn.</p>
-<h3 id="34-dip-bảo-vệ-điều-gì-giảm-coupling-thế-nào">3.4 DIP bảo vệ điều gì, giảm coupling thế nào<a hidden class="anchor" aria-hidden="true" href="#34-dip-bảo-vệ-điều-gì-giảm-coupling-thế-nào">#</a></h3>
-<ul>
-<li><strong>Bảo vệ</strong>: tính thuần khiết (purity) của tầng chính sách — không kiến thức hạ tầng, không side-effect ngoài ý muốn, test được bằng bộ nhớ.</li>
-<li><strong>Giảm coupling</strong>: từ coupling với <em>implementation cụ thể</em> (hàng nghìn dòng, thay đổi thường xuyên, kéo theo transitive dependencies) xuống coupling với <em>contract vài dòng</em> do chính mình sở hữu. Kiến thức mà tầng nghiệp vụ phải mang giảm từ &ldquo;toàn bộ Postgres&rdquo; xuống &ldquo;một interface 2 method&rdquo;.</li>
-</ul>
-<hr>
-<h2 id="4-cách-hoạt-động-xây-dựng-từng-bước">4. Cách hoạt động: xây dựng từng bước<a hidden class="anchor" aria-hidden="true" href="#4-cách-hoạt-động-xây-dựng-từng-bước">#</a></h2>
-<p>Bài toán xuyên suốt: <em>đặt hàng — kiểm tra tồn kho, tạo đơn, gửi email xác nhận.</em></p>
-<h3 id="bước-0--phiên-bản-chưa-đảo-baseline">Bước 0 — Phiên bản chưa đảo (baseline)<a hidden class="anchor" aria-hidden="true" href="#bước-0--phiên-bản-chưa-đảo-baseline">#</a></h3>
-<pre tabindex="0"><code>placeorder-v0/
+ source dep    ──▶ trùng                 order ──gọi qua interface──▶ postgres</code></pre><p>Control flow không đổi. Chỉ có <strong>kiến thức</strong> đổi chỗ: trước đây <code>order</code> biết <code>postgres</code>; giờ <code>postgres</code> biết <code>order</code>, còn <code>order</code> không biết gì.</p><h3 id=32-vì-sao-hướng-này-đúng--stable-dependencies>3.2 Vì sao hướng này đúng? — Stable Dependencies<a hidden class=anchor aria-hidden=true href=#32-vì-sao-hướng-này-đúng--stable-dependencies>#</a></h3><p>Chương 1.1 đã thiết lập: phụ thuộc phải trỏ về phía ổn định. Xét độ ổn định thực nghiệm trong một hệ thống 5 năm tuổi:</p><table><thead><tr><th>Thành phần</th><th>Tần suất thay đổi</th><th>Lý do đổi</th></tr></thead><tbody><tr><td>Business rule cốt lõi (&ldquo;đơn > 500k freeship&rdquo;)</td><td>Thấp nhất</td><td>Chỉ đổi khi doanh nghiệp đổi chính sách</td></tr><tr><td>Use case (quy trình đặt hàng)</td><td>Thấp</td><td>Đổi khi quy trình đổi</td></tr><tr><td>Schema DB, driver, ORM</td><td>Trung bình–cao</td><td>Tối ưu hóa, migrate, upgrade</td></tr><tr><td>Framework HTTP, format API</td><td>Cao</td><td>Fashion công nghệ, client mới</td></tr></tbody></table><p>Mũi tên phải trỏ từ hàng dưới lên hàng trên. DIP là cơ chế hiện thực hóa điều đó.</p><h3 id=33-abstraction-thuộc-về-ai--điểm-bị-hiểu-sai-nhiều-nhất>3.3 Abstraction thuộc về ai? — điểm bị hiểu sai nhiều nhất<a hidden class=anchor aria-hidden=true href=#33-abstraction-thuộc-về-ai--điểm-bị-hiểu-sai-nhiều-nhất>#</a></h3><p>DIP nói &ldquo;cả hai phụ thuộc abstraction&rdquo;. Nhưng abstraction đặt ở <strong>package nào</strong>? Câu trả lời quyết định thành bại:</p><p><strong>Interface thuộc về phía cấp cao (consumer) — nó là <em>nhu cầu</em> của chính sách, không phải <em>mô tả</em> của cơ chế.</strong></p><p><code>order.OrderStore</code> nghĩa là: <em>&ldquo;nghiệp vụ order cần một chỗ lưu đơn&rdquo;</em> — phát biểu từ góc nhìn nghiệp vụ, chỉ chứa những gì nghiệp vụ cần, dùng kiểu dữ liệu của nghiệp vụ. Nếu đặt interface ở package <code>postgres</code>, nó trở thành mô tả của Postgres repo, business phải import <code>postgres</code> để lấy nó → mũi tên trỏ sai, DIP thất bại dù &ldquo;có interface&rdquo;. Có interface không đồng nghĩa với có inversion. <strong>Vị trí của interface quyết định hướng của mũi tên.</strong></p><p>Go hỗ trợ điều này tốt hơn mọi ngôn ngữ mainstream: nhờ <strong>implicit interface satisfaction</strong>, package <code>postgres</code> thỏa mãn <code>order.OrderStore</code> mà không cần khai báo <code>implements</code>, thậm chí không cần import <code>order</code> nếu kiểu trùng — nhưng thực tế nó import <code>order</code> để dùng kiểu domain (<code>order.Order</code>), và đó chính xác là hướng mũi tên ta muốn.</p><h3 id=34-dip-bảo-vệ-điều-gì-giảm-coupling-thế-nào>3.4 DIP bảo vệ điều gì, giảm coupling thế nào<a hidden class=anchor aria-hidden=true href=#34-dip-bảo-vệ-điều-gì-giảm-coupling-thế-nào>#</a></h3><ul><li><strong>Bảo vệ</strong>: tính thuần khiết (purity) của tầng chính sách — không kiến thức hạ tầng, không side-effect ngoài ý muốn, test được bằng bộ nhớ.</li><li><strong>Giảm coupling</strong>: từ coupling với <em>implementation cụ thể</em> (hàng nghìn dòng, thay đổi thường xuyên, kéo theo transitive dependencies) xuống coupling với <em>contract vài dòng</em> do chính mình sở hữu. Kiến thức mà tầng nghiệp vụ phải mang giảm từ &ldquo;toàn bộ Postgres&rdquo; xuống &ldquo;một interface 2 method&rdquo;.</li></ul><hr><h2 id=4-cách-hoạt-động-xây-dựng-từng-bước>4. Cách hoạt động: xây dựng từng bước<a hidden class=anchor aria-hidden=true href=#4-cách-hoạt-động-xây-dựng-từng-bước>#</a></h2><p>Bài toán xuyên suốt: <em>đặt hàng — kiểm tra tồn kho, tạo đơn, gửi email xác nhận.</em></p><h3 id=bước-0--phiên-bản-chưa-đảo-baseline>Bước 0 — Phiên bản chưa đảo (baseline)<a hidden class=anchor aria-hidden=true href=#bước-0--phiên-bản-chưa-đảo-baseline>#</a></h3><pre tabindex=0><code>placeorder-v0/
 └── internal/
     ├── order/service.go        # import postgres, smtpmail  ✗
     ├── postgres/repo.go
-    └── smtpmail/sender.go</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/order/service.go — V0: nghiệp vụ ôm hạ tầng</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">order</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/postgres&#34;</span>  <span style="color:#75715e">// ✗</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/smtpmail&#34;</span>  <span style="color:#75715e">// ✗</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Service</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">repo</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">postgres</span>.<span style="color:#a6e22e">OrderRepo</span>   <span style="color:#75715e">// kiểu cụ thể</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mail</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">smtpmail</span>.<span style="color:#a6e22e">Sender</span>      <span style="color:#75715e">// kiểu cụ thể</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Service</span>) <span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">customerID</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">items</span> []<span style="color:#a6e22e">postgres</span>.<span style="color:#a6e22e">ItemRow</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ✗✗ nghiệp vụ dùng kiểu của tầng DB (ItemRow) — leaky đến tận chữ ký hàm</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#f92672">...</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Đếm kiến thức: <code>order</code> biết Postgres (schema, kiểu row), biết SMTP (địa chỉ server nằm trong Sender). Test <code>PlaceOrder</code> cần Postgres thật + SMTP thật hoặc build tag khéo léo. Không đạt.</p>
-<h3 id="bước-1--nghiệp-vụ-tuyên-bố-nhu-cầu-bằng-interface-của-chính-nó">Bước 1 — Nghiệp vụ tuyên bố nhu cầu bằng interface của chính nó<a hidden class="anchor" aria-hidden="true" href="#bước-1--nghiệp-vụ-tuyên-bố-nhu-cầu-bằng-interface-của-chính-nó">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/order/order.go — kiểu domain, thuộc về nghiệp vụ</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">order</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Order</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ID</span>         <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">CustomerID</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Items</span>      []<span style="color:#a6e22e">Item</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Total</span>      <span style="color:#a6e22e">Money</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">PlacedAt</span>   <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Item</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">SKU</span>      <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Quantity</span> <span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Price</span>    <span style="color:#a6e22e">Money</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Money</span> <span style="color:#66d9ef">int64</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrEmptyOrder</span>       = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;order: empty order&#34;</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ErrInsufficientStock</span> = <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;order: insufficient stock&#34;</span>)
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// ==== NHU CẦU của nghiệp vụ — interface do nghiệp vụ sở hữu ====</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Repository: &#34;tôi cần chỗ lưu đơn hàng&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Repository</span> <span style="color:#66d9ef">interface</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// StockChecker: &#34;tôi cần biết hàng còn không&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StockChecker</span> <span style="color:#66d9ef">interface</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Available</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">sku</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">error</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Notifier: &#34;tôi cần báo cho khách&#34; — chú ý: KHÔNG phải EmailSender.</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Nghiệp vụ không quy định kênh; email chỉ là một cơ chế.</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Notifier</span> <span style="color:#66d9ef">interface</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">OrderPlaced</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Ba interface này hẹp (1 method), dùng thuần kiểu domain, đặt tên theo <strong>vai trò trong nghiệp vụ</strong> chứ không theo công nghệ. Đây là những &ldquo;cổng&rdquo; (port) mà thế giới bên ngoài sẽ cắm vào.</p>
-<h3 id="bước-2--use-case-chỉ-phụ-thuộc-các-cổng">Bước 2 — Use case chỉ phụ thuộc các cổng<a hidden class="anchor" aria-hidden="true" href="#bước-2--use-case-chỉ-phụ-thuộc-các-cổng">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/order/service.go — V1: thuần chính sách</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">order</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Service</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">repo</span>    <span style="color:#a6e22e">Repository</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">stock</span>   <span style="color:#a6e22e">StockChecker</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">notify</span>  <span style="color:#a6e22e">Notifier</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">now</span>     <span style="color:#66d9ef">func</span>() <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span> <span style="color:#75715e">// cả thời gian cũng là dependency — test được</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">newID</span>   <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewService</span>(<span style="color:#a6e22e">repo</span> <span style="color:#a6e22e">Repository</span>, <span style="color:#a6e22e">stock</span> <span style="color:#a6e22e">StockChecker</span>, <span style="color:#a6e22e">notify</span> <span style="color:#a6e22e">Notifier</span>,
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">now</span> <span style="color:#66d9ef">func</span>() <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>, <span style="color:#a6e22e">newID</span> <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">string</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Service</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Service</span>{<span style="color:#a6e22e">repo</span>: <span style="color:#a6e22e">repo</span>, <span style="color:#a6e22e">stock</span>: <span style="color:#a6e22e">stock</span>, <span style="color:#a6e22e">notify</span>: <span style="color:#a6e22e">notify</span>, <span style="color:#a6e22e">now</span>: <span style="color:#a6e22e">now</span>, <span style="color:#a6e22e">newID</span>: <span style="color:#a6e22e">newID</span>}
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Service</span>) <span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">customerID</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">items</span> []<span style="color:#a6e22e">Item</span>) (<span style="color:#a6e22e">Order</span>, <span style="color:#66d9ef">error</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">items</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Order</span>{}, <span style="color:#a6e22e">ErrEmptyOrder</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">it</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">items</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">avail</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">stock</span>.<span style="color:#a6e22e">Available</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">it</span>.<span style="color:#a6e22e">SKU</span>)
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Order</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;check stock %s: %w&#34;</span>, <span style="color:#a6e22e">it</span>.<span style="color:#a6e22e">SKU</span>, <span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">avail</span> &lt; <span style="color:#a6e22e">it</span>.<span style="color:#a6e22e">Quantity</span> {
-</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Order</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;%w: sku %s&#34;</span>, <span style="color:#a6e22e">ErrInsufficientStock</span>, <span style="color:#a6e22e">it</span>.<span style="color:#a6e22e">SKU</span>)
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Order</span>{
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ID</span>:         <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">newID</span>(),
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">CustomerID</span>: <span style="color:#a6e22e">customerID</span>,
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Items</span>:      <span style="color:#a6e22e">items</span>,
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Total</span>:      <span style="color:#a6e22e">total</span>(<span style="color:#a6e22e">items</span>),
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">PlacedAt</span>:   <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">now</span>(),
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Order</span>{}, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;save order: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Quyết định thiết kế: gửi thông báo lỗi KHÔNG làm fail đơn —</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// đây là business rule, và giờ nó nằm đúng chỗ để đọc thấy được.</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">notify</span>.<span style="color:#a6e22e">OrderPlaced</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// log ở đây qua một logger được inject; đơn vẫn thành công</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">err</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">o</span>, <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">total</span>(<span style="color:#a6e22e">items</span> []<span style="color:#a6e22e">Item</span>) <span style="color:#a6e22e">Money</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">t</span> <span style="color:#a6e22e">Money</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">it</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">items</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">t</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">it</span>.<span style="color:#a6e22e">Price</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">Money</span>(<span style="color:#a6e22e">it</span>.<span style="color:#a6e22e">Quantity</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">t</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Kiểm tra: <code>go list -deps ./internal/order</code> → chỉ stdlib. Nghiệp vụ đạt độ thuần 100%.</p>
-<h3 id="bước-3--hạ-tầng-implement-các-cổng-mũi-tên-đã-đảo">Bước 3 — Hạ tầng implement các cổng (mũi tên đã đảo)<a hidden class="anchor" aria-hidden="true" href="#bước-3--hạ-tầng-implement-các-cổng-mũi-tên-đã-đảo">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/postgres/order_repo.go</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">postgres</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;database/sql&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;encoding/json&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/order&#34;</span> <span style="color:#75715e">// ← MŨI TÊN: hạ tầng import nghiệp vụ</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">OrderRepo</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">DB</span> }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewOrderRepo</span>(<span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">DB</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">OrderRepo</span> { <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">OrderRepo</span>{<span style="color:#a6e22e">db</span>} }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">OrderRepo</span>) <span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">items</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Marshal</span>(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Items</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;marshal items: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">ExecContext</span>(<span style="color:#a6e22e">ctx</span>,
-</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">`INSERT INTO orders (id, customer_id, items, total, placed_at)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		 VALUES ($1, $2, $3, $4, $5)`</span>,
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">CustomerID</span>, <span style="color:#a6e22e">items</span>, int64(<span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Total</span>), <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">PlacedAt</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;insert order: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/smtpmail/notifier.go</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">smtpmail</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net/smtp&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/order&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Notifier</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">addr</span>, <span style="color:#a6e22e">from</span> <span style="color:#66d9ef">string</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">auth</span>       <span style="color:#a6e22e">smtp</span>.<span style="color:#a6e22e">Auth</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// map customerID → email; thực tế sẽ inject một CustomerDirectory</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">emailOf</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">customerID</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">error</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">n</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Notifier</span>) <span style="color:#a6e22e">OrderPlaced</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">to</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">emailOf</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">CustomerID</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;resolve email: %w&#34;</span>, <span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">body</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;Subject: Don hang %s\r\n\r\nTong tien: %d VND\r\n&#34;</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">ID</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Total</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">smtp</span>.<span style="color:#a6e22e">SendMail</span>(<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">addr</span>, <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">auth</span>, <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">from</span>, []<span style="color:#66d9ef">string</span>{<span style="color:#a6e22e">to</span>}, []byte(<span style="color:#a6e22e">body</span>))
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="bước-4--composition-root-nối-dây">Bước 4 — Composition root nối dây<a hidden class="anchor" aria-hidden="true" href="#bước-4--composition-root-nối-dây">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// cmd/api/main.go</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;crypto/rand&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;database/sql&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;encoding/hex&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;log&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;github.com/lib/pq&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/httpapi&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/order&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/postgres&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/smtpmail&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sql</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;postgres&#34;</span>, <span style="color:#a6e22e">mustEnv</span>(<span style="color:#e6db74">&#34;DATABASE_URL&#34;</span>))
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>) }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">svc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">NewService</span>(
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">postgres</span>.<span style="color:#a6e22e">NewOrderRepo</span>(<span style="color:#a6e22e">db</span>),
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">postgres</span>.<span style="color:#a6e22e">NewStockRepo</span>(<span style="color:#a6e22e">db</span>),
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">smtpmail</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">mustEnv</span>(<span style="color:#e6db74">&#34;SMTP_ADDR&#34;</span>), <span style="color:#a6e22e">mustEnv</span>(<span style="color:#e6db74">&#34;SMTP_FROM&#34;</span>)),
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>,
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">newID</span>,
-</span></span><span style="display:flex;"><span>	)
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">httpapi</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">svc</span>).<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:8080&#34;</span>))
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newID</span>() <span style="color:#66d9ef">string</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">16</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">b</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">hex</span>.<span style="color:#a6e22e">EncodeToString</span>(<span style="color:#a6e22e">b</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="bước-5--unit-test-nghiệp-vụ-bằng-fake-trong-bộ-nhớ">Bước 5 — Unit test nghiệp vụ bằng fake trong bộ nhớ<a hidden class="anchor" aria-hidden="true" href="#bước-5--unit-test-nghiệp-vụ-bằng-fake-trong-bộ-nhớ">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// internal/order/service_test.go</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">order_test</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;context&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;errors&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;testing&#34;</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;myapp/internal/order&#34;</span>
-</span></span><span style="display:flex;"><span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Fake — implementation thật nhưng chạy trong RAM. Không cần mockgen.</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">fakeRepo</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">saved</span> []<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Order</span>; <span style="color:#a6e22e">failWith</span> <span style="color:#66d9ef">error</span> }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">fakeRepo</span>) <span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">_</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">o</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">failWith</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">failWith</span> }
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">saved</span> = append(<span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">saved</span>, <span style="color:#a6e22e">o</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">fakeStock</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#a6e22e">fakeStock</span>) <span style="color:#a6e22e">Available</span>(<span style="color:#a6e22e">_</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">sku</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">error</span>) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>[<span style="color:#a6e22e">sku</span>], <span style="color:#66d9ef">nil</span> }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">fakeNotifier</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">notified</span> <span style="color:#66d9ef">int</span>; <span style="color:#a6e22e">failWith</span> <span style="color:#66d9ef">error</span> }
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">fakeNotifier</span>) <span style="color:#a6e22e">OrderPlaced</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Order</span>) <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">notified</span><span style="color:#f92672">++</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">failWith</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newSvc</span>(<span style="color:#a6e22e">repo</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">fakeRepo</span>, <span style="color:#a6e22e">stock</span> <span style="color:#a6e22e">fakeStock</span>, <span style="color:#a6e22e">n</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">fakeNotifier</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Service</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">NewService</span>(<span style="color:#a6e22e">repo</span>, <span style="color:#a6e22e">stock</span>, <span style="color:#a6e22e">n</span>,
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">func</span>() <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Date</span>(<span style="color:#ae81ff">2026</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">UTC</span>) },
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">string</span> { <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;test-id-1&#34;</span> },
-</span></span><span style="display:flex;"><span>	)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestPlaceOrder_ThanhCong</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">repo</span>, <span style="color:#a6e22e">notif</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fakeRepo</span>{}, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fakeNotifier</span>{}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">svc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">newSvc</span>(<span style="color:#a6e22e">repo</span>, <span style="color:#a6e22e">fakeStock</span>{<span style="color:#e6db74">&#34;SKU1&#34;</span>: <span style="color:#ae81ff">10</span>}, <span style="color:#a6e22e">notif</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">o</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">svc</span>.<span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;cust-1&#34;</span>,
-</span></span><span style="display:flex;"><span>		[]<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Item</span>{{<span style="color:#a6e22e">SKU</span>: <span style="color:#e6db74">&#34;SKU1&#34;</span>, <span style="color:#a6e22e">Quantity</span>: <span style="color:#ae81ff">2</span>, <span style="color:#a6e22e">Price</span>: <span style="color:#ae81ff">50_000</span>}})
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>) }
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Total</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">100_000</span> { <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;total = %d&#34;</span>, <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">Total</span>) }
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">saved</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">1</span> { <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#e6db74">&#34;order chua duoc luu&#34;</span>) }
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">notif</span>.<span style="color:#a6e22e">notified</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">1</span> { <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#e6db74">&#34;khach chua duoc bao&#34;</span>) }
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestPlaceOrder_HetHang</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">svc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">newSvc</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fakeRepo</span>{}, <span style="color:#a6e22e">fakeStock</span>{<span style="color:#e6db74">&#34;SKU1&#34;</span>: <span style="color:#ae81ff">1</span>}, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fakeNotifier</span>{})
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">svc</span>.<span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;cust-1&#34;</span>,
-</span></span><span style="display:flex;"><span>		[]<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Item</span>{{<span style="color:#a6e22e">SKU</span>: <span style="color:#e6db74">&#34;SKU1&#34;</span>, <span style="color:#a6e22e">Quantity</span>: <span style="color:#ae81ff">2</span>, <span style="color:#a6e22e">Price</span>: <span style="color:#ae81ff">50_000</span>}})
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">Is</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">ErrInsufficientStock</span>) {
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;want ErrInsufficientStock, got %v&#34;</span>, <span style="color:#a6e22e">err</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">TestPlaceOrder_LoiGuiMail_DonVanThanhCong</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">T</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">repo</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fakeRepo</span>{}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">svc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">newSvc</span>(<span style="color:#a6e22e">repo</span>, <span style="color:#a6e22e">fakeStock</span>{<span style="color:#e6db74">&#34;SKU1&#34;</span>: <span style="color:#ae81ff">10</span>}, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fakeNotifier</span>{<span style="color:#a6e22e">failWith</span>: <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;smtp down&#34;</span>)})
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">svc</span>.<span style="color:#a6e22e">PlaceOrder</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>(), <span style="color:#e6db74">&#34;cust-1&#34;</span>,
-</span></span><span style="display:flex;"><span>		[]<span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Item</span>{{<span style="color:#a6e22e">SKU</span>: <span style="color:#e6db74">&#34;SKU1&#34;</span>, <span style="color:#a6e22e">Quantity</span>: <span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">Price</span>: <span style="color:#ae81ff">50_000</span>}})
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;don phai thanh cong du mail loi, got %v&#34;</span>, <span style="color:#a6e22e">err</span>) }
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">repo</span>.<span style="color:#a6e22e">saved</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">1</span> { <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#e6db74">&#34;order chua duoc luu&#34;</span>) }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Bộ test này chạy trong ~1ms, không network, không container, và <strong>test đúng business rule</strong> kể cả rule tinh tế &ldquo;mail lỗi không fail đơn&rdquo;. Ở V0, rule đó không thể test mà không dựng SMTP giả ở tầng network.</p>
-<h3 id="sơ-đồ-tổng-kết">Sơ đồ tổng kết<a hidden class="anchor" aria-hidden="true" href="#sơ-đồ-tổng-kết">#</a></h3>
-<pre tabindex="0"><code>                        ┌──────────────────────┐
+    └── smtpmail/sender.go</code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/order/service.go — V0: nghiệp vụ ôm hạ tầng</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>order</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;context&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/postgres&#34;</span>  <span style=color:#75715e>// ✗</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/smtpmail&#34;</span>  <span style=color:#75715e>// ✗</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Service</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>repo</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>postgres</span>.<span style=color:#a6e22e>OrderRepo</span>   <span style=color:#75715e>// kiểu cụ thể</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>mail</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>smtpmail</span>.<span style=color:#a6e22e>Sender</span>      <span style=color:#75715e>// kiểu cụ thể</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Service</span>) <span style=color:#a6e22e>PlaceOrder</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>customerID</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>items</span> []<span style=color:#a6e22e>postgres</span>.<span style=color:#a6e22e>ItemRow</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// ✗✗ nghiệp vụ dùng kiểu của tầng DB (ItemRow) — leaky đến tận chữ ký hàm</span>
+</span></span><span style=display:flex><span>	<span style=color:#f92672>...</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Đếm kiến thức: <code>order</code> biết Postgres (schema, kiểu row), biết SMTP (địa chỉ server nằm trong Sender). Test <code>PlaceOrder</code> cần Postgres thật + SMTP thật hoặc build tag khéo léo. Không đạt.</p><h3 id=bước-1--nghiệp-vụ-tuyên-bố-nhu-cầu-bằng-interface-của-chính-nó>Bước 1 — Nghiệp vụ tuyên bố nhu cầu bằng interface của chính nó<a hidden class=anchor aria-hidden=true href=#bước-1--nghiệp-vụ-tuyên-bố-nhu-cầu-bằng-interface-của-chính-nó>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/order/order.go — kiểu domain, thuộc về nghiệp vụ</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>order</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;context&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;errors&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;time&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Order</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>ID</span>         <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>CustomerID</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Items</span>      []<span style=color:#a6e22e>Item</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Total</span>      <span style=color:#a6e22e>Money</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>PlacedAt</span>   <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Item</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>SKU</span>      <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Quantity</span> <span style=color:#66d9ef>int</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Price</span>    <span style=color:#a6e22e>Money</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Money</span> <span style=color:#66d9ef>int64</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> (
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>ErrEmptyOrder</span>       = <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;order: empty order&#34;</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>ErrInsufficientStock</span> = <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;order: insufficient stock&#34;</span>)
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// ==== NHU CẦU của nghiệp vụ — interface do nghiệp vụ sở hữu ====</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Repository: &#34;tôi cần chỗ lưu đơn hàng&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Repository</span> <span style=color:#66d9ef>interface</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Save</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>o</span> <span style=color:#a6e22e>Order</span>) <span style=color:#66d9ef>error</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// StockChecker: &#34;tôi cần biết hàng còn không&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>StockChecker</span> <span style=color:#66d9ef>interface</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>Available</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>sku</span> <span style=color:#66d9ef>string</span>) (<span style=color:#66d9ef>int</span>, <span style=color:#66d9ef>error</span>)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Notifier: &#34;tôi cần báo cho khách&#34; — chú ý: KHÔNG phải EmailSender.</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Nghiệp vụ không quy định kênh; email chỉ là một cơ chế.</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Notifier</span> <span style=color:#66d9ef>interface</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>OrderPlaced</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>o</span> <span style=color:#a6e22e>Order</span>) <span style=color:#66d9ef>error</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Ba interface này hẹp (1 method), dùng thuần kiểu domain, đặt tên theo <strong>vai trò trong nghiệp vụ</strong> chứ không theo công nghệ. Đây là những &ldquo;cổng&rdquo; (port) mà thế giới bên ngoài sẽ cắm vào.</p><h3 id=bước-2--use-case-chỉ-phụ-thuộc-các-cổng>Bước 2 — Use case chỉ phụ thuộc các cổng<a hidden class=anchor aria-hidden=true href=#bước-2--use-case-chỉ-phụ-thuộc-các-cổng>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/order/service.go — V1: thuần chính sách</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>order</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;context&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;time&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Service</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>repo</span>    <span style=color:#a6e22e>Repository</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>stock</span>   <span style=color:#a6e22e>StockChecker</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>notify</span>  <span style=color:#a6e22e>Notifier</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>now</span>     <span style=color:#66d9ef>func</span>() <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span> <span style=color:#75715e>// cả thời gian cũng là dependency — test được</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>newID</span>   <span style=color:#66d9ef>func</span>() <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewService</span>(<span style=color:#a6e22e>repo</span> <span style=color:#a6e22e>Repository</span>, <span style=color:#a6e22e>stock</span> <span style=color:#a6e22e>StockChecker</span>, <span style=color:#a6e22e>notify</span> <span style=color:#a6e22e>Notifier</span>,
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>now</span> <span style=color:#66d9ef>func</span>() <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>, <span style=color:#a6e22e>newID</span> <span style=color:#66d9ef>func</span>() <span style=color:#66d9ef>string</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>Service</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Service</span>{<span style=color:#a6e22e>repo</span>: <span style=color:#a6e22e>repo</span>, <span style=color:#a6e22e>stock</span>: <span style=color:#a6e22e>stock</span>, <span style=color:#a6e22e>notify</span>: <span style=color:#a6e22e>notify</span>, <span style=color:#a6e22e>now</span>: <span style=color:#a6e22e>now</span>, <span style=color:#a6e22e>newID</span>: <span style=color:#a6e22e>newID</span>}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Service</span>) <span style=color:#a6e22e>PlaceOrder</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>customerID</span> <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>items</span> []<span style=color:#a6e22e>Item</span>) (<span style=color:#a6e22e>Order</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>items</span>) <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Order</span>{}, <span style=color:#a6e22e>ErrEmptyOrder</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>it</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>items</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>avail</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>stock</span>.<span style=color:#a6e22e>Available</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>it</span>.<span style=color:#a6e22e>SKU</span>)
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>			<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Order</span>{}, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;check stock %s: %w&#34;</span>, <span style=color:#a6e22e>it</span>.<span style=color:#a6e22e>SKU</span>, <span style=color:#a6e22e>err</span>)
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>avail</span> &lt; <span style=color:#a6e22e>it</span>.<span style=color:#a6e22e>Quantity</span> {
+</span></span><span style=display:flex><span>			<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Order</span>{}, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;%w: sku %s&#34;</span>, <span style=color:#a6e22e>ErrInsufficientStock</span>, <span style=color:#a6e22e>it</span>.<span style=color:#a6e22e>SKU</span>)
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>o</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>Order</span>{
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>ID</span>:         <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>newID</span>(),
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>CustomerID</span>: <span style=color:#a6e22e>customerID</span>,
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>Items</span>:      <span style=color:#a6e22e>items</span>,
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>Total</span>:      <span style=color:#a6e22e>total</span>(<span style=color:#a6e22e>items</span>),
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>PlacedAt</span>:   <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>now</span>(),
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>repo</span>.<span style=color:#a6e22e>Save</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Order</span>{}, <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;save order: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// Quyết định thiết kế: gửi thông báo lỗi KHÔNG làm fail đơn —</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// đây là business rule, và giờ nó nằm đúng chỗ để đọc thấy được.</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>s</span>.<span style=color:#a6e22e>notify</span>.<span style=color:#a6e22e>OrderPlaced</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>		<span style=color:#75715e>// log ở đây qua một logger được inject; đơn vẫn thành công</span>
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>_</span> = <span style=color:#a6e22e>err</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>o</span>, <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>total</span>(<span style=color:#a6e22e>items</span> []<span style=color:#a6e22e>Item</span>) <span style=color:#a6e22e>Money</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>t</span> <span style=color:#a6e22e>Money</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>it</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>items</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>t</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>it</span>.<span style=color:#a6e22e>Price</span> <span style=color:#f92672>*</span> <span style=color:#a6e22e>Money</span>(<span style=color:#a6e22e>it</span>.<span style=color:#a6e22e>Quantity</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>t</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Kiểm tra: <code>go list -deps ./internal/order</code> → chỉ stdlib. Nghiệp vụ đạt độ thuần 100%.</p><h3 id=bước-3--hạ-tầng-implement-các-cổng-mũi-tên-đã-đảo>Bước 3 — Hạ tầng implement các cổng (mũi tên đã đảo)<a hidden class=anchor aria-hidden=true href=#bước-3--hạ-tầng-implement-các-cổng-mũi-tên-đã-đảo>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/postgres/order_repo.go</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>postgres</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;context&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;database/sql&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;encoding/json&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/order&#34;</span> <span style=color:#75715e>// ← MŨI TÊN: hạ tầng import nghiệp vụ</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>OrderRepo</span> <span style=color:#66d9ef>struct</span>{ <span style=color:#a6e22e>db</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>sql</span>.<span style=color:#a6e22e>DB</span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewOrderRepo</span>(<span style=color:#a6e22e>db</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>sql</span>.<span style=color:#a6e22e>DB</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>OrderRepo</span> { <span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>OrderRepo</span>{<span style=color:#a6e22e>db</span>} }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>OrderRepo</span>) <span style=color:#a6e22e>Save</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>o</span> <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Order</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>items</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>json</span>.<span style=color:#a6e22e>Marshal</span>(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Items</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;marshal items: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>db</span>.<span style=color:#a6e22e>ExecContext</span>(<span style=color:#a6e22e>ctx</span>,
+</span></span><span style=display:flex><span>		<span style=color:#e6db74>`INSERT INTO orders (id, customer_id, items, total, placed_at)
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>		 VALUES ($1, $2, $3, $4, $5)`</span>,
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ID</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>CustomerID</span>, <span style=color:#a6e22e>items</span>, int64(<span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Total</span>), <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>PlacedAt</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;insert order: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/smtpmail/notifier.go</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>smtpmail</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;context&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;net/smtp&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/order&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Notifier</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>addr</span>, <span style=color:#a6e22e>from</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>auth</span>       <span style=color:#a6e22e>smtp</span>.<span style=color:#a6e22e>Auth</span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// map customerID → email; thực tế sẽ inject một CustomerDirectory</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>emailOf</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>customerID</span> <span style=color:#66d9ef>string</span>) (<span style=color:#66d9ef>string</span>, <span style=color:#66d9ef>error</span>)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>n</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Notifier</span>) <span style=color:#a6e22e>OrderPlaced</span>(<span style=color:#a6e22e>ctx</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>o</span> <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Order</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>to</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>n</span>.<span style=color:#a6e22e>emailOf</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>CustomerID</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Errorf</span>(<span style=color:#e6db74>&#34;resolve email: %w&#34;</span>, <span style=color:#a6e22e>err</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>body</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Sprintf</span>(<span style=color:#e6db74>&#34;Subject: Don hang %s\r\n\r\nTong tien: %d VND\r\n&#34;</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>ID</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Total</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>smtp</span>.<span style=color:#a6e22e>SendMail</span>(<span style=color:#a6e22e>n</span>.<span style=color:#a6e22e>addr</span>, <span style=color:#a6e22e>n</span>.<span style=color:#a6e22e>auth</span>, <span style=color:#a6e22e>n</span>.<span style=color:#a6e22e>from</span>, []<span style=color:#66d9ef>string</span>{<span style=color:#a6e22e>to</span>}, []byte(<span style=color:#a6e22e>body</span>))
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=bước-4--composition-root-nối-dây>Bước 4 — Composition root nối dây<a hidden class=anchor aria-hidden=true href=#bước-4--composition-root-nối-dây>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// cmd/api/main.go</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;crypto/rand&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;database/sql&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;encoding/hex&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;log&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;time&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>_</span> <span style=color:#e6db74>&#34;github.com/lib/pq&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/httpapi&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/order&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/postgres&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/smtpmail&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>db</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>sql</span>.<span style=color:#a6e22e>Open</span>(<span style=color:#e6db74>&#34;postgres&#34;</span>, <span style=color:#a6e22e>mustEnv</span>(<span style=color:#e6db74>&#34;DATABASE_URL&#34;</span>))
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Fatal</span>(<span style=color:#a6e22e>err</span>) }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>svc</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>NewService</span>(
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>postgres</span>.<span style=color:#a6e22e>NewOrderRepo</span>(<span style=color:#a6e22e>db</span>),
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>postgres</span>.<span style=color:#a6e22e>NewStockRepo</span>(<span style=color:#a6e22e>db</span>),
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>smtpmail</span>.<span style=color:#a6e22e>New</span>(<span style=color:#a6e22e>mustEnv</span>(<span style=color:#e6db74>&#34;SMTP_ADDR&#34;</span>), <span style=color:#a6e22e>mustEnv</span>(<span style=color:#e6db74>&#34;SMTP_FROM&#34;</span>)),
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Now</span>,
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>newID</span>,
+</span></span><span style=display:flex><span>	)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>log</span>.<span style=color:#a6e22e>Fatal</span>(<span style=color:#a6e22e>httpapi</span>.<span style=color:#a6e22e>New</span>(<span style=color:#a6e22e>svc</span>).<span style=color:#a6e22e>ListenAndServe</span>(<span style=color:#e6db74>&#34;:8080&#34;</span>))
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>newID</span>() <span style=color:#66d9ef>string</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>b</span> <span style=color:#f92672>:=</span> make([]<span style=color:#66d9ef>byte</span>, <span style=color:#ae81ff>16</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>rand</span>.<span style=color:#a6e22e>Read</span>(<span style=color:#a6e22e>b</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>hex</span>.<span style=color:#a6e22e>EncodeToString</span>(<span style=color:#a6e22e>b</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=bước-5--unit-test-nghiệp-vụ-bằng-fake-trong-bộ-nhớ>Bước 5 — Unit test nghiệp vụ bằng fake trong bộ nhớ<a hidden class=anchor aria-hidden=true href=#bước-5--unit-test-nghiệp-vụ-bằng-fake-trong-bộ-nhớ>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// internal/order/service_test.go</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>order_test</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;context&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;errors&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;testing&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;time&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;myapp/internal/order&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Fake — implementation thật nhưng chạy trong RAM. Không cần mockgen.</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>fakeRepo</span> <span style=color:#66d9ef>struct</span>{ <span style=color:#a6e22e>saved</span> []<span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Order</span>; <span style=color:#a6e22e>failWith</span> <span style=color:#66d9ef>error</span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>f</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>fakeRepo</span>) <span style=color:#a6e22e>Save</span>(<span style=color:#a6e22e>_</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>o</span> <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Order</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>failWith</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>failWith</span> }
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>saved</span> = append(<span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>saved</span>, <span style=color:#a6e22e>o</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>fakeStock</span> <span style=color:#66d9ef>map</span>[<span style=color:#66d9ef>string</span>]<span style=color:#66d9ef>int</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>f</span> <span style=color:#a6e22e>fakeStock</span>) <span style=color:#a6e22e>Available</span>(<span style=color:#a6e22e>_</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>sku</span> <span style=color:#66d9ef>string</span>) (<span style=color:#66d9ef>int</span>, <span style=color:#66d9ef>error</span>) { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>f</span>[<span style=color:#a6e22e>sku</span>], <span style=color:#66d9ef>nil</span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>fakeNotifier</span> <span style=color:#66d9ef>struct</span>{ <span style=color:#a6e22e>notified</span> <span style=color:#66d9ef>int</span>; <span style=color:#a6e22e>failWith</span> <span style=color:#66d9ef>error</span> }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>f</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>fakeNotifier</span>) <span style=color:#a6e22e>OrderPlaced</span>(<span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Order</span>) <span style=color:#66d9ef>error</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>notified</span><span style=color:#f92672>++</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>failWith</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>newSvc</span>(<span style=color:#a6e22e>repo</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>fakeRepo</span>, <span style=color:#a6e22e>stock</span> <span style=color:#a6e22e>fakeStock</span>, <span style=color:#a6e22e>n</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>fakeNotifier</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Service</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>NewService</span>(<span style=color:#a6e22e>repo</span>, <span style=color:#a6e22e>stock</span>, <span style=color:#a6e22e>n</span>,
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>func</span>() <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span> { <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Date</span>(<span style=color:#ae81ff>2026</span>, <span style=color:#ae81ff>1</span>, <span style=color:#ae81ff>1</span>, <span style=color:#ae81ff>0</span>, <span style=color:#ae81ff>0</span>, <span style=color:#ae81ff>0</span>, <span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>UTC</span>) },
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>func</span>() <span style=color:#66d9ef>string</span> { <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;test-id-1&#34;</span> },
+</span></span><span style=display:flex><span>	)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestPlaceOrder_ThanhCong</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>repo</span>, <span style=color:#a6e22e>notif</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>fakeRepo</span>{}, <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>fakeNotifier</span>{}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>svc</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>newSvc</span>(<span style=color:#a6e22e>repo</span>, <span style=color:#a6e22e>fakeStock</span>{<span style=color:#e6db74>&#34;SKU1&#34;</span>: <span style=color:#ae81ff>10</span>}, <span style=color:#a6e22e>notif</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>o</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>svc</span>.<span style=color:#a6e22e>PlaceOrder</span>(<span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>(), <span style=color:#e6db74>&#34;cust-1&#34;</span>,
+</span></span><span style=display:flex><span>		[]<span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Item</span>{{<span style=color:#a6e22e>SKU</span>: <span style=color:#e6db74>&#34;SKU1&#34;</span>, <span style=color:#a6e22e>Quantity</span>: <span style=color:#ae81ff>2</span>, <span style=color:#a6e22e>Price</span>: <span style=color:#ae81ff>50_000</span>}})
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatal</span>(<span style=color:#a6e22e>err</span>) }
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Total</span> <span style=color:#f92672>!=</span> <span style=color:#ae81ff>100_000</span> { <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;total = %d&#34;</span>, <span style=color:#a6e22e>o</span>.<span style=color:#a6e22e>Total</span>) }
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>repo</span>.<span style=color:#a6e22e>saved</span>) <span style=color:#f92672>!=</span> <span style=color:#ae81ff>1</span> { <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatal</span>(<span style=color:#e6db74>&#34;order chua duoc luu&#34;</span>) }
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>notif</span>.<span style=color:#a6e22e>notified</span> <span style=color:#f92672>!=</span> <span style=color:#ae81ff>1</span> { <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatal</span>(<span style=color:#e6db74>&#34;khach chua duoc bao&#34;</span>) }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestPlaceOrder_HetHang</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>svc</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>newSvc</span>(<span style=color:#f92672>&amp;</span><span style=color:#a6e22e>fakeRepo</span>{}, <span style=color:#a6e22e>fakeStock</span>{<span style=color:#e6db74>&#34;SKU1&#34;</span>: <span style=color:#ae81ff>1</span>}, <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>fakeNotifier</span>{})
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>svc</span>.<span style=color:#a6e22e>PlaceOrder</span>(<span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>(), <span style=color:#e6db74>&#34;cust-1&#34;</span>,
+</span></span><span style=display:flex><span>		[]<span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Item</span>{{<span style=color:#a6e22e>SKU</span>: <span style=color:#e6db74>&#34;SKU1&#34;</span>, <span style=color:#a6e22e>Quantity</span>: <span style=color:#ae81ff>2</span>, <span style=color:#a6e22e>Price</span>: <span style=color:#ae81ff>50_000</span>}})
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>Is</span>(<span style=color:#a6e22e>err</span>, <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>ErrInsufficientStock</span>) {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;want ErrInsufficientStock, got %v&#34;</span>, <span style=color:#a6e22e>err</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestPlaceOrder_LoiGuiMail_DonVanThanhCong</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>repo</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>fakeRepo</span>{}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>svc</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>newSvc</span>(<span style=color:#a6e22e>repo</span>, <span style=color:#a6e22e>fakeStock</span>{<span style=color:#e6db74>&#34;SKU1&#34;</span>: <span style=color:#ae81ff>10</span>}, <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>fakeNotifier</span>{<span style=color:#a6e22e>failWith</span>: <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;smtp down&#34;</span>)})
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>svc</span>.<span style=color:#a6e22e>PlaceOrder</span>(<span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>(), <span style=color:#e6db74>&#34;cust-1&#34;</span>,
+</span></span><span style=display:flex><span>		[]<span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Item</span>{{<span style=color:#a6e22e>SKU</span>: <span style=color:#e6db74>&#34;SKU1&#34;</span>, <span style=color:#a6e22e>Quantity</span>: <span style=color:#ae81ff>1</span>, <span style=color:#a6e22e>Price</span>: <span style=color:#ae81ff>50_000</span>}})
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> { <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatalf</span>(<span style=color:#e6db74>&#34;don phai thanh cong du mail loi, got %v&#34;</span>, <span style=color:#a6e22e>err</span>) }
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>repo</span>.<span style=color:#a6e22e>saved</span>) <span style=color:#f92672>!=</span> <span style=color:#ae81ff>1</span> { <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fatal</span>(<span style=color:#e6db74>&#34;order chua duoc luu&#34;</span>) }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Bộ test này chạy trong ~1ms, không network, không container, và <strong>test đúng business rule</strong> kể cả rule tinh tế &ldquo;mail lỗi không fail đơn&rdquo;. Ở V0, rule đó không thể test mà không dựng SMTP giả ở tầng network.</p><h3 id=sơ-đồ-tổng-kết>Sơ đồ tổng kết<a hidden class=anchor aria-hidden=true href=#sơ-đồ-tổng-kết>#</a></h3><pre tabindex=0><code>                        ┌──────────────────────┐
                         │      cmd/api/main     │  (biết tất cả — chỉ để lắp ráp)
                         └──┬──────┬──────┬──────┘
                            │      │      │ import
@@ -529,301 +333,10 @@ Business logic là tài sản quý nhất của hệ thống: nó mã hóa cách
                         │       order (domain)      │   ← MỌI mũi tên trỏ VÀO
                         │  Service + Repository +   │      import: chỉ stdlib
                         │  StockChecker + Notifier  │
-                        └──────────────────────────┘</code></pre><p>Đây, thu nhỏ, <strong>chính là Clean Architecture</strong>. Phần còn lại của tài liệu chỉ là mở rộng sơ đồ này ra nhiều tầng, nhiều module, nhiều pattern.</p>
-<hr>
-<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
-<table>
-  <thead>
-      <tr>
-          <th>Được</th>
-          <th>Mất</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Nghiệp vụ test bằng RAM, mili-giây</td>
-          <td>Thêm ~30% số file (interface, adapter, wiring)</td>
-      </tr>
-      <tr>
-          <td>Đổi hạ tầng = viết adapter mới</td>
-          <td>Đọc code phải nhảy qua interface (IDE &ldquo;go to implementation&rdquo;)</td>
-      </tr>
-      <tr>
-          <td>Nghiệp vụ tái dùng cho HTTP/gRPC/CLI/worker</td>
-          <td>Người mới cần hiểu quy ước trước khi đóng góp</td>
-      </tr>
-      <tr>
-          <td>Thay đổi hạ tầng không lan vào nghiệp vụ</td>
-          <td>Interface là contract phải bảo trì: thêm method = sửa mọi impl + fake</td>
-      </tr>
-      <tr>
-          <td>Compile-time enforcement bằng <code>internal/</code> + linter</td>
-          <td>Performance: gọi qua interface ngăn inline, thêm ~1–3ns/call</td>
-      </tr>
-  </tbody>
-</table>
-<p>Về performance: 1–3ns mỗi call qua interface so với 1–10ms mỗi query DB — nhiễu nền, <strong>không bao giờ</strong> là lý do từ chối DIP ở tầng use case. Nó chỉ đáng cân nhắc trong hot loop xử lý hàng triệu phần tử (lúc đó dùng kiểu cụ thể hoặc generics trong phạm vi hẹp).</p>
-<p>Trade-off thật sự nằm ở <strong>chi phí nhận thức</strong>: mỗi interface là một khái niệm thêm vào đầu người đọc. Vì thế: đảo phụ thuộc <strong>tại ranh giới kiến trúc</strong> (nghiệp vụ ↔ hạ tầng), không đảo giữa hai package nghiệp vụ cùng tầng, càng không đảo bên trong một package.</p>
-<hr>
-<h2 id="6-best-practices">6. Best Practices<a hidden class="anchor" aria-hidden="true" href="#6-best-practices">#</a></h2>
-<ol>
-<li><strong>Interface ở phía consumer, đặt tên theo vai trò</strong>: <code>order.Notifier</code>, không phải <code>smtp.IEmailService</code>.</li>
-<li><strong>Interface hẹp</strong> — bắt đầu 1 method; nhu cầu mới thì thêm interface mới hoặc compose.</li>
-<li><strong>Chỉ dùng kiểu domain trong contract</strong> — thấy <code>*sql.Row</code>, <code>*http.Request</code>, <code>pb.OrderProto</code> trong interface của package nghiệp vụ là báo động đỏ.</li>
-<li><strong>Dịch lỗi tại adapter</strong>: <code>sql.ErrNoRows</code> → <code>order.ErrNotFound</code>. Sentinel error của domain là một phần của contract.</li>
-<li><strong>Inject cả non-determinism</strong>: <code>time.Now</code>, random ID, UUID — như ví dụ trên — để test deterministic.</li>
-<li><strong>Kiểm tra compile-time</strong> implement đủ interface tại adapter:</li>
-</ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_</span> <span style="color:#a6e22e">order</span>.<span style="color:#a6e22e">Repository</span> = (<span style="color:#f92672">*</span><span style="color:#a6e22e">OrderRepo</span>)(<span style="color:#66d9ef">nil</span>) <span style="color:#75715e">// vỡ build ngay nếu thiếu method</span>
-</span></span></code></pre></div><ol start="7">
-<li><strong>Cưỡng chế hướng import bằng CI</strong> (depguard/gomodguard) — kiến trúc chỉ tồn tại nếu được enforce.</li>
-</ol>
-<hr>
-<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
-<ul>
-<li><strong>Interface đặt cạnh implementation</strong> (<code>postgres.Repository</code> mà business import) — inversion giả. Đã phân tích ở 3.3.</li>
-<li><strong>Interface &ldquo;ăn theo&rdquo; implementation</strong>: 12 method vì repo có 12 method. Vi phạm ISP, mock nặng nề. → interface theo nhu cầu use case.</li>
-<li><strong>Đảo mọi thứ</strong>: interface cho cả hàm tính tổng, struct config… Chi phí nhận thức tăng, giá trị bằng 0. → chỉ đảo tại ranh giới nghiệp vụ/hạ tầng.</li>
-<li><strong>Service Locator</strong> (<code>container.Get(&quot;orderRepo&quot;)</code>): giấu dependency vào chuỗi string, mất kiểm tra compile-time, dependency graph trở nên vô hình. → constructor injection tường minh.</li>
-<li><strong>Adapter gọi ngược use case</strong>: <code>postgres.OrderRepo</code> gọi <code>order.Service.Validate()</code> bên trong <code>Save</code> → vòng lặp logic, transaction lồng nhau khó lường. Adapter chỉ làm cơ chế, không làm chính sách.</li>
-</ul>
-<hr>
-<h2 id="8-khi-nào-không-đảo-phụ-thuộc">8. Khi nào KHÔNG đảo phụ thuộc<a hidden class="anchor" aria-hidden="true" href="#8-khi-nào-không-đảo-phụ-thuộc">#</a></h2>
-<ul>
-<li>Giữa hai package <strong>cùng tầng</strong> nghiệp vụ ổn định: <code>order</code> gọi thẳng <code>pricing.Calculate()</code> — hàm thuần, cùng vòng đời, không cần interface ở giữa.</li>
-<li>Với <strong>stdlib ổn định</strong>: không ai cần <code>ITimeProvider</code> bọc <code>time.Now</code> <em>trừ khi</em> test cần điều khiển thời gian (như ví dụ trên — và khi đó inject <code>func() time.Time</code> là đủ, không cần interface).</li>
-<li><strong>Tool nhỏ, script</strong>: toàn bộ chương trình là &ldquo;tầng ngoài&rdquo;, không có chính sách đáng bảo vệ.</li>
-<li>Khi chỉ có một implementation <strong>và</strong> không cần fake để test <strong>và</strong> không nằm trên ranh giới kiến trúc — cả ba điều kiện cùng lúc.</li>
-</ul>
-<hr>
-<h2 id="tóm-tắt-chương">Tóm tắt chương<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt-chương">#</a></h2>
-<ul>
-<li>DIP tách control flow (không đổi) khỏi source dependency (bị đảo): hạ tầng import nghiệp vụ.</li>
-<li>Vị trí interface quyết định tất cả: interface là <em>nhu cầu của consumer</em>, sống trong package consumer, nói ngôn ngữ domain.</li>
-<li>Go hỗ trợ DIP hạng nhất: implicit satisfaction + consumer-side interface + <code>internal/</code>.</li>
-<li>Sơ đồ &ldquo;mọi mũi tên trỏ vào domain&rdquo; ở mục 4 chính là Clean Architecture thu nhỏ.</li>
-</ul>
-<p><strong>Chương tiếp theo:</strong> <a href="/series/clean-architect/01-foundation/04-separation-of-concerns/">Separation of Concerns &amp; Composition</a> — mảnh nền cuối trước khi vào Clean Architecture Core.</p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:1313/tags/golang/">Golang</a></li>
-      <li><a href="http://localhost:1313/tags/clean-architecture/">Clean-Architecture</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:1313/series/clean-architect/01-foundation/02-solid/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Chương 1.2 — SOLID trong Go: Năm quy tắc quản trị phụ thuộc</span>
-  </a>
-  <a class="next" href="http://localhost:1313/series/clean-architect/01-foundation/04-separation-of-concerns/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Chương 1.4 — Separation of Concerns &amp; Composition over Inheritance</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on x"
-            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f&amp;hashtags=backend%2cgolang%2cclean-architecture">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f&amp;title=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;summary=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f&title=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on whatsapp"
-            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on telegram"
-            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+                        └──────────────────────────┘</code></pre><p>Đây, thu nhỏ, <strong>chính là Clean Architecture</strong>. Phần còn lại của tài liệu chỉ là mở rộng sơ đồ này ra nhiều tầng, nhiều module, nhiều pattern.</p><hr><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><table><thead><tr><th>Được</th><th>Mất</th></tr></thead><tbody><tr><td>Nghiệp vụ test bằng RAM, mili-giây</td><td>Thêm ~30% số file (interface, adapter, wiring)</td></tr><tr><td>Đổi hạ tầng = viết adapter mới</td><td>Đọc code phải nhảy qua interface (IDE &ldquo;go to implementation&rdquo;)</td></tr><tr><td>Nghiệp vụ tái dùng cho HTTP/gRPC/CLI/worker</td><td>Người mới cần hiểu quy ước trước khi đóng góp</td></tr><tr><td>Thay đổi hạ tầng không lan vào nghiệp vụ</td><td>Interface là contract phải bảo trì: thêm method = sửa mọi impl + fake</td></tr><tr><td>Compile-time enforcement bằng <code>internal/</code> + linter</td><td>Performance: gọi qua interface ngăn inline, thêm ~1–3ns/call</td></tr></tbody></table><p>Về performance: 1–3ns mỗi call qua interface so với 1–10ms mỗi query DB — nhiễu nền, <strong>không bao giờ</strong> là lý do từ chối DIP ở tầng use case. Nó chỉ đáng cân nhắc trong hot loop xử lý hàng triệu phần tử (lúc đó dùng kiểu cụ thể hoặc generics trong phạm vi hẹp).</p><p>Trade-off thật sự nằm ở <strong>chi phí nhận thức</strong>: mỗi interface là một khái niệm thêm vào đầu người đọc. Vì thế: đảo phụ thuộc <strong>tại ranh giới kiến trúc</strong> (nghiệp vụ ↔ hạ tầng), không đảo giữa hai package nghiệp vụ cùng tầng, càng không đảo bên trong một package.</p><hr><h2 id=6-best-practices>6. Best Practices<a hidden class=anchor aria-hidden=true href=#6-best-practices>#</a></h2><ol><li><strong>Interface ở phía consumer, đặt tên theo vai trò</strong>: <code>order.Notifier</code>, không phải <code>smtp.IEmailService</code>.</li><li><strong>Interface hẹp</strong> — bắt đầu 1 method; nhu cầu mới thì thêm interface mới hoặc compose.</li><li><strong>Chỉ dùng kiểu domain trong contract</strong> — thấy <code>*sql.Row</code>, <code>*http.Request</code>, <code>pb.OrderProto</code> trong interface của package nghiệp vụ là báo động đỏ.</li><li><strong>Dịch lỗi tại adapter</strong>: <code>sql.ErrNoRows</code> → <code>order.ErrNotFound</code>. Sentinel error của domain là một phần của contract.</li><li><strong>Inject cả non-determinism</strong>: <code>time.Now</code>, random ID, UUID — như ví dụ trên — để test deterministic.</li><li><strong>Kiểm tra compile-time</strong> implement đủ interface tại adapter:</li></ol><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>_</span> <span style=color:#a6e22e>order</span>.<span style=color:#a6e22e>Repository</span> = (<span style=color:#f92672>*</span><span style=color:#a6e22e>OrderRepo</span>)(<span style=color:#66d9ef>nil</span>) <span style=color:#75715e>// vỡ build ngay nếu thiếu method</span>
+</span></span></code></pre></div><ol start=7><li><strong>Cưỡng chế hướng import bằng CI</strong> (depguard/gomodguard) — kiến trúc chỉ tồn tại nếu được enforce.</li></ol><hr><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li><strong>Interface đặt cạnh implementation</strong> (<code>postgres.Repository</code> mà business import) — inversion giả. Đã phân tích ở 3.3.</li><li><strong>Interface &ldquo;ăn theo&rdquo; implementation</strong>: 12 method vì repo có 12 method. Vi phạm ISP, mock nặng nề. → interface theo nhu cầu use case.</li><li><strong>Đảo mọi thứ</strong>: interface cho cả hàm tính tổng, struct config… Chi phí nhận thức tăng, giá trị bằng 0. → chỉ đảo tại ranh giới nghiệp vụ/hạ tầng.</li><li><strong>Service Locator</strong> (<code>container.Get("orderRepo")</code>): giấu dependency vào chuỗi string, mất kiểm tra compile-time, dependency graph trở nên vô hình. → constructor injection tường minh.</li><li><strong>Adapter gọi ngược use case</strong>: <code>postgres.OrderRepo</code> gọi <code>order.Service.Validate()</code> bên trong <code>Save</code> → vòng lặp logic, transaction lồng nhau khó lường. Adapter chỉ làm cơ chế, không làm chính sách.</li></ul><hr><h2 id=8-khi-nào-không-đảo-phụ-thuộc>8. Khi nào KHÔNG đảo phụ thuộc<a hidden class=anchor aria-hidden=true href=#8-khi-nào-không-đảo-phụ-thuộc>#</a></h2><ul><li>Giữa hai package <strong>cùng tầng</strong> nghiệp vụ ổn định: <code>order</code> gọi thẳng <code>pricing.Calculate()</code> — hàm thuần, cùng vòng đời, không cần interface ở giữa.</li><li>Với <strong>stdlib ổn định</strong>: không ai cần <code>ITimeProvider</code> bọc <code>time.Now</code> <em>trừ khi</em> test cần điều khiển thời gian (như ví dụ trên — và khi đó inject <code>func() time.Time</code> là đủ, không cần interface).</li><li><strong>Tool nhỏ, script</strong>: toàn bộ chương trình là &ldquo;tầng ngoài&rdquo;, không có chính sách đáng bảo vệ.</li><li>Khi chỉ có một implementation <strong>và</strong> không cần fake để test <strong>và</strong> không nằm trên ranh giới kiến trúc — cả ba điều kiện cùng lúc.</li></ul><hr><h2 id=tóm-tắt-chương>Tóm tắt chương<a hidden class=anchor aria-hidden=true href=#tóm-tắt-chương>#</a></h2><ul><li>DIP tách control flow (không đổi) khỏi source dependency (bị đảo): hạ tầng import nghiệp vụ.</li><li>Vị trí interface quyết định tất cả: interface là <em>nhu cầu của consumer</em>, sống trong package consumer, nói ngôn ngữ domain.</li><li>Go hỗ trợ DIP hạng nhất: implicit satisfaction + consumer-side interface + <code>internal/</code>.</li><li>Sơ đồ &ldquo;mọi mũi tên trỏ vào domain&rdquo; ở mục 4 chính là Clean Architecture thu nhỏ.</li></ul><p><strong>Chương tiếp theo:</strong> <a href=/series/clean-architect/01-foundation/04-separation-of-concerns/>Separation of Concerns & Composition</a> — mảnh nền cuối trước khi vào Clean Architecture Core.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/golang/>Golang</a></li><li><a href=https://thanhhv.github.io/tags/clean-architecture/>Clean-Architecture</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/clean-architect/01-foundation/02-solid/><span class=title>« Prev</span><br><span>Chương 1.2 — SOLID trong Go: Năm quy tắc quản trị phụ thuộc</span>
+</a><a class=next href=https://thanhhv.github.io/series/clean-architect/01-foundation/04-separation-of-concerns/><span class=title>Next »</span><br><span>Chương 1.4 — Separation of Concerns & Composition over Inheritance</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f&amp;hashtags=backend%2cgolang%2cclean-architecture"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f&amp;title=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;summary=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f&title=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 1.3 — Dependency Inversion: Cỗ máy đảo chiều phụ thuộc on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%201.3%20%e2%80%94%20Dependency%20Inversion%3a%20C%e1%bb%97%20m%c3%a1y%20%c4%91%e1%ba%a3o%20chi%e1%bb%81u%20ph%e1%bb%a5%20thu%e1%bb%99c&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fclean-architect%2f01-foundation%2f03-dependency-inversion%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

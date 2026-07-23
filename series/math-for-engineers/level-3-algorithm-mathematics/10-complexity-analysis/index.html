@@ -1,234 +1,44 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="math, computer-science, algorithms">
-<meta name="description" content="
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán | Thanh HV's Blog</title>
+<meta name=keywords content="math,computer-science,algorithms"><meta name=description content="
 Level 3 – Algorithm Mathematics
 Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)
 
 1. Problem Statement
-Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm.">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
+Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán"><meta property="og:description" content=" Level 3 – Algorithm Mathematics Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)
+1. Problem Statement Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-20T08:40:00+07:00"><meta property="article:modified_time" content="2026-07-20T08:40:00+07:00"><meta property="article:tag" content="Math"><meta property="article:tag" content="Computer-Science"><meta property="article:tag" content="Algorithms"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán"><meta name=twitter:description content="
+Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)
 
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:1313/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/math-for-engineers/">Math for Engineers</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán
-    </h1>
-    <div class="post-meta"><span title='2026-07-20 08:40:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;18 min
-
-</div>
-  </header> 
-  <div class="post-content"><blockquote>
-<p>Level 3 – Algorithm Mathematics
-Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)</p></blockquote>
-<hr>
-<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
-<p>Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm.</p>
-<p>Không có bug. Không có lỗi logic. Code &ldquo;đúng&rdquo; theo mọi unit test. Vấn đề nằm ở chỗ khác: <strong>chi phí của thuật toán tăng theo bình phương kích thước dữ liệu</strong>, và không có cách nào phát hiện điều đó bằng cách chạy thử trên dữ liệu nhỏ.</p>
-<p>Đây chính là bài toán mà Complexity Analysis sinh ra để giải quyết:</p>
-<p><strong>Làm sao dự đoán hành vi của một thuật toán trên dữ liệu lớn, mà không cần chạy nó trên dữ liệu lớn?</strong></p>
-<p>Nếu không có công cụ này, lập trình viên chỉ còn hai lựa chọn tồi:</p>
-<ol>
-<li><strong>Benchmark mọi thứ trên dữ liệu production</strong> — đắt, chậm, và thường bất khả thi (bạn không thể benchmark trên 10 tỷ record trước khi có 10 tỷ record).</li>
-<li><strong>Đoán mò</strong> — và trực giác con người cực kỳ tệ với các hàm tăng trưởng phi tuyến.</li>
-</ol>
-<h2 id="2-trực-giác">2. Trực giác<a hidden class="anchor" aria-hidden="true" href="#2-trực-giác">#</a></h2>
-<h3 id="câu-chuyện-tờ-giấy-gấp-đôi">Câu chuyện tờ giấy gấp đôi<a hidden class="anchor" aria-hidden="true" href="#câu-chuyện-tờ-giấy-gấp-đôi">#</a></h3>
-<p>Hãy bắt đầu bằng một câu hỏi kinh điển: gấp đôi một tờ giấy dày 0.1mm bao nhiêu lần thì chồng giấy chạm tới Mặt Trăng?</p>
-<p>Trực giác nói: hàng triệu lần. Đáp án thực: <strong>42 lần</strong>. Vì mỗi lần gấp <em>nhân đôi</em> độ dày: 2⁴² × 0.1mm ≈ 440.000 km.</p>
-<p>Trực giác con người là <strong>tuyến tính</strong>. Chúng ta ước lượng tốt các đại lượng cộng dồn (&ldquo;mỗi ngày tiết kiệm 100k, một năm được 36.5 triệu&rdquo;), nhưng thất bại hoàn toàn với tăng trưởng theo cấp số nhân — và cả chiều ngược lại, logarit.</p>
-<h3 id="áp-vào-code">Áp vào code<a hidden class="anchor" aria-hidden="true" href="#áp-vào-code">#</a></h3>
-<p>Xét hai đoạn code cùng giải bài toán &ldquo;tìm phần tử trong danh sách đã sắp xếp&rdquo;:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Cách 1: Linear scan — duyệt từ đầu</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">linearSearch</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">target</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">a</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">target</span> {
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">i</span>
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cách 2: Binary search — mỗi bước loại bỏ một nửa</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">binarySearch</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">target</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lo</span>, <span style="color:#a6e22e">hi</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>, len(<span style="color:#a6e22e">a</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">lo</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">hi</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mid</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">lo</span> <span style="color:#f92672">+</span> (<span style="color:#a6e22e">hi</span><span style="color:#f92672">-</span><span style="color:#a6e22e">lo</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span> <span style="color:#75715e">// tránh overflow, xem chương 19</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">switch</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">mid</span>] <span style="color:#f92672">==</span> <span style="color:#a6e22e">target</span>:
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">mid</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">mid</span>] &lt; <span style="color:#a6e22e">target</span>:
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">lo</span> = <span style="color:#a6e22e">mid</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">default</span>:
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">hi</span> = <span style="color:#a6e22e">mid</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Với 1.000 phần tử, cả hai đều &ldquo;nhanh&rdquo; — vài trăm nanosecond, mắt thường không phân biệt được. Nhưng nhìn số bước tối đa khi dữ liệu tăng:</p>
-<table>
-  <thead>
-      <tr>
-          <th>n</th>
-          <th>Linear (n bước)</th>
-          <th>Binary (log₂n bước)</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>1.000</td>
-          <td>1.000</td>
-          <td>10</td>
-      </tr>
-      <tr>
-          <td>1.000.000</td>
-          <td>1.000.000</td>
-          <td>20</td>
-      </tr>
-      <tr>
-          <td>1.000.000.000</td>
-          <td>1.000.000.000</td>
-          <td>30</td>
-      </tr>
-  </tbody>
-</table>
-<p>Dữ liệu tăng <strong>1 triệu lần</strong>, binary search chỉ tốn thêm <strong>20 bước</strong>. Đây là điều trực giác tuyến tính không bao giờ tự nhận ra: sự khác biệt giữa hai thuật toán không phải là &ldquo;nhanh gấp đôi&rdquo; mà là <strong>khác nhau về bản chất tăng trưởng</strong>.</p>
-<h3 id="giới-hạn-của-trực-giác--và-của-benchmark">Giới hạn của trực giác — và của benchmark<a hidden class="anchor" aria-hidden="true" href="#giới-hạn-của-trực-giác--và-của-benchmark">#</a></h3>
-<p>Vậy tại sao không benchmark là xong? Vì benchmark chỉ trả lời &ldquo;nhanh bao nhiêu <strong>tại kích thước này, trên máy này</strong>&rdquo;. Nó không trả lời:</p>
-<ul>
-<li>Khi dữ liệu tăng 100 lần, thời gian tăng bao nhiêu lần?</li>
-<li>Con số đo được là do thuật toán, hay do CPU/cache/compiler?</li>
-<li>Thuật toán A nhanh hơn B ở n = 10⁴, nhưng ở n = 10⁸ thì sao?</li>
-</ul>
-<p>Chúng ta cần một công cụ <strong>trừu tượng hóa khỏi phần cứng</strong> và chỉ giữ lại điều bất biến: <em>hình dạng của hàm tăng trưởng</em>. Đó là việc của toán học.</p>
-<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
-<h3 id="bước-trừu-tượng-hóa-thứ-nhất-đếm-phép-toán-thay-vì-đo-giây">Bước trừu tượng hóa thứ nhất: đếm phép toán thay vì đo giây<a hidden class="anchor" aria-hidden="true" href="#bước-trừu-tượng-hóa-thứ-nhất-đếm-phép-toán-thay-vì-đo-giây">#</a></h3>
-<p>Thời gian chạy phụ thuộc CPU, cache, compiler, nhiệt độ phòng server&hellip; Nhưng <strong>số phép toán cơ bản</strong> mà thuật toán thực hiện thì không. Ta định nghĩa hàm chi phí:</p>
-<blockquote>
-<p>T(n) = số phép toán cơ bản khi input có kích thước n</p></blockquote>
-<p>Với linear search trong trường hợp xấu nhất: T(n) = n lần so sánh (cộng vài phép gán). Với binary search: T(n) ≈ log₂n.</p>
-<h3 id="bước-trừu-tượng-hóa-thứ-hai-chỉ-giữ-hình-dạng-tăng-trưởng">Bước trừu tượng hóa thứ hai: chỉ giữ hình dạng tăng trưởng<a hidden class="anchor" aria-hidden="true" href="#bước-trừu-tượng-hóa-thứ-hai-chỉ-giữ-hình-dạng-tăng-trưởng">#</a></h3>
-<p>Giả sử đếm chi li, ta được T(n) = 3n² + 5n + 20. Khi n = 10⁶:</p>
-<ul>
-<li>3n² = 3.000.000.000.000</li>
-<li>5n = 5.000.000</li>
-<li>20 = 20</li>
-</ul>
-<p>Thành phần n² chiếm <strong>99.9998%</strong> tổng chi phí. Các thành phần còn lại — và cả hệ số 3 — không thay đổi <em>câu trả lời cho câu hỏi ta quan tâm</em>: &ldquo;khi n tăng 10 lần, chi phí tăng ~100 lần&rdquo;. Vì vậy toán học cho phép ta vứt bỏ chúng một cách <strong>có kỷ luật</strong>, và đó chính là ký hiệu tiệm cận (asymptotic notation).</p>
-<p>Điểm mấu chốt cần hiểu: Big-O không phải là &ldquo;cách viết tắt lười biếng&rdquo;. Nó là một <strong>phép trừu tượng hóa có chủ đích</strong> — ta chấp nhận mất thông tin về hằng số để đổi lấy một bất biến đúng trên mọi phần cứng, mọi ngôn ngữ, mọi compiler. Giống như khi thiết kế API, ta giấu implementation detail để giữ contract ổn định.</p>
-<h3 id="nếu-không-có-nó-thì-sao">Nếu không có nó thì sao?<a hidden class="anchor" aria-hidden="true" href="#nếu-không-có-nó-thì-sao">#</a></h3>
-<p>Không có ký hiệu tiệm cận, mọi thảo luận về hiệu năng thuật toán đều phải kèm theo model CPU, phiên bản compiler và cờ tối ưu hóa. Paper nghiên cứu năm 1975 sẽ vô dụng năm 2026. Big-O là lý do một kết quả về quicksort từ thập niên 60 vẫn đúng nguyên vẹn trên chip M-series hôm nay.</p>
-<h2 id="4-mathematical-model">4. Mathematical Model<a hidden class="anchor" aria-hidden="true" href="#4-mathematical-model">#</a></h2>
-<h3 id="định-nghĩa-big-o">Định nghĩa Big-O<a hidden class="anchor" aria-hidden="true" href="#định-nghĩa-big-o">#</a></h3>
-<blockquote>
-<p>f(n) = O(g(n)) khi và chỉ khi tồn tại hằng số c &gt; 0 và n₀ sao cho:
-<strong>f(n) ≤ c·g(n) với mọi n ≥ n₀</strong></p></blockquote>
-<p>Diễn giải từng thành phần — vì mỗi mảnh của định nghĩa đều trả lời một câu hỏi thực tế:</p>
-<ul>
-<li><strong>c·g(n)</strong>: &ldquo;nhân với hằng số nào đó&rdquo; — chính là chỗ ta <em>hợp pháp hóa</em> việc bỏ qua hệ số. 3n² và 300n² đều là O(n²).</li>
-<li><strong>n ≥ n₀</strong>: &ldquo;từ một điểm nào đó trở đi&rdquo; — ta chỉ quan tâm hành vi khi n lớn. Với n nhỏ, mọi thuật toán đều nhanh; sự khác biệt chỉ lộ ra ở quy mô.</li>
-<li><strong>≤</strong>: Big-O là <strong>chặn trên</strong> (upper bound). Nói &ldquo;thuật toán này là O(n²)&rdquo; nghĩa là &ldquo;không tệ hơn n²&rdquo;, chứ không phải &ldquo;đúng bằng n²&rdquo;. Linear search cũng là O(n²) — về mặt kỹ thuật đúng, nhưng không có ích.</li>
-</ul>
-<p>Trực quan hóa:</p>
-<pre tabindex="0"><code>chi phí
+1. Problem Statement
+Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"Math for Engineers","item":"https://thanhhv.github.io/series/math-for-engineers/"},{"@type":"ListItem","position":3,"name":"Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán","item":"https://thanhhv.github.io/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán","name":"Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán","description":" Level 3 – Algorithm Mathematics Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)\n1. Problem Statement Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm.\n","keywords":["math","computer-science","algorithms"],"articleBody":" Level 3 – Algorithm Mathematics Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)\n1. Problem Statement Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm.\nKhông có bug. Không có lỗi logic. Code “đúng” theo mọi unit test. Vấn đề nằm ở chỗ khác: chi phí của thuật toán tăng theo bình phương kích thước dữ liệu, và không có cách nào phát hiện điều đó bằng cách chạy thử trên dữ liệu nhỏ.\nĐây chính là bài toán mà Complexity Analysis sinh ra để giải quyết:\nLàm sao dự đoán hành vi của một thuật toán trên dữ liệu lớn, mà không cần chạy nó trên dữ liệu lớn?\nNếu không có công cụ này, lập trình viên chỉ còn hai lựa chọn tồi:\nBenchmark mọi thứ trên dữ liệu production — đắt, chậm, và thường bất khả thi (bạn không thể benchmark trên 10 tỷ record trước khi có 10 tỷ record). Đoán mò — và trực giác con người cực kỳ tệ với các hàm tăng trưởng phi tuyến. 2. Trực giác Câu chuyện tờ giấy gấp đôi Hãy bắt đầu bằng một câu hỏi kinh điển: gấp đôi một tờ giấy dày 0.1mm bao nhiêu lần thì chồng giấy chạm tới Mặt Trăng?\nTrực giác nói: hàng triệu lần. Đáp án thực: 42 lần. Vì mỗi lần gấp nhân đôi độ dày: 2⁴² × 0.1mm ≈ 440.000 km.\nTrực giác con người là tuyến tính. Chúng ta ước lượng tốt các đại lượng cộng dồn (“mỗi ngày tiết kiệm 100k, một năm được 36.5 triệu”), nhưng thất bại hoàn toàn với tăng trưởng theo cấp số nhân — và cả chiều ngược lại, logarit.\nÁp vào code Xét hai đoạn code cùng giải bài toán “tìm phần tử trong danh sách đã sắp xếp”:\n// Cách 1: Linear scan — duyệt từ đầu func linearSearch(a []int, target int) int { for i, v := range a { if v == target { return i } } return -1 } // Cách 2: Binary search — mỗi bước loại bỏ một nửa func binarySearch(a []int, target int) int { lo, hi := 0, len(a)-1 for lo \u003c= hi { mid := lo + (hi-lo)/2 // tránh overflow, xem chương 19 switch { case a[mid] == target: return mid case a[mid] \u003c target: lo = mid + 1 default: hi = mid - 1 } } return -1 } Với 1.000 phần tử, cả hai đều “nhanh” — vài trăm nanosecond, mắt thường không phân biệt được. Nhưng nhìn số bước tối đa khi dữ liệu tăng:\nn Linear (n bước) Binary (log₂n bước) 1.000 1.000 10 1.000.000 1.000.000 20 1.000.000.000 1.000.000.000 30 Dữ liệu tăng 1 triệu lần, binary search chỉ tốn thêm 20 bước. Đây là điều trực giác tuyến tính không bao giờ tự nhận ra: sự khác biệt giữa hai thuật toán không phải là “nhanh gấp đôi” mà là khác nhau về bản chất tăng trưởng.\nGiới hạn của trực giác — và của benchmark Vậy tại sao không benchmark là xong? Vì benchmark chỉ trả lời “nhanh bao nhiêu tại kích thước này, trên máy này”. Nó không trả lời:\nKhi dữ liệu tăng 100 lần, thời gian tăng bao nhiêu lần? Con số đo được là do thuật toán, hay do CPU/cache/compiler? Thuật toán A nhanh hơn B ở n = 10⁴, nhưng ở n = 10⁸ thì sao? Chúng ta cần một công cụ trừu tượng hóa khỏi phần cứng và chỉ giữ lại điều bất biến: hình dạng của hàm tăng trưởng. Đó là việc của toán học.\n3. First Principles Bước trừu tượng hóa thứ nhất: đếm phép toán thay vì đo giây Thời gian chạy phụ thuộc CPU, cache, compiler, nhiệt độ phòng server… Nhưng số phép toán cơ bản mà thuật toán thực hiện thì không. Ta định nghĩa hàm chi phí:\nT(n) = số phép toán cơ bản khi input có kích thước n\nVới linear search trong trường hợp xấu nhất: T(n) = n lần so sánh (cộng vài phép gán). Với binary search: T(n) ≈ log₂n.\nBước trừu tượng hóa thứ hai: chỉ giữ hình dạng tăng trưởng Giả sử đếm chi li, ta được T(n) = 3n² + 5n + 20. Khi n = 10⁶:\n3n² = 3.000.000.000.000 5n = 5.000.000 20 = 20 Thành phần n² chiếm 99.9998% tổng chi phí. Các thành phần còn lại — và cả hệ số 3 — không thay đổi câu trả lời cho câu hỏi ta quan tâm: “khi n tăng 10 lần, chi phí tăng ~100 lần”. Vì vậy toán học cho phép ta vứt bỏ chúng một cách có kỷ luật, và đó chính là ký hiệu tiệm cận (asymptotic notation).\nĐiểm mấu chốt cần hiểu: Big-O không phải là “cách viết tắt lười biếng”. Nó là một phép trừu tượng hóa có chủ đích — ta chấp nhận mất thông tin về hằng số để đổi lấy một bất biến đúng trên mọi phần cứng, mọi ngôn ngữ, mọi compiler. Giống như khi thiết kế API, ta giấu implementation detail để giữ contract ổn định.\nNếu không có nó thì sao? Không có ký hiệu tiệm cận, mọi thảo luận về hiệu năng thuật toán đều phải kèm theo model CPU, phiên bản compiler và cờ tối ưu hóa. Paper nghiên cứu năm 1975 sẽ vô dụng năm 2026. Big-O là lý do một kết quả về quicksort từ thập niên 60 vẫn đúng nguyên vẹn trên chip M-series hôm nay.\n4. Mathematical Model Định nghĩa Big-O f(n) = O(g(n)) khi và chỉ khi tồn tại hằng số c \u003e 0 và n₀ sao cho: f(n) ≤ c·g(n) với mọi n ≥ n₀\nDiễn giải từng thành phần — vì mỗi mảnh của định nghĩa đều trả lời một câu hỏi thực tế:\nc·g(n): “nhân với hằng số nào đó” — chính là chỗ ta hợp pháp hóa việc bỏ qua hệ số. 3n² và 300n² đều là O(n²). n ≥ n₀: “từ một điểm nào đó trở đi” — ta chỉ quan tâm hành vi khi n lớn. Với n nhỏ, mọi thuật toán đều nhanh; sự khác biệt chỉ lộ ra ở quy mô. ≤: Big-O là chặn trên (upper bound). Nói “thuật toán này là O(n²)” nghĩa là “không tệ hơn n²”, chứ không phải “đúng bằng n²”. Linear search cũng là O(n²) — về mặt kỹ thuật đúng, nhưng không có ích. Trực quan hóa:\nchi phí │ c·g(n) │ ╱ │ ╱ ← từ n₀ trở đi, f(n) luôn │ ╱ nằm dưới c·g(n) │ ✕ ✕ ╱✕ │ ✕ ╱ │ ✕ ╱ f(n) │ ✕ ╱ │ ╱✕ └──┼──────────────────────── n n₀Big-Omega và Big-Theta Big-O một mình chưa đủ, vì nó chỉ nói “không tệ hơn”. Bộ ba đầy đủ:\nKý hiệu Ý nghĩa Câu hỏi nó trả lời O(g) chặn trên: f ≤ c·g “Tệ nhất là bao nhiêu?” Ω(g) chặn dưới: f ≥ c·g “Ít nhất phải tốn bao nhiêu?” Θ(g) chặn chặt: cả hai “Chính xác tăng trưởng thế nào?” Ω đặc biệt quan trọng vì nó cho phép chứng minh giới hạn của mọi thuật toán, không chỉ một thuật toán cụ thể. Ví dụ kinh điển: mọi thuật toán sort dựa trên so sánh cần Ω(n log n) phép so sánh (chứng minh ở chương 16 — dựa trên việc cây quyết định phải có n! lá). Đây là kiểu tri thức chỉ toán học mang lại được: benchmark không bao giờ chứng minh được “không tồn tại cách nhanh hơn”.\nWorst case, Average case và tại sao phải phân biệt T(n) thực ra không phải là một hàm — cùng kích thước n có nhiều input khác nhau với chi phí khác nhau. Ta phải chọn góc nhìn:\nWorst case: max trên mọi input kích thước n. Dùng cho cam kết SLA, hệ thống real-time, và phòng thủ trước adversarial input. Average case: kỳ vọng (expected value — chương 11) trên phân phối input. Dùng khi input “ngẫu nhiên tự nhiên”. Quicksort là O(n²) worst case nhưng Θ(n log n) average case — và đó là lý do nó vẫn thống trị. Amortized: chi phí trung bình trên một chuỗi thao tác, ngay cả khi từng thao tác riêng lẻ có thể đắt. Đây là khái niệm hay bị hiểu nhầm nhất, và đáng để phân tích kỹ. Amortized Analysis: trường hợp slice của Go Khi bạn append vào một slice Go đã đầy, runtime cấp phát mảng mới (lớn hơn ~2 lần khi slice nhỏ, ~1.25 lần khi lớn) và copy toàn bộ. Thao tác append đó tốn O(n). Vậy có nên nói “append là O(n)” không?\nKhông — và đây là chỗ toán học tinh tế hơn trực giác. Xét chuỗi n lần append với chiến lược nhân đôi capacity, tổng chi phí copy là:\n1 + 2 + 4 + 8 + … + n/2 + n \u003c 2n\nTổng chuỗi hình học này bị chặn bởi 2n, nên n thao tác tốn O(n) tổng cộng → mỗi thao tác tốn O(1) amortized. Từng lần append riêng lẻ có thể đắt, nhưng những lần đắt hiếm đến mức “trả góp” đều ra thì mỗi lần chỉ tốn hằng số.\nKỹ thuật chứng minh chuẩn là phương pháp kế toán (accounting method): mỗi lần append “trả trước” 3 đơn vị — 1 cho việc ghi phần tử, 2 gửi tiết kiệm để trả cho lần copy tương lai. Có thể kiểm tra rằng số dư tiết kiệm không bao giờ âm, nên tổng chi phí thật ≤ tổng đã trả = 3n. Đây chính là một invariant (chương 03) áp dụng vào phân tích chi phí.\nCâu hỏi kiểm tra hiểu bản chất: tại sao nhân đôi mà không phải cộng thêm 100 slot mỗi lần? Nếu tăng tuyến tính, tổng chi phí copy là 100 + 200 + 300 + … = O(n²/100) — vẫn là bình phương. Chỉ tăng theo tỷ lệ (geometric growth) mới cho amortized O(1). Hằng số không cứu được hình dạng của hàm.\n5. Thuật toán — phân tích như thế nào trong thực tế Phân tích độ phức tạp không phải là tra bảng, mà là ba kỹ thuật cơ bản:\nKỹ thuật 1 — Đếm vòng lặp theo cấu trúc:\nfor i := 0; i \u003c n; i++ { // n lần for j := i + 1; j \u003c n; j++ { // n-1, n-2, ..., 1 lần // so sánh cặp (i, j) } } Tổng số lần chạy vòng trong: (n-1) + (n-2) + … + 1 = n(n-1)/2 = Θ(n²). Lưu ý: vòng lặp lồng nhau không tự động là n² — phải nhìn vào biên chạy thật. Ví dụ vòng trong chạy j *= 2 thì tổng là Θ(n log n).\nKỹ thuật 2 — Recurrence cho đệ quy (chi tiết ở chương 06): merge sort chia đôi và merge tuyến tính cho T(n) = 2T(n/2) + Θ(n), Master Theorem cho ngay Θ(n log n).\nKỹ thuật 3 — Nhìn xuyên qua abstraction: dòng code ngắn nhất có thể đắt nhất.\n// Trông như O(n), thực ra là O(n²) s := \"\" for _, w := range words { s += w // mỗi lần += copy toàn bộ chuỗi cũ: 1+2+...+n ký tự } // Đúng cách: strings.Builder — amortized O(1) mỗi lần ghi var b strings.Builder for _, w := range words { b.WriteString(w) } String trong Go là immutable, nên s += w cấp phát chuỗi mới và copy. Đây là lỗi production thật sự phổ biến — và là ví dụ hoàn hảo cho việc độ phức tạp nằm ở ngữ nghĩa của phép toán, không phải ở số dòng code.\nBảng tra nhanh và ngưỡng thực dụng Với CPU hiện đại xử lý ~10⁸–10⁹ phép toán đơn giản mỗi giây, quy tắc ngón tay cái khi ước lượng “thuật toán này có chạy nổi không”:\nĐộ phức tạp n tối đa xử lý trong ~1 giây Ví dụ O(log n) gần như vô hạn binary search O(n) ~10⁸ scan, hash lookup toàn bộ O(n log n) ~10⁷ sort O(n²) ~10⁴ so sánh mọi cặp O(2ⁿ) ~25 duyệt mọi tập con O(n!) ~11 duyệt mọi hoán vị Bảng này đáng nhớ hơn mọi công thức: nó biến Big-O từ lý thuyết thành công cụ ước lượng feasibility trong 5 giây — kể cả trong phỏng vấn (“n = 10⁵ → nghĩ ngay n log n hoặc tốt hơn, quên O(n²) đi”).\n6. Trade-off Big-O vs constant factor. Big-O cố tình vứt hằng số, nhưng production không vứt. Một ví dụ có thật về hai cách tìm kiếm trên dữ liệu nhỏ:\n// Với n \u003c ~64, linear scan trên slice thường NHANH HƠN map lookup: // - slice nằm liên tục trong bộ nhớ → cache line prefetch hoạt động tối đa // - map lookup: hash + truy cập bucket rải rác → cache miss Đây là lý do sort.Sort của Go (và pdqsort từ Go 1.19) chuyển sang insertion sort O(n²) khi phân đoạn nhỏ hơn ~12 phần tử: ở kích thước đó, hằng số nhỏ và cache locality của insertion sort thắng mọi thuật toán O(n log n). Thuật toán “tệ về lý thuyết” là lựa chọn đúng khi n nhỏ và ta biết n nhỏ.\nTime vs Space. Hash map biến tìm kiếm O(n) thành O(1) bằng cách tốn thêm O(n) bộ nhớ. Precompute, cache, index — cùng một trade-off. Chiều ngược lại cũng tồn tại: HyperLogLog (chương 23) đếm hàng tỷ phần tử với 12KB bằng cách hy sinh độ chính xác.\nWorst case vs Average case. Chọn tối ưu theo cái nào là quyết định kiến trúc:\nHệ thống chịu adversarial input (API công khai) phải nghĩ theo worst case: hash flooding attack từng khai thác chính khoảng cách giữa average O(1) và worst O(n) của hash table — đây là lý do Go dùng hash seed ngẫu nhiên cho mỗi map. Batch job nội bộ có thể tin average case và thắng lớn về hiệu năng trung bình. Đơn giản vs Tối ưu. Thuật toán O(n log log n) tồn tại cho nhiều bài toán, nhưng production dùng bản O(n log n) đơn giản — vì chi phí bảo trì, rủi ro bug và khả năng đọc hiểu của team cũng là chi phí. Độ phức tạp của code cũng là một loại complexity.\n7. Production Applications PostgreSQL Query Planner — nơi complexity analysis chạy tự động hàng triệu lần mỗi giây. Với mỗi query, planner ước lượng chi phí của từng chiến lược: sequential scan là O(n) với hằng số nhỏ (đọc tuần tự, prefetch tốt); index scan là O(log n + k) với hằng số lớn hơn mỗi lần truy cập (random I/O). Đó là lý do PostgreSQL cố tình chọn seq scan khi bảng nhỏ hoặc query lấy phần lớn số dòng — một minh họa sống động rằng Big-O chỉ là một biến trong hàm chi phí, không phải toàn bộ. EXPLAIN ANALYZE chính là “máy phân tích độ phức tạp” bạn dùng hằng ngày.\nRedis chọn cấu trúc dữ liệu theo đúng bảng trade-off trên: sorted set nhỏ lưu bằng listpack (mảng phẳng, O(n) nhưng hằng số tí hon, cache-friendly), tự động chuyển sang skip list O(log n) khi vượt ngưỡng zset-max-listpack-entries. Cùng một API, hai thuật toán, chuyển đổi dựa trên n — đây là complexity analysis được mã hóa thành config.\nGo runtime: map là hash table với average O(1) và hash seed ngẫu nhiên chống adversarial input; slice append là amortized O(1) như đã phân tích; garbage collector được thiết kế quanh cam kết độ trễ — tri-color concurrent mark-sweep giữ pause ngắn (đơn vị trăm microsecond) thay vì stop-the-world tỷ lệ với heap — một dạng “amortize chi phí GC theo thời gian thực thi”.\nKafka đạt throughput khổng lồ không phải nhờ thuật toán lạ mà nhờ tôn trọng hằng số: mọi thao tác ghi/đọc log đều là sequential I/O — cùng là “đọc n byte” O(n), nhưng đọc tuần tự trên SSD/HDD nhanh hơn random hàng chục đến hàng trăm lần. Consumer offset là con trỏ vào log — seek O(1) thay vì tìm kiếm.\nElasticsearch: inverted index biến tìm kiếm text từ O(tổng số document × độ dài) thành O(số document chứa term) — thay đổi cả biến n mà chi phí phụ thuộc vào. Bài học: cách tối ưu mạnh nhất thường không phải giảm bậc của hàm, mà là đổi biến — làm cho chi phí phụ thuộc vào đại lượng nhỏ hơn nhiều.\n8. Interview Complexity analysis xuất hiện trong 100% buổi phỏng vấn thuật toán — không phải như một câu hỏi riêng mà là câu “độ phức tạp bao nhiêu?” sau mỗi lời giải.\nCác dạng phổ biến:\nPhân tích code cho sẵn (đặc biệt vòng lặp có biên chạy lạ: j *= 2, j += i) Two Sum (LeetCode 1): từ O(n²) brute force → O(n) với hash map — bài kiểm tra chuẩn về trade-off time/space Phân tích thuật toán đệ quy (thường cần Master Theorem hoặc vẽ cây đệ quy) “Có thể làm tốt hơn không?” — kiểm tra bạn có biết lower bound không (ví dụ: tìm max của mảng không sort được nhanh hơn Ω(n) — mỗi phần tử phải được nhìn ít nhất một lần) Lỗi tư duy thường gặp:\nNói “hai vòng lặp lồng nhau nên là O(n²)” mà không nhìn biên chạy. Vòng trong chạy trên biến khác (m) thì là O(n·m); biên logarit thì là O(n log n). Quên chi phí ẩn: strings.Contains, slice copy, sort bên trong vòng lặp. Nhầm O với Θ: “thuật toán này là O(n log n)” đúng cả với thuật toán O(n) — dùng dấu nào thể hiện bạn hiểu mình đang nói chặn trên hay chặn chặt. Với amortized: khẳng định “append có thể tốn O(n) nên vòng lặp append n lần là O(n²)” — sai, là O(n) tổng, như đã chứng minh ở mục 4. Cách phân tích thay vì học thuộc: khi gặp bài mới, hỏi tuần tự: (1) input size là biến nào — có thể có nhiều hơn một; (2) với ràng buộc n đề cho, bảng ngưỡng ở mục 5 gợi ý độ phức tạp mục tiêu nào; (3) chi phí mỗi bước lặp/đệ quy là gì, có chi phí ẩn không; (4) nghiệm của recurrence là gì. Ràng buộc n trong đề bài chính là gợi ý lời giải bị mã hóa: n ≤ 20 gần như hét lên “bitmask/duyệt tập con được phép”.\nTừ phỏng vấn sang production: Two Sum với hash map chính là bài toán join trong database thu nhỏ — hash join của PostgreSQL là “Two Sum trên hàng triệu dòng”. Kỹ năng nhận diện “bài này về bản chất là bài kia” đáng giá hơn mọi lời giải thuộc lòng.\n9. Anti-pattern Sùng bái Big-O, bỏ quên hằng số và cache. Thay linked list “O(1) insert” cho slice “O(n) insert” rồi thấy hệ thống chậm đi: mỗi node linked list là một lần cấp phát heap + cache miss khi duyệt, trong khi slice hưởng trọn prefetcher. Trên phần cứng hiện đại, cache locality thường quyết định nhiều hơn một bậc log.\nTối ưu độ phức tạp của phần không phải bottleneck. Dành hai ngày đưa một hàm từ O(n log n) về O(n) trong khi 95% thời gian request nằm ở network I/O. Complexity analysis cho biết hàm nào có thể chậm; profiler (pprof) cho biết hàm nào đang chậm. Cần cả hai, theo đúng thứ tự: đo trước, tối ưu sau.\nPhân tích trên biến sai. “API của tôi là O(1) vì chỉ query một dòng” — nhưng query đó là LIKE '%keyword%' khiến database scan O(n) trên bảng. Độ phức tạp của hệ thống là của toàn bộ đường đi, tính trên kích thước dữ liệu thật, không phải của riêng đoạn code bạn viết.\nGiả định n nhỏ mãi mãi. Câu chuyện mở đầu chương này. Mọi bảng đều lớn dần; code O(n²) là quả bom hẹn giờ có ngòi nổ bằng tốc độ tăng trưởng của công ty — nó phát nổ đúng lúc công ty thành công.\nDùng average case cho hệ thống đối mặt kẻ xấu. Hash table “O(1)” trở thành O(n) dưới hash flooding. Regex backtracking “thường nhanh” trở thành 2ⁿ với input độc (ReDoS) — lý do Go chọn engine RE2 với đảm bảo O(n) worst case, chấp nhận bỏ backreference. Một quyết định thiết kế ngôn ngữ dựa thẳng trên worst-case analysis.\n10. Best Practices Nên:\nƯớc lượng độ phức tạp trước khi viết code, dựa trên kích thước dữ liệu dự kiến sau 2–3 năm chứ không phải hôm nay. Bảng ngưỡng ở mục 5 đủ cho 90% quyết định. Nghĩ worst case cho mọi bề mặt tiếp xúc với người dùng/kẻ tấn công; cho phép average case với dữ liệu nội bộ kiểm soát được. Benchmark để đo hằng số khi hai lựa chọn cùng bậc — go test -bench với nhiều cỡ n (10³, 10⁴, 10⁵…) và nhìn tỷ lệ tăng giữa các cỡ: thời gian tăng ~10 lần khi n tăng 10 lần → tuyến tính; ~100 lần → bình phương. Đây là cách “đo” Big-O bằng thực nghiệm. Khi tối ưu, ưu tiên theo thứ tự: đổi biến (index/inverted index) → giảm bậc (thuật toán tốt hơn) → giảm hằng số (cache locality, giảm allocation) — mỗi bậc sau chỉ làm khi bậc trước không còn khả thi. Không nên:\nKhông tối ưu khi chưa profile — trực giác về bottleneck sai nhiều hơn đúng, kể cả với kỹ sư giàu kinh nghiệm. Không thay cấu trúc dữ liệu đơn giản bằng cấu trúc “tốt hơn về lý thuyết” khi n \u003c vài nghìn — đo trước. Không cam kết SLA dựa trên average case. Câu hỏi tự kiểm tra khi rời chương này:\nTại sao amortized O(1) của slice append đòi hỏi tăng capacity theo tỷ lệ, không phải cộng hằng số? Vì sao PostgreSQL đôi khi cố tình chọn seq scan O(n) thay vì index scan O(log n)? Benchmark cho thấy thuật toán A nhanh hơn B ở n = 10⁴. Kết luận gì được và không được phép rút ra? Chương tiếp theo: 11 — Probability, nơi “average case” của chương này được đặt trên nền móng chính xác: kỳ vọng, phân phối, và lý do các hệ thống lớn dám đánh cược vào xác suất.\n","wordCount":"3831","inLanguage":"en","datePublished":"2026-07-20T08:40:00+07:00","dateModified":"2026-07-20T08:40:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/math-for-engineers/level-3-algorithm-mathematics/10-complexity-analysis/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/math-for-engineers/>Math for Engineers</a></div><h1 class="post-title entry-hint-parent">Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán</h1><div class=post-meta><span title='2026-07-20 08:40:00 +0700 +07'>July 20, 2026</span>&nbsp;·&nbsp;18 min</div></header><div class=post-content><blockquote><p>Level 3 – Algorithm Mathematics
+Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)</p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Năm 2010, một kỹ sư tại một công ty thương mại điện tử viết đoạn code kiểm tra sản phẩm trùng lặp: với mỗi sản phẩm, duyệt qua toàn bộ danh sách để tìm bản sao. Code chạy hoàn hảo trên môi trường dev với 1.000 sản phẩm — mất 2ms. Sáu tháng sau, catalog đạt 2 triệu sản phẩm, và cron job đó chiếm trọn một CPU core trong 4 giờ mỗi đêm.</p><p>Không có bug. Không có lỗi logic. Code &ldquo;đúng&rdquo; theo mọi unit test. Vấn đề nằm ở chỗ khác: <strong>chi phí của thuật toán tăng theo bình phương kích thước dữ liệu</strong>, và không có cách nào phát hiện điều đó bằng cách chạy thử trên dữ liệu nhỏ.</p><p>Đây chính là bài toán mà Complexity Analysis sinh ra để giải quyết:</p><p><strong>Làm sao dự đoán hành vi của một thuật toán trên dữ liệu lớn, mà không cần chạy nó trên dữ liệu lớn?</strong></p><p>Nếu không có công cụ này, lập trình viên chỉ còn hai lựa chọn tồi:</p><ol><li><strong>Benchmark mọi thứ trên dữ liệu production</strong> — đắt, chậm, và thường bất khả thi (bạn không thể benchmark trên 10 tỷ record trước khi có 10 tỷ record).</li><li><strong>Đoán mò</strong> — và trực giác con người cực kỳ tệ với các hàm tăng trưởng phi tuyến.</li></ol><h2 id=2-trực-giác>2. Trực giác<a hidden class=anchor aria-hidden=true href=#2-trực-giác>#</a></h2><h3 id=câu-chuyện-tờ-giấy-gấp-đôi>Câu chuyện tờ giấy gấp đôi<a hidden class=anchor aria-hidden=true href=#câu-chuyện-tờ-giấy-gấp-đôi>#</a></h3><p>Hãy bắt đầu bằng một câu hỏi kinh điển: gấp đôi một tờ giấy dày 0.1mm bao nhiêu lần thì chồng giấy chạm tới Mặt Trăng?</p><p>Trực giác nói: hàng triệu lần. Đáp án thực: <strong>42 lần</strong>. Vì mỗi lần gấp <em>nhân đôi</em> độ dày: 2⁴² × 0.1mm ≈ 440.000 km.</p><p>Trực giác con người là <strong>tuyến tính</strong>. Chúng ta ước lượng tốt các đại lượng cộng dồn (&ldquo;mỗi ngày tiết kiệm 100k, một năm được 36.5 triệu&rdquo;), nhưng thất bại hoàn toàn với tăng trưởng theo cấp số nhân — và cả chiều ngược lại, logarit.</p><h3 id=áp-vào-code>Áp vào code<a hidden class=anchor aria-hidden=true href=#áp-vào-code>#</a></h3><p>Xét hai đoạn code cùng giải bài toán &ldquo;tìm phần tử trong danh sách đã sắp xếp&rdquo;:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Cách 1: Linear scan — duyệt từ đầu</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>linearSearch</span>(<span style=color:#a6e22e>a</span> []<span style=color:#66d9ef>int</span>, <span style=color:#a6e22e>target</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>int</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>v</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>a</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>v</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>target</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>i</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Cách 2: Binary search — mỗi bước loại bỏ một nửa</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>binarySearch</span>(<span style=color:#a6e22e>a</span> []<span style=color:#66d9ef>int</span>, <span style=color:#a6e22e>target</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>int</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>lo</span>, <span style=color:#a6e22e>hi</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>, len(<span style=color:#a6e22e>a</span>)<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>lo</span> <span style=color:#f92672>&lt;=</span> <span style=color:#a6e22e>hi</span> {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>mid</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>lo</span> <span style=color:#f92672>+</span> (<span style=color:#a6e22e>hi</span><span style=color:#f92672>-</span><span style=color:#a6e22e>lo</span>)<span style=color:#f92672>/</span><span style=color:#ae81ff>2</span> <span style=color:#75715e>// tránh overflow, xem chương 19</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>switch</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>a</span>[<span style=color:#a6e22e>mid</span>] <span style=color:#f92672>==</span> <span style=color:#a6e22e>target</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>mid</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>a</span>[<span style=color:#a6e22e>mid</span>] &lt; <span style=color:#a6e22e>target</span>:
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>lo</span> = <span style=color:#a6e22e>mid</span> <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>default</span>:
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>hi</span> = <span style=color:#a6e22e>mid</span> <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Với 1.000 phần tử, cả hai đều &ldquo;nhanh&rdquo; — vài trăm nanosecond, mắt thường không phân biệt được. Nhưng nhìn số bước tối đa khi dữ liệu tăng:</p><table><thead><tr><th>n</th><th>Linear (n bước)</th><th>Binary (log₂n bước)</th></tr></thead><tbody><tr><td>1.000</td><td>1.000</td><td>10</td></tr><tr><td>1.000.000</td><td>1.000.000</td><td>20</td></tr><tr><td>1.000.000.000</td><td>1.000.000.000</td><td>30</td></tr></tbody></table><p>Dữ liệu tăng <strong>1 triệu lần</strong>, binary search chỉ tốn thêm <strong>20 bước</strong>. Đây là điều trực giác tuyến tính không bao giờ tự nhận ra: sự khác biệt giữa hai thuật toán không phải là &ldquo;nhanh gấp đôi&rdquo; mà là <strong>khác nhau về bản chất tăng trưởng</strong>.</p><h3 id=giới-hạn-của-trực-giác--và-của-benchmark>Giới hạn của trực giác — và của benchmark<a hidden class=anchor aria-hidden=true href=#giới-hạn-của-trực-giác--và-của-benchmark>#</a></h3><p>Vậy tại sao không benchmark là xong? Vì benchmark chỉ trả lời &ldquo;nhanh bao nhiêu <strong>tại kích thước này, trên máy này</strong>&rdquo;. Nó không trả lời:</p><ul><li>Khi dữ liệu tăng 100 lần, thời gian tăng bao nhiêu lần?</li><li>Con số đo được là do thuật toán, hay do CPU/cache/compiler?</li><li>Thuật toán A nhanh hơn B ở n = 10⁴, nhưng ở n = 10⁸ thì sao?</li></ul><p>Chúng ta cần một công cụ <strong>trừu tượng hóa khỏi phần cứng</strong> và chỉ giữ lại điều bất biến: <em>hình dạng của hàm tăng trưởng</em>. Đó là việc của toán học.</p><h2 id=3-first-principles>3. First Principles<a hidden class=anchor aria-hidden=true href=#3-first-principles>#</a></h2><h3 id=bước-trừu-tượng-hóa-thứ-nhất-đếm-phép-toán-thay-vì-đo-giây>Bước trừu tượng hóa thứ nhất: đếm phép toán thay vì đo giây<a hidden class=anchor aria-hidden=true href=#bước-trừu-tượng-hóa-thứ-nhất-đếm-phép-toán-thay-vì-đo-giây>#</a></h3><p>Thời gian chạy phụ thuộc CPU, cache, compiler, nhiệt độ phòng server&mldr; Nhưng <strong>số phép toán cơ bản</strong> mà thuật toán thực hiện thì không. Ta định nghĩa hàm chi phí:</p><blockquote><p>T(n) = số phép toán cơ bản khi input có kích thước n</p></blockquote><p>Với linear search trong trường hợp xấu nhất: T(n) = n lần so sánh (cộng vài phép gán). Với binary search: T(n) ≈ log₂n.</p><h3 id=bước-trừu-tượng-hóa-thứ-hai-chỉ-giữ-hình-dạng-tăng-trưởng>Bước trừu tượng hóa thứ hai: chỉ giữ hình dạng tăng trưởng<a hidden class=anchor aria-hidden=true href=#bước-trừu-tượng-hóa-thứ-hai-chỉ-giữ-hình-dạng-tăng-trưởng>#</a></h3><p>Giả sử đếm chi li, ta được T(n) = 3n² + 5n + 20. Khi n = 10⁶:</p><ul><li>3n² = 3.000.000.000.000</li><li>5n = 5.000.000</li><li>20 = 20</li></ul><p>Thành phần n² chiếm <strong>99.9998%</strong> tổng chi phí. Các thành phần còn lại — và cả hệ số 3 — không thay đổi <em>câu trả lời cho câu hỏi ta quan tâm</em>: &ldquo;khi n tăng 10 lần, chi phí tăng ~100 lần&rdquo;. Vì vậy toán học cho phép ta vứt bỏ chúng một cách <strong>có kỷ luật</strong>, và đó chính là ký hiệu tiệm cận (asymptotic notation).</p><p>Điểm mấu chốt cần hiểu: Big-O không phải là &ldquo;cách viết tắt lười biếng&rdquo;. Nó là một <strong>phép trừu tượng hóa có chủ đích</strong> — ta chấp nhận mất thông tin về hằng số để đổi lấy một bất biến đúng trên mọi phần cứng, mọi ngôn ngữ, mọi compiler. Giống như khi thiết kế API, ta giấu implementation detail để giữ contract ổn định.</p><h3 id=nếu-không-có-nó-thì-sao>Nếu không có nó thì sao?<a hidden class=anchor aria-hidden=true href=#nếu-không-có-nó-thì-sao>#</a></h3><p>Không có ký hiệu tiệm cận, mọi thảo luận về hiệu năng thuật toán đều phải kèm theo model CPU, phiên bản compiler và cờ tối ưu hóa. Paper nghiên cứu năm 1975 sẽ vô dụng năm 2026. Big-O là lý do một kết quả về quicksort từ thập niên 60 vẫn đúng nguyên vẹn trên chip M-series hôm nay.</p><h2 id=4-mathematical-model>4. Mathematical Model<a hidden class=anchor aria-hidden=true href=#4-mathematical-model>#</a></h2><h3 id=định-nghĩa-big-o>Định nghĩa Big-O<a hidden class=anchor aria-hidden=true href=#định-nghĩa-big-o>#</a></h3><blockquote><p>f(n) = O(g(n)) khi và chỉ khi tồn tại hằng số c > 0 và n₀ sao cho:
+<strong>f(n) ≤ c·g(n) với mọi n ≥ n₀</strong></p></blockquote><p>Diễn giải từng thành phần — vì mỗi mảnh của định nghĩa đều trả lời một câu hỏi thực tế:</p><ul><li><strong>c·g(n)</strong>: &ldquo;nhân với hằng số nào đó&rdquo; — chính là chỗ ta <em>hợp pháp hóa</em> việc bỏ qua hệ số. 3n² và 300n² đều là O(n²).</li><li><strong>n ≥ n₀</strong>: &ldquo;từ một điểm nào đó trở đi&rdquo; — ta chỉ quan tâm hành vi khi n lớn. Với n nhỏ, mọi thuật toán đều nhanh; sự khác biệt chỉ lộ ra ở quy mô.</li><li><strong>≤</strong>: Big-O là <strong>chặn trên</strong> (upper bound). Nói &ldquo;thuật toán này là O(n²)&rdquo; nghĩa là &ldquo;không tệ hơn n²&rdquo;, chứ không phải &ldquo;đúng bằng n²&rdquo;. Linear search cũng là O(n²) — về mặt kỹ thuật đúng, nhưng không có ích.</li></ul><p>Trực quan hóa:</p><pre tabindex=0><code>chi phí
   │                    c·g(n)
   │                   ╱
   │                  ╱   ← từ n₀ trở đi, f(n) luôn
@@ -239,402 +49,28 @@ Yêu cầu trước: Chương 03 (Proof Techniques), Chương 06 (Recurrence)</p
   │    ✕ ╱
   │   ╱✕
   └──┼──────────────────────── n
-     n₀</code></pre><h3 id="big-omega-và-big-theta">Big-Omega và Big-Theta<a hidden class="anchor" aria-hidden="true" href="#big-omega-và-big-theta">#</a></h3>
-<p>Big-O một mình chưa đủ, vì nó chỉ nói &ldquo;không tệ hơn&rdquo;. Bộ ba đầy đủ:</p>
-<table>
-  <thead>
-      <tr>
-          <th>Ký hiệu</th>
-          <th>Ý nghĩa</th>
-          <th>Câu hỏi nó trả lời</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>O(g)</td>
-          <td>chặn trên: f ≤ c·g</td>
-          <td>&ldquo;Tệ nhất là bao nhiêu?&rdquo;</td>
-      </tr>
-      <tr>
-          <td>Ω(g)</td>
-          <td>chặn dưới: f ≥ c·g</td>
-          <td>&ldquo;Ít nhất phải tốn bao nhiêu?&rdquo;</td>
-      </tr>
-      <tr>
-          <td>Θ(g)</td>
-          <td>chặn chặt: cả hai</td>
-          <td>&ldquo;Chính xác tăng trưởng thế nào?&rdquo;</td>
-      </tr>
-  </tbody>
-</table>
-<p>Ω đặc biệt quan trọng vì nó cho phép chứng minh <strong>giới hạn của mọi thuật toán</strong>, không chỉ một thuật toán cụ thể. Ví dụ kinh điển: <em>mọi</em> thuật toán sort dựa trên so sánh cần Ω(n log n) phép so sánh (chứng minh ở chương 16 — dựa trên việc cây quyết định phải có n! lá). Đây là kiểu tri thức chỉ toán học mang lại được: benchmark không bao giờ chứng minh được &ldquo;không tồn tại cách nhanh hơn&rdquo;.</p>
-<h3 id="worst-case-average-case-và-tại-sao-phải-phân-biệt">Worst case, Average case và tại sao phải phân biệt<a hidden class="anchor" aria-hidden="true" href="#worst-case-average-case-và-tại-sao-phải-phân-biệt">#</a></h3>
-<p>T(n) thực ra không phải là một hàm — cùng kích thước n có nhiều input khác nhau với chi phí khác nhau. Ta phải chọn góc nhìn:</p>
-<ul>
-<li><strong>Worst case</strong>: max trên mọi input kích thước n. Dùng cho cam kết SLA, hệ thống real-time, và phòng thủ trước adversarial input.</li>
-<li><strong>Average case</strong>: kỳ vọng (expected value — chương 11) trên phân phối input. Dùng khi input &ldquo;ngẫu nhiên tự nhiên&rdquo;. Quicksort là O(n²) worst case nhưng Θ(n log n) average case — và đó là lý do nó vẫn thống trị.</li>
-<li><strong>Amortized</strong>: chi phí trung bình trên một <em>chuỗi</em> thao tác, ngay cả khi từng thao tác riêng lẻ có thể đắt. Đây là khái niệm hay bị hiểu nhầm nhất, và đáng để phân tích kỹ.</li>
-</ul>
-<h3 id="amortized-analysis-trường-hợp-slice-của-go">Amortized Analysis: trường hợp slice của Go<a hidden class="anchor" aria-hidden="true" href="#amortized-analysis-trường-hợp-slice-của-go">#</a></h3>
-<p>Khi bạn <code>append</code> vào một slice Go đã đầy, runtime cấp phát mảng mới (lớn hơn ~2 lần khi slice nhỏ, ~1.25 lần khi lớn) và copy toàn bộ. Thao tác append đó tốn O(n). Vậy có nên nói &ldquo;append là O(n)&rdquo; không?</p>
-<p>Không — và đây là chỗ toán học tinh tế hơn trực giác. Xét chuỗi n lần append với chiến lược nhân đôi capacity, tổng chi phí copy là:</p>
-<blockquote>
-<p>1 + 2 + 4 + 8 + &hellip; + n/2 + n &lt; 2n</p></blockquote>
-<p>Tổng chuỗi hình học này bị chặn bởi 2n, nên <strong>n thao tác tốn O(n) tổng cộng → mỗi thao tác tốn O(1) amortized</strong>. Từng lần append riêng lẻ có thể đắt, nhưng những lần đắt hiếm đến mức &ldquo;trả góp&rdquo; đều ra thì mỗi lần chỉ tốn hằng số.</p>
-<p>Kỹ thuật chứng minh chuẩn là <strong>phương pháp kế toán (accounting method)</strong>: mỗi lần append &ldquo;trả trước&rdquo; 3 đơn vị — 1 cho việc ghi phần tử, 2 gửi tiết kiệm để trả cho lần copy tương lai. Có thể kiểm tra rằng số dư tiết kiệm không bao giờ âm, nên tổng chi phí thật ≤ tổng đã trả = 3n. Đây chính là một <strong>invariant</strong> (chương 03) áp dụng vào phân tích chi phí.</p>
-<p>Câu hỏi kiểm tra hiểu bản chất: <em>tại sao nhân đôi mà không phải cộng thêm 100 slot mỗi lần?</em> Nếu tăng tuyến tính, tổng chi phí copy là 100 + 200 + 300 + &hellip; = O(n²/100) — vẫn là bình phương. <strong>Chỉ tăng theo tỷ lệ (geometric growth) mới cho amortized O(1).</strong> Hằng số không cứu được hình dạng của hàm.</p>
-<h2 id="5-thuật-toán--phân-tích-như-thế-nào-trong-thực-tế">5. Thuật toán — phân tích như thế nào trong thực tế<a hidden class="anchor" aria-hidden="true" href="#5-thuật-toán--phân-tích-như-thế-nào-trong-thực-tế">#</a></h2>
-<p>Phân tích độ phức tạp không phải là tra bảng, mà là ba kỹ thuật cơ bản:</p>
-<p><strong>Kỹ thuật 1 — Đếm vòng lặp theo cấu trúc:</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {        <span style="color:#75715e">// n lần</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">j</span> &lt; <span style="color:#a6e22e">n</span>; <span style="color:#a6e22e">j</span><span style="color:#f92672">++</span> { <span style="color:#75715e">// n-1, n-2, ..., 1 lần</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// so sánh cặp (i, j)</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Tổng số lần chạy vòng trong: (n-1) + (n-2) + &hellip; + 1 = n(n-1)/2 = Θ(n²). Lưu ý: vòng lặp lồng nhau <em>không tự động</em> là n² — phải nhìn vào biên chạy thật. Ví dụ vòng trong chạy <code>j *= 2</code> thì tổng là Θ(n log n).</p>
-<p><strong>Kỹ thuật 2 — Recurrence cho đệ quy</strong> (chi tiết ở chương 06): merge sort chia đôi và merge tuyến tính cho T(n) = 2T(n/2) + Θ(n), Master Theorem cho ngay Θ(n log n).</p>
-<p><strong>Kỹ thuật 3 — Nhìn xuyên qua abstraction:</strong> dòng code ngắn nhất có thể đắt nhất.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Trông như O(n), thực ra là O(n²)</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">words</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">s</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">w</span> <span style="color:#75715e">// mỗi lần += copy toàn bộ chuỗi cũ: 1+2+...+n ký tự</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Đúng cách: strings.Builder — amortized O(1) mỗi lần ghi</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">b</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Builder</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">words</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">w</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>String trong Go là immutable, nên <code>s += w</code> cấp phát chuỗi mới và copy. Đây là lỗi production thật sự phổ biến — và là ví dụ hoàn hảo cho việc độ phức tạp nằm ở <strong>ngữ nghĩa của phép toán</strong>, không phải ở số dòng code.</p>
-<h3 id="bảng-tra-nhanh-và-ngưỡng-thực-dụng">Bảng tra nhanh và ngưỡng thực dụng<a hidden class="anchor" aria-hidden="true" href="#bảng-tra-nhanh-và-ngưỡng-thực-dụng">#</a></h3>
-<p>Với CPU hiện đại xử lý ~10⁸–10⁹ phép toán đơn giản mỗi giây, quy tắc ngón tay cái khi ước lượng &ldquo;thuật toán này có chạy nổi không&rdquo;:</p>
-<table>
-  <thead>
-      <tr>
-          <th>Độ phức tạp</th>
-          <th>n tối đa xử lý trong ~1 giây</th>
-          <th>Ví dụ</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>O(log n)</td>
-          <td>gần như vô hạn</td>
-          <td>binary search</td>
-      </tr>
-      <tr>
-          <td>O(n)</td>
-          <td>~10⁸</td>
-          <td>scan, hash lookup toàn bộ</td>
-      </tr>
-      <tr>
-          <td>O(n log n)</td>
-          <td>~10⁷</td>
-          <td>sort</td>
-      </tr>
-      <tr>
-          <td>O(n²)</td>
-          <td>~10⁴</td>
-          <td>so sánh mọi cặp</td>
-      </tr>
-      <tr>
-          <td>O(2ⁿ)</td>
-          <td>~25</td>
-          <td>duyệt mọi tập con</td>
-      </tr>
-      <tr>
-          <td>O(n!)</td>
-          <td>~11</td>
-          <td>duyệt mọi hoán vị</td>
-      </tr>
-  </tbody>
-</table>
-<p>Bảng này đáng nhớ hơn mọi công thức: nó biến Big-O từ lý thuyết thành công cụ ước lượng feasibility trong 5 giây — kể cả trong phỏng vấn (&ldquo;n = 10⁵ → nghĩ ngay n log n hoặc tốt hơn, quên O(n²) đi&rdquo;).</p>
-<h2 id="6-trade-off">6. Trade-off<a hidden class="anchor" aria-hidden="true" href="#6-trade-off">#</a></h2>
-<p><strong>Big-O vs constant factor.</strong> Big-O cố tình vứt hằng số, nhưng production không vứt. Một ví dụ có thật về hai cách tìm kiếm trên dữ liệu nhỏ:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Với n &lt; ~64, linear scan trên slice thường NHANH HƠN map lookup:</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// - slice nằm liên tục trong bộ nhớ → cache line prefetch hoạt động tối đa</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// - map lookup: hash + truy cập bucket rải rác → cache miss</span>
-</span></span></code></pre></div><p>Đây là lý do <code>sort.Sort</code> của Go (và pdqsort từ Go 1.19) chuyển sang <strong>insertion sort O(n²)</strong> khi phân đoạn nhỏ hơn ~12 phần tử: ở kích thước đó, hằng số nhỏ và cache locality của insertion sort thắng mọi thuật toán O(n log n). Thuật toán &ldquo;tệ về lý thuyết&rdquo; là lựa chọn đúng khi n nhỏ và ta <em>biết</em> n nhỏ.</p>
-<p><strong>Time vs Space.</strong> Hash map biến tìm kiếm O(n) thành O(1) bằng cách tốn thêm O(n) bộ nhớ. Precompute, cache, index — cùng một trade-off. Chiều ngược lại cũng tồn tại: HyperLogLog (chương 23) đếm hàng tỷ phần tử với 12KB bằng cách hy sinh độ chính xác.</p>
-<p><strong>Worst case vs Average case.</strong> Chọn tối ưu theo cái nào là quyết định kiến trúc:</p>
-<ul>
-<li>Hệ thống chịu adversarial input (API công khai) phải nghĩ theo worst case: hash flooding attack từng khai thác chính khoảng cách giữa average O(1) và worst O(n) của hash table — đây là lý do Go dùng hash seed ngẫu nhiên cho mỗi map.</li>
-<li>Batch job nội bộ có thể tin average case và thắng lớn về hiệu năng trung bình.</li>
-</ul>
-<p><strong>Đơn giản vs Tối ưu.</strong> Thuật toán O(n log log n) tồn tại cho nhiều bài toán, nhưng production dùng bản O(n log n) đơn giản — vì chi phí bảo trì, rủi ro bug và khả năng đọc hiểu của team cũng là chi phí. Độ phức tạp của <em>code</em> cũng là một loại complexity.</p>
-<h2 id="7-production-applications">7. Production Applications<a hidden class="anchor" aria-hidden="true" href="#7-production-applications">#</a></h2>
-<p><strong>PostgreSQL Query Planner</strong> — nơi complexity analysis chạy tự động hàng triệu lần mỗi giây. Với mỗi query, planner ước lượng chi phí của từng chiến lược: sequential scan là O(n) với hằng số nhỏ (đọc tuần tự, prefetch tốt); index scan là O(log n + k) với hằng số lớn hơn mỗi lần truy cập (random I/O). Đó là lý do PostgreSQL <strong>cố tình chọn seq scan</strong> khi bảng nhỏ hoặc query lấy phần lớn số dòng — một minh họa sống động rằng Big-O chỉ là một biến trong hàm chi phí, không phải toàn bộ. <code>EXPLAIN ANALYZE</code> chính là &ldquo;máy phân tích độ phức tạp&rdquo; bạn dùng hằng ngày.</p>
-<p><strong>Redis</strong> chọn cấu trúc dữ liệu theo đúng bảng trade-off trên: sorted set nhỏ lưu bằng listpack (mảng phẳng, O(n) nhưng hằng số tí hon, cache-friendly), tự động chuyển sang skip list O(log n) khi vượt ngưỡng <code>zset-max-listpack-entries</code>. Cùng một API, hai thuật toán, chuyển đổi dựa trên n — đây là complexity analysis được mã hóa thành config.</p>
-<p><strong>Go runtime</strong>: map là hash table với average O(1) và hash seed ngẫu nhiên chống adversarial input; slice append là amortized O(1) như đã phân tích; garbage collector được thiết kế quanh cam kết <em>độ trễ</em> — tri-color concurrent mark-sweep giữ pause ngắn (đơn vị trăm microsecond) thay vì stop-the-world tỷ lệ với heap — một dạng &ldquo;amortize chi phí GC theo thời gian thực thi&rdquo;.</p>
-<p><strong>Kafka</strong> đạt throughput khổng lồ không phải nhờ thuật toán lạ mà nhờ tôn trọng hằng số: mọi thao tác ghi/đọc log đều là <strong>sequential I/O</strong> — cùng là &ldquo;đọc n byte&rdquo; O(n), nhưng đọc tuần tự trên SSD/HDD nhanh hơn random hàng chục đến hàng trăm lần. Consumer offset là con trỏ vào log — seek O(1) thay vì tìm kiếm.</p>
-<p><strong>Elasticsearch</strong>: inverted index biến tìm kiếm text từ O(tổng số document × độ dài) thành O(số document chứa term) — thay đổi cả <em>biến n</em> mà chi phí phụ thuộc vào. Bài học: cách tối ưu mạnh nhất thường không phải giảm bậc của hàm, mà là <strong>đổi biến</strong> — làm cho chi phí phụ thuộc vào đại lượng nhỏ hơn nhiều.</p>
-<h2 id="8-interview">8. Interview<a hidden class="anchor" aria-hidden="true" href="#8-interview">#</a></h2>
-<p>Complexity analysis xuất hiện trong <strong>100%</strong> buổi phỏng vấn thuật toán — không phải như một câu hỏi riêng mà là câu &ldquo;độ phức tạp bao nhiêu?&rdquo; sau mỗi lời giải.</p>
-<p><strong>Các dạng phổ biến:</strong></p>
-<ul>
-<li>Phân tích code cho sẵn (đặc biệt vòng lặp có biên chạy lạ: <code>j *= 2</code>, <code>j += i</code>)</li>
-<li>Two Sum (LeetCode 1): từ O(n²) brute force → O(n) với hash map — bài kiểm tra chuẩn về trade-off time/space</li>
-<li>Phân tích thuật toán đệ quy (thường cần Master Theorem hoặc vẽ cây đệ quy)</li>
-<li>&ldquo;Có thể làm tốt hơn không?&rdquo; — kiểm tra bạn có biết lower bound không (ví dụ: tìm max của mảng không sort được nhanh hơn Ω(n) — mỗi phần tử phải được nhìn ít nhất một lần)</li>
-</ul>
-<p><strong>Lỗi tư duy thường gặp:</strong></p>
-<ul>
-<li>Nói &ldquo;hai vòng lặp lồng nhau nên là O(n²)&rdquo; mà không nhìn biên chạy. Vòng trong chạy trên biến khác (m) thì là O(n·m); biên logarit thì là O(n log n).</li>
-<li>Quên chi phí ẩn: <code>strings.Contains</code>, slice copy, sort bên trong vòng lặp.</li>
-<li>Nhầm O với Θ: &ldquo;thuật toán này là O(n log n)&rdquo; đúng cả với thuật toán O(n) — dùng dấu nào thể hiện bạn hiểu mình đang nói chặn trên hay chặn chặt.</li>
-<li>Với amortized: khẳng định &ldquo;append có thể tốn O(n) nên vòng lặp append n lần là O(n²)&rdquo; — sai, là O(n) tổng, như đã chứng minh ở mục 4.</li>
-</ul>
-<p><strong>Cách phân tích thay vì học thuộc:</strong> khi gặp bài mới, hỏi tuần tự: (1) input size là biến nào — có thể có nhiều hơn một; (2) với ràng buộc n đề cho, bảng ngưỡng ở mục 5 gợi ý độ phức tạp mục tiêu nào; (3) chi phí mỗi bước lặp/đệ quy là gì, có chi phí ẩn không; (4) nghiệm của recurrence là gì. Ràng buộc n trong đề bài chính là <strong>gợi ý lời giải bị mã hóa</strong>: n ≤ 20 gần như hét lên &ldquo;bitmask/duyệt tập con được phép&rdquo;.</p>
-<p><strong>Từ phỏng vấn sang production:</strong> Two Sum với hash map chính là bài toán join trong database thu nhỏ — hash join của PostgreSQL là &ldquo;Two Sum trên hàng triệu dòng&rdquo;. Kỹ năng nhận diện &ldquo;bài này về bản chất là bài kia&rdquo; đáng giá hơn mọi lời giải thuộc lòng.</p>
-<h2 id="9-anti-pattern">9. Anti-pattern<a hidden class="anchor" aria-hidden="true" href="#9-anti-pattern">#</a></h2>
-<p><strong>Sùng bái Big-O, bỏ quên hằng số và cache.</strong> Thay linked list &ldquo;O(1) insert&rdquo; cho slice &ldquo;O(n) insert&rdquo; rồi thấy hệ thống <em>chậm đi</em>: mỗi node linked list là một lần cấp phát heap + cache miss khi duyệt, trong khi slice hưởng trọn prefetcher. Trên phần cứng hiện đại, <strong>cache locality thường quyết định nhiều hơn một bậc log</strong>.</p>
-<p><strong>Tối ưu độ phức tạp của phần không phải bottleneck.</strong> Dành hai ngày đưa một hàm từ O(n log n) về O(n) trong khi 95% thời gian request nằm ở network I/O. Complexity analysis cho biết hàm nào <em>có thể</em> chậm; profiler (<code>pprof</code>) cho biết hàm nào <em>đang</em> chậm. Cần cả hai, theo đúng thứ tự: đo trước, tối ưu sau.</p>
-<p><strong>Phân tích trên biến sai.</strong> &ldquo;API của tôi là O(1) vì chỉ query một dòng&rdquo; — nhưng query đó là <code>LIKE '%keyword%'</code> khiến database scan O(n) trên bảng. Độ phức tạp của hệ thống là của <strong>toàn bộ đường đi</strong>, tính trên kích thước dữ liệu thật, không phải của riêng đoạn code bạn viết.</p>
-<p><strong>Giả định n nhỏ mãi mãi.</strong> Câu chuyện mở đầu chương này. Mọi bảng đều lớn dần; code O(n²) là quả bom hẹn giờ có ngòi nổ bằng tốc độ tăng trưởng của công ty — nó phát nổ đúng lúc công ty thành công.</p>
-<p><strong>Dùng average case cho hệ thống đối mặt kẻ xấu.</strong> Hash table &ldquo;O(1)&rdquo; trở thành O(n) dưới hash flooding. Regex backtracking &ldquo;thường nhanh&rdquo; trở thành 2ⁿ với input độc (ReDoS) — lý do Go chọn engine RE2 với đảm bảo O(n) worst case, chấp nhận bỏ backreference. Một quyết định thiết kế ngôn ngữ dựa thẳng trên worst-case analysis.</p>
-<h2 id="10-best-practices">10. Best Practices<a hidden class="anchor" aria-hidden="true" href="#10-best-practices">#</a></h2>
-<p><strong>Nên:</strong></p>
-<ul>
-<li>Ước lượng độ phức tạp <strong>trước khi viết code</strong>, dựa trên kích thước dữ liệu dự kiến sau 2–3 năm chứ không phải hôm nay. Bảng ngưỡng ở mục 5 đủ cho 90% quyết định.</li>
-<li>Nghĩ worst case cho mọi bề mặt tiếp xúc với người dùng/kẻ tấn công; cho phép average case với dữ liệu nội bộ kiểm soát được.</li>
-<li>Benchmark để đo hằng số khi hai lựa chọn cùng bậc — <code>go test -bench</code> với nhiều cỡ n (10³, 10⁴, 10⁵&hellip;) và nhìn <em>tỷ lệ tăng</em> giữa các cỡ: thời gian tăng ~10 lần khi n tăng 10 lần → tuyến tính; ~100 lần → bình phương. Đây là cách &ldquo;đo&rdquo; Big-O bằng thực nghiệm.</li>
-<li>Khi tối ưu, ưu tiên theo thứ tự: đổi biến (index/inverted index) → giảm bậc (thuật toán tốt hơn) → giảm hằng số (cache locality, giảm allocation) — mỗi bậc sau chỉ làm khi bậc trước không còn khả thi.</li>
-</ul>
-<p><strong>Không nên:</strong></p>
-<ul>
-<li>Không tối ưu khi chưa profile — trực giác về bottleneck sai nhiều hơn đúng, kể cả với kỹ sư giàu kinh nghiệm.</li>
-<li>Không thay cấu trúc dữ liệu đơn giản bằng cấu trúc &ldquo;tốt hơn về lý thuyết&rdquo; khi n &lt; vài nghìn — đo trước.</li>
-<li>Không cam kết SLA dựa trên average case.</li>
-</ul>
-<p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p>
-<ol>
-<li>Tại sao amortized O(1) của slice append đòi hỏi tăng capacity theo tỷ lệ, không phải cộng hằng số?</li>
-<li>Vì sao PostgreSQL đôi khi cố tình chọn seq scan O(n) thay vì index scan O(log n)?</li>
-<li>Benchmark cho thấy thuật toán A nhanh hơn B ở n = 10⁴. Kết luận gì được và không được phép rút ra?</li>
-</ol>
-<hr>
-<p><em>Chương tiếp theo: <a href="/series/math-for-engineers/level-3-algorithm-mathematics/11-probability/">11 — Probability</a>, nơi &ldquo;average case&rdquo; của chương này được đặt trên nền móng chính xác: kỳ vọng, phân phối, và lý do các hệ thống lớn dám đánh cược vào xác suất.</em></p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/math/">Math</a></li>
-      <li><a href="http://localhost:1313/tags/computer-science/">Computer-Science</a></li>
-      <li><a href="http://localhost:1313/tags/algorithms/">Algorithms</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:1313/series/math-for-engineers/level-2-discrete-mathematics/09-boolean-algebra/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Chương 09 — Boolean Algebra: Đại số của bật và tắt</span>
-  </a>
-  <a class="next" href="http://localhost:1313/series/math-for-engineers/level-3-algorithm-mathematics/11-probability/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Chương 11 — Probability: Đánh cược có tính toán</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on x"
-            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f&amp;hashtags=math%2ccomputer-science%2calgorithms">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;summary=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f&title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on whatsapp"
-            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on telegram"
-            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+     n₀</code></pre><h3 id=big-omega-và-big-theta>Big-Omega và Big-Theta<a hidden class=anchor aria-hidden=true href=#big-omega-và-big-theta>#</a></h3><p>Big-O một mình chưa đủ, vì nó chỉ nói &ldquo;không tệ hơn&rdquo;. Bộ ba đầy đủ:</p><table><thead><tr><th>Ký hiệu</th><th>Ý nghĩa</th><th>Câu hỏi nó trả lời</th></tr></thead><tbody><tr><td>O(g)</td><td>chặn trên: f ≤ c·g</td><td>&ldquo;Tệ nhất là bao nhiêu?&rdquo;</td></tr><tr><td>Ω(g)</td><td>chặn dưới: f ≥ c·g</td><td>&ldquo;Ít nhất phải tốn bao nhiêu?&rdquo;</td></tr><tr><td>Θ(g)</td><td>chặn chặt: cả hai</td><td>&ldquo;Chính xác tăng trưởng thế nào?&rdquo;</td></tr></tbody></table><p>Ω đặc biệt quan trọng vì nó cho phép chứng minh <strong>giới hạn của mọi thuật toán</strong>, không chỉ một thuật toán cụ thể. Ví dụ kinh điển: <em>mọi</em> thuật toán sort dựa trên so sánh cần Ω(n log n) phép so sánh (chứng minh ở chương 16 — dựa trên việc cây quyết định phải có n! lá). Đây là kiểu tri thức chỉ toán học mang lại được: benchmark không bao giờ chứng minh được &ldquo;không tồn tại cách nhanh hơn&rdquo;.</p><h3 id=worst-case-average-case-và-tại-sao-phải-phân-biệt>Worst case, Average case và tại sao phải phân biệt<a hidden class=anchor aria-hidden=true href=#worst-case-average-case-và-tại-sao-phải-phân-biệt>#</a></h3><p>T(n) thực ra không phải là một hàm — cùng kích thước n có nhiều input khác nhau với chi phí khác nhau. Ta phải chọn góc nhìn:</p><ul><li><strong>Worst case</strong>: max trên mọi input kích thước n. Dùng cho cam kết SLA, hệ thống real-time, và phòng thủ trước adversarial input.</li><li><strong>Average case</strong>: kỳ vọng (expected value — chương 11) trên phân phối input. Dùng khi input &ldquo;ngẫu nhiên tự nhiên&rdquo;. Quicksort là O(n²) worst case nhưng Θ(n log n) average case — và đó là lý do nó vẫn thống trị.</li><li><strong>Amortized</strong>: chi phí trung bình trên một <em>chuỗi</em> thao tác, ngay cả khi từng thao tác riêng lẻ có thể đắt. Đây là khái niệm hay bị hiểu nhầm nhất, và đáng để phân tích kỹ.</li></ul><h3 id=amortized-analysis-trường-hợp-slice-của-go>Amortized Analysis: trường hợp slice của Go<a hidden class=anchor aria-hidden=true href=#amortized-analysis-trường-hợp-slice-của-go>#</a></h3><p>Khi bạn <code>append</code> vào một slice Go đã đầy, runtime cấp phát mảng mới (lớn hơn ~2 lần khi slice nhỏ, ~1.25 lần khi lớn) và copy toàn bộ. Thao tác append đó tốn O(n). Vậy có nên nói &ldquo;append là O(n)&rdquo; không?</p><p>Không — và đây là chỗ toán học tinh tế hơn trực giác. Xét chuỗi n lần append với chiến lược nhân đôi capacity, tổng chi phí copy là:</p><blockquote><p>1 + 2 + 4 + 8 + &mldr; + n/2 + n &lt; 2n</p></blockquote><p>Tổng chuỗi hình học này bị chặn bởi 2n, nên <strong>n thao tác tốn O(n) tổng cộng → mỗi thao tác tốn O(1) amortized</strong>. Từng lần append riêng lẻ có thể đắt, nhưng những lần đắt hiếm đến mức &ldquo;trả góp&rdquo; đều ra thì mỗi lần chỉ tốn hằng số.</p><p>Kỹ thuật chứng minh chuẩn là <strong>phương pháp kế toán (accounting method)</strong>: mỗi lần append &ldquo;trả trước&rdquo; 3 đơn vị — 1 cho việc ghi phần tử, 2 gửi tiết kiệm để trả cho lần copy tương lai. Có thể kiểm tra rằng số dư tiết kiệm không bao giờ âm, nên tổng chi phí thật ≤ tổng đã trả = 3n. Đây chính là một <strong>invariant</strong> (chương 03) áp dụng vào phân tích chi phí.</p><p>Câu hỏi kiểm tra hiểu bản chất: <em>tại sao nhân đôi mà không phải cộng thêm 100 slot mỗi lần?</em> Nếu tăng tuyến tính, tổng chi phí copy là 100 + 200 + 300 + &mldr; = O(n²/100) — vẫn là bình phương. <strong>Chỉ tăng theo tỷ lệ (geometric growth) mới cho amortized O(1).</strong> Hằng số không cứu được hình dạng của hàm.</p><h2 id=5-thuật-toán--phân-tích-như-thế-nào-trong-thực-tế>5. Thuật toán — phân tích như thế nào trong thực tế<a hidden class=anchor aria-hidden=true href=#5-thuật-toán--phân-tích-như-thế-nào-trong-thực-tế>#</a></h2><p>Phân tích độ phức tạp không phải là tra bảng, mà là ba kỹ thuật cơ bản:</p><p><strong>Kỹ thuật 1 — Đếm vòng lặp theo cấu trúc:</strong></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>n</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {        <span style=color:#75715e>// n lần</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>j</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>; <span style=color:#a6e22e>j</span> &lt; <span style=color:#a6e22e>n</span>; <span style=color:#a6e22e>j</span><span style=color:#f92672>++</span> { <span style=color:#75715e>// n-1, n-2, ..., 1 lần</span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// so sánh cặp (i, j)</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Tổng số lần chạy vòng trong: (n-1) + (n-2) + &mldr; + 1 = n(n-1)/2 = Θ(n²). Lưu ý: vòng lặp lồng nhau <em>không tự động</em> là n² — phải nhìn vào biên chạy thật. Ví dụ vòng trong chạy <code>j *= 2</code> thì tổng là Θ(n log n).</p><p><strong>Kỹ thuật 2 — Recurrence cho đệ quy</strong> (chi tiết ở chương 06): merge sort chia đôi và merge tuyến tính cho T(n) = 2T(n/2) + Θ(n), Master Theorem cho ngay Θ(n log n).</p><p><strong>Kỹ thuật 3 — Nhìn xuyên qua abstraction:</strong> dòng code ngắn nhất có thể đắt nhất.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Trông như O(n), thực ra là O(n²)</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>s</span> <span style=color:#f92672>:=</span> <span style=color:#e6db74>&#34;&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>w</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>words</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>s</span> <span style=color:#f92672>+=</span> <span style=color:#a6e22e>w</span> <span style=color:#75715e>// mỗi lần += copy toàn bộ chuỗi cũ: 1+2+...+n ký tự</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// Đúng cách: strings.Builder — amortized O(1) mỗi lần ghi</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>b</span> <span style=color:#a6e22e>strings</span>.<span style=color:#a6e22e>Builder</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>w</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>words</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>b</span>.<span style=color:#a6e22e>WriteString</span>(<span style=color:#a6e22e>w</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>String trong Go là immutable, nên <code>s += w</code> cấp phát chuỗi mới và copy. Đây là lỗi production thật sự phổ biến — và là ví dụ hoàn hảo cho việc độ phức tạp nằm ở <strong>ngữ nghĩa của phép toán</strong>, không phải ở số dòng code.</p><h3 id=bảng-tra-nhanh-và-ngưỡng-thực-dụng>Bảng tra nhanh và ngưỡng thực dụng<a hidden class=anchor aria-hidden=true href=#bảng-tra-nhanh-và-ngưỡng-thực-dụng>#</a></h3><p>Với CPU hiện đại xử lý ~10⁸–10⁹ phép toán đơn giản mỗi giây, quy tắc ngón tay cái khi ước lượng &ldquo;thuật toán này có chạy nổi không&rdquo;:</p><table><thead><tr><th>Độ phức tạp</th><th>n tối đa xử lý trong ~1 giây</th><th>Ví dụ</th></tr></thead><tbody><tr><td>O(log n)</td><td>gần như vô hạn</td><td>binary search</td></tr><tr><td>O(n)</td><td>~10⁸</td><td>scan, hash lookup toàn bộ</td></tr><tr><td>O(n log n)</td><td>~10⁷</td><td>sort</td></tr><tr><td>O(n²)</td><td>~10⁴</td><td>so sánh mọi cặp</td></tr><tr><td>O(2ⁿ)</td><td>~25</td><td>duyệt mọi tập con</td></tr><tr><td>O(n!)</td><td>~11</td><td>duyệt mọi hoán vị</td></tr></tbody></table><p>Bảng này đáng nhớ hơn mọi công thức: nó biến Big-O từ lý thuyết thành công cụ ước lượng feasibility trong 5 giây — kể cả trong phỏng vấn (&ldquo;n = 10⁵ → nghĩ ngay n log n hoặc tốt hơn, quên O(n²) đi&rdquo;).</p><h2 id=6-trade-off>6. Trade-off<a hidden class=anchor aria-hidden=true href=#6-trade-off>#</a></h2><p><strong>Big-O vs constant factor.</strong> Big-O cố tình vứt hằng số, nhưng production không vứt. Một ví dụ có thật về hai cách tìm kiếm trên dữ liệu nhỏ:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Với n &lt; ~64, linear scan trên slice thường NHANH HƠN map lookup:</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// - slice nằm liên tục trong bộ nhớ → cache line prefetch hoạt động tối đa</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// - map lookup: hash + truy cập bucket rải rác → cache miss</span>
+</span></span></code></pre></div><p>Đây là lý do <code>sort.Sort</code> của Go (và pdqsort từ Go 1.19) chuyển sang <strong>insertion sort O(n²)</strong> khi phân đoạn nhỏ hơn ~12 phần tử: ở kích thước đó, hằng số nhỏ và cache locality của insertion sort thắng mọi thuật toán O(n log n). Thuật toán &ldquo;tệ về lý thuyết&rdquo; là lựa chọn đúng khi n nhỏ và ta <em>biết</em> n nhỏ.</p><p><strong>Time vs Space.</strong> Hash map biến tìm kiếm O(n) thành O(1) bằng cách tốn thêm O(n) bộ nhớ. Precompute, cache, index — cùng một trade-off. Chiều ngược lại cũng tồn tại: HyperLogLog (chương 23) đếm hàng tỷ phần tử với 12KB bằng cách hy sinh độ chính xác.</p><p><strong>Worst case vs Average case.</strong> Chọn tối ưu theo cái nào là quyết định kiến trúc:</p><ul><li>Hệ thống chịu adversarial input (API công khai) phải nghĩ theo worst case: hash flooding attack từng khai thác chính khoảng cách giữa average O(1) và worst O(n) của hash table — đây là lý do Go dùng hash seed ngẫu nhiên cho mỗi map.</li><li>Batch job nội bộ có thể tin average case và thắng lớn về hiệu năng trung bình.</li></ul><p><strong>Đơn giản vs Tối ưu.</strong> Thuật toán O(n log log n) tồn tại cho nhiều bài toán, nhưng production dùng bản O(n log n) đơn giản — vì chi phí bảo trì, rủi ro bug và khả năng đọc hiểu của team cũng là chi phí. Độ phức tạp của <em>code</em> cũng là một loại complexity.</p><h2 id=7-production-applications>7. Production Applications<a hidden class=anchor aria-hidden=true href=#7-production-applications>#</a></h2><p><strong>PostgreSQL Query Planner</strong> — nơi complexity analysis chạy tự động hàng triệu lần mỗi giây. Với mỗi query, planner ước lượng chi phí của từng chiến lược: sequential scan là O(n) với hằng số nhỏ (đọc tuần tự, prefetch tốt); index scan là O(log n + k) với hằng số lớn hơn mỗi lần truy cập (random I/O). Đó là lý do PostgreSQL <strong>cố tình chọn seq scan</strong> khi bảng nhỏ hoặc query lấy phần lớn số dòng — một minh họa sống động rằng Big-O chỉ là một biến trong hàm chi phí, không phải toàn bộ. <code>EXPLAIN ANALYZE</code> chính là &ldquo;máy phân tích độ phức tạp&rdquo; bạn dùng hằng ngày.</p><p><strong>Redis</strong> chọn cấu trúc dữ liệu theo đúng bảng trade-off trên: sorted set nhỏ lưu bằng listpack (mảng phẳng, O(n) nhưng hằng số tí hon, cache-friendly), tự động chuyển sang skip list O(log n) khi vượt ngưỡng <code>zset-max-listpack-entries</code>. Cùng một API, hai thuật toán, chuyển đổi dựa trên n — đây là complexity analysis được mã hóa thành config.</p><p><strong>Go runtime</strong>: map là hash table với average O(1) và hash seed ngẫu nhiên chống adversarial input; slice append là amortized O(1) như đã phân tích; garbage collector được thiết kế quanh cam kết <em>độ trễ</em> — tri-color concurrent mark-sweep giữ pause ngắn (đơn vị trăm microsecond) thay vì stop-the-world tỷ lệ với heap — một dạng &ldquo;amortize chi phí GC theo thời gian thực thi&rdquo;.</p><p><strong>Kafka</strong> đạt throughput khổng lồ không phải nhờ thuật toán lạ mà nhờ tôn trọng hằng số: mọi thao tác ghi/đọc log đều là <strong>sequential I/O</strong> — cùng là &ldquo;đọc n byte&rdquo; O(n), nhưng đọc tuần tự trên SSD/HDD nhanh hơn random hàng chục đến hàng trăm lần. Consumer offset là con trỏ vào log — seek O(1) thay vì tìm kiếm.</p><p><strong>Elasticsearch</strong>: inverted index biến tìm kiếm text từ O(tổng số document × độ dài) thành O(số document chứa term) — thay đổi cả <em>biến n</em> mà chi phí phụ thuộc vào. Bài học: cách tối ưu mạnh nhất thường không phải giảm bậc của hàm, mà là <strong>đổi biến</strong> — làm cho chi phí phụ thuộc vào đại lượng nhỏ hơn nhiều.</p><h2 id=8-interview>8. Interview<a hidden class=anchor aria-hidden=true href=#8-interview>#</a></h2><p>Complexity analysis xuất hiện trong <strong>100%</strong> buổi phỏng vấn thuật toán — không phải như một câu hỏi riêng mà là câu &ldquo;độ phức tạp bao nhiêu?&rdquo; sau mỗi lời giải.</p><p><strong>Các dạng phổ biến:</strong></p><ul><li>Phân tích code cho sẵn (đặc biệt vòng lặp có biên chạy lạ: <code>j *= 2</code>, <code>j += i</code>)</li><li>Two Sum (LeetCode 1): từ O(n²) brute force → O(n) với hash map — bài kiểm tra chuẩn về trade-off time/space</li><li>Phân tích thuật toán đệ quy (thường cần Master Theorem hoặc vẽ cây đệ quy)</li><li>&ldquo;Có thể làm tốt hơn không?&rdquo; — kiểm tra bạn có biết lower bound không (ví dụ: tìm max của mảng không sort được nhanh hơn Ω(n) — mỗi phần tử phải được nhìn ít nhất một lần)</li></ul><p><strong>Lỗi tư duy thường gặp:</strong></p><ul><li>Nói &ldquo;hai vòng lặp lồng nhau nên là O(n²)&rdquo; mà không nhìn biên chạy. Vòng trong chạy trên biến khác (m) thì là O(n·m); biên logarit thì là O(n log n).</li><li>Quên chi phí ẩn: <code>strings.Contains</code>, slice copy, sort bên trong vòng lặp.</li><li>Nhầm O với Θ: &ldquo;thuật toán này là O(n log n)&rdquo; đúng cả với thuật toán O(n) — dùng dấu nào thể hiện bạn hiểu mình đang nói chặn trên hay chặn chặt.</li><li>Với amortized: khẳng định &ldquo;append có thể tốn O(n) nên vòng lặp append n lần là O(n²)&rdquo; — sai, là O(n) tổng, như đã chứng minh ở mục 4.</li></ul><p><strong>Cách phân tích thay vì học thuộc:</strong> khi gặp bài mới, hỏi tuần tự: (1) input size là biến nào — có thể có nhiều hơn một; (2) với ràng buộc n đề cho, bảng ngưỡng ở mục 5 gợi ý độ phức tạp mục tiêu nào; (3) chi phí mỗi bước lặp/đệ quy là gì, có chi phí ẩn không; (4) nghiệm của recurrence là gì. Ràng buộc n trong đề bài chính là <strong>gợi ý lời giải bị mã hóa</strong>: n ≤ 20 gần như hét lên &ldquo;bitmask/duyệt tập con được phép&rdquo;.</p><p><strong>Từ phỏng vấn sang production:</strong> Two Sum với hash map chính là bài toán join trong database thu nhỏ — hash join của PostgreSQL là &ldquo;Two Sum trên hàng triệu dòng&rdquo;. Kỹ năng nhận diện &ldquo;bài này về bản chất là bài kia&rdquo; đáng giá hơn mọi lời giải thuộc lòng.</p><h2 id=9-anti-pattern>9. Anti-pattern<a hidden class=anchor aria-hidden=true href=#9-anti-pattern>#</a></h2><p><strong>Sùng bái Big-O, bỏ quên hằng số và cache.</strong> Thay linked list &ldquo;O(1) insert&rdquo; cho slice &ldquo;O(n) insert&rdquo; rồi thấy hệ thống <em>chậm đi</em>: mỗi node linked list là một lần cấp phát heap + cache miss khi duyệt, trong khi slice hưởng trọn prefetcher. Trên phần cứng hiện đại, <strong>cache locality thường quyết định nhiều hơn một bậc log</strong>.</p><p><strong>Tối ưu độ phức tạp của phần không phải bottleneck.</strong> Dành hai ngày đưa một hàm từ O(n log n) về O(n) trong khi 95% thời gian request nằm ở network I/O. Complexity analysis cho biết hàm nào <em>có thể</em> chậm; profiler (<code>pprof</code>) cho biết hàm nào <em>đang</em> chậm. Cần cả hai, theo đúng thứ tự: đo trước, tối ưu sau.</p><p><strong>Phân tích trên biến sai.</strong> &ldquo;API của tôi là O(1) vì chỉ query một dòng&rdquo; — nhưng query đó là <code>LIKE '%keyword%'</code> khiến database scan O(n) trên bảng. Độ phức tạp của hệ thống là của <strong>toàn bộ đường đi</strong>, tính trên kích thước dữ liệu thật, không phải của riêng đoạn code bạn viết.</p><p><strong>Giả định n nhỏ mãi mãi.</strong> Câu chuyện mở đầu chương này. Mọi bảng đều lớn dần; code O(n²) là quả bom hẹn giờ có ngòi nổ bằng tốc độ tăng trưởng của công ty — nó phát nổ đúng lúc công ty thành công.</p><p><strong>Dùng average case cho hệ thống đối mặt kẻ xấu.</strong> Hash table &ldquo;O(1)&rdquo; trở thành O(n) dưới hash flooding. Regex backtracking &ldquo;thường nhanh&rdquo; trở thành 2ⁿ với input độc (ReDoS) — lý do Go chọn engine RE2 với đảm bảo O(n) worst case, chấp nhận bỏ backreference. Một quyết định thiết kế ngôn ngữ dựa thẳng trên worst-case analysis.</p><h2 id=10-best-practices>10. Best Practices<a hidden class=anchor aria-hidden=true href=#10-best-practices>#</a></h2><p><strong>Nên:</strong></p><ul><li>Ước lượng độ phức tạp <strong>trước khi viết code</strong>, dựa trên kích thước dữ liệu dự kiến sau 2–3 năm chứ không phải hôm nay. Bảng ngưỡng ở mục 5 đủ cho 90% quyết định.</li><li>Nghĩ worst case cho mọi bề mặt tiếp xúc với người dùng/kẻ tấn công; cho phép average case với dữ liệu nội bộ kiểm soát được.</li><li>Benchmark để đo hằng số khi hai lựa chọn cùng bậc — <code>go test -bench</code> với nhiều cỡ n (10³, 10⁴, 10⁵&mldr;) và nhìn <em>tỷ lệ tăng</em> giữa các cỡ: thời gian tăng ~10 lần khi n tăng 10 lần → tuyến tính; ~100 lần → bình phương. Đây là cách &ldquo;đo&rdquo; Big-O bằng thực nghiệm.</li><li>Khi tối ưu, ưu tiên theo thứ tự: đổi biến (index/inverted index) → giảm bậc (thuật toán tốt hơn) → giảm hằng số (cache locality, giảm allocation) — mỗi bậc sau chỉ làm khi bậc trước không còn khả thi.</li></ul><p><strong>Không nên:</strong></p><ul><li>Không tối ưu khi chưa profile — trực giác về bottleneck sai nhiều hơn đúng, kể cả với kỹ sư giàu kinh nghiệm.</li><li>Không thay cấu trúc dữ liệu đơn giản bằng cấu trúc &ldquo;tốt hơn về lý thuyết&rdquo; khi n &lt; vài nghìn — đo trước.</li><li>Không cam kết SLA dựa trên average case.</li></ul><p><strong>Câu hỏi tự kiểm tra khi rời chương này:</strong></p><ol><li>Tại sao amortized O(1) của slice append đòi hỏi tăng capacity theo tỷ lệ, không phải cộng hằng số?</li><li>Vì sao PostgreSQL đôi khi cố tình chọn seq scan O(n) thay vì index scan O(log n)?</li><li>Benchmark cho thấy thuật toán A nhanh hơn B ở n = 10⁴. Kết luận gì được và không được phép rút ra?</li></ol><hr><p><em>Chương tiếp theo: <a href=/series/math-for-engineers/level-3-algorithm-mathematics/11-probability/>11 — Probability</a>, nơi &ldquo;average case&rdquo; của chương này được đặt trên nền móng chính xác: kỳ vọng, phân phối, và lý do các hệ thống lớn dám đánh cược vào xác suất.</em></p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/math/>Math</a></li><li><a href=https://thanhhv.github.io/tags/computer-science/>Computer-Science</a></li><li><a href=https://thanhhv.github.io/tags/algorithms/>Algorithms</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/math-for-engineers/level-2-discrete-mathematics/09-boolean-algebra/><span class=title>« Prev</span><br><span>Chương 09 — Boolean Algebra: Đại số của bật và tắt</span>
+</a><a class=next href=https://thanhhv.github.io/series/math-for-engineers/level-3-algorithm-mathematics/11-probability/><span class=title>Next »</span><br><span>Chương 11 — Probability: Đánh cược có tính toán</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f&amp;hashtags=math%2ccomputer-science%2calgorithms"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;summary=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f&title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Complexity Analysis: Ngôn ngữ đo lường thuật toán on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Complexity%20Analysis%3a%20Ng%c3%b4n%20ng%e1%bb%af%20%c4%91o%20l%c6%b0%e1%bb%9dng%20thu%e1%ba%adt%20to%c3%a1n&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fmath-for-engineers%2flevel-3-algorithm-mathematics%2f10-complexity-analysis%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

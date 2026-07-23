@@ -1,145 +1,20 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Chương 10 — Factor 5: Build, Release, Run | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, twelve-factor, cloud-native">
-<meta name="description" content="
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 10 — Factor 5: Build, Release, Run | Thanh HV's Blog</title>
+<meta name=keywords content="backend,twelve-factor,cloud-native"><meta name=description content="
 &ldquo;Strictly separate build and run stages&rdquo; — Tách bạch nghiêm ngặt các giai đoạn build và run.
 Phần 2 – The Twelve Factors | Nhóm: Reproducible | Chương trước: Backing Services | Chương sau: Processes
 
 1. Problem Statement
 Câu hỏi factor này trả lời: &ldquo;Từ code đến process đang chạy, chuyện gì xảy ra — và có đảo ngược được không?&rdquo;
-Trong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/series/twelve-factor/10-factor-05-build-release-run/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/series/twelve-factor/10-factor-05-build-release-run/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
+Trong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:"><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/twelve-factor/10-factor-05-build-release-run/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/twelve-factor/10-factor-05-build-release-run/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/twelve-factor/10-factor-05-build-release-run/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 10 — Factor 5: Build, Release, Run"><meta property="og:description" content=" “Strictly separate build and run stages” — Tách bạch nghiêm ngặt các giai đoạn build và run.
+Phần 2 – The Twelve Factors | Nhóm: Reproducible | Chương trước: Backing Services | Chương sau: Processes
+1. Problem Statement Câu hỏi factor này trả lời: “Từ code đến process đang chạy, chuyện gì xảy ra — và có đảo ngược được không?”
+Trong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:"><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-10T11:00:00+07:00"><meta property="article:modified_time" content="2026-07-10T11:00:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Twelve-Factor"><meta property="article:tag" content="Cloud-Native"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 10 — Factor 5: Build, Release, Run"><meta name=twitter:description content="
+&ldquo;Strictly separate build and run stages&rdquo; — Tách bạch nghiêm ngặt các giai đoạn build và run.
+Phần 2 – The Twelve Factors | Nhóm: Reproducible | Chương trước: Backing Services | Chương sau: Processes
 
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:1313/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/twelve-factor/">The Twelve-Factor App</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Chương 10 — Factor 5: Build, Release, Run
-    </h1>
-    <div class="post-meta"><span title='2026-07-10 11:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;9 min
-
-</div>
-  </header> 
-  <div class="post-content"><blockquote>
-<p><em>&ldquo;Strictly separate build and run stages&rdquo;</em> — Tách bạch nghiêm ngặt các giai đoạn build và run.</p>
-<p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Reproducible</strong> | Chương trước: <a href="/series/twelve-factor/09-factor-04-backing-services/">Backing Services</a> | Chương sau: <a href="/series/twelve-factor/11-factor-06-processes/">Processes</a></p></blockquote>
-<hr>
-<h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
-<p>Câu hỏi factor này trả lời: <strong>&ldquo;Từ code đến process đang chạy, chuyện gì xảy ra — và có đảo ngược được không?&rdquo;</strong></p>
-<p>Trong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:</p>
-<ul>
-<li><strong>Không trả lời được &ldquo;đang chạy bản nào&rdquo;</strong> — thứ đang chạy là code + các bản vá tay không tồn tại ở đâu khác.</li>
-<li><strong>Không rollback được</strong> — &ldquo;bản trước&rdquo; không được lưu như một khối nguyên vẹn; rollback nghĩa là cố nhớ lại và làm ngược các thao tác tay.</li>
-<li><strong>Deploy không lặp lại được</strong> — làm lại từ đầu chưa chắc ra kết quả cũ.</li>
-<li>Kịch bản kinh điển: sự cố lúc 2h sáng → sửa nóng file trên server → sáng hôm sau CI deploy bản mới → <strong>bản vá bị ghi đè, sự cố quay lại</strong> → và giờ không ai nhớ đêm qua đã sửa gì.</li>
-</ul>
-<h2 id="2-tại-sao-nguyên-lý-này-tồn-tại">2. Tại sao nguyên lý này tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-nguyên-lý-này-tồn-tại">#</a></h2>
-<ul>
-<li><strong>Deployment</strong>: tự động hóa đòi hỏi quy trình là các bước thuần túy, đầu vào rõ, đầu ra rõ. &ldquo;Build rồi sửa tay một chút&rdquo; không tự động hóa được.</li>
-<li><strong>Operational</strong>: rollback phải là thao tác một lệnh trong một phút. Điều đó chỉ khả thi khi mỗi lần deploy tạo ra một <strong>release bất biến, đánh số, lưu giữ được</strong> — quay về = trỏ lại release cũ.</li>
-<li><strong>Business/Compliance</strong>: audit đòi hỏi &ldquo;bản chạy lúc 14:03 ngày 5/3 là gì, ai phê duyệt&rdquo; — chỉ trả lời được khi release là thực thể có định danh.</li>
-<li><strong>Scalability</strong>: autoscaler tạo instance mới bất kỳ lúc nào; nó cần một artifact hoàn chỉnh để chạy ngay, không cần &ldquo;làm thêm vài bước tay&rdquo;.</li>
-</ul>
-<h2 id="3-bản-chất">3. Bản chất<a hidden class="anchor" aria-hidden="true" href="#3-bản-chất">#</a></h2>
-<p>Chia vòng đời thành ba giai đoạn với <strong>ranh giới một chiều</strong> — mỗi giai đoạn có đầu vào, đầu ra và tính chất riêng:</p>
-<pre tabindex="0"><code>   BUILD                      RELEASE                      RUN
+1. Problem Statement
+Câu hỏi factor này trả lời: &ldquo;Từ code đến process đang chạy, chuyện gì xảy ra — và có đảo ngược được không?&rdquo;
+Trong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"The Twelve-Factor App","item":"https://thanhhv.github.io/series/twelve-factor/"},{"@type":"ListItem","position":3,"name":"Chương 10 — Factor 5: Build, Release, Run","item":"https://thanhhv.github.io/series/twelve-factor/10-factor-05-build-release-run/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 10 — Factor 5: Build, Release, Run","name":"Chương 10 — Factor 5: Build, Release, Run","description":" \u0026ldquo;Strictly separate build and run stages\u0026rdquo; — Tách bạch nghiêm ngặt các giai đoạn build và run.\nPhần 2 – The Twelve Factors | Nhóm: Reproducible | Chương trước: Backing Services | Chương sau: Processes\n1. Problem Statement Câu hỏi factor này trả lời: \u0026ldquo;Từ code đến process đang chạy, chuyện gì xảy ra — và có đảo ngược được không?\u0026rdquo;\nTrong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:\n","keywords":["backend","twelve-factor","cloud-native"],"articleBody":" “Strictly separate build and run stages” — Tách bạch nghiêm ngặt các giai đoạn build và run.\nPhần 2 – The Twelve Factors | Nhóm: Reproducible | Chương trước: Backing Services | Chương sau: Processes\n1. Problem Statement Câu hỏi factor này trả lời: “Từ code đến process đang chạy, chuyện gì xảy ra — và có đảo ngược được không?”\nTrong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:\nKhông trả lời được “đang chạy bản nào” — thứ đang chạy là code + các bản vá tay không tồn tại ở đâu khác. Không rollback được — “bản trước” không được lưu như một khối nguyên vẹn; rollback nghĩa là cố nhớ lại và làm ngược các thao tác tay. Deploy không lặp lại được — làm lại từ đầu chưa chắc ra kết quả cũ. Kịch bản kinh điển: sự cố lúc 2h sáng → sửa nóng file trên server → sáng hôm sau CI deploy bản mới → bản vá bị ghi đè, sự cố quay lại → và giờ không ai nhớ đêm qua đã sửa gì. 2. Tại sao nguyên lý này tồn tại Deployment: tự động hóa đòi hỏi quy trình là các bước thuần túy, đầu vào rõ, đầu ra rõ. “Build rồi sửa tay một chút” không tự động hóa được. Operational: rollback phải là thao tác một lệnh trong một phút. Điều đó chỉ khả thi khi mỗi lần deploy tạo ra một release bất biến, đánh số, lưu giữ được — quay về = trỏ lại release cũ. Business/Compliance: audit đòi hỏi “bản chạy lúc 14:03 ngày 5/3 là gì, ai phê duyệt” — chỉ trả lời được khi release là thực thể có định danh. Scalability: autoscaler tạo instance mới bất kỳ lúc nào; nó cần một artifact hoàn chỉnh để chạy ngay, không cần “làm thêm vài bước tay”. 3. Bản chất Chia vòng đời thành ba giai đoạn với ranh giới một chiều — mỗi giai đoạn có đầu vào, đầu ra và tính chất riêng:\nBUILD RELEASE RUN ───── ─────── ─── vào: code (commit SHA) vào: build + config vào: release + dependencies của MỘT môi trường ra: BUILD ARTIFACT ra: RELEASE ra: process đang chạy (image bất biến) (bất biến, có ID, rollback về được) khi: mỗi lần code đổi khi: artifact HOẶC config khi: bất kỳ lúc nào — đổi restart, scale, phức tạp: được phép cao phức tạp: thấp thay node hỏng (compile, test, tool) (ghép hai thứ có sẵn) phức tạp: PHẢI tối thiểu (không build, không cài, không quyết định gì) ═══ RANH GIỚI MỘT CHIỀU: không sửa code sau build, không sửa release sau release, không \"vá\" process đang chạy. Muốn đổi → quay lại giai đoạn trước. ═══Ba hệ quả logic đáng khắc cốt:\nrelease = build ⊗ config — đây là điểm F3 và F5 khớp nhau: vì config tách khỏi code, một build dùng được cho mọi môi trường; release chỉ là phép ghép. Suy ra: build một lần, deploy nhiều nơi — image staging và production là cùng một image, cùng digest. Thứ bạn test chính là thứ bạn chạy. Run phải “ngu” — giai đoạn run xảy ra không báo trước (node chết, autoscale lúc 3h sáng), nên nó phải đơn giản đến mức không thể hỏng: lấy release, chạy. Mọi thứ thông minh (compile, migration, quyết định) dồn về build/release, nơi có người trực và có thể fail an toàn. Rollback = re-release bản cũ — vì release bất biến và được lưu, quay lại chỉ là trỏ con trỏ. Không cần build lại (rủi ro build ra thứ khác), không cần “sửa ngược”. Điều gì xảy ra nếu vi phạm? Mỗi kiểu vi phạm phá một hệ quả: build riêng cho từng môi trường → thứ test ≠ thứ chạy; container tự build/tự cài lúc khởi động → khởi động chậm + có thể fail lúc không ai trực (npm registry sập lúc autoscale = không scale được); sửa nóng trên server → release đang chạy không tương ứng artifact nào, rollback và audit đều mù.\n4. Cách áp dụng 4.1. Build — GitHub Actions tạo artifact bất biến # .github/workflows/build.yml (trích) name: build on: push: branches: [main] jobs: build: runs-on: ubuntu-latest steps: - uses: actions/checkout@v4 - uses: actions/setup-go@v5 with: { go-version-file: go.mod } - run: go vet ./... \u0026\u0026 go test -race ./... # test là một phần của BUILD - name: Build \u0026 push image (đánh tag bằng commit SHA — bất biến) run: | docker build \\ --build-arg COMMIT_SHA=${{ github.sha }} \\ -t $REGISTRY/myapp:${{ github.sha }} . docker push $REGISTRY/myapp:${{ github.sha }} # Ghi lại digest — định danh tuyệt đối của artifact docker inspect --format='{{index .RepoDigests 0}}' $REGISTRY/myapp:${{ github.sha }} Yêu cầu với giai đoạn build: chạy trên CI (không phải máy cá nhân), từ commit sạch, kết quả chỉ phụ thuộc commit (reproducible), đẩy vào registry — registry chính là kho lưu build artifact.\n4.2. Release + Run trên Kubernetes Trên Kubernetes, ánh xạ ba giai đoạn rất rõ:\nBuild artifact = container image (theo digest). Release = Deployment spec đã render đầy đủ: image digest + ConfigMap/Secret + tham số. Với Helm: helm release đúng nghĩa đen — có số revision, lưu lịch sử, rollback được. Với GitOps (chương 23): release = một commit trong repo config. Run = kubelet kéo image và chạy container theo spec. Không có bước nào khác. # deployment.yaml (trích) — một RELEASE cụ thể spec: replicas: 4 strategy: rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } # release mới thay dần release cũ template: metadata: labels: app: myapp version: \"9f8e7d6\" # nhìn pod biết release spec: containers: - name: server # Pin theo DIGEST — release trỏ vào artifact tuyệt đối, không thể xê dịch image: registry.example.com/myapp@sha256:4c2a...e91b envFrom: - configMapRef: { name: myapp-config-v42 } # config cũng có version # Rollback = re-release bản cũ, một lệnh: helm rollback myapp 41 # hoặc kubectl rollout undo deployment/myapp # GitOps: git revert → hệ thống tự hội tụ về release cũ 4.3. Database migration nằm ở đâu trong ba giai đoạn? Câu hỏi thực chiến hay gặp nhất của factor này. Migration không thuộc run (run phải ngu) và không thuộc build (build không được chạm môi trường). Nó là một release step — chạy một lần cho mỗi lần release, trước khi phiên bản mới nhận traffic:\n# Job migration — chạy như một bước của release (hoặc Helm pre-upgrade hook / initContainer # tùy quy mô; Job tách riêng là sạch nhất vì chạy đúng MỘT lần, không phải mỗi pod) apiVersion: batch/v1 kind: Job metadata: name: myapp-migrate-9f8e7d6 spec: backoffLimit: 2 template: spec: restartPolicy: Never containers: - name: migrate image: registry.example.com/myapp@sha256:4c2a...e91b # CÙNG image với app (F12!) args: [\"migrate\", \"up\"] envFrom: - secretRef: { name: myapp-secrets } Kèm kỷ luật expand–contract (vì trong rolling update, bản cũ và mới chạy song song trên cùng schema): bước 1 release schema mở rộng (thêm cột, tương thích cả hai bản) → bước 2 release code mới → bước 3 release dọn schema cũ. Chi tiết ở chương 24.\n5. Trade-off Build-once-run-anywhere vs build-per-environment. Chuẩn là build once. Nhưng có ngoại lệ thực tế: frontend SPA nhúng biến lúc build (VITE_API_URL) buộc build theo môi trường — cách chữa là runtime config (config.js bơm lúc serve). Go không có vấn đề này: binary đọc env lúc chạy. Nếu bạn thấy mình cần --build-arg ENVIRONMENT=prod cho backend Go — đó là dấu hiệu config đang lọt vào build, quay lại F3.\nTốc độ hotfix vs kỷ luật quy trình. Sửa nóng trên server nhanh hơn (phút) so với đi qua pipeline (5–15 phút). Nhưng phép so sánh đúng phải tính cả kỳ vọng rủi ro: bản vá tay bị ghi đè, không audit, không test. Đầu tư đúng là làm pipeline nhanh (build cache, test song song, deploy tự động) để con đường kỷ luật cũng là con đường nhanh — khi pipeline dưới 10 phút, cám dỗ sửa tay gần như biến mất.\nLưu bao nhiêu release? Mỗi release chiếm chỗ trong registry. Thực dụng: giữ mọi release N tháng gần nhất + mọi release từng chạy production (tag riêng), dọn image của branch/PR sau vài tuần bằng registry lifecycle policy.\n6. Best Practices Build chỉ trên CI, từ commit đã push; cấm docker push từ máy cá nhân lên registry production (enforce bằng quyền registry). Tag image bằng commit SHA; production tham chiếu digest; cấm :latest sau ranh giới CI. Test chạy trong giai đoạn build — artifact đã push nghĩa là đã qua test. Release có định danh và lịch sử: Helm revision, hoặc Git history của repo GitOps. Rollback được diễn tập, không chỉ được tin là có: thử rollout undo trên staging định kỳ. Migration là release step, cùng image với app, theo expand–contract. Đo thời gian pipeline như một SLO của team platform — pipeline chậm là nguyên nhân số một khiến kỷ luật bị phá. 7. Anti-patterns Sửa code/config trực tiếp trên server hoặc trong container đang chạy — phá cả ba ranh giới một lúc; bản vá sẽ bị ghi đè bởi lần deploy sau. Build lúc khởi động container (clone repo + go build trong entrypoint; npm install khi start) — run phụ thuộc network + registry ngoài đúng lúc nhạy cảm nhất (autoscale, recovery); khởi động chậm phá luôn F9. Build riêng từng môi trường (make build-staging, make build-prod) — hai artifact khác nhau, thứ test không phải thứ chạy. CI đè tag (myapp:staging được push đè liên tục) — “staging đang chạy gì?” không có câu trả lời xác định; hai pod cùng tag có thể chạy hai code khác nhau sau restart. Rollback bằng cách build lại code cũ — chậm (chờ build lúc đang cháy) và rủi ro (build mới từ code cũ chưa chắc giống build cũ nếu dependency trôi). Rollback phải dùng lại artifact cũ. Migration tự động chạy trong main() của app — N pod cùng khởi động là N lần đua migration; lỗi migration làm crash-loop toàn bộ fleet thay vì fail một Job có kiểm soát. 8. Khi nào KHÔNG cần áp dụng đầy đủ Ngôn ngữ thông dịch + môi trường đơn giản (script Python nội bộ): “build” gần như rỗng — nhưng ranh giới release/run vẫn đáng giữ (deploy từ Git tag, không sửa trên server). Dev local: hot-reload (air, docker compose watch) cố tình xóa ranh giới build/run để lặp nhanh — hợp lệ, vì dev không phải một “deploy” theo nghĩa production. Ranh giới chỉ bắt buộc từ CI trở đi. Hệ thống một máy, một người (side project): kỷ luật đầy đủ có thể quá nặng; mức tối thiểu đáng giữ: build từ Git, giữ lại binary cũ để quay về. Tóm tắt Ba giai đoạn, ranh giới một chiều: build (code → artifact bất biến), release (artifact ⊗ config → release có ID), run (chạy release, không quyết định gì). Build once, run anywhere: staging và prod chạy cùng một image, cùng digest — thứ bạn test là thứ bạn chạy. Rollback = re-release bản cũ — một lệnh, một phút; không bao giờ build lại để rollback. Run xảy ra lúc không ai trực → run phải tối giản; mọi phức tạp dồn về build/release. Migration là release step với kỷ luật expand–contract. ","wordCount":"1916","inLanguage":"en","datePublished":"2026-07-10T11:00:00+07:00","dateModified":"2026-07-10T11:00:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/twelve-factor/10-factor-05-build-release-run/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/twelve-factor/>The Twelve-Factor App</a></div><h1 class="post-title entry-hint-parent">Chương 10 — Factor 5: Build, Release, Run</h1><div class=post-meta><span title='2026-07-10 11:00:00 +0700 +07'>July 10, 2026</span>&nbsp;·&nbsp;9 min</div></header><div class=post-content><blockquote><p><em>&ldquo;Strictly separate build and run stages&rdquo;</em> — Tách bạch nghiêm ngặt các giai đoạn build và run.</p><p><strong>Phần 2 – The Twelve Factors</strong> | Nhóm: <strong>Reproducible</strong> | Chương trước: <a href=/series/twelve-factor/09-factor-04-backing-services/>Backing Services</a> | Chương sau: <a href=/series/twelve-factor/11-factor-06-processes/>Processes</a></p></blockquote><hr><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Câu hỏi factor này trả lời: <strong>&ldquo;Từ code đến process đang chạy, chuyện gì xảy ra — và có đảo ngược được không?&rdquo;</strong></p><p>Trong thế giới chương 1, ba việc trộn làm một: build trên máy dev, copy lên server, sửa config tại chỗ, có khi sửa cả code tại chỗ. Hệ quả:</p><ul><li><strong>Không trả lời được &ldquo;đang chạy bản nào&rdquo;</strong> — thứ đang chạy là code + các bản vá tay không tồn tại ở đâu khác.</li><li><strong>Không rollback được</strong> — &ldquo;bản trước&rdquo; không được lưu như một khối nguyên vẹn; rollback nghĩa là cố nhớ lại và làm ngược các thao tác tay.</li><li><strong>Deploy không lặp lại được</strong> — làm lại từ đầu chưa chắc ra kết quả cũ.</li><li>Kịch bản kinh điển: sự cố lúc 2h sáng → sửa nóng file trên server → sáng hôm sau CI deploy bản mới → <strong>bản vá bị ghi đè, sự cố quay lại</strong> → và giờ không ai nhớ đêm qua đã sửa gì.</li></ul><h2 id=2-tại-sao-nguyên-lý-này-tồn-tại>2. Tại sao nguyên lý này tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-nguyên-lý-này-tồn-tại>#</a></h2><ul><li><strong>Deployment</strong>: tự động hóa đòi hỏi quy trình là các bước thuần túy, đầu vào rõ, đầu ra rõ. &ldquo;Build rồi sửa tay một chút&rdquo; không tự động hóa được.</li><li><strong>Operational</strong>: rollback phải là thao tác một lệnh trong một phút. Điều đó chỉ khả thi khi mỗi lần deploy tạo ra một <strong>release bất biến, đánh số, lưu giữ được</strong> — quay về = trỏ lại release cũ.</li><li><strong>Business/Compliance</strong>: audit đòi hỏi &ldquo;bản chạy lúc 14:03 ngày 5/3 là gì, ai phê duyệt&rdquo; — chỉ trả lời được khi release là thực thể có định danh.</li><li><strong>Scalability</strong>: autoscaler tạo instance mới bất kỳ lúc nào; nó cần một artifact hoàn chỉnh để chạy ngay, không cần &ldquo;làm thêm vài bước tay&rdquo;.</li></ul><h2 id=3-bản-chất>3. Bản chất<a hidden class=anchor aria-hidden=true href=#3-bản-chất>#</a></h2><p>Chia vòng đời thành ba giai đoạn với <strong>ranh giới một chiều</strong> — mỗi giai đoạn có đầu vào, đầu ra và tính chất riêng:</p><pre tabindex=0><code>   BUILD                      RELEASE                      RUN
    ─────                      ───────                      ───
    vào:  code (commit SHA)    vào:  build + config         vào:  release
          + dependencies             của MỘT môi trường
@@ -154,344 +29,70 @@ Trong thế giới chương 1, ba việc trộn làm một: build trên máy dev
                                                             không quyết định gì)
 
    ═══ RANH GIỚI MỘT CHIỀU: không sửa code sau build, không sửa release sau release,
-       không &#34;vá&#34; process đang chạy. Muốn đổi → quay lại giai đoạn trước. ═══</code></pre><p>Ba hệ quả logic đáng khắc cốt:</p>
-<ol>
-<li><strong><code>release = build ⊗ config</code></strong> — đây là điểm F3 và F5 khớp nhau: vì config tách khỏi code, một build dùng được cho mọi môi trường; release chỉ là phép ghép. Suy ra: <strong>build một lần, deploy nhiều nơi</strong> — image staging và production là <em>cùng một image</em>, cùng digest. Thứ bạn test chính là thứ bạn chạy.</li>
-<li><strong>Run phải &ldquo;ngu&rdquo;</strong> — giai đoạn run xảy ra không báo trước (node chết, autoscale lúc 3h sáng), nên nó phải đơn giản đến mức không thể hỏng: lấy release, chạy. Mọi thứ thông minh (compile, migration, quyết định) dồn về build/release, nơi có người trực và có thể fail an toàn.</li>
-<li><strong>Rollback = re-release bản cũ</strong> — vì release bất biến và được lưu, quay lại chỉ là trỏ con trỏ. Không cần build lại (rủi ro build ra thứ khác), không cần &ldquo;sửa ngược&rdquo;.</li>
-</ol>
-<p><strong>Điều gì xảy ra nếu vi phạm?</strong> Mỗi kiểu vi phạm phá một hệ quả: build riêng cho từng môi trường → thứ test ≠ thứ chạy; container tự build/tự cài lúc khởi động → khởi động chậm + có thể fail lúc không ai trực (npm registry sập lúc autoscale = không scale được); sửa nóng trên server → release đang chạy không tương ứng artifact nào, rollback và audit đều mù.</p>
-<h2 id="4-cách-áp-dụng">4. Cách áp dụng<a hidden class="anchor" aria-hidden="true" href="#4-cách-áp-dụng">#</a></h2>
-<h3 id="41-build--github-actions-tạo-artifact-bất-biến">4.1. Build — GitHub Actions tạo artifact bất biến<a hidden class="anchor" aria-hidden="true" href="#41-build--github-actions-tạo-artifact-bất-biến">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># .github/workflows/build.yml (trích)</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">name</span>: <span style="color:#ae81ff">build</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">on</span>:
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">push</span>:
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">branches</span>: [<span style="color:#ae81ff">main]</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">jobs</span>:
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">build</span>:
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runs-on</span>: <span style="color:#ae81ff">ubuntu-latest</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">steps</span>:
-</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/checkout@v4</span>
-</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/setup-go@v5</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">with</span>: { <span style="color:#f92672">go-version-file</span>: <span style="color:#ae81ff">go.mod }</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">run</span>: <span style="color:#ae81ff">go vet ./... &amp;&amp; go test -race ./...  </span> <span style="color:#75715e"># test là một phần của BUILD</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>      - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Build &amp; push image (đánh tag bằng commit SHA — bất biến)</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">run</span>: |<span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          docker build \
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --build-arg COMMIT_SHA=${{ github.sha }} \
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            -t $REGISTRY/myapp:${{ github.sha }} .
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          docker push $REGISTRY/myapp:${{ github.sha }}
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          # Ghi lại digest — định danh tuyệt đối của artifact
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          docker inspect --format=&#39;{{index .RepoDigests 0}}&#39; $REGISTRY/myapp:${{ github.sha }}</span>
-</span></span></code></pre></div><p>Yêu cầu với giai đoạn build: chạy trên CI (không phải máy cá nhân), từ commit sạch, kết quả <strong>chỉ phụ thuộc commit</strong> (reproducible), đẩy vào registry — registry chính là kho lưu build artifact.</p>
-<h3 id="42-release--run-trên-kubernetes">4.2. Release + Run trên Kubernetes<a hidden class="anchor" aria-hidden="true" href="#42-release--run-trên-kubernetes">#</a></h3>
-<p>Trên Kubernetes, ánh xạ ba giai đoạn rất rõ:</p>
-<ul>
-<li><strong>Build artifact</strong> = container image (theo digest).</li>
-<li><strong>Release</strong> = Deployment spec đã render đầy đủ: image digest + ConfigMap/Secret + tham số. Với Helm: <code>helm release</code> đúng nghĩa đen — có số revision, lưu lịch sử, rollback được. Với GitOps (chương 23): release = một commit trong repo config.</li>
-<li><strong>Run</strong> = kubelet kéo image và chạy container theo spec. Không có bước nào khác.</li>
-</ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># deployment.yaml (trích) — một RELEASE cụ thể</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">replicas</span>: <span style="color:#ae81ff">4</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">strategy</span>:
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">rollingUpdate</span>: { <span style="color:#f92672">maxUnavailable: 0, maxSurge</span>: <span style="color:#ae81ff">1</span> }   <span style="color:#75715e"># release mới thay dần release cũ</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">template</span>:
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">metadata</span>:
-</span></span><span style="display:flex;"><span>      <span style="color:#f92672">labels</span>:
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">app</span>: <span style="color:#ae81ff">myapp</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">version</span>: <span style="color:#e6db74">&#34;9f8e7d6&#34;</span>          <span style="color:#75715e"># nhìn pod biết release</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">spec</span>:
-</span></span><span style="display:flex;"><span>      <span style="color:#f92672">containers</span>:
-</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">server</span>
-</span></span><span style="display:flex;"><span>          <span style="color:#75715e"># Pin theo DIGEST — release trỏ vào artifact tuyệt đối, không thể xê dịch</span>
-</span></span><span style="display:flex;"><span>          <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.example.com/myapp@sha256:4c2a...e91b</span>
-</span></span><span style="display:flex;"><span>          <span style="color:#f92672">envFrom</span>:
-</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">configMapRef</span>: { <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-config-v42 } </span> <span style="color:#75715e"># config cũng có version</span>
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Rollback = re-release bản cũ, một lệnh:</span>
-</span></span><span style="display:flex;"><span>helm rollback myapp <span style="color:#ae81ff">41</span>            <span style="color:#75715e"># hoặc</span>
-</span></span><span style="display:flex;"><span>kubectl rollout undo deployment/myapp
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># GitOps: git revert &lt;commit&gt; → hệ thống tự hội tụ về release cũ</span>
-</span></span></code></pre></div><h3 id="43-database-migration-nằm-ở-đâu-trong-ba-giai-đoạn">4.3. Database migration nằm ở đâu trong ba giai đoạn?<a hidden class="anchor" aria-hidden="true" href="#43-database-migration-nằm-ở-đâu-trong-ba-giai-đoạn">#</a></h3>
-<p>Câu hỏi thực chiến hay gặp nhất của factor này. Migration <strong>không thuộc run</strong> (run phải ngu) và <strong>không thuộc build</strong> (build không được chạm môi trường). Nó là một <strong>release step</strong> — chạy một lần cho mỗi lần release, trước khi phiên bản mới nhận traffic:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># Job migration — chạy như một bước của release (hoặc Helm pre-upgrade hook / initContainer</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># tùy quy mô; Job tách riêng là sạch nhất vì chạy đúng MỘT lần, không phải mỗi pod)</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">apiVersion</span>: <span style="color:#ae81ff">batch/v1</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">kind</span>: <span style="color:#ae81ff">Job</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">metadata</span>:
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-migrate-9f8e7d6</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">spec</span>:
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">backoffLimit</span>: <span style="color:#ae81ff">2</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">template</span>:
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">spec</span>:
-</span></span><span style="display:flex;"><span>      <span style="color:#f92672">restartPolicy</span>: <span style="color:#ae81ff">Never</span>
-</span></span><span style="display:flex;"><span>      <span style="color:#f92672">containers</span>:
-</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">migrate</span>
-</span></span><span style="display:flex;"><span>          <span style="color:#f92672">image</span>: <span style="color:#ae81ff">registry.example.com/myapp@sha256:4c2a...e91b </span> <span style="color:#75715e"># CÙNG image với app (F12!)</span>
-</span></span><span style="display:flex;"><span>          <span style="color:#f92672">args</span>: [<span style="color:#e6db74">&#34;migrate&#34;</span>, <span style="color:#e6db74">&#34;up&#34;</span>]
-</span></span><span style="display:flex;"><span>          <span style="color:#f92672">envFrom</span>:
-</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">secretRef</span>: { <span style="color:#f92672">name</span>: <span style="color:#ae81ff">myapp-secrets }</span>
-</span></span></code></pre></div><p>Kèm kỷ luật <strong>expand–contract</strong> (vì trong rolling update, bản cũ và mới chạy song song trên cùng schema): bước 1 release schema mở rộng (thêm cột, tương thích cả hai bản) → bước 2 release code mới → bước 3 release dọn schema cũ. Chi tiết ở chương 24.</p>
-<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
-<p><strong>Build-once-run-anywhere vs build-per-environment.</strong> Chuẩn là build once. Nhưng có ngoại lệ thực tế: frontend SPA nhúng biến lúc build (<code>VITE_API_URL</code>) buộc build theo môi trường — cách chữa là runtime config (<code>config.js</code> bơm lúc serve). Go không có vấn đề này: binary đọc env lúc chạy. Nếu bạn thấy mình cần <code>--build-arg ENVIRONMENT=prod</code> cho backend Go — đó là dấu hiệu config đang lọt vào build, quay lại F3.</p>
-<p><strong>Tốc độ hotfix vs kỷ luật quy trình.</strong> Sửa nóng trên server nhanh hơn (phút) so với đi qua pipeline (5–15 phút). Nhưng phép so sánh đúng phải tính cả kỳ vọng rủi ro: bản vá tay bị ghi đè, không audit, không test. Đầu tư đúng là <strong>làm pipeline nhanh</strong> (build cache, test song song, deploy tự động) để con đường kỷ luật cũng là con đường nhanh — khi pipeline dưới 10 phút, cám dỗ sửa tay gần như biến mất.</p>
-<p><strong>Lưu bao nhiêu release?</strong> Mỗi release chiếm chỗ trong registry. Thực dụng: giữ mọi release N tháng gần nhất + mọi release từng chạy production (tag riêng), dọn image của branch/PR sau vài tuần bằng registry lifecycle policy.</p>
-<h2 id="6-best-practices">6. Best Practices<a hidden class="anchor" aria-hidden="true" href="#6-best-practices">#</a></h2>
-<ul>
-<li>Build chỉ trên CI, từ commit đã push; cấm <code>docker push</code> từ máy cá nhân lên registry production (enforce bằng quyền registry).</li>
-<li>Tag image bằng commit SHA; production tham chiếu digest; cấm <code>:latest</code> sau ranh giới CI.</li>
-<li>Test chạy trong giai đoạn build — artifact đã push nghĩa là đã qua test.</li>
-<li>Release có định danh và lịch sử: Helm revision, hoặc Git history của repo GitOps.</li>
-<li>Rollback được diễn tập, không chỉ được tin là có: thử <code>rollout undo</code> trên staging định kỳ.</li>
-<li>Migration là release step, cùng image với app, theo expand–contract.</li>
-<li>Đo thời gian pipeline như một SLO của team platform — pipeline chậm là nguyên nhân số một khiến kỷ luật bị phá.</li>
-</ul>
-<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
-<ul>
-<li><strong>Sửa code/config trực tiếp trên server hoặc trong container đang chạy</strong> — phá cả ba ranh giới một lúc; bản vá sẽ bị ghi đè bởi lần deploy sau.</li>
-<li><strong>Build lúc khởi động container</strong> (clone repo + <code>go build</code> trong entrypoint; <code>npm install</code> khi start) — run phụ thuộc network + registry ngoài đúng lúc nhạy cảm nhất (autoscale, recovery); khởi động chậm phá luôn F9.</li>
-<li><strong>Build riêng từng môi trường</strong> (<code>make build-staging</code>, <code>make build-prod</code>) — hai artifact khác nhau, thứ test không phải thứ chạy.</li>
-<li><strong>CI đè tag</strong> (<code>myapp:staging</code> được push đè liên tục) — &ldquo;staging đang chạy gì?&rdquo; không có câu trả lời xác định; hai pod cùng tag có thể chạy hai code khác nhau sau restart.</li>
-<li><strong>Rollback bằng cách build lại code cũ</strong> — chậm (chờ build lúc đang cháy) và rủi ro (build mới từ code cũ chưa chắc giống build cũ nếu dependency trôi). Rollback phải dùng lại artifact cũ.</li>
-<li><strong>Migration tự động chạy trong <code>main()</code> của app</strong> — N pod cùng khởi động là N lần đua migration; lỗi migration làm crash-loop toàn bộ fleet thay vì fail một Job có kiểm soát.</li>
-</ul>
-<h2 id="8-khi-nào-không-cần-áp-dụng-đầy-đủ">8. Khi nào KHÔNG cần áp dụng đầy đủ<a hidden class="anchor" aria-hidden="true" href="#8-khi-nào-không-cần-áp-dụng-đầy-đủ">#</a></h2>
-<ul>
-<li><strong>Ngôn ngữ thông dịch + môi trường đơn giản</strong> (script Python nội bộ): &ldquo;build&rdquo; gần như rỗng — nhưng ranh giới release/run vẫn đáng giữ (deploy từ Git tag, không sửa trên server).</li>
-<li><strong>Dev local</strong>: hot-reload (air, docker compose watch) cố tình xóa ranh giới build/run để lặp nhanh — hợp lệ, vì dev không phải một &ldquo;deploy&rdquo; theo nghĩa production. Ranh giới chỉ bắt buộc từ CI trở đi.</li>
-<li><strong>Hệ thống một máy, một người</strong> (side project): kỷ luật đầy đủ có thể quá nặng; mức tối thiểu đáng giữ: build từ Git, giữ lại binary cũ để quay về.</li>
-</ul>
-<hr>
-<h2 id="tóm-tắt">Tóm tắt<a hidden class="anchor" aria-hidden="true" href="#tóm-tắt">#</a></h2>
-<ul>
-<li>Ba giai đoạn, ranh giới một chiều: <strong>build</strong> (code → artifact bất biến), <strong>release</strong> (artifact ⊗ config → release có ID), <strong>run</strong> (chạy release, không quyết định gì).</li>
-<li><strong>Build once, run anywhere</strong>: staging và prod chạy cùng một image, cùng digest — thứ bạn test là thứ bạn chạy.</li>
-<li><strong>Rollback = re-release bản cũ</strong> — một lệnh, một phút; không bao giờ build lại để rollback.</li>
-<li>Run xảy ra lúc không ai trực → run phải tối giản; mọi phức tạp dồn về build/release. Migration là release step với kỷ luật expand–contract.</li>
-</ul>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:1313/tags/twelve-factor/">Twelve-Factor</a></li>
-      <li><a href="http://localhost:1313/tags/cloud-native/">Cloud-Native</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:1313/series/twelve-factor/09-factor-04-backing-services/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Chương 9 — Factor 4: Backing Services</span>
-  </a>
-  <a class="next" href="http://localhost:1313/series/twelve-factor/11-factor-06-processes/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Chương 11 — Factor 6: Processes</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on x"
-            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;summary=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f&title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on whatsapp"
-            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on telegram"
-            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&u=http%3a%2f%2flocalhost%3a1313%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+       không &#34;vá&#34; process đang chạy. Muốn đổi → quay lại giai đoạn trước. ═══</code></pre><p>Ba hệ quả logic đáng khắc cốt:</p><ol><li><strong><code>release = build ⊗ config</code></strong> — đây là điểm F3 và F5 khớp nhau: vì config tách khỏi code, một build dùng được cho mọi môi trường; release chỉ là phép ghép. Suy ra: <strong>build một lần, deploy nhiều nơi</strong> — image staging và production là <em>cùng một image</em>, cùng digest. Thứ bạn test chính là thứ bạn chạy.</li><li><strong>Run phải &ldquo;ngu&rdquo;</strong> — giai đoạn run xảy ra không báo trước (node chết, autoscale lúc 3h sáng), nên nó phải đơn giản đến mức không thể hỏng: lấy release, chạy. Mọi thứ thông minh (compile, migration, quyết định) dồn về build/release, nơi có người trực và có thể fail an toàn.</li><li><strong>Rollback = re-release bản cũ</strong> — vì release bất biến và được lưu, quay lại chỉ là trỏ con trỏ. Không cần build lại (rủi ro build ra thứ khác), không cần &ldquo;sửa ngược&rdquo;.</li></ol><p><strong>Điều gì xảy ra nếu vi phạm?</strong> Mỗi kiểu vi phạm phá một hệ quả: build riêng cho từng môi trường → thứ test ≠ thứ chạy; container tự build/tự cài lúc khởi động → khởi động chậm + có thể fail lúc không ai trực (npm registry sập lúc autoscale = không scale được); sửa nóng trên server → release đang chạy không tương ứng artifact nào, rollback và audit đều mù.</p><h2 id=4-cách-áp-dụng>4. Cách áp dụng<a hidden class=anchor aria-hidden=true href=#4-cách-áp-dụng>#</a></h2><h3 id=41-build--github-actions-tạo-artifact-bất-biến>4.1. Build — GitHub Actions tạo artifact bất biến<a hidden class=anchor aria-hidden=true href=#41-build--github-actions-tạo-artifact-bất-biến>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># .github/workflows/build.yml (trích)</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>build</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>push</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>branches</span>: [<span style=color:#ae81ff>main]</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>build</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v4</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/setup-go@v5</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>: { <span style=color:#f92672>go-version-file</span>: <span style=color:#ae81ff>go.mod }</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>run</span>: <span style=color:#ae81ff>go vet ./... &amp;&amp; go test -race ./...  </span> <span style=color:#75715e># test là một phần của BUILD</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Build &amp; push image (đánh tag bằng commit SHA — bất biến)</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>          docker build \
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>            --build-arg COMMIT_SHA=${{ github.sha }} \
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>            -t $REGISTRY/myapp:${{ github.sha }} .
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>          docker push $REGISTRY/myapp:${{ github.sha }}
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>          # Ghi lại digest — định danh tuyệt đối của artifact
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>          docker inspect --format=&#39;{{index .RepoDigests 0}}&#39; $REGISTRY/myapp:${{ github.sha }}</span>
+</span></span></code></pre></div><p>Yêu cầu với giai đoạn build: chạy trên CI (không phải máy cá nhân), từ commit sạch, kết quả <strong>chỉ phụ thuộc commit</strong> (reproducible), đẩy vào registry — registry chính là kho lưu build artifact.</p><h3 id=42-release--run-trên-kubernetes>4.2. Release + Run trên Kubernetes<a hidden class=anchor aria-hidden=true href=#42-release--run-trên-kubernetes>#</a></h3><p>Trên Kubernetes, ánh xạ ba giai đoạn rất rõ:</p><ul><li><strong>Build artifact</strong> = container image (theo digest).</li><li><strong>Release</strong> = Deployment spec đã render đầy đủ: image digest + ConfigMap/Secret + tham số. Với Helm: <code>helm release</code> đúng nghĩa đen — có số revision, lưu lịch sử, rollback được. Với GitOps (chương 23): release = một commit trong repo config.</li><li><strong>Run</strong> = kubelet kéo image và chạy container theo spec. Không có bước nào khác.</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># deployment.yaml (trích) — một RELEASE cụ thể</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>spec</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>replicas</span>: <span style=color:#ae81ff>4</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>strategy</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>rollingUpdate</span>: { <span style=color:#f92672>maxUnavailable: 0, maxSurge</span>: <span style=color:#ae81ff>1</span> }   <span style=color:#75715e># release mới thay dần release cũ</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>template</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>metadata</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>labels</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>app</span>: <span style=color:#ae81ff>myapp</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>version</span>: <span style=color:#e6db74>&#34;9f8e7d6&#34;</span>          <span style=color:#75715e># nhìn pod biết release</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>spec</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>containers</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>server</span>
+</span></span><span style=display:flex><span>          <span style=color:#75715e># Pin theo DIGEST — release trỏ vào artifact tuyệt đối, không thể xê dịch</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>registry.example.com/myapp@sha256:4c2a...e91b</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>envFrom</span>:
+</span></span><span style=display:flex><span>            - <span style=color:#f92672>configMapRef</span>: { <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-config-v42 } </span> <span style=color:#75715e># config cũng có version</span>
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Rollback = re-release bản cũ, một lệnh:</span>
+</span></span><span style=display:flex><span>helm rollback myapp <span style=color:#ae81ff>41</span>            <span style=color:#75715e># hoặc</span>
+</span></span><span style=display:flex><span>kubectl rollout undo deployment/myapp
+</span></span><span style=display:flex><span><span style=color:#75715e># GitOps: git revert &lt;commit&gt; → hệ thống tự hội tụ về release cũ</span>
+</span></span></code></pre></div><h3 id=43-database-migration-nằm-ở-đâu-trong-ba-giai-đoạn>4.3. Database migration nằm ở đâu trong ba giai đoạn?<a hidden class=anchor aria-hidden=true href=#43-database-migration-nằm-ở-đâu-trong-ba-giai-đoạn>#</a></h3><p>Câu hỏi thực chiến hay gặp nhất của factor này. Migration <strong>không thuộc run</strong> (run phải ngu) và <strong>không thuộc build</strong> (build không được chạm môi trường). Nó là một <strong>release step</strong> — chạy một lần cho mỗi lần release, trước khi phiên bản mới nhận traffic:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># Job migration — chạy như một bước của release (hoặc Helm pre-upgrade hook / initContainer</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># tùy quy mô; Job tách riêng là sạch nhất vì chạy đúng MỘT lần, không phải mỗi pod)</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>batch/v1</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Job</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>metadata</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-migrate-9f8e7d6</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>spec</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>backoffLimit</span>: <span style=color:#ae81ff>2</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>template</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>spec</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>restartPolicy</span>: <span style=color:#ae81ff>Never</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>containers</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>migrate</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>registry.example.com/myapp@sha256:4c2a...e91b </span> <span style=color:#75715e># CÙNG image với app (F12!)</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>args</span>: [<span style=color:#e6db74>&#34;migrate&#34;</span>, <span style=color:#e6db74>&#34;up&#34;</span>]
+</span></span><span style=display:flex><span>          <span style=color:#f92672>envFrom</span>:
+</span></span><span style=display:flex><span>            - <span style=color:#f92672>secretRef</span>: { <span style=color:#f92672>name</span>: <span style=color:#ae81ff>myapp-secrets }</span>
+</span></span></code></pre></div><p>Kèm kỷ luật <strong>expand–contract</strong> (vì trong rolling update, bản cũ và mới chạy song song trên cùng schema): bước 1 release schema mở rộng (thêm cột, tương thích cả hai bản) → bước 2 release code mới → bước 3 release dọn schema cũ. Chi tiết ở chương 24.</p><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><p><strong>Build-once-run-anywhere vs build-per-environment.</strong> Chuẩn là build once. Nhưng có ngoại lệ thực tế: frontend SPA nhúng biến lúc build (<code>VITE_API_URL</code>) buộc build theo môi trường — cách chữa là runtime config (<code>config.js</code> bơm lúc serve). Go không có vấn đề này: binary đọc env lúc chạy. Nếu bạn thấy mình cần <code>--build-arg ENVIRONMENT=prod</code> cho backend Go — đó là dấu hiệu config đang lọt vào build, quay lại F3.</p><p><strong>Tốc độ hotfix vs kỷ luật quy trình.</strong> Sửa nóng trên server nhanh hơn (phút) so với đi qua pipeline (5–15 phút). Nhưng phép so sánh đúng phải tính cả kỳ vọng rủi ro: bản vá tay bị ghi đè, không audit, không test. Đầu tư đúng là <strong>làm pipeline nhanh</strong> (build cache, test song song, deploy tự động) để con đường kỷ luật cũng là con đường nhanh — khi pipeline dưới 10 phút, cám dỗ sửa tay gần như biến mất.</p><p><strong>Lưu bao nhiêu release?</strong> Mỗi release chiếm chỗ trong registry. Thực dụng: giữ mọi release N tháng gần nhất + mọi release từng chạy production (tag riêng), dọn image của branch/PR sau vài tuần bằng registry lifecycle policy.</p><h2 id=6-best-practices>6. Best Practices<a hidden class=anchor aria-hidden=true href=#6-best-practices>#</a></h2><ul><li>Build chỉ trên CI, từ commit đã push; cấm <code>docker push</code> từ máy cá nhân lên registry production (enforce bằng quyền registry).</li><li>Tag image bằng commit SHA; production tham chiếu digest; cấm <code>:latest</code> sau ranh giới CI.</li><li>Test chạy trong giai đoạn build — artifact đã push nghĩa là đã qua test.</li><li>Release có định danh và lịch sử: Helm revision, hoặc Git history của repo GitOps.</li><li>Rollback được diễn tập, không chỉ được tin là có: thử <code>rollout undo</code> trên staging định kỳ.</li><li>Migration là release step, cùng image với app, theo expand–contract.</li><li>Đo thời gian pipeline như một SLO của team platform — pipeline chậm là nguyên nhân số một khiến kỷ luật bị phá.</li></ul><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li><strong>Sửa code/config trực tiếp trên server hoặc trong container đang chạy</strong> — phá cả ba ranh giới một lúc; bản vá sẽ bị ghi đè bởi lần deploy sau.</li><li><strong>Build lúc khởi động container</strong> (clone repo + <code>go build</code> trong entrypoint; <code>npm install</code> khi start) — run phụ thuộc network + registry ngoài đúng lúc nhạy cảm nhất (autoscale, recovery); khởi động chậm phá luôn F9.</li><li><strong>Build riêng từng môi trường</strong> (<code>make build-staging</code>, <code>make build-prod</code>) — hai artifact khác nhau, thứ test không phải thứ chạy.</li><li><strong>CI đè tag</strong> (<code>myapp:staging</code> được push đè liên tục) — &ldquo;staging đang chạy gì?&rdquo; không có câu trả lời xác định; hai pod cùng tag có thể chạy hai code khác nhau sau restart.</li><li><strong>Rollback bằng cách build lại code cũ</strong> — chậm (chờ build lúc đang cháy) và rủi ro (build mới từ code cũ chưa chắc giống build cũ nếu dependency trôi). Rollback phải dùng lại artifact cũ.</li><li><strong>Migration tự động chạy trong <code>main()</code> của app</strong> — N pod cùng khởi động là N lần đua migration; lỗi migration làm crash-loop toàn bộ fleet thay vì fail một Job có kiểm soát.</li></ul><h2 id=8-khi-nào-không-cần-áp-dụng-đầy-đủ>8. Khi nào KHÔNG cần áp dụng đầy đủ<a hidden class=anchor aria-hidden=true href=#8-khi-nào-không-cần-áp-dụng-đầy-đủ>#</a></h2><ul><li><strong>Ngôn ngữ thông dịch + môi trường đơn giản</strong> (script Python nội bộ): &ldquo;build&rdquo; gần như rỗng — nhưng ranh giới release/run vẫn đáng giữ (deploy từ Git tag, không sửa trên server).</li><li><strong>Dev local</strong>: hot-reload (air, docker compose watch) cố tình xóa ranh giới build/run để lặp nhanh — hợp lệ, vì dev không phải một &ldquo;deploy&rdquo; theo nghĩa production. Ranh giới chỉ bắt buộc từ CI trở đi.</li><li><strong>Hệ thống một máy, một người</strong> (side project): kỷ luật đầy đủ có thể quá nặng; mức tối thiểu đáng giữ: build từ Git, giữ lại binary cũ để quay về.</li></ul><hr><h2 id=tóm-tắt>Tóm tắt<a hidden class=anchor aria-hidden=true href=#tóm-tắt>#</a></h2><ul><li>Ba giai đoạn, ranh giới một chiều: <strong>build</strong> (code → artifact bất biến), <strong>release</strong> (artifact ⊗ config → release có ID), <strong>run</strong> (chạy release, không quyết định gì).</li><li><strong>Build once, run anywhere</strong>: staging và prod chạy cùng một image, cùng digest — thứ bạn test là thứ bạn chạy.</li><li><strong>Rollback = re-release bản cũ</strong> — một lệnh, một phút; không bao giờ build lại để rollback.</li><li>Run xảy ra lúc không ai trực → run phải tối giản; mọi phức tạp dồn về build/release. Migration là release step với kỷ luật expand–contract.</li></ul></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/twelve-factor/>Twelve-Factor</a></li><li><a href=https://thanhhv.github.io/tags/cloud-native/>Cloud-Native</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/twelve-factor/09-factor-04-backing-services/><span class=title>« Prev</span><br><span>Chương 9 — Factor 4: Backing Services</span>
+</a><a class=next href=https://thanhhv.github.io/series/twelve-factor/11-factor-06-processes/><span class=title>Next »</span><br><span>Chương 11 — Factor 6: Processes</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f&amp;hashtags=backend%2ctwelve-factor%2ccloud-native"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f&amp;title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;summary=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f&title=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 10 — Factor 5: Build, Release, Run on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2010%20%e2%80%94%20Factor%205%3a%20Build%2c%20Release%2c%20Run&u=https%3a%2f%2fthanhhv.github.io%2fseries%2ftwelve-factor%2f10-factor-05-build-release-run%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>

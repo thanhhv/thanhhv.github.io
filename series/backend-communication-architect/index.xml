@@ -1,190 +1,74 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
-  <channel>
-    <title>Backend Communication Architecture on Thanh HV&#39;s Blog</title>
-    <link>http://localhost:1313/series/backend-communication-architect/</link>
-    <description>Recent content in Backend Communication Architecture on Thanh HV&#39;s Blog</description>
-    <generator>Hugo -- 0.146.7</generator>
-    <language>en-us</language>
-    <lastBuildDate>Sun, 22 Feb 2026 21:00:00 +0700</lastBuildDate>
-    <atom:link href="http://localhost:1313/series/backend-communication-architect/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Chương 16: Failure Cases — Phân tích sự cố Production</title>
-      <link>http://localhost:1313/series/backend-communication-architect/16-failure-cases/</link>
-      <pubDate>Sun, 22 Feb 2026 21:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/16-failure-cases/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/15-principal-architecture/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | Chương sau →&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;Đây là chương quan trọng nhất của toàn bộ tài liệu. Mọi kiến thức về giao thức, message broker, resilience pattern ở các chương trước chỉ thực sự có giá trị khi bạn đứng trước một dashboard đỏ rực lúc 2 giờ sáng và phải trả lời ba câu hỏi: &lt;strong&gt;chuyện gì đang xảy ra, tại sao, và làm gì ngay bây giờ&lt;/strong&gt;.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 15. Principal Architecture — Multi-Region, Cross-DC và Large Scale</title>
-      <link>http://localhost:1313/series/backend-communication-architect/15-principal-architecture/</link>
-      <pubDate>Sun, 22 Feb 2026 20:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/15-principal-architecture/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/14-microservices-communication/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/16-failure-cases/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;151-business-problem-khi-công-ty-vượt-qua-biên-giới-một-region&#34;&gt;15.1. Business problem: khi công ty vượt qua biên giới một region&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu từ một tình huống có thật ở hầu hết các công ty tăng trưởng nhanh.&lt;/p&gt;
-&lt;p&gt;Công ty của bạn khởi đầu với toàn bộ hệ thống đặt tại một region — giả sử &lt;code&gt;us-east-1&lt;/code&gt; (Virginia). Ba năm sau, business mở rộng ra ba châu lục: Bắc Mỹ, châu Âu, và Đông Nam Á. Ngay lập tức, ba loại áp lực xuất hiện cùng lúc, và cả ba đều không giải quyết được bằng cách &amp;ldquo;tối ưu code&amp;rdquo;:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 14 — Microservices Communication: API Gateway và Service Mesh</title>
-      <link>http://localhost:1313/series/backend-communication-architect/14-microservices-communication/</link>
-      <pubDate>Sun, 22 Feb 2026 19:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/14-microservices-communication/</guid>
-      <description>&lt;p&gt;← Chương trước | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/15-principal-architecture/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;mở-đầu-bài-toán-kinh-doanh&#34;&gt;Mở đầu: Bài toán kinh doanh&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu từ một câu chuyện quen thuộc. Công ty của bạn có một monolith, 50 developer, deploy 1 lần/tuần. Mỗi lần deploy là một &amp;ldquo;sự kiện&amp;rdquo;: freeze code từ thứ Tư, QA regression 2 ngày, deploy đêm thứ Sáu, và cả team on-call cuối tuần. Feature nhỏ nhất cũng mất 2 tuần để ra production vì phải xếp hàng chung chuyến tàu release. Ban lãnh đạo hỏi: &amp;ldquo;Đối thủ ship feature mỗi ngày, tại sao chúng ta mất 2 tuần?&amp;rdquo;&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 12: Resilience Patterns — Giao tiếp ổn định trong hệ thống không ổn định</title>
-      <link>http://localhost:1313/series/backend-communication-architect/12-resilience-patterns/</link>
-      <pubDate>Sun, 22 Feb 2026 18:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/12-resilience-patterns/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/11-api-design/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | Chương sau →&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;121-first-principles-partial-failure-là-trạng-thái-bình-thường&#34;&gt;12.1. First principles: partial failure là trạng thái bình thường&lt;/h2&gt;
-&lt;p&gt;Trong monolith, một lời gọi hàm hoặc thành công hoặc ném exception — và cả hai đều xảy ra trong cùng một process, cùng một số phận. Khoảnh khắc bạn tách hàm đó ra sau một network call, bạn nhận về một tập kết quả hoàn toàn mới: thành công, thất bại, &lt;strong&gt;và mọi trạng thái lửng lơ ở giữa&lt;/strong&gt; — request đến nơi nhưng response thất lạc, request đang xếp hàng ở đâu đó và sẽ được xử lý sau 30 giây nữa, downstream đã xử lý xong nhưng bạn đã bỏ đi.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 11: API Design — Thiết kế API cho tuổi thọ 10 năm</title>
-      <link>http://localhost:1313/series/backend-communication-architect/11-api-design/</link>
-      <pubDate>Sun, 22 Feb 2026 17:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/11-api-design/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/10-so-sanh-communication-pattern/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/12-resilience-patterns/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;111-vì-sao-api-design-là-quyết-định-khó-đảo-ngược-nhất&#34;&gt;11.1. Vì sao API design là quyết định khó đảo ngược nhất&lt;/h2&gt;
-&lt;p&gt;Bắt đầu từ một sự thật mà mọi engineer đều học được theo cách đau đớn: &lt;strong&gt;code là tài sản riêng của bạn, còn API là hợp đồng công khai với người khác&lt;/strong&gt;. Bạn có thể refactor toàn bộ internal implementation vào thứ Ba tuần sau mà không ai hay biết. Nhưng một field đã xuất hiện trong response, một URI đã có người gọi, một status code đã có người viết &lt;code&gt;if&lt;/code&gt; để bắt — những thứ đó không còn thuộc về bạn nữa. Chúng thuộc về mọi consumer đang phụ thuộc vào chúng.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 10: So sánh Communication Pattern và Framework quyết định</title>
-      <link>http://localhost:1313/series/backend-communication-architect/10-so-sanh-communication-pattern/</link>
-      <pubDate>Sun, 22 Feb 2026 16:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/10-so-sanh-communication-pattern/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/09-event-streaming/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/11-api-design/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;&amp;ldquo;Service A cần nói chuyện với Service B / với client. Dùng cái gì?&amp;rdquo;&lt;/p&gt;&lt;/blockquote&gt;
-&lt;p&gt;Cách câu hỏi này thường bị trả lời sai trong thực tế:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 9: Event Streaming — Log phân tán và xử lý sự kiện quy mô lớn</title>
-      <link>http://localhost:1313/series/backend-communication-architect/09-event-streaming/</link>
-      <pubDate>Sun, 22 Feb 2026 15:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/09-event-streaming/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/08-message-queue/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/10-so-sanh-communication-pattern/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu bằng một bài toán thật, không phải định nghĩa sách giáo khoa.&lt;/p&gt;
-&lt;p&gt;Bạn vận hành một nền tảng thương mại điện tử. Mỗi hành động của người dùng — xem sản phẩm, thêm vào giỏ, tìm kiếm, click banner — sinh ra một event. Ở quy mô 10 triệu người dùng hoạt động, hệ thống của bạn sinh &lt;strong&gt;2–5 triệu event mỗi giây&lt;/strong&gt; vào giờ cao điểm. Và đây là danh sách những bên muốn tiêu thụ dòng event đó:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 8: Message Queue — Tách rời thời gian giữa các hệ thống</title>
-      <link>http://localhost:1313/series/backend-communication-architect/08-message-queue/</link>
-      <pubDate>Sun, 22 Feb 2026 14:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/08-message-queue/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/07-sse/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/09-event-streaming/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu từ một luồng nghiệp vụ mà mọi hệ thống e-commerce đều có: &lt;strong&gt;khách hàng đặt hàng thành công&lt;/strong&gt;.&lt;/p&gt;
-&lt;p&gt;Khi đơn hàng được tạo, hệ thống phải làm ít nhất bốn việc:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Gửi email xác nhận cho khách.&lt;/li&gt;
-&lt;li&gt;Cộng điểm tích lũy (loyalty).&lt;/li&gt;
-&lt;li&gt;Cập nhật tồn kho (inventory).&lt;/li&gt;
-&lt;li&gt;Đẩy dữ liệu sang hệ thống analytics.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;Cách tiếp cận ngây thơ nhất — và cũng là cách hầu hết các hệ thống bắt đầu — là gọi synchronous tất cả trong cùng một request:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 7: Server-Sent Events — Push đơn giản trên HTTP</title>
-      <link>http://localhost:1313/series/backend-communication-architect/07-sse/</link>
-      <pubDate>Sun, 22 Feb 2026 13:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/07-sse/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/06-websocket/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/08-message-queue/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Ba bài toán rất phổ biến có chung một hình dạng:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Dashboard giá / telemetry&lt;/strong&gt;: server đẩy giá mới, số liệu mới xuống hàng nghìn màn hình. Client chỉ nhìn, không gửi gì (ngoài vài thao tác lọc hiếm hoi qua REST).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Notification feed&lt;/strong&gt;: &amp;ldquo;bạn có comment mới&amp;rdquo; — server phát, client nhận.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;LLM token streaming&lt;/strong&gt;: model sinh token, server đẩy từng token xuống UI ngay khi có. Client gửi đúng một prompt lúc đầu (qua POST), sau đó chỉ nhận.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Điểm chung: &lt;strong&gt;dữ liệu chảy một chiều, server → client&lt;/strong&gt;. Chiều ngược lại hoặc không tồn tại, hoặc thưa thớt tới mức một HTTP request bình thường phục vụ tốt.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 6: WebSocket — Kênh song công cho Realtime</title>
-      <link>http://localhost:1313/series/backend-communication-architect/06-websocket/</link>
-      <pubDate>Sun, 22 Feb 2026 12:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/06-websocket/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/05-grpc/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/07-sse/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Bạn đang xây một collaboration app: chat nhóm, cursor tracking, comment realtime. Yêu cầu nghiệp vụ rất rõ ràng: khi user A gõ một tin nhắn, user B phải thấy nó trong vòng dưới 200ms; đồng thời client của B cũng liên tục gửi trạng thái của chính nó lên server (typing indicator, cursor position). Nghĩa là dữ liệu chảy &lt;strong&gt;cả hai chiều, liên tục, với tần suất cao và độ trễ thấp&lt;/strong&gt;.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 5: gRPC — RPC hiệu năng cao cho Internal Services</title>
-      <link>http://localhost:1313/series/backend-communication-architect/05-grpc/</link>
-      <pubDate>Sun, 22 Feb 2026 11:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/05-grpc/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/04-graphql/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/06-websocket/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu từ một hệ thống thật. Bạn đang vận hành một nền tảng thương mại điện tử với khoảng 200 internal service. Mỗi request từ người dùng — ví dụ &amp;ldquo;đặt hàng&amp;rdquo; — kích hoạt một chuỗi gọi nội bộ: &lt;code&gt;api-gateway → order-service → inventory-service → pricing-service → promotion-service → payment-service → notification-service&lt;/code&gt;. Fan-out trung bình 1 request bên ngoài thành 15–30 lời gọi nội bộ. Ở mức 5.000 request/giây từ phía người dùng, hệ thống nội bộ đang xử lý &lt;strong&gt;hơn 100.000 lời gọi service-to-service mỗi giây&lt;/strong&gt;.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 4: GraphQL — Query Language cho API</title>
-      <link>http://localhost:1313/series/backend-communication-architect/04-graphql/</link>
-      <pubDate>Sun, 22 Feb 2026 10:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/04-graphql/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/03-rest/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/05-grpc/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu bằng một tình huống mà gần như mọi team backend phục vụ mobile app đều gặp phải.&lt;/p&gt;
-&lt;p&gt;Công ty bạn có một mobile app thương mại điện tử. App có màn hình Home, màn hình Profile, màn hình Order History, màn hình Order Detail. Backend đã có sẵn một bộ REST API được thiết kế &amp;ldquo;chuẩn resource-oriented&amp;rdquo;:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 3. REST — Kiến trúc tài nguyên trên HTTP</title>
-      <link>http://localhost:1313/series/backend-communication-architect/03-rest/</link>
-      <pubDate>Sun, 22 Feb 2026 09:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/03-rest/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/02-http/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/04-graphql/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;31-problem-statement--bài-toán-trước-khi-có-giải-pháp&#34;&gt;3.1. Problem Statement — bài toán trước khi có giải pháp&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu từ một tình huống rất thật. Công ty bạn có một hệ thống quản lý đơn hàng. Ban đầu chỉ có một web app nội bộ gọi thẳng vào database. Sau 18 tháng, bức tranh thay đổi:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Team mobile cần đọc/ghi đơn hàng từ iOS và Android.&lt;/li&gt;
-&lt;li&gt;Đối tác logistics cần truy vấn trạng thái đơn qua máy chủ của họ.&lt;/li&gt;
-&lt;li&gt;Team data cần kéo dữ liệu định kỳ để làm báo cáo.&lt;/li&gt;
-&lt;li&gt;Một team khác xây admin portal, cũng cần cùng dữ liệu nhưng thao tác khác.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Bốn client, bốn ngôn ngữ, bốn vòng đời release khác nhau — tất cả cần truy cập &lt;strong&gt;cùng một tập dữ liệu&lt;/strong&gt; qua HTTP. Câu hỏi kỹ thuật đặt ra:&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 2: HTTP — Nền tảng của giao tiếp hiện đại</title>
-      <link>http://localhost:1313/series/backend-communication-architect/02-http/</link>
-      <pubDate>Sun, 22 Feb 2026 08:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/02-http/</guid>
-      <description>&lt;p&gt;&lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/01-communication-fundamentals/&#34;&gt;← Chương trước&lt;/a&gt; | Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/03-rest/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement&#34;&gt;1. Problem Statement&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu bằng một tình huống production quen thuộc.&lt;/p&gt;
-&lt;p&gt;Hệ thống e-commerce của bạn có 40 microservice. Một buổi sáng thứ Hai, sau đợt flash sale, team on-call báo cáo: service &lt;code&gt;checkout&lt;/code&gt; gọi service &lt;code&gt;pricing&lt;/code&gt; với p99 latency tăng từ 15ms lên 800ms, dù CPU của &lt;code&gt;pricing&lt;/code&gt; chỉ 30%. Không có deploy mới. Không có query chậm. Metrics của &lt;code&gt;pricing&lt;/code&gt; hoàn toàn bình thường.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>Chương 1: Communication Fundamentals — Vì sao hệ thống cần giao tiếp</title>
-      <link>http://localhost:1313/series/backend-communication-architect/01-communication-fundamentals/</link>
-      <pubDate>Sun, 22 Feb 2026 07:00:00 +0700</pubDate>
-      <guid>http://localhost:1313/series/backend-communication-architect/01-communication-fundamentals/</guid>
-      <description>&lt;p&gt;← Mục lục | &lt;a href=&#34;http://localhost:1313/series/backend-communication-architect/02-http/&#34;&gt;Chương sau →&lt;/a&gt;&lt;/p&gt;
-&lt;hr&gt;
-&lt;h2 id=&#34;1-problem-statement-từ-một-function-call-đến-một-network-call&#34;&gt;1. Problem Statement: Từ một function call đến một network call&lt;/h2&gt;
-&lt;p&gt;Hãy bắt đầu từ một tình huống kinh doanh có thật, không phải từ định nghĩa.&lt;/p&gt;
-&lt;p&gt;Công ty của bạn vận hành một hệ thống thương mại điện tử. Ba năm trước, toàn bộ hệ thống là một monolith viết bằng Go: module &lt;code&gt;order&lt;/code&gt; gọi module &lt;code&gt;inventory&lt;/code&gt; bằng một function call, module &lt;code&gt;payment&lt;/code&gt; gọi module &lt;code&gt;notification&lt;/code&gt; bằng một method trên struct. Mọi thứ chạy trong &lt;strong&gt;cùng một process, cùng một address space, cùng một failure domain&lt;/strong&gt;. Một lời gọi hàm mất vài chục nanosecond, không bao giờ &amp;ldquo;mất gói tin&amp;rdquo;, không bao giờ trả về một nửa kết quả, và hoặc là cả process sống, hoặc là cả process chết — không có trạng thái lưng chừng.&lt;/p&gt;</description>
-    </item>
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Backend Communication Architecture on Thanh HV's Blog</title><link>https://thanhhv.github.io/series/backend-communication-architect/</link><description>Recent content in Backend Communication Architecture on Thanh HV's Blog</description><generator>Hugo -- 0.146.7</generator><language>en-us</language><lastBuildDate>Sun, 22 Feb 2026 21:00:00 +0700</lastBuildDate><atom:link href="https://thanhhv.github.io/series/backend-communication-architect/index.xml" rel="self" type="application/rss+xml"/><item><title>Chương 16: Failure Cases — Phân tích sự cố Production</title><link>https://thanhhv.github.io/series/backend-communication-architect/16-failure-cases/</link><pubDate>Sun, 22 Feb 2026 21:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/16-failure-cases/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/15-principal-architecture/">← Chương trước&lt;/a> | Mục lục | Chương sau →&lt;/p>
+&lt;hr>
+&lt;p>Đây là chương quan trọng nhất của toàn bộ tài liệu. Mọi kiến thức về giao thức, message broker, resilience pattern ở các chương trước chỉ thực sự có giá trị khi bạn đứng trước một dashboard đỏ rực lúc 2 giờ sáng và phải trả lời ba câu hỏi: &lt;strong>chuyện gì đang xảy ra, tại sao, và làm gì ngay bây giờ&lt;/strong>.&lt;/p></description></item><item><title>Chương 15. Principal Architecture — Multi-Region, Cross-DC và Large Scale</title><link>https://thanhhv.github.io/series/backend-communication-architect/15-principal-architecture/</link><pubDate>Sun, 22 Feb 2026 20:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/15-principal-architecture/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/14-microservices-communication/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/16-failure-cases/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="151-business-problem-khi-công-ty-vượt-qua-biên-giới-một-region">15.1. Business problem: khi công ty vượt qua biên giới một region&lt;/h2>
+&lt;p>Hãy bắt đầu từ một tình huống có thật ở hầu hết các công ty tăng trưởng nhanh.&lt;/p>
+&lt;p>Công ty của bạn khởi đầu với toàn bộ hệ thống đặt tại một region — giả sử &lt;code>us-east-1&lt;/code> (Virginia). Ba năm sau, business mở rộng ra ba châu lục: Bắc Mỹ, châu Âu, và Đông Nam Á. Ngay lập tức, ba loại áp lực xuất hiện cùng lúc, và cả ba đều không giải quyết được bằng cách &amp;ldquo;tối ưu code&amp;rdquo;:&lt;/p></description></item><item><title>Chương 14 — Microservices Communication: API Gateway và Service Mesh</title><link>https://thanhhv.github.io/series/backend-communication-architect/14-microservices-communication/</link><pubDate>Sun, 22 Feb 2026 19:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/14-microservices-communication/</guid><description>&lt;p>← Chương trước | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/15-principal-architecture/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="mở-đầu-bài-toán-kinh-doanh">Mở đầu: Bài toán kinh doanh&lt;/h2>
+&lt;p>Hãy bắt đầu từ một câu chuyện quen thuộc. Công ty của bạn có một monolith, 50 developer, deploy 1 lần/tuần. Mỗi lần deploy là một &amp;ldquo;sự kiện&amp;rdquo;: freeze code từ thứ Tư, QA regression 2 ngày, deploy đêm thứ Sáu, và cả team on-call cuối tuần. Feature nhỏ nhất cũng mất 2 tuần để ra production vì phải xếp hàng chung chuyến tàu release. Ban lãnh đạo hỏi: &amp;ldquo;Đối thủ ship feature mỗi ngày, tại sao chúng ta mất 2 tuần?&amp;rdquo;&lt;/p></description></item><item><title>Chương 12: Resilience Patterns — Giao tiếp ổn định trong hệ thống không ổn định</title><link>https://thanhhv.github.io/series/backend-communication-architect/12-resilience-patterns/</link><pubDate>Sun, 22 Feb 2026 18:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/12-resilience-patterns/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/11-api-design/">← Chương trước&lt;/a> | Mục lục | Chương sau →&lt;/p>
+&lt;hr>
+&lt;h2 id="121-first-principles-partial-failure-là-trạng-thái-bình-thường">12.1. First principles: partial failure là trạng thái bình thường&lt;/h2>
+&lt;p>Trong monolith, một lời gọi hàm hoặc thành công hoặc ném exception — và cả hai đều xảy ra trong cùng một process, cùng một số phận. Khoảnh khắc bạn tách hàm đó ra sau một network call, bạn nhận về một tập kết quả hoàn toàn mới: thành công, thất bại, &lt;strong>và mọi trạng thái lửng lơ ở giữa&lt;/strong> — request đến nơi nhưng response thất lạc, request đang xếp hàng ở đâu đó và sẽ được xử lý sau 30 giây nữa, downstream đã xử lý xong nhưng bạn đã bỏ đi.&lt;/p></description></item><item><title>Chương 11: API Design — Thiết kế API cho tuổi thọ 10 năm</title><link>https://thanhhv.github.io/series/backend-communication-architect/11-api-design/</link><pubDate>Sun, 22 Feb 2026 17:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/11-api-design/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/12-resilience-patterns/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="111-vì-sao-api-design-là-quyết-định-khó-đảo-ngược-nhất">11.1. Vì sao API design là quyết định khó đảo ngược nhất&lt;/h2>
+&lt;p>Bắt đầu từ một sự thật mà mọi engineer đều học được theo cách đau đớn: &lt;strong>code là tài sản riêng của bạn, còn API là hợp đồng công khai với người khác&lt;/strong>. Bạn có thể refactor toàn bộ internal implementation vào thứ Ba tuần sau mà không ai hay biết. Nhưng một field đã xuất hiện trong response, một URI đã có người gọi, một status code đã có người viết &lt;code>if&lt;/code> để bắt — những thứ đó không còn thuộc về bạn nữa. Chúng thuộc về mọi consumer đang phụ thuộc vào chúng.&lt;/p></description></item><item><title>Chương 10: So sánh Communication Pattern và Framework quyết định</title><link>https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/</link><pubDate>Sun, 22 Feb 2026 16:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/09-event-streaming/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/11-api-design/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Chín chương vừa qua đã mổ xẻ từng công nghệ. Bây giờ là câu hỏi mà mọi architect phải trả lời hàng tuần, và là câu hỏi bị trả lời sai nhiều nhất:&lt;/p>
+&lt;blockquote>
+&lt;p>&amp;ldquo;Service A cần nói chuyện với Service B / với client. Dùng cái gì?&amp;rdquo;&lt;/p>&lt;/blockquote>
+&lt;p>Cách câu hỏi này thường bị trả lời sai trong thực tế:&lt;/p></description></item><item><title>Chương 9: Event Streaming — Log phân tán và xử lý sự kiện quy mô lớn</title><link>https://thanhhv.github.io/series/backend-communication-architect/09-event-streaming/</link><pubDate>Sun, 22 Feb 2026 15:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/09-event-streaming/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/08-message-queue/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/10-so-sanh-communication-pattern/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Hãy bắt đầu bằng một bài toán thật, không phải định nghĩa sách giáo khoa.&lt;/p>
+&lt;p>Bạn vận hành một nền tảng thương mại điện tử. Mỗi hành động của người dùng — xem sản phẩm, thêm vào giỏ, tìm kiếm, click banner — sinh ra một event. Ở quy mô 10 triệu người dùng hoạt động, hệ thống của bạn sinh &lt;strong>2–5 triệu event mỗi giây&lt;/strong> vào giờ cao điểm. Và đây là danh sách những bên muốn tiêu thụ dòng event đó:&lt;/p></description></item><item><title>Chương 8: Message Queue — Tách rời thời gian giữa các hệ thống</title><link>https://thanhhv.github.io/series/backend-communication-architect/08-message-queue/</link><pubDate>Sun, 22 Feb 2026 14:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/08-message-queue/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/07-sse/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/09-event-streaming/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Hãy bắt đầu từ một luồng nghiệp vụ mà mọi hệ thống e-commerce đều có: &lt;strong>khách hàng đặt hàng thành công&lt;/strong>.&lt;/p>
+&lt;p>Khi đơn hàng được tạo, hệ thống phải làm ít nhất bốn việc:&lt;/p>
+&lt;ol>
+&lt;li>Gửi email xác nhận cho khách.&lt;/li>
+&lt;li>Cộng điểm tích lũy (loyalty).&lt;/li>
+&lt;li>Cập nhật tồn kho (inventory).&lt;/li>
+&lt;li>Đẩy dữ liệu sang hệ thống analytics.&lt;/li>
+&lt;/ol>
+&lt;p>Cách tiếp cận ngây thơ nhất — và cũng là cách hầu hết các hệ thống bắt đầu — là gọi synchronous tất cả trong cùng một request:&lt;/p></description></item><item><title>Chương 7: Server-Sent Events — Push đơn giản trên HTTP</title><link>https://thanhhv.github.io/series/backend-communication-architect/07-sse/</link><pubDate>Sun, 22 Feb 2026 13:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/07-sse/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/06-websocket/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/08-message-queue/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Ba bài toán rất phổ biến có chung một hình dạng:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Dashboard giá / telemetry&lt;/strong>: server đẩy giá mới, số liệu mới xuống hàng nghìn màn hình. Client chỉ nhìn, không gửi gì (ngoài vài thao tác lọc hiếm hoi qua REST).&lt;/li>
+&lt;li>&lt;strong>Notification feed&lt;/strong>: &amp;ldquo;bạn có comment mới&amp;rdquo; — server phát, client nhận.&lt;/li>
+&lt;li>&lt;strong>LLM token streaming&lt;/strong>: model sinh token, server đẩy từng token xuống UI ngay khi có. Client gửi đúng một prompt lúc đầu (qua POST), sau đó chỉ nhận.&lt;/li>
+&lt;/ul>
+&lt;p>Điểm chung: &lt;strong>dữ liệu chảy một chiều, server → client&lt;/strong>. Chiều ngược lại hoặc không tồn tại, hoặc thưa thớt tới mức một HTTP request bình thường phục vụ tốt.&lt;/p></description></item><item><title>Chương 6: WebSocket — Kênh song công cho Realtime</title><link>https://thanhhv.github.io/series/backend-communication-architect/06-websocket/</link><pubDate>Sun, 22 Feb 2026 12:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/06-websocket/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/05-grpc/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/07-sse/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Bạn đang xây một collaboration app: chat nhóm, cursor tracking, comment realtime. Yêu cầu nghiệp vụ rất rõ ràng: khi user A gõ một tin nhắn, user B phải thấy nó trong vòng dưới 200ms; đồng thời client của B cũng liên tục gửi trạng thái của chính nó lên server (typing indicator, cursor position). Nghĩa là dữ liệu chảy &lt;strong>cả hai chiều, liên tục, với tần suất cao và độ trễ thấp&lt;/strong>.&lt;/p></description></item><item><title>Chương 5: gRPC — RPC hiệu năng cao cho Internal Services</title><link>https://thanhhv.github.io/series/backend-communication-architect/05-grpc/</link><pubDate>Sun, 22 Feb 2026 11:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/05-grpc/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/04-graphql/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/06-websocket/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Hãy bắt đầu từ một hệ thống thật. Bạn đang vận hành một nền tảng thương mại điện tử với khoảng 200 internal service. Mỗi request từ người dùng — ví dụ &amp;ldquo;đặt hàng&amp;rdquo; — kích hoạt một chuỗi gọi nội bộ: &lt;code>api-gateway → order-service → inventory-service → pricing-service → promotion-service → payment-service → notification-service&lt;/code>. Fan-out trung bình 1 request bên ngoài thành 15–30 lời gọi nội bộ. Ở mức 5.000 request/giây từ phía người dùng, hệ thống nội bộ đang xử lý &lt;strong>hơn 100.000 lời gọi service-to-service mỗi giây&lt;/strong>.&lt;/p></description></item><item><title>Chương 4: GraphQL — Query Language cho API</title><link>https://thanhhv.github.io/series/backend-communication-architect/04-graphql/</link><pubDate>Sun, 22 Feb 2026 10:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/04-graphql/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/03-rest/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/05-grpc/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Hãy bắt đầu bằng một tình huống mà gần như mọi team backend phục vụ mobile app đều gặp phải.&lt;/p>
+&lt;p>Công ty bạn có một mobile app thương mại điện tử. App có màn hình Home, màn hình Profile, màn hình Order History, màn hình Order Detail. Backend đã có sẵn một bộ REST API được thiết kế &amp;ldquo;chuẩn resource-oriented&amp;rdquo;:&lt;/p></description></item><item><title>Chương 3. REST — Kiến trúc tài nguyên trên HTTP</title><link>https://thanhhv.github.io/series/backend-communication-architect/03-rest/</link><pubDate>Sun, 22 Feb 2026 09:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/03-rest/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/02-http/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/04-graphql/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="31-problem-statement--bài-toán-trước-khi-có-giải-pháp">3.1. Problem Statement — bài toán trước khi có giải pháp&lt;/h2>
+&lt;p>Hãy bắt đầu từ một tình huống rất thật. Công ty bạn có một hệ thống quản lý đơn hàng. Ban đầu chỉ có một web app nội bộ gọi thẳng vào database. Sau 18 tháng, bức tranh thay đổi:&lt;/p>
+&lt;ul>
+&lt;li>Team mobile cần đọc/ghi đơn hàng từ iOS và Android.&lt;/li>
+&lt;li>Đối tác logistics cần truy vấn trạng thái đơn qua máy chủ của họ.&lt;/li>
+&lt;li>Team data cần kéo dữ liệu định kỳ để làm báo cáo.&lt;/li>
+&lt;li>Một team khác xây admin portal, cũng cần cùng dữ liệu nhưng thao tác khác.&lt;/li>
+&lt;/ul>
+&lt;p>Bốn client, bốn ngôn ngữ, bốn vòng đời release khác nhau — tất cả cần truy cập &lt;strong>cùng một tập dữ liệu&lt;/strong> qua HTTP. Câu hỏi kỹ thuật đặt ra:&lt;/p></description></item><item><title>Chương 2: HTTP — Nền tảng của giao tiếp hiện đại</title><link>https://thanhhv.github.io/series/backend-communication-architect/02-http/</link><pubDate>Sun, 22 Feb 2026 08:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/02-http/</guid><description>&lt;p>&lt;a href="https://thanhhv.github.io/series/backend-communication-architect/01-communication-fundamentals/">← Chương trước&lt;/a> | Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/03-rest/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement">1. Problem Statement&lt;/h2>
+&lt;p>Hãy bắt đầu bằng một tình huống production quen thuộc.&lt;/p>
+&lt;p>Hệ thống e-commerce của bạn có 40 microservice. Một buổi sáng thứ Hai, sau đợt flash sale, team on-call báo cáo: service &lt;code>checkout&lt;/code> gọi service &lt;code>pricing&lt;/code> với p99 latency tăng từ 15ms lên 800ms, dù CPU của &lt;code>pricing&lt;/code> chỉ 30%. Không có deploy mới. Không có query chậm. Metrics của &lt;code>pricing&lt;/code> hoàn toàn bình thường.&lt;/p></description></item><item><title>Chương 1: Communication Fundamentals — Vì sao hệ thống cần giao tiếp</title><link>https://thanhhv.github.io/series/backend-communication-architect/01-communication-fundamentals/</link><pubDate>Sun, 22 Feb 2026 07:00:00 +0700</pubDate><guid>https://thanhhv.github.io/series/backend-communication-architect/01-communication-fundamentals/</guid><description>&lt;p>← Mục lục | &lt;a href="https://thanhhv.github.io/series/backend-communication-architect/02-http/">Chương sau →&lt;/a>&lt;/p>
+&lt;hr>
+&lt;h2 id="1-problem-statement-từ-một-function-call-đến-một-network-call">1. Problem Statement: Từ một function call đến một network call&lt;/h2>
+&lt;p>Hãy bắt đầu từ một tình huống kinh doanh có thật, không phải từ định nghĩa.&lt;/p>
+&lt;p>Công ty của bạn vận hành một hệ thống thương mại điện tử. Ba năm trước, toàn bộ hệ thống là một monolith viết bằng Go: module &lt;code>order&lt;/code> gọi module &lt;code>inventory&lt;/code> bằng một function call, module &lt;code>payment&lt;/code> gọi module &lt;code>notification&lt;/code> bằng một method trên struct. Mọi thứ chạy trong &lt;strong>cùng một process, cùng một address space, cùng một failure domain&lt;/strong>. Một lời gọi hàm mất vài chục nanosecond, không bao giờ &amp;ldquo;mất gói tin&amp;rdquo;, không bao giờ trả về một nửa kết quả, và hoặc là cả process sống, hoặc là cả process chết — không có trạng thái lưng chừng.&lt;/p></description></item></channel></rss>

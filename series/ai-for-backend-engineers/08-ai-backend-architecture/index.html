@@ -1,129 +1,7 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
-<title>Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session | Thanh HV&#39;s Blog</title>
-<meta name="keywords" content="backend, ai, llm">
-<meta name="description" content="1. Problem Statement
-Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất.">
-<meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/series/ai-for-backend-engineers/08-ai-backend-architecture/">
-<link crossorigin="anonymous" href="/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css" integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v&#43;kKlD5xsQ1xeGDE=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
-<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/series/ai-for-backend-engineers/08-ai-backend-architecture/">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
-
-    </style>
-</noscript>
-</head>
-
-<body class="" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Thanh HV&#39;s Blog (Alt + H)">Thanh HV&#39;s Blog</a>
-            <div class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <ul id="menu">
-            <li>
-                <a href="http://localhost:1313/" title="Home">
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
-                    <span>Posts</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
-                    <span>Tags</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
-                    <span>Search</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/about-me/" title="About me">
-                    <span>About me</span>
-                </a>
-            </li>
-            <li>
-                <a href="http://localhost:1313/series/" title="Series">
-                    <span>Series</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</header>
-<main class="main">
-
-<article class="post-single">
-  <header class="post-header">
-    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/">Series</a>&nbsp;»&nbsp;<a href="http://localhost:1313/series/ai-for-backend-engineers/">AI cho Backend Engineer</a></div>
-    <h1 class="post-title entry-hint-parent">
-      Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session
-    </h1>
-    <div class="post-meta"><span title='2026-07-18 08:20:00 +0700 +07'>July 18, 2026</span>&nbsp;·&nbsp;10 min
-
-</div>
-  </header> 
-  <div class="post-content"><h2 id="1-problem-statement">1. Problem Statement<a hidden class="anchor" aria-hidden="true" href="#1-problem-statement">#</a></h2>
-<p>Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất.</p>
-<p>Đây chính xác là bài toán mà backend đã giải nhiều lần với database (connection pool), microservice (API gateway), external API (adapter layer). Lời giải cùng dạng: <strong>một tầng hạ tầng AI dùng chung</strong> — AI Gateway và các thành phần vệ tinh.</p>
-<h2 id="2-tại-sao-nó-tồn-tại">2. Tại sao nó tồn tại<a hidden class="anchor" aria-hidden="true" href="#2-tại-sao-nó-tồn-tại">#</a></h2>
-<ul>
-<li><strong>Business Problem</strong>: kiểm soát chi phí tập trung, không phụ thuộc một vendor, tính năng AI mới ship nhanh trên hạ tầng sẵn.</li>
-<li><strong>Engineering Problem</strong>: cross-cutting concerns (auth, rate limit, retry, log, cache) phải làm một lần, không lặp lại mỗi team.</li>
-<li><strong>AI Problem</strong>: provider không ổn định như database — rate limit chặt, outage xảy ra, model deprecated liên tục; hệ thống phải cách ly được sự bất ổn đó.</li>
-</ul>
-<h2 id="3-first-principles">3. First Principles<a hidden class="anchor" aria-hidden="true" href="#3-first-principles">#</a></h2>
-<p>AI Gateway là <strong>reverse proxy chuyên cho LLM traffic</strong>, đứng giữa mọi service nội bộ và mọi model provider:</p>
-<pre class="mermaid">flowchart LR
+<!doctype html><html lang=en dir=auto><head><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no"><meta name=robots content="index, follow"><title>Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session | Thanh HV's Blog</title>
+<meta name=keywords content="backend,ai,llm"><meta name=description content="1. Problem Statement
+Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất."><meta name=author content><link rel=canonical href=https://thanhhv.github.io/series/ai-for-backend-engineers/08-ai-backend-architecture/><link crossorigin=anonymous href=/assets/css/stylesheet.36ab24e4c1b924360adfc391166b0e8914323d9d6ffa42a50f9c6c435c5e1831.css integrity="sha256-Nqsk5MG5JDYK38ORFmsOiRQyPZ1v+kKlD5xsQ1xeGDE=" rel="preload stylesheet" as=style><link rel=icon href=https://thanhhv.github.io/favicon.ico><link rel=icon type=image/png sizes=16x16 href=https://thanhhv.github.io/favicon-16x16.png><link rel=icon type=image/png sizes=32x32 href=https://thanhhv.github.io/favicon-32x32.png><link rel=apple-touch-icon href=https://thanhhv.github.io/apple-touch-icon.png><link rel=mask-icon href=https://thanhhv.github.io/safari-pinned-tab.svg><meta name=theme-color content="#2e2e33"><meta name=msapplication-TileColor content="#2e2e33"><link rel=alternate hreflang=en href=https://thanhhv.github.io/series/ai-for-backend-engineers/08-ai-backend-architecture/><noscript><style>#theme-toggle,.top-link{display:none}</style></noscript><meta property="og:url" content="https://thanhhv.github.io/series/ai-for-backend-engineers/08-ai-backend-architecture/"><meta property="og:site_name" content="Thanh HV's Blog"><meta property="og:title" content="Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session"><meta property="og:description" content="1. Problem Statement Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="series"><meta property="article:published_time" content="2026-07-18T08:20:00+07:00"><meta property="article:modified_time" content="2026-07-18T08:20:00+07:00"><meta property="article:tag" content="Backend"><meta property="article:tag" content="Ai"><meta property="article:tag" content="Llm"><meta name=twitter:card content="summary"><meta name=twitter:title content="Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session"><meta name=twitter:description content="1. Problem Statement
+Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất."><script type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Series","item":"https://thanhhv.github.io/series/"},{"@type":"ListItem","position":2,"name":"AI cho Backend Engineer","item":"https://thanhhv.github.io/series/ai-for-backend-engineers/"},{"@type":"ListItem","position":3,"name":"Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session","item":"https://thanhhv.github.io/series/ai-for-backend-engineers/08-ai-backend-architecture/"}]}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","headline":"Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session","name":"Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session","description":"1. Problem Statement Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất.\n","keywords":["backend","ai","llm"],"articleBody":"1. Problem Statement Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất.\nĐây chính xác là bài toán mà backend đã giải nhiều lần với database (connection pool), microservice (API gateway), external API (adapter layer). Lời giải cùng dạng: một tầng hạ tầng AI dùng chung — AI Gateway và các thành phần vệ tinh.\n2. Tại sao nó tồn tại Business Problem: kiểm soát chi phí tập trung, không phụ thuộc một vendor, tính năng AI mới ship nhanh trên hạ tầng sẵn. Engineering Problem: cross-cutting concerns (auth, rate limit, retry, log, cache) phải làm một lần, không lặp lại mỗi team. AI Problem: provider không ổn định như database — rate limit chặt, outage xảy ra, model deprecated liên tục; hệ thống phải cách ly được sự bất ổn đó. 3. First Principles AI Gateway là reverse proxy chuyên cho LLM traffic, đứng giữa mọi service nội bộ và mọi model provider:\nflowchart LR subgraph Apps[\"Services nội bộ\"] A1[\"Chatbot\"] A2[\"RAG Search\"] A3[\"Ticket Classifier\"] end subgraph GW[\"AI GATEWAY\"] direction TB AUTH[\"AuthN/AuthZ nội bộvirtual key theo team/feature\"] RL[\"Rate Limit + Quota(theo team, user, feature)\"] CACHE[\"Cache(exact + semantic)\"] ROUTE[\"Model Router(chọn model, load balance key)\"] RES[\"Retry / Fallback /Circuit Breaker\"] OBS[\"Logging / Tracing /Cost Metering\"] end subgraph Providers P1[\"OpenAI\"] P2[\"Anthropic\"] P3[\"Gemini\"] P4[\"Self-hosted vLLM\"] end A1 \u0026 A2 \u0026 A3 --\u003e GW GW --\u003e P1 \u0026 P2 \u0026 P3 \u0026 P4 Nguyên tắc thiết kế: gateway expose một API thống nhất (thường theo format OpenAI-compatible hoặc một schema nội bộ) + tham số mức ý định (task: \"summarize\", quality: \"high\") — để app không cần biết model nào đứng sau. Build hay dùng sẵn (LiteLLM, Portkey, Kong AI Gateway, Envoy AI Gateway) — xem mục Trade-off.\n4. Internal Architecture — từng thành phần 4.1. Model Routing Router quyết định request nào đến model nào, theo:\nTask routing: phân loại → model nhỏ rẻ; suy luận phức tạp → model lớn. Có thể tĩnh (config theo feature) hoặc động (một classifier nhỏ đánh giá độ khó của prompt rồi chọn model — tiết kiệm 30–70% chi phí ở hệ thống lớn, đổi lấy thêm một tầng phức tạp). Load balancing: xoay nhiều API key/region/deployment để cộng dồn rate limit. Health-based: provider lỗi/chậm → route sang provider khác (kết hợp circuit breaker). 4.2. Retry, Fallback, Circuit Breaker // Go — phân loại lỗi quyết định hành vi func classify(err error, status int) Action { switch { case status == 429: // rate limit return RetryWithBackoff // tôn trọng Retry-After header case status \u003e= 500: // provider lỗi return RetryThenFallback // 1-2 lần rồi đổi provider case status == 400 \u0026\u0026 isContextLength(err): return TruncateAndRetry // cắt context rồi thử lại — KHÔNG retry nguyên bản case status == 400, status == 422: // lỗi request return FailFast // retry vô ích, đừng đốt quota case isTimeout(err): return RetryOnce // cẩn thận: request có thể đã được tính tiền } return FailFast } Fallback chain production điển hình: model chính → model tương đương provider khác → model nhỏ hơn → degraded response (\"hệ thống bận, thử lại sau\" hoặc kết quả từ rule-based). Lưu ý chất lượng: fallback sang model khác có thể thay đổi hành vi — prompt phải được test trên cả chain, và response nên gắn nhãn model đã dùng để debug.\nCircuit breaker theo từng provider: lỗi liên tiếp vượt ngưỡng → mở mạch, route thẳng sang fallback vài chục giây, thăm dò rồi đóng lại. Tránh việc mọi request chờ timeout 60s trong lúc provider outage.\n4.3. Caching — đặc thù LLM Tầng Cơ chế Hit rate Ghi chú Exact cache hash(model + prompt + params) → response Thấp với chat tự do, cao với task lặp (phân loại, extraction) Redis, TTL theo use case Semantic cache embed(query) → tìm query cũ tương tự ≥ ngưỡng → trả response cũ Trung bình Rủi ro trả sai: “chuyển tiền qua app?” ≈ “hủy chuyển tiền qua app?” — similarity cao, ý ngược. Chỉ dùng cho nội dung tĩnh, ngưỡng chặt, có kill switch Provider prompt caching provider cache phần đầu prompt (system + few-shot + tài liệu) giữa các request — Giảm 50–90% chi phí input phần cache. Điều kiện: phần ổn định nằm ĐẦU prompt — đây là lý do kiến trúc prompt: static trước, dynamic sau Cache invalidation: key phải chứa prompt_version và doc_version — quên điều này là serve câu trả lời của chính sách đã hết hiệu lực (Chương 13).\n4.4. Streaming Response Non-streaming: user chờ 15s nhìn spinner. Streaming: từ chữ đầu tiên sau ~1s. Cùng tổng thời gian, cảm nhận khác hẳn — streaming là mặc định cho mọi UI chat.\nsequenceDiagram participant C as Client (SSE) participant G as AI Gateway participant P as Provider C-\u003e\u003eG: POST /chat (Accept: text/event-stream) G-\u003e\u003eP: request stream=true P--\u003e\u003eG: chunk \"Xin\" G--\u003e\u003eC: data: {\"delta\": \"Xin\"} P--\u003e\u003eG: chunk \" chào\"... G--\u003e\u003eC: data: ... P--\u003e\u003eG: [DONE] + usage {tokens} G-\u003e\u003eG: log usage, cost, latency (chỉ biết ĐẦY ĐỦ khi stream xong) G--\u003e\u003eC: data: [DONE]Những việc backend phải xử lý mà demo không lộ ra: client ngắt kết nối giữa chừng (hủy request xuống provider để không trả tiền phần thừa); lỗi xảy ra giữa stream (đã gửi nửa câu — cần event error trong protocol của bạn, client xử lý được); timeout theo “khoảng lặng giữa 2 chunk” chứ không theo tổng thời gian; guardrail/content filter trên nội dung streaming (quét từng đoạn — đã stream ra là không rút lại được); usage token chỉ chốt ở cuối stream (metering phải chờ).\n// Go — proxy SSE với idle timeout và client-cancel func streamHandler(w http.ResponseWriter, r *http.Request) { flusher := w.(http.Flusher) w.Header().Set(\"Content-Type\", \"text/event-stream\") upstream, _ := callProviderStream(r.Context(), buildReq(r)) // ctx hủy → hủy upstream idle := time.NewTimer(15 * time.Second) for { select { case chunk, ok := \u003c-upstream.Chunks: if !ok { return } // stream xong idle.Reset(15 * time.Second) fmt.Fprintf(w, \"data: %s\\n\\n\", chunk.JSON()) flusher.Flush() case \u003c-idle.C: fmt.Fprintf(w, \"data: {\\\"error\\\": \\\"upstream_stalled\\\"}\\n\\n\") flusher.Flush() return case \u003c-r.Context().Done(): // client bỏ đi upstream.Cancel() // dừng đốt tiền ngay return } } } 4.5. Session Management \u0026 Conversation History LLM stateless → “cuộc hội thoại” là cấu trúc dữ liệu backend sở hữu:\nSession Store (Redis/Postgres): session_id → {user_id, messages[], summary, metadata, prompt_version, created_at}Vấn đề trung tâm: history dài ra vô hạn, context và tiền thì không. Chiến lược quản lý theo thang:\nSliding window: giữ N lượt gần nhất — đơn giản, mất thông tin cũ. Summarization: khi history vượt ngưỡng, dùng model rẻ tóm tắt phần cũ thành đoạn “summary”, giữ nguyên các lượt gần — chuẩn phổ biến. Chú ý: tóm tắt là lossy, thông tin quan trọng (tên, số, quyết định) nên được trích thành structured notes thay vì chỉ văn xuôi. Summary + retrieval: lượt cũ được embed; khi cần, retrieval lượt liên quan vào context — “trí nhớ dài hạn” cho hội thoại rất dài. Ngoài ra: session phải có TTL và giới hạn kích thước (Chương 13, “Memory Growth”); prompt_version lưu theo session để hội thoại đang diễn ra không đổi hành vi giữa chừng khi bạn deploy prompt mới.\n4.6. Rate Limiting \u0026 Quota — hai chiều Chiều vào (bảo vệ bạn): limit theo user/tenant/feature — không chỉ theo request mà theo token (1 user gửi 50K token/request khác 1 user gửi 500). Quota tiền theo tháng cho từng tenant với hard cap. Chiều ra (tôn trọng provider): điều tiết tổng TPM/RPM xuống dưới hạn mức provider, hàng đợi ưu tiên (interactive trước, batch sau) khi gần chạm trần. 5. Trade-off Build vs Buy gateway: LiteLLM/Portkey/Kong cho 80% tính năng ngay lập tức; tự build khi có yêu cầu đặc thù (routing theo logic nghiệp vụ, metering phức tạp, compliance). Chi phí thật của tự build nằm ở duy trì — provider API đổi liên tục. Hướng đi phổ biến: bắt đầu bằng open-source (LiteLLM), thay dần phần cần thiết. Gateway tập trung vs thư viện nhúng: gateway = thêm 1 hop (5–20ms, không đáng kể so với giây của LLM) + một single point of failure phải HA; thư viện nhúng = không hop nhưng cross-cutting concerns lặp ở mọi service và nâng cấp khó. Với ≥ 2 team dùng AI: gateway thắng. Semantic cache: tiết kiệm chi phí ↔ rủi ro trả lời sai ngữ cảnh. Chỉ bật cho content tĩnh, đo tỷ lệ false-hit bằng eval, có công tắc tắt nhanh. Streaming vs Non-streaming: streaming bắt buộc cho chat UI; non-streaming đơn giản hơn nhiều cho pipeline máy-với-máy (batch, extraction) — đừng stream chỗ không có người nhìn. (So sánh đầy đủ: Chương 14.) 6. Production Considerations Gateway phải HA hơn mọi thứ sau nó: nhiều instance, stateless (state ở Redis), health check, và có đường bypass khẩn cấp (app gọi thẳng provider với feature flag) nếu gateway chết. Metering là chức năng hạng nhất: mỗi response gắn (team, feature, user, model, tokens, cost) đẩy về hệ thống metric — cost dashboard theo chiều bất kỳ dựng từ đây (Chương 11). Virtual key: team nhận key nội bộ từ gateway (kèm quota, model được phép), không bao giờ cầm key thật của provider — thu hồi, xoay key thật không ảnh hưởng ai. Log có kiểm soát PII: prompt/response chứa dữ liệu người dùng — chính sách log (mask, TTL, quyền xem) phải có từ ngày đầu (Chương 12). Timeout ngân sách theo tầng: client 60s \u003e gateway 55s \u003e provider call 50s — tầng ngoài luôn dài hơn tầng trong, tránh “ai cũng chờ ai”. 7. Anti-patterns Mỗi team một API key thật của provider, rải trong env — không quota, không audit, lộ key là thay toàn bộ. Retry 429 lập tức không backoff — tự DDoS chính quota của mình, kéo dài sự cố. Cache không chứa prompt_version — deploy prompt mới nhưng user vẫn nhận response của prompt cũ, “deploy rồi mà không thấy đổi”. Gửi nguyên history 100 lượt mỗi request vì “context window còn chỗ” — chi phí hội thoại tăng bậc hai. Ước lượng chi phí bằng đếm ký tự thay vì usage thật từ response. Bọc streaming bằng “chờ đủ rồi trả một cục” ở một tầng trung gian — mất toàn bộ giá trị của streaming mà vẫn trả độ phức tạp của nó. 8. Best Practices Chuẩn hóa một interface LLM nội bộ (đủ dùng: messages, tools, stream, metadata) — mọi app nói chuyện qua nó; đổi provider là việc của gateway. Tag mọi request: feature, team, prompt_id, prompt_version, session_id, request_id — xương sống của observability và cost attribution. Chạy game day: tắt provider chính trong staging, xem fallback chain có chạy như thiết kế. Thiết kế prompt để tối ưu provider caching: phần tĩnh (system, few-shot, tài liệu chung) đứng đầu, phần động (user input) đứng cuối. Đặt hard cap chi tiêu ở mức gateway theo ngày/tháng — thà tính năng ngừng phục vụ còn hơn hóa đơn không trần. 9. Khi nào KHÔNG cần Một service, một tính năng AI, một provider, vài nghìn request/ngày: SDK provider + retry wrapper + log usage là đủ. Gateway trở nên đáng giá khi xuất hiện bất kỳ dấu hiệu nào: ≥2 team dùng AI, cần cost attribution, cần fallback đa provider, cần quota theo tenant, hoặc chi phí LLM thành mục đáng kể trong P\u0026L. Xây sớm quá là overhead; xây muộn quá là gỡ nợ ở 3 codebase — thời điểm đúng thường là “tính năng AI thứ hai”.\nChương tiếp theo: 09 — Model Serving — đứng sau gateway là gì: managed API hay GPU của chính bạn.\n","wordCount":"1988","inLanguage":"en","datePublished":"2026-07-18T08:20:00+07:00","dateModified":"2026-07-18T08:20:00+07:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://thanhhv.github.io/series/ai-for-backend-engineers/08-ai-backend-architecture/"},"publisher":{"@type":"Organization","name":"Thanh HV's Blog","logo":{"@type":"ImageObject","url":"https://thanhhv.github.io/favicon.ico"}}}</script></head><body id=top><script>localStorage.getItem("pref-theme")==="dark"&&document.body.classList.add("dark")</script><header class=header><nav class=nav><div class=logo><a href=https://thanhhv.github.io/ accesskey=h title="Thanh HV's Blog (Alt + H)">Thanh HV's Blog</a><div class=logo-switches><button id=theme-toggle accesskey=t title="(Alt + T)" aria-label="Toggle theme"><svg id="moon" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="sun" width="24" height="18" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button></div></div><ul id=menu><li><a href=https://thanhhv.github.io/ title=Home><span>Home</span></a></li><li><a href=https://thanhhv.github.io/posts/ title=Posts><span>Posts</span></a></li><li><a href=https://thanhhv.github.io/tags/ title=Tags><span>Tags</span></a></li><li><a href=https://thanhhv.github.io/search/ title="Search (Alt + /)" accesskey=/><span>Search</span></a></li><li><a href=https://thanhhv.github.io/about-me/ title="About me"><span>About me</span></a></li><li><a href=https://thanhhv.github.io/series/ title=Series><span>Series</span></a></li></ul></nav></header><main class=main><article class=post-single><header class=post-header><div class=breadcrumbs><a href=https://thanhhv.github.io/>Home</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/>Series</a>&nbsp;»&nbsp;<a href=https://thanhhv.github.io/series/ai-for-backend-engineers/>AI cho Backend Engineer</a></div><h1 class="post-title entry-hint-parent">Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session</h1><div class=post-meta><span title='2026-07-18 08:20:00 +0700 +07'>July 18, 2026</span>&nbsp;·&nbsp;10 min</div></header><div class=post-content><h2 id=1-problem-statement>1. Problem Statement<a hidden class=anchor aria-hidden=true href=#1-problem-statement>#</a></h2><p>Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại ticket, RAG search) do 3 team viết. Hiện trạng: mỗi team tự gọi provider bằng SDK riêng, API key rải trong env của từng service, không ai biết tổng chi phí, một team bị rate limit làm team khác cũng nghẽn (chung key), muốn đổi từ OpenAI sang Anthropic phải sửa 3 codebase, và không có logging thống nhất.</p><p>Đây chính xác là bài toán mà backend đã giải nhiều lần với database (connection pool), microservice (API gateway), external API (adapter layer). Lời giải cùng dạng: <strong>một tầng hạ tầng AI dùng chung</strong> — AI Gateway và các thành phần vệ tinh.</p><h2 id=2-tại-sao-nó-tồn-tại>2. Tại sao nó tồn tại<a hidden class=anchor aria-hidden=true href=#2-tại-sao-nó-tồn-tại>#</a></h2><ul><li><strong>Business Problem</strong>: kiểm soát chi phí tập trung, không phụ thuộc một vendor, tính năng AI mới ship nhanh trên hạ tầng sẵn.</li><li><strong>Engineering Problem</strong>: cross-cutting concerns (auth, rate limit, retry, log, cache) phải làm một lần, không lặp lại mỗi team.</li><li><strong>AI Problem</strong>: provider không ổn định như database — rate limit chặt, outage xảy ra, model deprecated liên tục; hệ thống phải cách ly được sự bất ổn đó.</li></ul><h2 id=3-first-principles>3. First Principles<a hidden class=anchor aria-hidden=true href=#3-first-principles>#</a></h2><p>AI Gateway là <strong>reverse proxy chuyên cho LLM traffic</strong>, đứng giữa mọi service nội bộ và mọi model provider:</p><pre class=mermaid>flowchart LR
     subgraph Apps[&#34;Services nội bộ&#34;]
         A1[&#34;Chatbot&#34;]
         A2[&#34;RAG Search&#34;]
@@ -145,84 +23,30 @@ Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại tic
         P4[&#34;Self-hosted vLLM&#34;]
     end
     A1 &amp; A2 &amp; A3 --&gt; GW
-    GW --&gt; P1 &amp; P2 &amp; P3 &amp; P4</pre><style>
-  pre.mermaid {
-    background: transparent;
-    display: flex;
-    justify-content: center;
-    overflow-x: auto;
-  }
-</style>
-<script type="module">
+    GW --&gt; P1 &amp; P2 &amp; P3 &amp; P4</pre><style>pre.mermaid{background:0 0;display:flex;justify-content:center;overflow-x:auto}</style><script type=module>
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({
     startOnLoad: true,
     theme: document.body.classList.contains("dark") ? "dark" : "default",
     securityLevel: "loose",
   });
-</script><p>Nguyên tắc thiết kế: gateway expose <strong>một API thống nhất</strong> (thường theo format OpenAI-compatible hoặc một schema nội bộ) + tham số mức ý định (<code>task: &quot;summarize&quot;</code>, <code>quality: &quot;high&quot;</code>) — để app không cần biết model nào đứng sau. Build hay dùng sẵn (LiteLLM, Portkey, Kong AI Gateway, Envoy AI Gateway) — xem mục Trade-off.</p>
-<h2 id="4-internal-architecture--từng-thành-phần">4. Internal Architecture — từng thành phần<a hidden class="anchor" aria-hidden="true" href="#4-internal-architecture--từng-thành-phần">#</a></h2>
-<h3 id="41-model-routing">4.1. Model Routing<a hidden class="anchor" aria-hidden="true" href="#41-model-routing">#</a></h3>
-<p>Router quyết định request nào đến model nào, theo:</p>
-<ul>
-<li><strong>Task routing</strong>: phân loại → model nhỏ rẻ; suy luận phức tạp → model lớn. Có thể tĩnh (config theo feature) hoặc động (một classifier nhỏ đánh giá độ khó của prompt rồi chọn model — tiết kiệm 30–70% chi phí ở hệ thống lớn, đổi lấy thêm một tầng phức tạp).</li>
-<li><strong>Load balancing</strong>: xoay nhiều API key/region/deployment để cộng dồn rate limit.</li>
-<li><strong>Health-based</strong>: provider lỗi/chậm → route sang provider khác (kết hợp circuit breaker).</li>
-</ul>
-<h3 id="42-retry-fallback-circuit-breaker">4.2. Retry, Fallback, Circuit Breaker<a hidden class="anchor" aria-hidden="true" href="#42-retry-fallback-circuit-breaker">#</a></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Go — phân loại lỗi quyết định hành vi</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">classify</span>(<span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>, <span style="color:#a6e22e">status</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">Action</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">switch</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">status</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">429</span>:               <span style="color:#75715e">// rate limit</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RetryWithBackoff</span>        <span style="color:#75715e">// tôn trọng Retry-After header</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">status</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">500</span>:                <span style="color:#75715e">// provider lỗi</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RetryThenFallback</span>       <span style="color:#75715e">// 1-2 lần rồi đổi provider</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">status</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">400</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">isContextLength</span>(<span style="color:#a6e22e">err</span>):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">TruncateAndRetry</span>        <span style="color:#75715e">// cắt context rồi thử lại — KHÔNG retry nguyên bản</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">status</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">400</span>, <span style="color:#a6e22e">status</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">422</span>: <span style="color:#75715e">// lỗi request</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">FailFast</span>                <span style="color:#75715e">// retry vô ích, đừng đốt quota</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">isTimeout</span>(<span style="color:#a6e22e">err</span>):
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">RetryOnce</span>               <span style="color:#75715e">// cẩn thận: request có thể đã được tính tiền</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">FailFast</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Fallback chain production điển hình: <code>model chính → model tương đương provider khác → model nhỏ hơn → degraded response (&quot;hệ thống bận, thử lại sau&quot; hoặc kết quả từ rule-based)</code>. Lưu ý chất lượng: fallback sang model khác có thể thay đổi hành vi — prompt phải được test trên cả chain, và response nên gắn nhãn model đã dùng để debug.</p>
-<p>Circuit breaker theo từng provider: lỗi liên tiếp vượt ngưỡng → mở mạch, route thẳng sang fallback vài chục giây, thăm dò rồi đóng lại. Tránh việc mọi request chờ timeout 60s trong lúc provider outage.</p>
-<h3 id="43-caching--đặc-thù-llm">4.3. Caching — đặc thù LLM<a hidden class="anchor" aria-hidden="true" href="#43-caching--đặc-thù-llm">#</a></h3>
-<table>
-  <thead>
-      <tr>
-          <th>Tầng</th>
-          <th>Cơ chế</th>
-          <th>Hit rate</th>
-          <th>Ghi chú</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>Exact cache</td>
-          <td>hash(model + prompt + params) → response</td>
-          <td>Thấp với chat tự do, cao với task lặp (phân loại, extraction)</td>
-          <td>Redis, TTL theo use case</td>
-      </tr>
-      <tr>
-          <td>Semantic cache</td>
-          <td>embed(query) → tìm query cũ tương tự ≥ ngưỡng → trả response cũ</td>
-          <td>Trung bình</td>
-          <td><strong>Rủi ro trả sai</strong>: &ldquo;chuyển tiền qua app?&rdquo; ≈ &ldquo;hủy chuyển tiền qua app?&rdquo; — similarity cao, ý ngược. Chỉ dùng cho nội dung tĩnh, ngưỡng chặt, có kill switch</td>
-      </tr>
-      <tr>
-          <td>Provider prompt caching</td>
-          <td>provider cache phần đầu prompt (system + few-shot + tài liệu) giữa các request</td>
-          <td>—</td>
-          <td>Giảm 50–90% chi phí input phần cache. <strong>Điều kiện: phần ổn định nằm ĐẦU prompt</strong> — đây là lý do kiến trúc prompt: static trước, dynamic sau</td>
-      </tr>
-  </tbody>
-</table>
-<p>Cache invalidation: key phải chứa <code>prompt_version</code> và <code>doc_version</code> — quên điều này là serve câu trả lời của chính sách đã hết hiệu lực (Chương 13).</p>
-<h3 id="44-streaming-response">4.4. Streaming Response<a hidden class="anchor" aria-hidden="true" href="#44-streaming-response">#</a></h3>
-<p>Non-streaming: user chờ 15s nhìn spinner. Streaming: từ chữ đầu tiên sau ~1s. Cùng tổng thời gian, cảm nhận khác hẳn — <strong>streaming là mặc định cho mọi UI chat</strong>.</p>
-<pre class="mermaid">sequenceDiagram
+</script><p>Nguyên tắc thiết kế: gateway expose <strong>một API thống nhất</strong> (thường theo format OpenAI-compatible hoặc một schema nội bộ) + tham số mức ý định (<code>task: "summarize"</code>, <code>quality: "high"</code>) — để app không cần biết model nào đứng sau. Build hay dùng sẵn (LiteLLM, Portkey, Kong AI Gateway, Envoy AI Gateway) — xem mục Trade-off.</p><h2 id=4-internal-architecture--từng-thành-phần>4. Internal Architecture — từng thành phần<a hidden class=anchor aria-hidden=true href=#4-internal-architecture--từng-thành-phần>#</a></h2><h3 id=41-model-routing>4.1. Model Routing<a hidden class=anchor aria-hidden=true href=#41-model-routing>#</a></h3><p>Router quyết định request nào đến model nào, theo:</p><ul><li><strong>Task routing</strong>: phân loại → model nhỏ rẻ; suy luận phức tạp → model lớn. Có thể tĩnh (config theo feature) hoặc động (một classifier nhỏ đánh giá độ khó của prompt rồi chọn model — tiết kiệm 30–70% chi phí ở hệ thống lớn, đổi lấy thêm một tầng phức tạp).</li><li><strong>Load balancing</strong>: xoay nhiều API key/region/deployment để cộng dồn rate limit.</li><li><strong>Health-based</strong>: provider lỗi/chậm → route sang provider khác (kết hợp circuit breaker).</li></ul><h3 id=42-retry-fallback-circuit-breaker>4.2. Retry, Fallback, Circuit Breaker<a hidden class=anchor aria-hidden=true href=#42-retry-fallback-circuit-breaker>#</a></h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Go — phân loại lỗi quyết định hành vi</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>classify</span>(<span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>, <span style=color:#a6e22e>status</span> <span style=color:#66d9ef>int</span>) <span style=color:#a6e22e>Action</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>switch</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>429</span>:               <span style=color:#75715e>// rate limit</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>RetryWithBackoff</span>        <span style=color:#75715e>// tôn trọng Retry-After header</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>&gt;=</span> <span style=color:#ae81ff>500</span>:                <span style=color:#75715e>// provider lỗi</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>RetryThenFallback</span>       <span style=color:#75715e>// 1-2 lần rồi đổi provider</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>400</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#a6e22e>isContextLength</span>(<span style=color:#a6e22e>err</span>):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>TruncateAndRetry</span>        <span style=color:#75715e>// cắt context rồi thử lại — KHÔNG retry nguyên bản</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>400</span>, <span style=color:#a6e22e>status</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>422</span>: <span style=color:#75715e>// lỗi request</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>FailFast</span>                <span style=color:#75715e>// retry vô ích, đừng đốt quota</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>isTimeout</span>(<span style=color:#a6e22e>err</span>):
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>RetryOnce</span>               <span style=color:#75715e>// cẩn thận: request có thể đã được tính tiền</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>FailFast</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Fallback chain production điển hình: <code>model chính → model tương đương provider khác → model nhỏ hơn → degraded response ("hệ thống bận, thử lại sau" hoặc kết quả từ rule-based)</code>. Lưu ý chất lượng: fallback sang model khác có thể thay đổi hành vi — prompt phải được test trên cả chain, và response nên gắn nhãn model đã dùng để debug.</p><p>Circuit breaker theo từng provider: lỗi liên tiếp vượt ngưỡng → mở mạch, route thẳng sang fallback vài chục giây, thăm dò rồi đóng lại. Tránh việc mọi request chờ timeout 60s trong lúc provider outage.</p><h3 id=43-caching--đặc-thù-llm>4.3. Caching — đặc thù LLM<a hidden class=anchor aria-hidden=true href=#43-caching--đặc-thù-llm>#</a></h3><table><thead><tr><th>Tầng</th><th>Cơ chế</th><th>Hit rate</th><th>Ghi chú</th></tr></thead><tbody><tr><td>Exact cache</td><td>hash(model + prompt + params) → response</td><td>Thấp với chat tự do, cao với task lặp (phân loại, extraction)</td><td>Redis, TTL theo use case</td></tr><tr><td>Semantic cache</td><td>embed(query) → tìm query cũ tương tự ≥ ngưỡng → trả response cũ</td><td>Trung bình</td><td><strong>Rủi ro trả sai</strong>: &ldquo;chuyển tiền qua app?&rdquo; ≈ &ldquo;hủy chuyển tiền qua app?&rdquo; — similarity cao, ý ngược. Chỉ dùng cho nội dung tĩnh, ngưỡng chặt, có kill switch</td></tr><tr><td>Provider prompt caching</td><td>provider cache phần đầu prompt (system + few-shot + tài liệu) giữa các request</td><td>—</td><td>Giảm 50–90% chi phí input phần cache. <strong>Điều kiện: phần ổn định nằm ĐẦU prompt</strong> — đây là lý do kiến trúc prompt: static trước, dynamic sau</td></tr></tbody></table><p>Cache invalidation: key phải chứa <code>prompt_version</code> và <code>doc_version</code> — quên điều này là serve câu trả lời của chính sách đã hết hiệu lực (Chương 13).</p><h3 id=44-streaming-response>4.4. Streaming Response<a hidden class=anchor aria-hidden=true href=#44-streaming-response>#</a></h3><p>Non-streaming: user chờ 15s nhìn spinner. Streaming: từ chữ đầu tiên sau ~1s. Cùng tổng thời gian, cảm nhận khác hẳn — <strong>streaming là mặc định cho mọi UI chat</strong>.</p><pre class=mermaid>sequenceDiagram
     participant C as Client (SSE)
     participant G as AI Gateway
     participant P as Provider
@@ -235,301 +59,33 @@ Công ty bạn giờ có 4 tính năng AI (chatbot, tóm tắt, phân loại tic
     G--&gt;&gt;C: data: ...
     P--&gt;&gt;G: [DONE] + usage {tokens}
     G-&gt;&gt;G: log usage, cost, latency (chỉ biết ĐẦY ĐỦ khi stream xong)
-    G--&gt;&gt;C: data: [DONE]</pre><p>Những việc backend phải xử lý mà demo không lộ ra: client ngắt kết nối giữa chừng (hủy request xuống provider để không trả tiền phần thừa); lỗi xảy ra <strong>giữa</strong> stream (đã gửi nửa câu — cần event <code>error</code> trong protocol của bạn, client xử lý được); timeout theo &ldquo;khoảng lặng giữa 2 chunk&rdquo; chứ không theo tổng thời gian; guardrail/content filter trên nội dung streaming (quét từng đoạn — đã stream ra là không rút lại được); usage token chỉ chốt ở cuối stream (metering phải chờ).</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Go — proxy SSE với idle timeout và client-cancel</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">streamHandler</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">flusher</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">w</span>.(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Flusher</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Header</span>().<span style="color:#a6e22e">Set</span>(<span style="color:#e6db74">&#34;Content-Type&#34;</span>, <span style="color:#e6db74">&#34;text/event-stream&#34;</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">upstream</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">callProviderStream</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>(), <span style="color:#a6e22e">buildReq</span>(<span style="color:#a6e22e">r</span>)) <span style="color:#75715e">// ctx hủy → hủy upstream</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">idle</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">NewTimer</span>(<span style="color:#ae81ff">15</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">select</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">chunk</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">upstream</span>.<span style="color:#a6e22e">Chunks</span>:
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">ok</span> { <span style="color:#66d9ef">return</span> } <span style="color:#75715e">// stream xong</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">idle</span>.<span style="color:#a6e22e">Reset</span>(<span style="color:#ae81ff">15</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintf</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;data: %s\n\n&#34;</span>, <span style="color:#a6e22e">chunk</span>.<span style="color:#a6e22e">JSON</span>())
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">flusher</span>.<span style="color:#a6e22e">Flush</span>()
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">idle</span>.<span style="color:#a6e22e">C</span>:
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintf</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;data: {\&#34;error\&#34;: \&#34;upstream_stalled\&#34;}\n\n&#34;</span>)
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">flusher</span>.<span style="color:#a6e22e">Flush</span>()
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>().<span style="color:#a6e22e">Done</span>(): <span style="color:#75715e">// client bỏ đi</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">upstream</span>.<span style="color:#a6e22e">Cancel</span>()      <span style="color:#75715e">// dừng đốt tiền ngay</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>
-</span></span><span style="display:flex;"><span>        }
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="45-session-management--conversation-history">4.5. Session Management &amp; Conversation History<a hidden class="anchor" aria-hidden="true" href="#45-session-management--conversation-history">#</a></h3>
-<p>LLM stateless → &ldquo;cuộc hội thoại&rdquo; là cấu trúc dữ liệu backend sở hữu:</p>
-<pre tabindex="0"><code>Session Store (Redis/Postgres):
-  session_id → {user_id, messages[], summary, metadata, prompt_version, created_at}</code></pre><p>Vấn đề trung tâm: <strong>history dài ra vô hạn, context và tiền thì không</strong>. Chiến lược quản lý theo thang:</p>
-<ol>
-<li><strong>Sliding window</strong>: giữ N lượt gần nhất — đơn giản, mất thông tin cũ.</li>
-<li><strong>Summarization</strong>: khi history vượt ngưỡng, dùng model rẻ tóm tắt phần cũ thành đoạn &ldquo;summary&rdquo;, giữ nguyên các lượt gần — chuẩn phổ biến. Chú ý: tóm tắt là lossy, thông tin quan trọng (tên, số, quyết định) nên được trích thành structured notes thay vì chỉ văn xuôi.</li>
-<li><strong>Summary + retrieval</strong>: lượt cũ được embed; khi cần, retrieval lượt liên quan vào context — &ldquo;trí nhớ dài hạn&rdquo; cho hội thoại rất dài.</li>
-</ol>
-<p>Ngoài ra: session phải có TTL và giới hạn kích thước (Chương 13, &ldquo;Memory Growth&rdquo;); <code>prompt_version</code> lưu theo session để hội thoại đang diễn ra không đổi hành vi giữa chừng khi bạn deploy prompt mới.</p>
-<h3 id="46-rate-limiting--quota--hai-chiều">4.6. Rate Limiting &amp; Quota — hai chiều<a hidden class="anchor" aria-hidden="true" href="#46-rate-limiting--quota--hai-chiều">#</a></h3>
-<ul>
-<li><strong>Chiều vào</strong> (bảo vệ bạn): limit theo user/tenant/feature — không chỉ theo request mà <strong>theo token</strong> (1 user gửi 50K token/request khác 1 user gửi 500). Quota tiền theo tháng cho từng tenant với hard cap.</li>
-<li><strong>Chiều ra</strong> (tôn trọng provider): điều tiết tổng TPM/RPM xuống dưới hạn mức provider, hàng đợi ưu tiên (interactive trước, batch sau) khi gần chạm trần.</li>
-</ul>
-<h2 id="5-trade-off">5. Trade-off<a hidden class="anchor" aria-hidden="true" href="#5-trade-off">#</a></h2>
-<ul>
-<li><strong>Build vs Buy gateway</strong>: LiteLLM/Portkey/Kong cho 80% tính năng ngay lập tức; tự build khi có yêu cầu đặc thù (routing theo logic nghiệp vụ, metering phức tạp, compliance). Chi phí thật của tự build nằm ở <strong>duy trì</strong> — provider API đổi liên tục. Hướng đi phổ biến: bắt đầu bằng open-source (LiteLLM), thay dần phần cần thiết.</li>
-<li><strong>Gateway tập trung vs thư viện nhúng</strong>: gateway = thêm 1 hop (5–20ms, không đáng kể so với giây của LLM) + một single point of failure phải HA; thư viện nhúng = không hop nhưng cross-cutting concerns lặp ở mọi service và nâng cấp khó. Với ≥ 2 team dùng AI: gateway thắng.</li>
-<li><strong>Semantic cache</strong>: tiết kiệm chi phí ↔ rủi ro trả lời sai ngữ cảnh. Chỉ bật cho content tĩnh, đo tỷ lệ false-hit bằng eval, có công tắc tắt nhanh.</li>
-<li><strong>Streaming vs Non-streaming</strong>: streaming bắt buộc cho chat UI; non-streaming đơn giản hơn nhiều cho pipeline máy-với-máy (batch, extraction) — đừng stream chỗ không có người nhìn. (So sánh đầy đủ: Chương 14.)</li>
-</ul>
-<h2 id="6-production-considerations">6. Production Considerations<a hidden class="anchor" aria-hidden="true" href="#6-production-considerations">#</a></h2>
-<ul>
-<li>Gateway phải <strong>HA hơn mọi thứ sau nó</strong>: nhiều instance, stateless (state ở Redis), health check, và có đường bypass khẩn cấp (app gọi thẳng provider với feature flag) nếu gateway chết.</li>
-<li><strong>Metering là chức năng hạng nhất</strong>: mỗi response gắn (team, feature, user, model, tokens, cost) đẩy về hệ thống metric — cost dashboard theo chiều bất kỳ dựng từ đây (Chương 11).</li>
-<li><strong>Virtual key</strong>: team nhận key nội bộ từ gateway (kèm quota, model được phép), không bao giờ cầm key thật của provider — thu hồi, xoay key thật không ảnh hưởng ai.</li>
-<li><strong>Log có kiểm soát PII</strong>: prompt/response chứa dữ liệu người dùng — chính sách log (mask, TTL, quyền xem) phải có từ ngày đầu (Chương 12).</li>
-<li><strong>Timeout ngân sách theo tầng</strong>: client 60s &gt; gateway 55s &gt; provider call 50s — tầng ngoài luôn dài hơn tầng trong, tránh &ldquo;ai cũng chờ ai&rdquo;.</li>
-</ul>
-<h2 id="7-anti-patterns">7. Anti-patterns<a hidden class="anchor" aria-hidden="true" href="#7-anti-patterns">#</a></h2>
-<ul>
-<li>Mỗi team một API key thật của provider, rải trong env — không quota, không audit, lộ key là thay toàn bộ.</li>
-<li>Retry 429 lập tức không backoff — tự DDoS chính quota của mình, kéo dài sự cố.</li>
-<li>Cache không chứa prompt_version — deploy prompt mới nhưng user vẫn nhận response của prompt cũ, &ldquo;deploy rồi mà không thấy đổi&rdquo;.</li>
-<li>Gửi nguyên history 100 lượt mỗi request vì &ldquo;context window còn chỗ&rdquo; — chi phí hội thoại tăng bậc hai.</li>
-<li>Ước lượng chi phí bằng đếm ký tự thay vì usage thật từ response.</li>
-<li>Bọc streaming bằng &ldquo;chờ đủ rồi trả một cục&rdquo; ở một tầng trung gian — mất toàn bộ giá trị của streaming mà vẫn trả độ phức tạp của nó.</li>
-</ul>
-<h2 id="8-best-practices">8. Best Practices<a hidden class="anchor" aria-hidden="true" href="#8-best-practices">#</a></h2>
-<ul>
-<li>Chuẩn hóa <strong>một interface LLM nội bộ</strong> (đủ dùng: messages, tools, stream, metadata) — mọi app nói chuyện qua nó; đổi provider là việc của gateway.</li>
-<li>Tag mọi request: <code>feature</code>, <code>team</code>, <code>prompt_id</code>, <code>prompt_version</code>, <code>session_id</code>, <code>request_id</code> — xương sống của observability và cost attribution.</li>
-<li>Chạy <strong>game day</strong>: tắt provider chính trong staging, xem fallback chain có chạy như thiết kế.</li>
-<li>Thiết kế prompt để tối ưu provider caching: phần tĩnh (system, few-shot, tài liệu chung) đứng đầu, phần động (user input) đứng cuối.</li>
-<li>Đặt hard cap chi tiêu ở mức gateway theo ngày/tháng — thà tính năng ngừng phục vụ còn hơn hóa đơn không trần.</li>
-</ul>
-<h2 id="9-khi-nào-không-cần">9. Khi nào KHÔNG cần<a hidden class="anchor" aria-hidden="true" href="#9-khi-nào-không-cần">#</a></h2>
-<p>Một service, một tính năng AI, một provider, vài nghìn request/ngày: SDK provider + retry wrapper + log usage là đủ. Gateway trở nên đáng giá khi xuất hiện bất kỳ dấu hiệu nào: ≥2 team dùng AI, cần cost attribution, cần fallback đa provider, cần quota theo tenant, hoặc chi phí LLM thành mục đáng kể trong P&amp;L. Xây sớm quá là overhead; xây muộn quá là gỡ nợ ở 3 codebase — thời điểm đúng thường là &ldquo;tính năng AI thứ hai&rdquo;.</p>
-<hr>
-<p><strong>Chương tiếp theo</strong>: <a href="/series/ai-for-backend-engineers/09-model-serving/">09 — Model Serving</a> — đứng sau gateway là gì: managed API hay GPU của chính bạn.</p>
-
-
-  </div>
-
-  <footer class="post-footer">
-    <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/backend/">Backend</a></li>
-      <li><a href="http://localhost:1313/tags/ai/">Ai</a></li>
-      <li><a href="http://localhost:1313/tags/llm/">Llm</a></li>
-    </ul>
-<nav class="paginav">
-  <a class="prev" href="http://localhost:1313/series/ai-for-backend-engineers/07-ai-agents/">
-    <span class="title">« Prev</span>
-    <br>
-    <span>Chương 07 — AI Agents: Planning, Memory, Workflow vs Agent</span>
-  </a>
-  <a class="next" href="http://localhost:1313/series/ai-for-backend-engineers/09-model-serving/">
-    <span class="title">Next »</span>
-    <br>
-    <span>Chương 09 — Model Serving: API vs Self-hosted, Ollama, vLLM, TensorRT-LLM</span>
-  </a>
-</nav>
-
-
-<ul class="share-buttons">
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on x"
-            href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f&amp;hashtags=backend%2cai%2cllm">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on linkedin"
-            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f&amp;title=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;summary=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;source=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on reddit"
-            href="https://reddit.com/submit?url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f&title=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on facebook"
-            href="https://facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on whatsapp"
-            href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session%20-%20http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f">
-            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on telegram"
-            href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;url=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f">
-            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
-                <path
-                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
-            </svg>
-        </a>
-    </li>
-    <li>
-        <a target="_blank" rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on ycombinator"
-            href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&u=http%3a%2f%2flocalhost%3a1313%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f">
-            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
-                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
-                <path
-                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
-            </svg>
-        </a>
-    </li>
-</ul>
-
-  </footer>
-  <script src="https://utteranc.es/client.js"
-          repo="thanhhv/blog-comments"
-          issue-term="pathname"
-          label="💬 comment"
-          theme="github-light"
-          crossorigin="anonymous"
-          async>
-  </script>
-
-</article>
-    </main>
-    
-<footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Thanh HV&#39;s Blog</a></span> · 
-
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-<script>
-    document.querySelectorAll('pre > code').forEach((codeblock) => {
-        const container = codeblock.parentNode.parentNode;
-
-        const copybutton = document.createElement('button');
-        copybutton.classList.add('copy-code');
-        copybutton.innerHTML = 'copy';
-
-        function copyingDone() {
-            copybutton.innerHTML = 'copied!';
-            setTimeout(() => {
-                copybutton.innerHTML = 'copy';
-            }, 2000);
-        }
-
-        copybutton.addEventListener('click', (cb) => {
-            if ('clipboard' in navigator) {
-                navigator.clipboard.writeText(codeblock.textContent);
-                copyingDone();
-                return;
-            }
-
-            const range = document.createRange();
-            range.selectNodeContents(codeblock);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            try {
-                document.execCommand('copy');
-                copyingDone();
-            } catch (e) { };
-            selection.removeRange(range);
-        });
-
-        if (container.classList.contains("highlight")) {
-            container.appendChild(copybutton);
-        } else if (container.parentNode.firstChild == container) {
-            
-        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
-            
-            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
-        } else {
-            
-            codeblock.parentNode.appendChild(copybutton);
-        }
-    });
-</script>
-</body>
-
-</html>
+    G--&gt;&gt;C: data: [DONE]</pre><p>Những việc backend phải xử lý mà demo không lộ ra: client ngắt kết nối giữa chừng (hủy request xuống provider để không trả tiền phần thừa); lỗi xảy ra <strong>giữa</strong> stream (đã gửi nửa câu — cần event <code>error</code> trong protocol của bạn, client xử lý được); timeout theo &ldquo;khoảng lặng giữa 2 chunk&rdquo; chứ không theo tổng thời gian; guardrail/content filter trên nội dung streaming (quét từng đoạn — đã stream ra là không rút lại được); usage token chỉ chốt ở cuối stream (metering phải chờ).</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// Go — proxy SSE với idle timeout và client-cancel</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>streamHandler</span>(<span style=color:#a6e22e>w</span> <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>ResponseWriter</span>, <span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Request</span>) {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>flusher</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>w</span>.(<span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>Flusher</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>w</span>.<span style=color:#a6e22e>Header</span>().<span style=color:#a6e22e>Set</span>(<span style=color:#e6db74>&#34;Content-Type&#34;</span>, <span style=color:#e6db74>&#34;text/event-stream&#34;</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>upstream</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>callProviderStream</span>(<span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Context</span>(), <span style=color:#a6e22e>buildReq</span>(<span style=color:#a6e22e>r</span>)) <span style=color:#75715e>// ctx hủy → hủy upstream</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>idle</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>NewTimer</span>(<span style=color:#ae81ff>15</span> <span style=color:#f92672>*</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Second</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>for</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>select</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#a6e22e>chunk</span>, <span style=color:#a6e22e>ok</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&lt;-</span><span style=color:#a6e22e>upstream</span>.<span style=color:#a6e22e>Chunks</span>:
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>ok</span> { <span style=color:#66d9ef>return</span> } <span style=color:#75715e>// stream xong</span>
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>idle</span>.<span style=color:#a6e22e>Reset</span>(<span style=color:#ae81ff>15</span> <span style=color:#f92672>*</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Second</span>)
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Fprintf</span>(<span style=color:#a6e22e>w</span>, <span style=color:#e6db74>&#34;data: %s\n\n&#34;</span>, <span style=color:#a6e22e>chunk</span>.<span style=color:#a6e22e>JSON</span>())
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>flusher</span>.<span style=color:#a6e22e>Flush</span>()
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#f92672>&lt;-</span><span style=color:#a6e22e>idle</span>.<span style=color:#a6e22e>C</span>:
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Fprintf</span>(<span style=color:#a6e22e>w</span>, <span style=color:#e6db74>&#34;data: {\&#34;error\&#34;: \&#34;upstream_stalled\&#34;}\n\n&#34;</span>)
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>flusher</span>.<span style=color:#a6e22e>Flush</span>()
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>case</span> <span style=color:#f92672>&lt;-</span><span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Context</span>().<span style=color:#a6e22e>Done</span>(): <span style=color:#75715e>// client bỏ đi</span>
+</span></span><span style=display:flex><span>            <span style=color:#a6e22e>upstream</span>.<span style=color:#a6e22e>Cancel</span>()      <span style=color:#75715e>// dừng đốt tiền ngay</span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=45-session-management--conversation-history>4.5. Session Management & Conversation History<a hidden class=anchor aria-hidden=true href=#45-session-management--conversation-history>#</a></h3><p>LLM stateless → &ldquo;cuộc hội thoại&rdquo; là cấu trúc dữ liệu backend sở hữu:</p><pre tabindex=0><code>Session Store (Redis/Postgres):
+  session_id → {user_id, messages[], summary, metadata, prompt_version, created_at}</code></pre><p>Vấn đề trung tâm: <strong>history dài ra vô hạn, context và tiền thì không</strong>. Chiến lược quản lý theo thang:</p><ol><li><strong>Sliding window</strong>: giữ N lượt gần nhất — đơn giản, mất thông tin cũ.</li><li><strong>Summarization</strong>: khi history vượt ngưỡng, dùng model rẻ tóm tắt phần cũ thành đoạn &ldquo;summary&rdquo;, giữ nguyên các lượt gần — chuẩn phổ biến. Chú ý: tóm tắt là lossy, thông tin quan trọng (tên, số, quyết định) nên được trích thành structured notes thay vì chỉ văn xuôi.</li><li><strong>Summary + retrieval</strong>: lượt cũ được embed; khi cần, retrieval lượt liên quan vào context — &ldquo;trí nhớ dài hạn&rdquo; cho hội thoại rất dài.</li></ol><p>Ngoài ra: session phải có TTL và giới hạn kích thước (Chương 13, &ldquo;Memory Growth&rdquo;); <code>prompt_version</code> lưu theo session để hội thoại đang diễn ra không đổi hành vi giữa chừng khi bạn deploy prompt mới.</p><h3 id=46-rate-limiting--quota--hai-chiều>4.6. Rate Limiting & Quota — hai chiều<a hidden class=anchor aria-hidden=true href=#46-rate-limiting--quota--hai-chiều>#</a></h3><ul><li><strong>Chiều vào</strong> (bảo vệ bạn): limit theo user/tenant/feature — không chỉ theo request mà <strong>theo token</strong> (1 user gửi 50K token/request khác 1 user gửi 500). Quota tiền theo tháng cho từng tenant với hard cap.</li><li><strong>Chiều ra</strong> (tôn trọng provider): điều tiết tổng TPM/RPM xuống dưới hạn mức provider, hàng đợi ưu tiên (interactive trước, batch sau) khi gần chạm trần.</li></ul><h2 id=5-trade-off>5. Trade-off<a hidden class=anchor aria-hidden=true href=#5-trade-off>#</a></h2><ul><li><strong>Build vs Buy gateway</strong>: LiteLLM/Portkey/Kong cho 80% tính năng ngay lập tức; tự build khi có yêu cầu đặc thù (routing theo logic nghiệp vụ, metering phức tạp, compliance). Chi phí thật của tự build nằm ở <strong>duy trì</strong> — provider API đổi liên tục. Hướng đi phổ biến: bắt đầu bằng open-source (LiteLLM), thay dần phần cần thiết.</li><li><strong>Gateway tập trung vs thư viện nhúng</strong>: gateway = thêm 1 hop (5–20ms, không đáng kể so với giây của LLM) + một single point of failure phải HA; thư viện nhúng = không hop nhưng cross-cutting concerns lặp ở mọi service và nâng cấp khó. Với ≥ 2 team dùng AI: gateway thắng.</li><li><strong>Semantic cache</strong>: tiết kiệm chi phí ↔ rủi ro trả lời sai ngữ cảnh. Chỉ bật cho content tĩnh, đo tỷ lệ false-hit bằng eval, có công tắc tắt nhanh.</li><li><strong>Streaming vs Non-streaming</strong>: streaming bắt buộc cho chat UI; non-streaming đơn giản hơn nhiều cho pipeline máy-với-máy (batch, extraction) — đừng stream chỗ không có người nhìn. (So sánh đầy đủ: Chương 14.)</li></ul><h2 id=6-production-considerations>6. Production Considerations<a hidden class=anchor aria-hidden=true href=#6-production-considerations>#</a></h2><ul><li>Gateway phải <strong>HA hơn mọi thứ sau nó</strong>: nhiều instance, stateless (state ở Redis), health check, và có đường bypass khẩn cấp (app gọi thẳng provider với feature flag) nếu gateway chết.</li><li><strong>Metering là chức năng hạng nhất</strong>: mỗi response gắn (team, feature, user, model, tokens, cost) đẩy về hệ thống metric — cost dashboard theo chiều bất kỳ dựng từ đây (Chương 11).</li><li><strong>Virtual key</strong>: team nhận key nội bộ từ gateway (kèm quota, model được phép), không bao giờ cầm key thật của provider — thu hồi, xoay key thật không ảnh hưởng ai.</li><li><strong>Log có kiểm soát PII</strong>: prompt/response chứa dữ liệu người dùng — chính sách log (mask, TTL, quyền xem) phải có từ ngày đầu (Chương 12).</li><li><strong>Timeout ngân sách theo tầng</strong>: client 60s > gateway 55s > provider call 50s — tầng ngoài luôn dài hơn tầng trong, tránh &ldquo;ai cũng chờ ai&rdquo;.</li></ul><h2 id=7-anti-patterns>7. Anti-patterns<a hidden class=anchor aria-hidden=true href=#7-anti-patterns>#</a></h2><ul><li>Mỗi team một API key thật của provider, rải trong env — không quota, không audit, lộ key là thay toàn bộ.</li><li>Retry 429 lập tức không backoff — tự DDoS chính quota của mình, kéo dài sự cố.</li><li>Cache không chứa prompt_version — deploy prompt mới nhưng user vẫn nhận response của prompt cũ, &ldquo;deploy rồi mà không thấy đổi&rdquo;.</li><li>Gửi nguyên history 100 lượt mỗi request vì &ldquo;context window còn chỗ&rdquo; — chi phí hội thoại tăng bậc hai.</li><li>Ước lượng chi phí bằng đếm ký tự thay vì usage thật từ response.</li><li>Bọc streaming bằng &ldquo;chờ đủ rồi trả một cục&rdquo; ở một tầng trung gian — mất toàn bộ giá trị của streaming mà vẫn trả độ phức tạp của nó.</li></ul><h2 id=8-best-practices>8. Best Practices<a hidden class=anchor aria-hidden=true href=#8-best-practices>#</a></h2><ul><li>Chuẩn hóa <strong>một interface LLM nội bộ</strong> (đủ dùng: messages, tools, stream, metadata) — mọi app nói chuyện qua nó; đổi provider là việc của gateway.</li><li>Tag mọi request: <code>feature</code>, <code>team</code>, <code>prompt_id</code>, <code>prompt_version</code>, <code>session_id</code>, <code>request_id</code> — xương sống của observability và cost attribution.</li><li>Chạy <strong>game day</strong>: tắt provider chính trong staging, xem fallback chain có chạy như thiết kế.</li><li>Thiết kế prompt để tối ưu provider caching: phần tĩnh (system, few-shot, tài liệu chung) đứng đầu, phần động (user input) đứng cuối.</li><li>Đặt hard cap chi tiêu ở mức gateway theo ngày/tháng — thà tính năng ngừng phục vụ còn hơn hóa đơn không trần.</li></ul><h2 id=9-khi-nào-không-cần>9. Khi nào KHÔNG cần<a hidden class=anchor aria-hidden=true href=#9-khi-nào-không-cần>#</a></h2><p>Một service, một tính năng AI, một provider, vài nghìn request/ngày: SDK provider + retry wrapper + log usage là đủ. Gateway trở nên đáng giá khi xuất hiện bất kỳ dấu hiệu nào: ≥2 team dùng AI, cần cost attribution, cần fallback đa provider, cần quota theo tenant, hoặc chi phí LLM thành mục đáng kể trong P&amp;L. Xây sớm quá là overhead; xây muộn quá là gỡ nợ ở 3 codebase — thời điểm đúng thường là &ldquo;tính năng AI thứ hai&rdquo;.</p><hr><p><strong>Chương tiếp theo</strong>: <a href=/series/ai-for-backend-engineers/09-model-serving/>09 — Model Serving</a> — đứng sau gateway là gì: managed API hay GPU của chính bạn.</p></div><footer class=post-footer><ul class=post-tags><li><a href=https://thanhhv.github.io/tags/backend/>Backend</a></li><li><a href=https://thanhhv.github.io/tags/ai/>Ai</a></li><li><a href=https://thanhhv.github.io/tags/llm/>Llm</a></li></ul><nav class=paginav><a class=prev href=https://thanhhv.github.io/series/ai-for-backend-engineers/07-ai-agents/><span class=title>« Prev</span><br><span>Chương 07 — AI Agents: Planning, Memory, Workflow vs Agent</span>
+</a><a class=next href=https://thanhhv.github.io/series/ai-for-backend-engineers/09-model-serving/><span class=title>Next »</span><br><span>Chương 09 — Model Serving: API vs Self-hosted, Ollama, vLLM, TensorRT-LLM</span></a></nav><ul class=share-buttons><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on x" href="https://x.com/intent/tweet/?text=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f&amp;hashtags=backend%2cai%2cllm"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446C483.971.0 512 28.03 512 62.554zM269.951 190.75 182.567 75.216H56L207.216 272.95 63.9 436.783h61.366L235.9 310.383l96.667 126.4H456L298.367 228.367l134-153.151H371.033zM127.633 110h36.468l219.38 290.065H349.5z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f&amp;title=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;summary=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;source=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM160.461 423.278V197.561h-75.04v225.717h75.04zm270.539.0V293.839c0-69.333-37.018-101.586-86.381-101.586-39.804.0-57.634 21.891-67.617 37.266v-31.958h-75.021c.995 21.181.0 225.717.0 225.717h75.02V297.222c0-6.748.486-13.492 2.474-18.315 5.414-13.475 17.767-27.434 38.494-27.434 27.135.0 38.007 20.707 38.007 51.037v120.768H431zM123.448 88.722C97.774 88.722 81 105.601 81 127.724c0 21.658 16.264 39.002 41.455 39.002h.484c26.165.0 42.452-17.344 42.452-39.002-.485-22.092-16.241-38.954-41.943-39.002z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on reddit" href="https://reddit.com/submit?url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f&title=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zM446 265.638c0-22.964-18.616-41.58-41.58-41.58-11.211.0-21.361 4.457-28.841 11.666-28.424-20.508-67.586-33.757-111.204-35.278l18.941-89.121 61.884 13.157c.756 15.734 13.642 28.29 29.56 28.29 16.407.0 29.706-13.299 29.706-29.701.0-16.403-13.299-29.702-29.706-29.702-11.666.0-21.657 6.792-26.515 16.578l-69.105-14.69c-1.922-.418-3.939-.042-5.585 1.036-1.658 1.073-2.811 2.761-3.224 4.686l-21.152 99.438c-44.258 1.228-84.046 14.494-112.837 35.232-7.468-7.164-17.589-11.591-28.757-11.591-22.965.0-41.585 18.616-41.585 41.58.0 16.896 10.095 31.41 24.568 37.918-.639 4.135-.99 8.328-.99 12.576.0 63.977 74.469 115.836 166.33 115.836s166.334-51.859 166.334-115.836c0-4.218-.347-8.387-.977-12.493 14.564-6.47 24.735-21.034 24.735-38.001zM326.526 373.831c-20.27 20.241-59.115 21.816-70.534 21.816-11.428.0-50.277-1.575-70.522-21.82-3.007-3.008-3.007-7.882.0-10.889 3.003-2.999 7.882-3.003 10.885.0 12.777 12.781 40.11 17.317 59.637 17.317 19.522.0 46.86-4.536 59.657-17.321 3.016-2.999 7.886-2.995 10.885.008 3.008 3.011 3.003 7.882-.008 10.889zm-5.23-48.781c-16.373.0-29.701-13.324-29.701-29.698.0-16.381 13.328-29.714 29.701-29.714 16.378.0 29.706 13.333 29.706 29.714.0 16.374-13.328 29.698-29.706 29.698zM160.91 295.348c0-16.381 13.328-29.71 29.714-29.71 16.369.0 29.689 13.329 29.689 29.71.0 16.373-13.32 29.693-29.689 29.693-16.386.0-29.714-13.32-29.714-29.693z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on facebook" href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H342.978V319.085h66.6l12.672-82.621h-79.272v-53.617c0-22.603 11.073-44.636 46.58-44.636H425.6v-70.34s-32.71-5.582-63.982-5.582c-65.288.0-107.96 39.569-107.96 111.204v62.971h-72.573v82.621h72.573V512h-191.104c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on whatsapp" href="https://api.whatsapp.com/send?text=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session%20-%20https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f"><svg viewBox="0 0 512 512" height="30" width="30" fill="currentcolor"><path d="M449.446.0C483.971.0 512 28.03 512 62.554v386.892C512 483.97 483.97 512 449.446 512H62.554c-34.524.0-62.554-28.03-62.554-62.554V62.554c0-34.524 28.029-62.554 62.554-62.554h386.892zm-58.673 127.703c-33.842-33.881-78.847-52.548-126.798-52.568-98.799.0-179.21 80.405-179.249 179.234-.013 31.593 8.241 62.428 23.927 89.612l-25.429 92.884 95.021-24.925c26.181 14.28 55.659 21.807 85.658 21.816h.074c98.789.0 179.206-80.413 179.247-179.243.018-47.895-18.61-92.93-52.451-126.81zM263.976 403.485h-.06c-26.734-.01-52.954-7.193-75.828-20.767l-5.441-3.229-56.386 14.792 15.05-54.977-3.542-5.637c-14.913-23.72-22.791-51.136-22.779-79.287.033-82.142 66.867-148.971 149.046-148.971 39.793.014 77.199 15.531 105.329 43.692 28.128 28.16 43.609 65.592 43.594 105.4-.034 82.149-66.866 148.983-148.983 148.984zm81.721-111.581c-4.479-2.242-26.499-13.075-30.604-14.571-4.105-1.495-7.091-2.241-10.077 2.241-2.986 4.483-11.569 14.572-14.182 17.562-2.612 2.988-5.225 3.364-9.703 1.12-4.479-2.241-18.91-6.97-36.017-22.23C231.8 264.15 222.81 249.484 220.198 245s-.279-6.908 1.963-9.14c2.016-2.007 4.48-5.232 6.719-7.847 2.24-2.615 2.986-4.484 4.479-7.472 1.493-2.99.747-5.604-.374-7.846-1.119-2.241-10.077-24.288-13.809-33.256-3.635-8.733-7.327-7.55-10.077-7.688-2.609-.13-5.598-.158-8.583-.158-2.986.0-7.839 1.121-11.944 5.604-4.105 4.484-15.675 15.32-15.675 37.364.0 22.046 16.048 43.342 18.287 46.332 2.24 2.99 31.582 48.227 76.511 67.627 10.685 4.615 19.028 7.371 25.533 9.434 10.728 3.41 20.492 2.929 28.209 1.775 8.605-1.285 26.499-10.833 30.231-21.295 3.732-10.464 3.732-19.431 2.612-21.298-1.119-1.869-4.105-2.99-8.583-5.232z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on telegram" href="https://telegram.me/share/url?text=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&amp;url=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f"><svg viewBox="2 2 28 28" height="30" width="30" fill="currentcolor"><path d="M26.49 29.86H5.5a3.37 3.37.0 01-2.47-1 3.35 3.35.0 01-1-2.47V5.48A3.36 3.36.0 013 3 3.37 3.37.0 015.5 2h21A3.38 3.38.0 0129 3a3.36 3.36.0 011 2.46V26.37a3.35 3.35.0 01-1 2.47 3.38 3.38.0 01-2.51 1.02zm-5.38-6.71a.79.79.0 00.85-.66L24.73 9.24a.55.55.0 00-.18-.46.62.62.0 00-.41-.17q-.08.0-16.53 6.11a.59.59.0 00-.41.59.57.57.0 00.43.52l4 1.24 1.61 4.83a.62.62.0 00.63.43.56.56.0 00.4-.17L16.54 20l4.09 3A.9.9.0 0021.11 23.15zM13.8 20.71l-1.21-4q8.72-5.55 8.78-5.55c.15.0.23.0.23.16a.18.18.0 010 .06s-2.51 2.3-7.52 6.8z"/></svg></a></li><li><a target=_blank rel="noopener noreferrer" aria-label="share Chương 08 — AI Backend Architecture: Gateway, Routing, Caching, Streaming, Session on ycombinator" href="https://news.ycombinator.com/submitlink?t=Ch%c6%b0%c6%a1ng%2008%20%e2%80%94%20AI%20Backend%20Architecture%3a%20Gateway%2c%20Routing%2c%20Caching%2c%20Streaming%2c%20Session&u=https%3a%2f%2fthanhhv.github.io%2fseries%2fai-for-backend-engineers%2f08-ai-backend-architecture%2f"><svg width="30" height="30" viewBox="0 0 512 512" fill="currentcolor" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"><path d="M449.446.0C483.971.0 512 28.03 512 62.554V449.446C512 483.97 483.97 512 449.446 512H62.554C28.03 512 0 483.97.0 449.446V62.554C0 28.03 28.029.0 62.554.0H449.446zM183.8767 87.9921h-62.034L230.6673 292.4508V424.0079h50.6655V292.4508L390.1575 87.9921H328.1233L256 238.2489z"/></svg></a></li></ul></footer><script src=https://utteranc.es/client.js repo=thanhhv/blog-comments issue-term=pathname label="💬 comment" theme=github-light crossorigin=anonymous async></script></article></main><footer class=footer><span>&copy; 2026 <a href=https://thanhhv.github.io/>Thanh HV's Blog</a></span> ·
+<span>Powered by
+<a href=https://gohugo.io/ rel="noopener noreferrer" target=_blank>Hugo</a> &
+        <a href=https://github.com/adityatelange/hugo-PaperMod/ rel=noopener target=_blank>PaperMod</a></span></footer><a href=#top aria-label="go to top" title="Go to Top (Alt + G)" class=top-link id=top-link accesskey=g><svg viewBox="0 0 12 6" fill="currentcolor"><path d="M12 6H0l6-6z"/></svg>
+</a><script>let menu=document.getElementById("menu");menu&&(menu.scrollLeft=localStorage.getItem("menu-scroll-position"),menu.onscroll=function(){localStorage.setItem("menu-scroll-position",menu.scrollLeft)}),document.querySelectorAll('a[href^="#"]').forEach(e=>{e.addEventListener("click",function(e){e.preventDefault();var t=this.getAttribute("href").substr(1);window.matchMedia("(prefers-reduced-motion: reduce)").matches?document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView():document.querySelector(`[id='${decodeURIComponent(t)}']`).scrollIntoView({behavior:"smooth"}),t==="top"?history.replaceState(null,null," "):history.pushState(null,null,`#${t}`)})})</script><script>var mybutton=document.getElementById("top-link");window.onscroll=function(){document.body.scrollTop>800||document.documentElement.scrollTop>800?(mybutton.style.visibility="visible",mybutton.style.opacity="1"):(mybutton.style.visibility="hidden",mybutton.style.opacity="0")}</script><script>document.getElementById("theme-toggle").addEventListener("click",()=>{document.body.className.includes("dark")?(document.body.classList.remove("dark"),localStorage.setItem("pref-theme","light")):(document.body.classList.add("dark"),localStorage.setItem("pref-theme","dark"))})</script><script>document.querySelectorAll("pre > code").forEach(e=>{const n=e.parentNode.parentNode,t=document.createElement("button");t.classList.add("copy-code"),t.innerHTML="copy";function s(){t.innerHTML="copied!",setTimeout(()=>{t.innerHTML="copy"},2e3)}t.addEventListener("click",t=>{if("clipboard"in navigator){navigator.clipboard.writeText(e.textContent),s();return}const n=document.createRange();n.selectNodeContents(e);const o=window.getSelection();o.removeAllRanges(),o.addRange(n);try{document.execCommand("copy"),s()}catch{}o.removeRange(n)}),n.classList.contains("highlight")?n.appendChild(t):n.parentNode.firstChild==n||(e.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName=="TABLE"?e.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(t):e.parentNode.appendChild(t))})</script></body></html>
