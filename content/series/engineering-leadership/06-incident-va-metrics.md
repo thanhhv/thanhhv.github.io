@@ -2817,24 +2817,24 @@ là một chỗ hệ thống của bạn đang mù.
 
 ## Liên kết chương khác
 
-- [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) — Accountability vs Responsibility là gốc
+- [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) — Accountability vs Responsibility là gốc
   của việc vì sao Incident Commander phải là một người, và vì sao blameless không đồng nghĩa với
   không có ai chịu trách nhiệm.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — cập nhật cho stakeholder trong incident, no-surprise
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — cập nhật cho stakeholder trong incident, no-surprise
   principle, và cách viết bản postmortem đối ngoại tách khỏi bản nội bộ.
-- [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) — Psychological Safety là điều kiện tiên quyết kỹ
+- [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) — Psychological Safety là điều kiện tiên quyết kỹ
   thuật để postmortem có dữ liệu đầu vào trung thực; Hero Culture là anti-pattern chung của hai
   chương.
-- [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) — quyết định trong incident là quyết định dưới áp
+- [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) — quyết định trong incident là quyết định dưới áp
   lực thời gian với thông tin thiếu; error budget là cách biến tranh luận giá trị thành quyết định có
   dữ liệu; ngôn ngữ tiền để xin capacity cho việc học.
-- [`05-technical-leadership.md`](/series/engineering-leedership/05-technical-leadership/) — technical debt là nguồn sinh incident
+- [`05-technical-leadership.md`](/series/engineering-leadership/05-technical-leadership/) — technical debt là nguồn sinh incident
   có thể dự báo được; golden path và standard là dạng lưu bài học ở tầng công cụ, tức bền nhất.
-- [`07-project-delivery.md`](/series/engineering-leedership/07-project-delivery/) — action item cạnh tranh capacity với roadmap;
+- [`07-project-delivery.md`](/series/engineering-leadership/07-project-delivery/) — action item cạnh tranh capacity với roadmap;
   bucket technical health và cách bảo vệ nó là chỗ quyết định action item sống hay chết.
-- [`09-to-chuc-va-scaling.md`](/series/engineering-leedership/09-to-chuc-va-scaling/) — bài học đi ngang giữa các team là bài toán
+- [`09-to-chuc-va-scaling.md`](/series/engineering-leadership/09-to-chuc-va-scaling/) — bài học đi ngang giữa các team là bài toán
   tầng Organization; Platform Team và Enabling Team là cơ chế lan bài học ở quy mô lớn.
-- [`10-case-studies.md`](/series/engineering-leedership/10-case-studies/) — case study về một incident production nghiêm trọng,
+- [`10-case-studies.md`](/series/engineering-leadership/10-case-studies/) — case study về một incident production nghiêm trọng,
   phân tích đầy đủ từ bối cảnh đến bài học.
-- [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) — Blame Culture, Hero Culture, và các anti-pattern về
+- [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) — Blame Culture, Hero Culture, và các anti-pattern về
   metric được tổng hợp cùng dấu hiệu sớm và cách tháo gỡ.

@@ -3223,27 +3223,27 @@ Jira, Slack, git) và tìm một con số. Nếu bạn không tìm được con 
 
 ## Liên kết chương khác
 
-- [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) — Nền tảng của Ownership, Accountability vs
+- [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) — Nền tảng của Ownership, Accountability vs
   Responsibility, Influence và Trust. Chương này giả định các khái niệm đó; nếu phần phân biệt "tôi chịu
   hệ quả" và "tôi sẽ làm" ở mục 1 gây thắc mắc, đọc phần Accountability vs Responsibility ở `00`.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — Mọi script trong chương này là ứng dụng của các kỹ thuật
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — Mọi script trong chương này là ứng dụng của các kỹ thuật
   ở `02`: Difficult Conversations (nói với cấp trên khi quá tải, khi thiếu quyền), Stakeholder Management
   (đàm phán ưu tiên với PO), và Technical Writing (chuyển nội dung họp sang bất đồng bộ để giảm họp đêm và
   giảm áp lực tiếng Anh nói).
-- [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) — Delegation là cơ chế duy nhất để thoát khỏi trạng thái
+- [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) — Delegation là cơ chế duy nhất để thoát khỏi trạng thái
   martyr complex ở mục 1 và trạng thái quá tải ở mục 7; danh sách Waiting-for ở mục 4 là điều kiện kỹ
   thuật để Delegation hoạt động. Chương này cũng xử lý khoảng cách tuổi và thâm niên trong uy tín kỹ
   thuật, xuất hiện ở tình huống của Trang trong mục 2.
-- [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) — Mở rộng mục 5 lên cấp team và tổ chức: Decision
+- [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) — Mở rộng mục 5 lên cấp team và tổ chức: Decision
   Matrix, Risk Assessment, Decision Log, và các framework prioritization ở mục 3 khi chúng được dùng
   trong một nhóm thay vì một người.
-- [`07-project-delivery.md`](/series/engineering-leedership/07-project-delivery/) — Estimation, Roadmap và Risk Management. Khi cùng
+- [`07-project-delivery.md`](/series/engineering-leadership/07-project-delivery/) — Estimation, Roadmap và Risk Management. Khi cùng
   một nguyên nhân xuất hiện ở ba giai đoạn crunch (mục 7, Bước 4) hoặc khi vấn đề thật là capacity chứ
   không phải thứ tự (mục 3), lời giải nằm ở chương này, không ở Level 1.
-- [`11-career-evolution.md`](/series/engineering-leedership/11-career-evolution/) — Khi các dấu hiệu ở chương này không phải dữ liệu về
+- [`11-career-evolution.md`](/series/engineering-leadership/11-career-evolution/) — Khi các dấu hiệu ở chương này không phải dữ liệu về
   bạn mà là dữ liệu về tổ chức: ownership giả không sửa được sau nhiều lần đàm phán, không còn loại vấn đề
   mới trong nhiều quý, hoặc inefficacy có nguồn ở cơ chế mà tổ chức không đổi. Chương này cũng xử lý lựa
   chọn IC track vs Manager track làm cơ sở cho bảng năng lực ở mục 6.
-- [`06-incident-va-metrics.md`](/series/engineering-leedership/06-incident-va-metrics/) — Điều kiện biên của gần như mọi thực hành
+- [`06-incident-va-metrics.md`](/series/engineering-leadership/06-incident-va-metrics/) — Điều kiện biên của gần như mọi thực hành
   trong chương này là "trừ khi đang có incident". Chương đó nói cách vận hành trong chế độ ngoại lệ, và
   cách chuyển các quyết định chữa cháy về lại chế độ bình thường.

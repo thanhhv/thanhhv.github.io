@@ -372,17 +372,17 @@ Quy trình năm bước và các cơ chế xác nhận ở trên có chi phí th
   compliance, hoặc ảnh hưởng nhiều người.
 - **Trong incident đang chạy.** Lúc đó cần command-and-control: câu ngắn, một người điều phối, không
   tranh luận về từ ngữ. Việc dừng lại để "thu hẹp inferential distance" giữa lúc hệ thống down là
-  sai; phần đó thuộc postmortem. Xem chi tiết ở [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/).
+  sai; phần đó thuộc postmortem. Xem chi tiết ở [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/).
 - **Khi team đã có common ground rất ấm và tốc độ là ràng buộc chính.** Hai người pair với nhau hai
   năm, cùng một codebase, đang chạy hotfix: bắt họ viết doc xác nhận là thuế thuần. Chi phí giao tiếp
   nên tỉ lệ với độ lạnh của cache và chi phí sai.
 - **Khi vấn đề thật là thiếu Psychological Safety, không phải thiếu kỹ thuật truyền tin.** Nếu một
   người im lặng vì lần trước nói thật thì bị nhắc trong Performance Review, thì mọi kỹ thuật hỏi mở
   đều vô dụng; câu trả lời sẽ vẫn là "dạ em ổn". Sửa nguyên nhân ở
-  [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/) trước, đừng sửa kỹ thuật hỏi.
+  [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/) trước, đừng sửa kỹ thuật hỏi.
 - **Khi vấn đề thật là cấu trúc tổ chức.** Nếu thông tin phải đi qua 5 tầng và mỗi tầng có động cơ
   làm đẹp báo cáo, không có kỹ thuật giao tiếp cá nhân nào bù được mất mát cấu trúc đó. Đó là bài
-  toán ở [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/): giảm số hop, hoặc tạo kênh bỏ qua
+  toán ở [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/): giảm số hop, hoặc tạo kênh bỏ qua
   tầng (skip-level).
 
 ---
@@ -663,7 +663,7 @@ hội tụ về quan điểm đó và bạn mất dữ liệu thật.
 - **Khi người nói đang dùng kênh nghe của bạn để tránh việc.** Có dạng nhân viên mang vấn đề đến liên
   tục và mỗi lần được nghe rất kỹ, không lần nào tự xử lý. Ở đây can thiệp đúng là chuyển sang mức
   coaching có ràng buộc: "em mang cho anh hai lựa chọn và khuyến nghị của em, mình bàn 10 phút" (xem
-  [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/)).
+  [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/)).
 - **Khi bạn không có năng lượng để nghe thật.** Nghe nửa vời tệ hơn hoãn: nó tiêu một lần vốn tin cậy
   mà không mua được thông tin. Hoãn 24 giờ và nói rõ lý do là lựa chọn tốt hơn.
 
@@ -1018,7 +1018,7 @@ khi nó sai về tốc độ thật.
 - **Khi nguyên nhân là hệ thống, không phải cá nhân.** Nếu 4/8 người trong team đều không viết test,
   đưa feedback từng người là sai địa chỉ và tạo cảm giác bất công. Nguyên nhân có thể là CI chậm 40
   phút, thiếu test data, hoặc chính bạn đã chấp nhận nhiều lần "lần này gấp, bỏ test". Sửa hệ thống
-  trước, xem [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/).
+  trước, xem [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/).
 - **Khi nền tin cậy chưa tồn tại.** Feedback điều chỉnh vào tuần đầu bạn làm lead với một người bạn
   chưa từng làm việc cùng sẽ được giải mã là "người mới đến muốn dằn mặt". Ngoại lệ: hành vi gây hại
   ngay (xúc phạm người khác, rủi ro bảo mật) — cái đó nói ngay, và nói như một ranh giới, không như
@@ -1422,7 +1422,7 @@ Sau call, gửi văn bản trong cùng ngày (template ở chủ đề 6).
 - **Khi bạn đang dùng "cuộc trò chuyện khó" để giải quyết một vấn đề vốn là của hệ thống.** Nếu ba
   Tech Lead liên tiếp đều thất bại ở cùng một team, cuộc trò chuyện khó thứ ba là sai địa chỉ: vấn đề
   ở thiết kế vai trò, ở phạm vi công việc, hoặc ở người phân công. Xem
-  [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/).
+  [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/).
 - **Khi mục tiêu thật của bạn là để mình cảm thấy đã làm đủ.** Có dạng cuộc trò chuyện được tổ chức để
   người lead có thể nói "tôi đã nói rồi" — với nội dung mờ đủ để không gây khó chịu. Cái đó tệ hơn
   không nói, vì nó tiêu một lần cơ hội và tạo bằng chứng giả rằng vấn đề đã được xử lý.
@@ -1772,7 +1772,7 @@ phần công việc được đánh giá của vai trò lead, không phải ph�
 - **Khi số người trực tiếp quá lớn.** Với 15 người trực tiếp, 1-1 hàng tuần chất lượng là bất khả thi
   (7.5 giờ mỗi tuần chỉ riêng thời lượng, chưa tính chuẩn bị và follow-up). Đó là vấn đề cấu trúc, và
   giải pháp là đổi cấu trúc, không phải rút 1-1 xuống 10 phút; xem
-  [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/).
+  [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/).
 - **Trong tuần có incident lớn hoặc release nặng.** Rút xuống 10–15 phút và chỉ hỏi một câu ("có gì
   đang chặn em, có gì gấp không"), rồi quay lại nhịp bình thường tuần sau. Cố giữ đủ 30 phút cho phần
   growth trong tuần đó là sai ưu tiên và người kia cũng không ở trạng thái nói được.
@@ -1781,11 +1781,11 @@ phần công việc được đánh giá của vai trò lead, không phải ph�
   nên nói rõ.
 - **Khi vấn đề là thiếu Psychological Safety ở cấp team.** Nếu người ta không dám nói trong 1-1 vì lần
   trước có người bị trừng phạt vì nói thật, tăng tần suất 1-1 sẽ chỉ tăng số lần nghe câu "em ổn".
-  Sửa nguyên nhân ở [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/).
+  Sửa nguyên nhân ở [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/).
 - **Khi bạn dùng 1-1 như cách duy nhất để quản lý.** Có dạng lead xử lý mọi thứ trong kênh riêng: giao
   việc, chốt kiến trúc, giải quyết xung đột. Kết quả là team không có ngữ cảnh chung, mọi thông tin
   phải đi qua lead, và lead trở thành điểm nghẽn — đúng lỗi mô tả ở
-  [12-anti-patterns.md](/series/engineering-leedership/12-anti-patterns/). 1-1 là kênh bổ sung, không thay được kênh công khai.
+  [12-anti-patterns.md](/series/engineering-leadership/12-anti-patterns/). 1-1 là kênh bổ sung, không thay được kênh công khai.
 
 ---
 
@@ -2205,11 +2205,11 @@ và nó là điều kiện đủ để đổi được sự hợp tác. Tỉ l�
 - **Khi bạn đang dùng khung này để tránh làm điều đúng về kỹ thuật.** Nếu một quyết định tạo rủi ro
   nghiêm trọng về dữ liệu khách hàng hoặc compliance, việc "dịch sang ngôn ngữ business và đưa ba lựa
   chọn" có thể trở thành cách chuyển trách nhiệm. Có một lớp vấn đề mà bạn phải nói "cái này chúng ta
-  không làm" và chấp nhận hệ quả — xem [00-nen-tang-leadership.md](/series/engineering-leedership/00-nen-tang-leadership/) về ranh
+  không làm" và chấp nhận hệ quả — xem [00-nen-tang-leadership.md](/series/engineering-leadership/00-nen-tang-leadership/) về ranh
   giới của Accountability.
 - **Trong incident đang chạy.** Lúc đó không làm stakeholder management theo nhịp; chạy giao thức
   communication của incident: một người phát ngôn, nhịp cố định, chỉ nói fact đã xác nhận. Xem
-  [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/).
+  [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/).
 - **Khi stakeholder đó không thật sự có quyền quyết.** Đầu tư nhiều tháng vào một người được giới thiệu
   là người quyết nhưng thực tế mọi thứ do người khác chốt là dạng lãng phí phổ biến trong bán hàng nội
   bộ. Kiểm tra bằng câu hỏi: "để việc này được duyệt thì cần ai đồng ý?"
@@ -2529,7 +2529,7 @@ chuyện của IT".
   gây khó, thì việc trình bày phương án "không làm gì" bằng số có thể gây hại cho bạn về ngắn hạn. Điều
   này không có nghĩa là không nói — nghĩa là chọn kênh khác (1-1 với người quyết trước buổi họp) và
   chọn cách phát biểu khác. Vấn đề gốc là vấn đề tổ chức, xem
-  [12-anti-patterns.md](/series/engineering-leedership/12-anti-patterns/).
+  [12-anti-patterns.md](/series/engineering-leadership/12-anti-patterns/).
 
 ---
 
@@ -2693,7 +2693,7 @@ Liệt kê thật, không để trống cho đẹp. Ghi rõ ai sẽ trả lời 
 ```
 
 **Cấu trúc incident report** (chi tiết về quy trình ở
-[06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/); ở đây là phần viết):
+[06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/); ở đây là phần viết):
 
 ```
 # INC-2026-0620: Hàng đợi thanh toán đầy, 1.100 giao dịch không được xử lý
@@ -2926,31 +2926,31 @@ nhất tự duy trì được, vì nó gắn việc cập nhật vào một hàn
 
 ## Liên kết chương khác
 
-- [00-nen-tang-leadership.md](/series/engineering-leedership/00-nen-tang-leadership/) — Ownership, Accountability và chuỗi Business
+- [00-nen-tang-leadership.md](/series/engineering-leadership/00-nen-tang-leadership/) — Ownership, Accountability và chuỗi Business
   Goal → Execution. Mọi thông điệp trong chương này chỉ có nghĩa khi truy vết được về một mắt trong
   chuỗi đó; phần ranh giới của Accountability quyết định khi nào bạn phải nói "việc này chúng ta không
   làm" thay vì đưa ba phương án.
-- [01-self-leadership.md](/series/engineering-leedership/01-self-leadership/) — Attention và năng lượng là tài nguyên mà Active
+- [01-self-leadership.md](/series/engineering-leadership/01-self-leadership/) — Attention và năng lượng là tài nguyên mà Active
   Listening và 1-1 tiêu thụ trực tiếp. Một lead không quản được lịch của mình sẽ huỷ 1-1 trước tiên, vì
   đó là việc quan trọng mà không cấp bách.
-- [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/) — Psychological Safety là điều kiện tiên quyết của mọi
+- [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/) — Psychological Safety là điều kiện tiên quyết của mọi
   kỹ thuật trong chương này. Nếu người ta không an toàn khi nói thật, kỹ thuật hỏi mở chỉ tạo ra thêm
   câu "em ổn". Phần xử lý xung đột trong team cũng nằm ở đó.
-- [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/) — RFC, ADR, Code Review và cách dựng chuẩn
+- [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/) — RFC, ADR, Code Review và cách dựng chuẩn
   kỹ thuật. Chương này nói về cách viết và cách nói; chương đó nói về việc dùng chúng để ra quyết định
   kỹ thuật và quản lý Technical Debt.
-- [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/) — Giao thức communication trong lúc incident
+- [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/) — Giao thức communication trong lúc incident
   (một người phát ngôn, nhịp cố định, chỉ nói fact đã xác nhận) là ngoại lệ của phần lớn nguyên tắc
   trong chương này. Postmortem Blameless và cách viết incident report chi tiết cũng ở đó.
-- [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/) — Feedback và 1-1 là đầu vào của Coaching,
+- [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/) — Feedback và 1-1 là đầu vào của Coaching,
   Career Ladder và Performance Review. Cuộc trò chuyện về promotion ở chủ đề 4 chỉ đúng nếu tiêu chí
   Ladder đã tồn tại và đã được nói từ đầu kỳ.
-- [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/) — Mất mát thông tin qua tầng tổ chức, số hop, và
+- [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/) — Mất mát thông tin qua tầng tổ chức, số hop, và
   giới hạn số người trực tiếp. Khi vấn đề giao tiếp là vấn đề cấu trúc, không kỹ thuật cá nhân nào bù
   được; phải giảm số hop hoặc tạo kênh skip-level.
-- [10-case-studies.md](/series/engineering-leedership/10-case-studies/) — Các case study dài có chuỗi bối cảnh → lựa chọn →
+- [10-case-studies.md](/series/engineering-leadership/10-case-studies/) — Các case study dài có chuỗi bối cảnh → lựa chọn →
   trade-off → quyết định → hậu quả, trong đó nhiều case có nguyên nhân gốc là lỗi truyền tin mô tả ở
   chủ đề 1.
-- [12-anti-patterns.md](/series/engineering-leedership/12-anti-patterns/) — Tập hợp các anti-pattern ở cấp tổ chức: lead thành điểm
+- [12-anti-patterns.md](/series/engineering-leadership/12-anti-patterns/) — Tập hợp các anti-pattern ở cấp tổ chức: lead thành điểm
   nghẽn thông tin, văn hoá phạt người báo tin xấu, họp thay cho viết, và báo cáo chỉ có màu xanh.
 

@@ -2862,32 +2862,32 @@ chức bạn đang làm. Câu trả lời dạng "chúng tôi làm khá tốt" n
 
 ## Liên kết chương khác
 
-- [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) — Accountability và Ownership là điều kiện
+- [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) — Accountability và Ownership là điều kiện
   tiên quyết của chương này: mọi framework ở đây sụp nếu trường "một tên người accountable" không có
   nghĩa gì trong tổ chức của bạn.
-- [`01-self-leadership.md`](/series/engineering-leedership/01-self-leadership/) — Số lượng quyết định chất lượng cao mỗi ngày là
+- [`01-self-leadership.md`](/series/engineering-leadership/01-self-leadership/) — Số lượng quyết định chất lượng cao mỗi ngày là
   hữu hạn và phụ thuộc vào quản lý năng lượng; chương đó giải thích cơ chế, chương này giải thích cách
   chi tiêu quỹ đó.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — Cost-Benefit Analysis (chủ đề 4) chỉ có tác dụng nếu
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — Cost-Benefit Analysis (chủ đề 4) chỉ có tác dụng nếu
   bạn trình bày được nó với stakeholder không có nền kỹ thuật; chương đó là phần kỹ thuật truyền đạt,
   chương này là phần nội dung được truyền đạt.
-- [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) — Delegation là việc phân bổ *quyền ra quyết định*;
+- [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) — Delegation là việc phân bổ *quyền ra quyết định*;
   bảng phân loại 4 mức ở chủ đề 2 là công cụ cụ thể để quyết định delegate cái gì cho ai, và
   Psychological Safety là điều kiện để câu hỏi "nó sẽ sai ở đâu" nhận được câu trả lời thật.
-- [`05-technical-leadership.md`](/series/engineering-leedership/05-technical-leadership/) — ADR, RFC và Technical Debt là các hiện
+- [`05-technical-leadership.md`](/series/engineering-leadership/05-technical-leadership/) — ADR, RFC và Technical Debt là các hiện
   vật mà chương này tạo ra và tiêu thụ; chương đó nói về nội dung kỹ thuật của quyết định, chương này
   nói về quá trình sinh ra nó.
-- [`06-incident-va-metrics.md`](/series/engineering-leedership/06-incident-va-metrics/) — Postmortem là nơi vòng học của quyết định
+- [`06-incident-va-metrics.md`](/series/engineering-leadership/06-incident-va-metrics/) — Postmortem là nơi vòng học của quyết định
   đóng lại; nguyên tắc tách "quyết định sai" khỏi "kết quả xấu" (chủ đề 8) là nguyên tắc Blameless áp
   cho quyết định, và DORA metrics là dữ liệu đầu vào cho cả risk assessment lẫn cost-benefit.
-- [`07-project-delivery.md`](/series/engineering-leedership/07-project-delivery/) — Prioritization (chủ đề 6) và Risk Assessment
+- [`07-project-delivery.md`](/series/engineering-leadership/07-project-delivery/) — Prioritization (chủ đề 6) và Risk Assessment
   (chủ đề 5) là hai đầu vào trực tiếp của lập kế hoạch và Estimation; cost of delay là biến nối giữa
   hai chương.
-- [`09-to-chuc-va-scaling.md`](/series/engineering-leedership/09-to-chuc-va-scaling/) — Khi tổ chức lớn, chi phí ra quyết định nhóm
+- [`09-to-chuc-va-scaling.md`](/series/engineering-leadership/09-to-chuc-va-scaling/) — Khi tổ chức lớn, chi phí ra quyết định nhóm
   tăng theo n²; chương đó nói về cách thiết kế ranh giới team để giảm số quyết định phải phối hợp, tức
   là giải bài toán ở tầng cấu trúc thay vì tầng quy trình.
-- [`10-case-studies.md`](/series/engineering-leedership/10-case-studies/) — Các tình huống dài đi qua trọn vẹn chuỗi bối cảnh →
+- [`10-case-studies.md`](/series/engineering-leadership/10-case-studies/) — Các tình huống dài đi qua trọn vẹn chuỗi bối cảnh →
   phương án → trade-off → quyết định → hậu quả → bài học, dùng đúng các framework của chương này.
-- [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) — Tổng hợp các anti-pattern xuyên chương; các mẫu HiPPO,
+- [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) — Tổng hợp các anti-pattern xuyên chương; các mẫu HiPPO,
   giả consensus, analysis paralysis và "mọi thứ là P0" xuất hiện ở đó cùng các biểu hiện ở tầng tổ chức.
 

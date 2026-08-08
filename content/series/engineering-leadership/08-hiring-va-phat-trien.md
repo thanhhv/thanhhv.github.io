@@ -3719,26 +3719,26 @@ chỗ hệ thống con người của bạn đang mù.
 
 ## Liên kết chương khác
 
-- [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) — Accountability quyết định ai chịu trách
+- [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) — Accountability quyết định ai chịu trách
   nhiệm về một lần tuyển sai; chuyển từ Individual Output sang System Output là gốc lý giải vì sao
   phát triển người là công việc chính chứ không phải việc phụ của lead.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — Feedback, Difficult Conversations và One-on-One là
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — Feedback, Difficult Conversations và One-on-One là
   hạ tầng cho toàn bộ chương này; không có 1-1 chất lượng thì mọi cơ chế ở đây đều chạy trên dữ liệu
   sai.
-- [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) — Psychological Safety quyết định người ta có nói
+- [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) — Psychological Safety quyết định người ta có nói
   thật trong stay interview hay không; Mentoring, Coaching và Sponsorship là ba công cụ khác nhau
   được dùng ở ba chỗ khác nhau trong chương này.
-- [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) — quyết định tuyển là quyết định irreversible với
+- [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) — quyết định tuyển là quyết định irreversible với
   blast radius lớn; decision log và cơ chế chống bias áp dụng trực tiếp cho debrief và calibration.
-- [`05-technical-leadership.md`](/series/engineering-leedership/05-technical-leadership/) — Code Review Culture là nơi hành vi gây
+- [`05-technical-leadership.md`](/series/engineering-leadership/05-technical-leadership/) — Code Review Culture là nơi hành vi gây
   hại hiện ra sớm nhất và đo được; engineering culture là tập hành vi được thưởng, mà promotion chính
   là cơ chế thưởng mạnh nhất.
-- [`07-project-delivery.md`](/series/engineering-leedership/07-project-delivery/) — vì sao thêm người không cứu được dự án trễ;
+- [`07-project-delivery.md`](/series/engineering-leadership/07-project-delivery/) — vì sao thêm người không cứu được dự án trễ;
   áp lực delivery là một trong những nguyên nhân hệ thống phổ biến nhất của underperformance và của
   việc mất người.
-- [`09-to-chuc-va-scaling.md`](/series/engineering-leedership/09-to-chuc-va-scaling/) — seniority mix, cấu trúc team, và cách
+- [`09-to-chuc-va-scaling.md`](/series/engineering-leadership/09-to-chuc-va-scaling/) — seniority mix, cấu trúc team, và cách
   thiết kế tổ chức để giảm phụ thuộc vào một vài cá nhân xuất sắc.
-- [`11-career-evolution.md`](/series/engineering-leedership/11-career-evolution/) — mô tả chi tiết từng bậc từ Junior tới Director:
+- [`11-career-evolution.md`](/series/engineering-leadership/11-career-evolution/) — mô tả chi tiết từng bậc từ Junior tới Director:
   phạm vi ảnh hưởng, cách ra quyết định, và sai lầm thường gặp khi chuyển vai trò.
-- [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) — Peter Principle, Hero Culture, và các anti-pattern
+- [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) — Peter Principle, Hero Culture, và các anti-pattern
   về quản lý con người được tổng hợp cùng dấu hiệu sớm và cách tháo gỡ.

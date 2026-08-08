@@ -2706,31 +2706,31 @@ từ team thật của bạn. Câu trả lời dạng "chắc là ổn" tương 
 
 ## Liên kết chương khác
 
-- [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) — ranh giới Accountability vs Responsibility
+- [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) — ranh giới Accountability vs Responsibility
   vs Ownership, nền của toàn bộ chương này: Delegation chuyển Responsibility nhưng không chuyển
   Accountability, và mọi tình huống ở đây đều quay về ranh giới đó.
-- [`01-self-leadership.md`](/series/engineering-leedership/01-self-leadership/) — quản lý năng lượng và sự chú ý của chính bạn.
+- [`01-self-leadership.md`](/series/engineering-leadership/01-self-leadership/) — quản lý năng lượng và sự chú ý của chính bạn.
   Delegation và Coaching đều đòi băng thông; một lead ở utilization 95% không thực hiện được bất kỳ
   thực hành nào trong chương này, kể cả khi hiểu hết.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — mô hình đưa feedback, illusion of transparency, và
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — mô hình đưa feedback, illusion of transparency, và
   cách viết để người đọc hành động. Mọi script trong chương này là ứng dụng của các nguyên lý ở đó.
-- [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) — Reversible vs Irreversible, ADR, và cách chọn
+- [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) — Reversible vs Irreversible, ADR, và cách chọn
   người quyết. Conflict Resolution ở chủ đề 5 chỉ hoạt động khi câu hỏi "ai có accountability cho
   quyết định này" đã có câu trả lời từ chương đó.
-- [`05-technical-leadership.md`](/series/engineering-leedership/05-technical-leadership/) — chuẩn kỹ thuật, RFC, review kiến trúc,
+- [`05-technical-leadership.md`](/series/engineering-leadership/05-technical-leadership/) — chuẩn kỹ thuật, RFC, review kiến trúc,
   quản lý Technical Debt. Đây là nội dung mà Delegation phân quyền lên và là chất liệu của phần lớn
   task conflict.
-- [`06-incident-va-metrics.md`](/series/engineering-leedership/06-incident-va-metrics/) — vận hành incident, postmortem blameless,
+- [`06-incident-va-metrics.md`](/series/engineering-leadership/06-incident-va-metrics/) — vận hành incident, postmortem blameless,
   DORA và SPACE. Là điều kiện biên xuất hiện trong cả bảy chủ đề: trong incident, Delegation, Coaching
   và thảo luận mở đều đổi chế độ.
-- [`08-hiring-va-phat-trien.md`](/series/engineering-leedership/08-hiring-va-phat-trien/) — Career Ladder, Performance Review, và
+- [`08-hiring-va-phat-trien.md`](/series/engineering-leadership/08-hiring-va-phat-trien/) — Career Ladder, Performance Review, và
   xử lý underperformance. Là nơi tiếp nhận các trường hợp mà chẩn đoán ở chương này kết luận không
   phải vấn đề kỹ năng hay động lực.
-- [`09-to-chuc-va-scaling.md`](/series/engineering-leedership/09-to-chuc-va-scaling/) — Team Topologies, Conway's Law, chia team khi
+- [`09-to-chuc-va-scaling.md`](/series/engineering-leadership/09-to-chuc-va-scaling/) — Team Topologies, Conway's Law, chia team khi
   vượt ngưỡng phối hợp. Là bước tiếp theo khi các can thiệp ở chủ đề 7 đã đạt trần.
-- [`10-case-studies.md`](/series/engineering-leedership/10-case-studies/) — các case dài đi hết chuỗi bối cảnh → lựa chọn →
+- [`10-case-studies.md`](/series/engineering-leadership/10-case-studies/) — các case dài đi hết chuỗi bối cảnh → lựa chọn →
   trade-off → hậu quả, trong đó có phiên bản mở rộng của tình huống team logistics và xung đột kiến
   trúc ở chương này.
-- [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) — danh mục hợp nhất các anti-pattern kèm dấu hiệu sớm;
+- [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) — danh mục hợp nhất các anti-pattern kèm dấu hiệu sớm;
   Hero Culture, bus factor = 1, micromanagement và team building thay cho sửa cấu trúc được phân tích
   sâu hơn ở đó.

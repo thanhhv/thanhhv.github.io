@@ -2169,22 +2169,22 @@ Câu nào bạn không trả lời được là một chỗ trống thật, khô
 
 ## Liên kết chương khác
 
-- [`01-self-leadership.md`](/series/engineering-leedership/01-self-leadership/) — Ownership ở cấp cá nhân, quản lý ưu tiên và năng
+- [`01-self-leadership.md`](/series/engineering-leadership/01-self-leadership/) — Ownership ở cấp cá nhân, quản lý ưu tiên và năng
   lượng. Đọc tiếp nếu Function Split Audit cho thấy bạn không có thời gian cho L-work: đó thường là
   vấn đề prioritization trước khi là vấn đề vai trò.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — Difficult Conversations, Feedback, One-on-One,
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — Difficult Conversations, Feedback, One-on-One,
   Stakeholder Management. Các script trong chương này (chuyển giao ownership, đàm phán với founder,
   Trust Repair) được mở rộng ở đó, gồm cả cách xử lý khi người đối diện phản ứng phòng thủ.
-- [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) — Delegation, Coaching, Psychological Safety. Đọc
+- [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) — Delegation, Coaching, Psychological Safety. Đọc
   cùng mục 5 và mục 6: Delegation là cơ chế chuyển Responsibility mà không chuyển được Accountability,
   và Psychological Safety là điều kiện tiên quyết trước khi siết accountability.
-- [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) — Reversible vs Irreversible, Decision Log,
+- [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) — Reversible vs Irreversible, Decision Log,
   Cost-Benefit. Trực tiếp bổ trợ mục 3 (làm đề xuất nhỏ và đảo ngược được) và mục 6 (bù vòng feedback
   dài bằng cách ghi dự đoán).
-- [`11-career-evolution.md`](/series/engineering-leedership/11-career-evolution/) — So sánh nhánh Staff/Principal với Engineering
+- [`11-career-evolution.md`](/series/engineering-leadership/11-career-evolution/) — So sánh nhánh Staff/Principal với Engineering
   Manager theo phạm vi ảnh hưởng và cách ra quyết định. Đọc nếu mục 1 làm bạn nhận ra mình đang ở
   nhánh không phù hợp, hoặc nếu tổ chức bạn không có tầng IC cao.
-- [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) — Danh mục đầy đủ các anti-pattern quản trị, gồm phần
+- [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) — Danh mục đầy đủ các anti-pattern quản trị, gồm phần
   mở rộng của retention promotion, hero ownership, accountability sinking và process không có ngày
   hết hạn, kèm cách tháo gỡ khi chúng đã đóng rễ vào văn hoá.
 

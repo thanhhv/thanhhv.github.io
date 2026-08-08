@@ -626,40 +626,40 @@ Bảng này đi từ triệu chứng quan sát được — thứ bạn thấy t
 
 | Triệu chứng bạn quan sát được | Anti-pattern có thể đang xảy ra | Chương lý thuyết liên quan |
 |---|---|---|
-| Ticket dồn lại khi một người nghỉ hai ngày | Micromanagement; Bus factor bằng 1 | [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/), [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/) |
-| Lead làm việc buổi tối, ban ngày chỉ họp | Không dám giao việc; Meeting Overload | [01-self-leadership.md](/series/engineering-leedership/01-self-leadership/), [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/) |
-| Họp thiết kế kết thúc hai phút sau khi người cao nhất phát biểu | HiPPO | [04-decision-making.md](/series/engineering-leedership/04-decision-making/) |
-| Quyết định "đã đồng thuận" bị mở lại khi đã bắt đầu code | Giả consensus; Quyết định không ghi lại | [04-decision-making.md](/series/engineering-leedership/04-decision-making/), [02-communication.md](/series/engineering-leedership/02-communication/) |
-| Sprint bị thêm việc mà lead không biết | Bỏ qua tầng quản lý; Cargo cult Agile | [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/), [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/) |
-| Cùng một người xử lý phần lớn incident | Hero Culture; Bus factor bằng 1 | [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/) |
-| Action item sau Postmortem phần lớn là "nhắc nhở cẩn thận hơn" | Blame Culture; Process theo phản xạ | [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/) |
-| Số near-miss được báo tự nguyện bằng không | Blame Culture | [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/), [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/) |
-| Một người bị đánh giá thấp lần đầu sau bốn kỳ "đạt" | Ruinous Empathy; Review là bất ngờ | [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/) |
-| Hai người xin chuyển team với cùng một cái tên trong lý do | Dung thứ hành vi gây hại | [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/) |
-| Điểm khảo sát nhân sự không đổi qua bốn kỳ dù mỗi quý có hoạt động mới | Culture deck chữa vấn đề cấu trúc | [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/) |
-| Feedback xuất hiện lần đầu trong buổi review | Feedback trễ và dồn; Review là bất ngờ | [02-communication.md](/series/engineering-leedership/02-communication/), [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/) |
-| Người nghỉ việc mà quản lý không thấy dấu hiệu trước bốn tuần | 1-1 thành status report | [02-communication.md](/series/engineering-leedership/02-communication/), [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/) |
-| Khối thời gian không họp dài nhất trong ngày dưới hai giờ | Meeting Overload | [01-self-leadership.md](/series/engineering-leedership/01-self-leadership/), [02-communication.md](/series/engineering-leedership/02-communication/) |
-| Dự án chuyển sang đỏ ở 20% thời lượng cuối | Che giấu tin xấu | [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/), [02-communication.md](/series/engineering-leedership/02-communication/) |
-| Quy trình release có nhiều bước hơn năm ngoái và chưa bỏ bước nào | Process theo phản xạ | [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/), [04-decision-making.md](/series/engineering-leedership/04-decision-making/) |
-| Retro sinh ra action item mà không ai làm | Cargo cult Agile | [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/) |
-| Câu trả lời phổ biến là "anh ấy làm hồi đó, mà anh ấy nghỉ rồi" | Quyết định không ghi lại; Bus factor bằng 1 | [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/) |
-| Ba tuần bàn về một thư viện thay được trong một tuần | Analysis paralysis với quyết định reversible | [04-decision-making.md](/series/engineering-leedership/04-decision-making/) |
-| Hàng đợi RFC chờ trên bảy ngày | Dùng quy trình irreversible cho mọi thứ | [04-decision-making.md](/series/engineering-leedership/04-decision-making/), [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/) |
-| Dự án viết lại đã dùng 70% thời gian và có 40% chức năng | Big Rewrite | [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/), [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/) |
-| Ước lượng sai có hệ thống ở một module cụ thể | Technical Debt vô danh | [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/), [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/) |
-| Giờ làm trên 45 mỗi tuần trong ba tuần liền, bug sau release tăng | Crunch không giới hạn | [01-self-leadership.md](/series/engineering-leedership/01-self-leadership/), [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/) |
-| Thêm bốn người mà throughput không tăng sau ba tuần | Thêm người vào dự án đang trễ | [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/) |
-| PR 600 dòng được approve trong 11 phút | Rubber-stamp approval | [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/) |
-| Số commit tăng 40% trong khi kích thước commit giảm | Đo sản lượng cá nhân | [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/) |
-| Velocity của mọi team tăng nhưng lead time không giảm | Velocity dùng để so sánh giữa các team | [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/), [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/) |
-| Cấp bậc tương quan gần như hoàn hảo với số năm ở công ty | Promotion như phần thưởng thâm niên | [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/), [11-career-evolution.md](/series/engineering-leedership/11-career-evolution/) |
-| Không có vị trí IC nào ở cấp trên Senior trong khung nhân sự | Promote engineer giỏi lên quản lý như đường duy nhất | [11-career-evolution.md](/series/engineering-leedership/11-career-evolution/), [00-nen-tang-leadership.md](/series/engineering-leedership/00-nen-tang-leadership/) |
-| Cùng một người luân chuyển nội bộ hai lần trong 18 tháng | Passing the trash | [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/) |
-| Phần lớn điều chỉnh lương ngoài kỳ được kích hoạt bởi offer bên ngoài | Counter-offer như phản xạ | [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/), [11-career-evolution.md](/series/engineering-leedership/11-career-evolution/) |
-| Team đồng ý trong họp rồi làm khác trong thực tế | Giả consensus; HiPPO | [04-decision-making.md](/series/engineering-leedership/04-decision-making/), [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/) |
-| Mọi quyết định kỹ thuật đều đến bàn bạn | Micromanagement; thiếu decision rights | [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/), [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/) |
-| Người giỏi nhất về kỹ thuật xin nghỉ và nói "ở đây không còn gì để học" | Bus factor bằng 1 kết hợp nhánh IC cụt | [11-career-evolution.md](/series/engineering-leedership/11-career-evolution/), [10-case-studies.md](/series/engineering-leedership/10-case-studies/) |
+| Ticket dồn lại khi một người nghỉ hai ngày | Micromanagement; Bus factor bằng 1 | [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/), [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/) |
+| Lead làm việc buổi tối, ban ngày chỉ họp | Không dám giao việc; Meeting Overload | [01-self-leadership.md](/series/engineering-leadership/01-self-leadership/), [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/) |
+| Họp thiết kế kết thúc hai phút sau khi người cao nhất phát biểu | HiPPO | [04-decision-making.md](/series/engineering-leadership/04-decision-making/) |
+| Quyết định "đã đồng thuận" bị mở lại khi đã bắt đầu code | Giả consensus; Quyết định không ghi lại | [04-decision-making.md](/series/engineering-leadership/04-decision-making/), [02-communication.md](/series/engineering-leadership/02-communication/) |
+| Sprint bị thêm việc mà lead không biết | Bỏ qua tầng quản lý; Cargo cult Agile | [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/), [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/) |
+| Cùng một người xử lý phần lớn incident | Hero Culture; Bus factor bằng 1 | [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/) |
+| Action item sau Postmortem phần lớn là "nhắc nhở cẩn thận hơn" | Blame Culture; Process theo phản xạ | [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/) |
+| Số near-miss được báo tự nguyện bằng không | Blame Culture | [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/), [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/) |
+| Một người bị đánh giá thấp lần đầu sau bốn kỳ "đạt" | Ruinous Empathy; Review là bất ngờ | [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/) |
+| Hai người xin chuyển team với cùng một cái tên trong lý do | Dung thứ hành vi gây hại | [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/) |
+| Điểm khảo sát nhân sự không đổi qua bốn kỳ dù mỗi quý có hoạt động mới | Culture deck chữa vấn đề cấu trúc | [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/) |
+| Feedback xuất hiện lần đầu trong buổi review | Feedback trễ và dồn; Review là bất ngờ | [02-communication.md](/series/engineering-leadership/02-communication/), [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/) |
+| Người nghỉ việc mà quản lý không thấy dấu hiệu trước bốn tuần | 1-1 thành status report | [02-communication.md](/series/engineering-leadership/02-communication/), [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/) |
+| Khối thời gian không họp dài nhất trong ngày dưới hai giờ | Meeting Overload | [01-self-leadership.md](/series/engineering-leadership/01-self-leadership/), [02-communication.md](/series/engineering-leadership/02-communication/) |
+| Dự án chuyển sang đỏ ở 20% thời lượng cuối | Che giấu tin xấu | [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/), [02-communication.md](/series/engineering-leadership/02-communication/) |
+| Quy trình release có nhiều bước hơn năm ngoái và chưa bỏ bước nào | Process theo phản xạ | [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/), [04-decision-making.md](/series/engineering-leadership/04-decision-making/) |
+| Retro sinh ra action item mà không ai làm | Cargo cult Agile | [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/) |
+| Câu trả lời phổ biến là "anh ấy làm hồi đó, mà anh ấy nghỉ rồi" | Quyết định không ghi lại; Bus factor bằng 1 | [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/) |
+| Ba tuần bàn về một thư viện thay được trong một tuần | Analysis paralysis với quyết định reversible | [04-decision-making.md](/series/engineering-leadership/04-decision-making/) |
+| Hàng đợi RFC chờ trên bảy ngày | Dùng quy trình irreversible cho mọi thứ | [04-decision-making.md](/series/engineering-leadership/04-decision-making/), [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/) |
+| Dự án viết lại đã dùng 70% thời gian và có 40% chức năng | Big Rewrite | [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/), [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/) |
+| Ước lượng sai có hệ thống ở một module cụ thể | Technical Debt vô danh | [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/), [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/) |
+| Giờ làm trên 45 mỗi tuần trong ba tuần liền, bug sau release tăng | Crunch không giới hạn | [01-self-leadership.md](/series/engineering-leadership/01-self-leadership/), [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/) |
+| Thêm bốn người mà throughput không tăng sau ba tuần | Thêm người vào dự án đang trễ | [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/) |
+| PR 600 dòng được approve trong 11 phút | Rubber-stamp approval | [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/) |
+| Số commit tăng 40% trong khi kích thước commit giảm | Đo sản lượng cá nhân | [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/) |
+| Velocity của mọi team tăng nhưng lead time không giảm | Velocity dùng để so sánh giữa các team | [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/), [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/) |
+| Cấp bậc tương quan gần như hoàn hảo với số năm ở công ty | Promotion như phần thưởng thâm niên | [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/), [11-career-evolution.md](/series/engineering-leadership/11-career-evolution/) |
+| Không có vị trí IC nào ở cấp trên Senior trong khung nhân sự | Promote engineer giỏi lên quản lý như đường duy nhất | [11-career-evolution.md](/series/engineering-leadership/11-career-evolution/), [00-nen-tang-leadership.md](/series/engineering-leadership/00-nen-tang-leadership/) |
+| Cùng một người luân chuyển nội bộ hai lần trong 18 tháng | Passing the trash | [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/) |
+| Phần lớn điều chỉnh lương ngoài kỳ được kích hoạt bởi offer bên ngoài | Counter-offer như phản xạ | [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/), [11-career-evolution.md](/series/engineering-leadership/11-career-evolution/) |
+| Team đồng ý trong họp rồi làm khác trong thực tế | Giả consensus; HiPPO | [04-decision-making.md](/series/engineering-leadership/04-decision-making/), [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/) |
+| Mọi quyết định kỹ thuật đều đến bàn bạn | Micromanagement; thiếu decision rights | [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/), [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/) |
+| Người giỏi nhất về kỹ thuật xin nghỉ và nói "ở đây không còn gì để học" | Bus factor bằng 1 kết hợp nhánh IC cụt | [11-career-evolution.md](/series/engineering-leadership/11-career-evolution/), [10-case-studies.md](/series/engineering-leadership/10-case-studies/) |
 
 ## Cách dùng chương này với team
 
@@ -687,17 +687,17 @@ Một lời nhắc thực dụng để kết. Đọc bộ tài liệu này một
 
 ## Liên kết toàn bộ bộ tài liệu
 
-- [README.md](/series/engineering-leedership/00-muc-luc/) — mục lục, cách đọc bộ tài liệu, và lộ trình đọc theo tình huống của bạn.
-- [00-nen-tang-leadership.md](/series/engineering-leedership/00-nen-tang-leadership/) — phân biệt Leadership và Management, Ownership và Accountability, chuỗi Business Goal đến Execution.
-- [01-self-leadership.md](/series/engineering-leedership/01-self-leadership/) — quản lý sự chú ý, năng lượng và thời gian của chính bạn; Circle of Influence; xử lý quá tải.
-- [02-communication.md](/series/engineering-leedership/02-communication/) — Feedback, các cuộc trò chuyện khó, giao tiếp với stakeholder, viết để ra quyết định.
-- [03-team-leadership.md](/series/engineering-leedership/03-team-leadership/) — Psychological Safety, Delegation, decision rights, xử lý xung đột trong team.
-- [04-decision-making.md](/series/engineering-leedership/04-decision-making/) — phân loại quyết định reversible và irreversible, RFC và ADR, các mô hình ra quyết định dưới bất định.
-- [05-technical-leadership.md](/series/engineering-leedership/05-technical-leadership/) — kiến trúc như quyết định tổ chức, Technical Debt, Code Review, chuẩn kỹ thuật và cách áp dụng.
-- [06-incident-va-metrics.md](/series/engineering-leedership/06-incident-va-metrics/) — Incident Command, Blameless Postmortem, SLO và Error Budget, DORA và SPACE, cách đo mà không bóp méo hành vi.
-- [07-project-delivery.md](/series/engineering-leedership/07-project-delivery/) — Estimation, quản lý phạm vi, xử lý dự án trễ, làm việc với ràng buộc hợp đồng và khách hàng.
-- [08-hiring-va-phat-trien.md](/series/engineering-leedership/08-hiring-va-phat-trien/) — phỏng vấn và đánh giá ứng viên, Onboarding, Performance Review, xử lý ca hiệu suất thấp, giữ người.
-- [09-to-chuc-va-scaling.md](/series/engineering-leedership/09-to-chuc-va-scaling/) — Team Topologies, Cognitive Load, các ngưỡng quy mô, nhân bản tầng quản lý, thiết kế tổ chức theo luồng giá trị.
-- [10-case-studies.md](/series/engineering-leedership/10-case-studies/) — các tình huống dài trong bối cảnh Việt Nam: bối cảnh, lựa chọn, trade-off, quyết định, hậu quả, bài học.
-- [11-career-evolution.md](/series/engineering-leedership/11-career-evolution/) — nhánh IC và nhánh quản lý, Career Ladder, chuyển vai, và cách quyết định hướng đi cho chính bạn.
+- [README.md](/series/engineering-leadership/00-muc-luc/) — mục lục, cách đọc bộ tài liệu, và lộ trình đọc theo tình huống của bạn.
+- [00-nen-tang-leadership.md](/series/engineering-leadership/00-nen-tang-leadership/) — phân biệt Leadership và Management, Ownership và Accountability, chuỗi Business Goal đến Execution.
+- [01-self-leadership.md](/series/engineering-leadership/01-self-leadership/) — quản lý sự chú ý, năng lượng và thời gian của chính bạn; Circle of Influence; xử lý quá tải.
+- [02-communication.md](/series/engineering-leadership/02-communication/) — Feedback, các cuộc trò chuyện khó, giao tiếp với stakeholder, viết để ra quyết định.
+- [03-team-leadership.md](/series/engineering-leadership/03-team-leadership/) — Psychological Safety, Delegation, decision rights, xử lý xung đột trong team.
+- [04-decision-making.md](/series/engineering-leadership/04-decision-making/) — phân loại quyết định reversible và irreversible, RFC và ADR, các mô hình ra quyết định dưới bất định.
+- [05-technical-leadership.md](/series/engineering-leadership/05-technical-leadership/) — kiến trúc như quyết định tổ chức, Technical Debt, Code Review, chuẩn kỹ thuật và cách áp dụng.
+- [06-incident-va-metrics.md](/series/engineering-leadership/06-incident-va-metrics/) — Incident Command, Blameless Postmortem, SLO và Error Budget, DORA và SPACE, cách đo mà không bóp méo hành vi.
+- [07-project-delivery.md](/series/engineering-leadership/07-project-delivery/) — Estimation, quản lý phạm vi, xử lý dự án trễ, làm việc với ràng buộc hợp đồng và khách hàng.
+- [08-hiring-va-phat-trien.md](/series/engineering-leadership/08-hiring-va-phat-trien/) — phỏng vấn và đánh giá ứng viên, Onboarding, Performance Review, xử lý ca hiệu suất thấp, giữ người.
+- [09-to-chuc-va-scaling.md](/series/engineering-leadership/09-to-chuc-va-scaling/) — Team Topologies, Cognitive Load, các ngưỡng quy mô, nhân bản tầng quản lý, thiết kế tổ chức theo luồng giá trị.
+- [10-case-studies.md](/series/engineering-leadership/10-case-studies/) — các tình huống dài trong bối cảnh Việt Nam: bối cảnh, lựa chọn, trade-off, quyết định, hậu quả, bài học.
+- [11-career-evolution.md](/series/engineering-leadership/11-career-evolution/) — nhánh IC và nhánh quản lý, Career Ladder, chuyển vai, và cách quyết định hướng đi cho chính bạn.
 

@@ -2820,35 +2820,35 @@ thống thật — repo, dashboard, calendar, wiki — và viết ra một câu 
 
 ## Liên kết chương khác
 
-- [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) — Ownership và Accountability là điều kiện
+- [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) — Ownership và Accountability là điều kiện
   tiên quyết: mọi hiện vật trong chương này (ADR, RFC, debt register, exception) đều có một trường "một
   tên người", và trường đó vô nghĩa nếu tổ chức chưa phân biệt được Responsibility với Accountability.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — Technical Leadership hoạt động qua văn bản và qua các
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — Technical Leadership hoạt động qua văn bản và qua các
   cuộc trao đổi khó: chương đó là phần kỹ thuật truyền đạt (viết cho stakeholder không kỹ thuật, dịch
   giá trị kỹ thuật sang ngôn ngữ tiền), chương này là phần nội dung được truyền đạt.
-- [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) — Psychological Safety là điều kiện để code review và
+- [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) — Psychological Safety là điều kiện để code review và
   RFC nhận được phản biện thật thay vì sự im lặng lịch sự; và Delegation là cơ chế để bạn không trở
   thành người quyết mọi thứ khi đã có standard và golden path.
-- [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) — Chương đó là quá trình sản xuất một quyết định;
+- [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) — Chương đó là quá trình sản xuất một quyết định;
   chương này là cách làm cho hàng nghìn quyết định bạn không tham gia vẫn hội tụ. Bảng 4 mức
   reversible/irreversible ở chương 04 là bộ lọc đầu vào cho ADR (chủ đề 2) và RFC (chủ đề 4).
-- [`06-incident-va-metrics.md`](/series/engineering-leedership/06-incident-va-metrics/) — Postmortem là nơi khoảng cách giữa kiến
+- [`06-incident-va-metrics.md`](/series/engineering-leadership/06-incident-va-metrics/) — Postmortem là nơi khoảng cách giữa kiến
   trúc thiết kế và hệ thống thật lộ ra, và là một trong sáu tín hiệu đọc culture; DORA metrics là dữ
   liệu đầu vào để đo technical debt (chủ đề 5) và để đánh giá review latency (chủ đề 3).
-- [`07-project-delivery.md`](/series/engineering-leedership/07-project-delivery/) — Architectural runway (chủ đề 1) là điều kiện để
+- [`07-project-delivery.md`](/series/engineering-leadership/07-project-delivery/) — Architectural runway (chủ đề 1) là điều kiện để
   Estimation không sai hệ thống; và lãi của technical debt là biến giải thích phần lớn hiện tượng ước
   lượng luôn trượt theo cùng một hướng.
-- [`08-hiring-va-phat-trien.md`](/series/engineering-leedership/08-hiring-va-phat-trien/) — Tiêu chí promotion là cơ chế văn hoá có
+- [`08-hiring-va-phat-trien.md`](/series/engineering-leadership/08-hiring-va-phat-trien/) — Tiêu chí promotion là cơ chế văn hoá có
   đòn bẩy dài nhất (chủ đề 7), và golden path quyết định phần lớn thời gian onboarding của người mới —
   hai chỗ mà technical leadership tác động trực tiếp vào tầng People.
-- [`09-to-chuc-va-scaling.md`](/series/engineering-leedership/09-to-chuc-va-scaling/) — Ranh giới team quyết định ranh giới service
+- [`09-to-chuc-va-scaling.md`](/series/engineering-leadership/09-to-chuc-va-scaling/) — Ranh giới team quyết định ranh giới service
   hợp lý ("ranh giới service không nhỏ hơn ranh giới team", ADR-014); và ngưỡng số team là biến chính
   trong mọi trade-off Standardization vs Flexibility ở chương này.
-- [`10-case-studies.md`](/series/engineering-leedership/10-case-studies/) — Các tình huống dài đi trọn chuỗi bối cảnh → phương án →
+- [`10-case-studies.md`](/series/engineering-leadership/10-case-studies/) — Các tình huống dài đi trọn chuỗi bối cảnh → phương án →
   trade-off → quyết định → hậu quả → bài học, dùng chính các template ADR, RFC và debt register ở đây.
-- [`11-career-evolution.md`](/series/engineering-leedership/11-career-evolution/) — Chủ đề 8 là một mảnh của bài toán lớn hơn: nhánh
+- [`11-career-evolution.md`](/series/engineering-leadership/11-career-evolution/) — Chủ đề 8 là một mảnh của bài toán lớn hơn: nhánh
   Staff/Principal giữ uy tín kỹ thuật bằng chiều sâu kỹ thuật, nhánh Manager giữ nó bằng khả năng đọc và
   phản biện thiết kế; chương đó nói về cách chọn giữa hai nhánh.
-- [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) — Tổng hợp xuyên chương các mẫu architecture astronaut,
+- [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) — Tổng hợp xuyên chương các mẫu architecture astronaut,
   rubber-stamp review, big rewrite, culture deck, hero culture và standard-không-thực-thi cùng biểu hiện
   của chúng ở tầng tổ chức.

@@ -88,49 +88,49 @@ nghi lễ, không phải công cụ.
 | File | Nội dung |
 |---|---|
 | `_STYLE-GUIDE.md` | Hợp đồng văn phong, template 9 mục, tiêu chuẩn nội dung |
-| [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) | Leadership vs Management · Ownership · Influence · Trust · Accountability vs Responsibility |
+| [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) | Leadership vs Management · Ownership · Influence · Trust · Accountability vs Responsibility |
 
 ### Level 1 — Self Leadership
 
 | File | Nội dung |
 |---|---|
-| [`01-self-leadership.md`](/series/engineering-leedership/01-self-leadership/) | Ownership ở cấp cá nhân · Time Management · Prioritization · Personal Productivity · Continuous Learning · Quản lý năng lượng và burnout |
+| [`01-self-leadership.md`](/series/engineering-leadership/01-self-leadership/) | Ownership ở cấp cá nhân · Time Management · Prioritization · Personal Productivity · Continuous Learning · Quản lý năng lượng và burnout |
 
 ### Level 2 — Team Leadership
 
 | File | Nội dung |
 |---|---|
-| [`02-communication.md`](/series/engineering-leedership/02-communication/) | Active Listening · Difficult Conversations · Feedback · One-on-One · Stakeholder Management · Presentation · Technical Writing |
-| [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) | Delegation · Mentoring · Coaching · Motivation · Conflict Resolution · Psychological Safety |
+| [`02-communication.md`](/series/engineering-leadership/02-communication/) | Active Listening · Difficult Conversations · Feedback · One-on-One · Stakeholder Management · Presentation · Technical Writing |
+| [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) | Delegation · Mentoring · Coaching · Motivation · Conflict Resolution · Psychological Safety |
 
 ### Level 3 — Technical Leadership
 
 | File | Nội dung |
 |---|---|
-| [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) | Decision Matrix · Cost-Benefit Analysis · Risk Assessment · Reversible vs Irreversible · Prioritization Frameworks · Decision Log |
-| [`05-technical-leadership.md`](/series/engineering-leedership/05-technical-leadership/) | Technical Vision · Architecture Decision & ADR · Code Review Culture · Architecture Review · RFC Process · Technical Debt Management · Engineering Culture |
-| [`06-incident-va-metrics.md`](/series/engineering-leedership/06-incident-va-metrics/) | Incident Leadership · Incident Management · Postmortem không quy tội · Engineering Metrics (DORA, SPACE) · SLO và Error Budget |
+| [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) | Decision Matrix · Cost-Benefit Analysis · Risk Assessment · Reversible vs Irreversible · Prioritization Frameworks · Decision Log |
+| [`05-technical-leadership.md`](/series/engineering-leadership/05-technical-leadership/) | Technical Vision · Architecture Decision & ADR · Code Review Culture · Architecture Review · RFC Process · Technical Debt Management · Engineering Culture |
+| [`06-incident-va-metrics.md`](/series/engineering-leadership/06-incident-va-metrics/) | Incident Leadership · Incident Management · Postmortem không quy tội · Engineering Metrics (DORA, SPACE) · SLO và Error Budget |
 
 ### Level 4 — Engineering Management
 
 | File | Nội dung |
 |---|---|
-| [`07-project-delivery.md`](/series/engineering-leedership/07-project-delivery/) | Agile · Scrum · Kanban · Estimation · Roadmap · Dependency Management · Risk Management · Planning · Budget Awareness |
-| [`08-hiring-va-phat-trien.md`](/series/engineering-leedership/08-hiring-va-phat-trien/) | Interview Design · Candidate Evaluation · Onboarding · Career Ladder · Performance Review · Promotion Framework · Xử lý underperformance |
+| [`07-project-delivery.md`](/series/engineering-leadership/07-project-delivery/) | Agile · Scrum · Kanban · Estimation · Roadmap · Dependency Management · Risk Management · Planning · Budget Awareness |
+| [`08-hiring-va-phat-trien.md`](/series/engineering-leadership/08-hiring-va-phat-trien/) | Interview Design · Candidate Evaluation · Onboarding · Career Ladder · Performance Review · Promotion Framework · Xử lý underperformance |
 
 ### Level 5 — Organizational Leadership
 
 | File | Nội dung |
 |---|---|
-| [`09-to-chuc-va-scaling.md`](/series/engineering-leedership/09-to-chuc-va-scaling/) | Technical Strategy · Team Topologies · Conway's Law · Cross-team Collaboration · Change Management · Scaling Organization · Executive Communication |
+| [`09-to-chuc-va-scaling.md`](/series/engineering-leadership/09-to-chuc-va-scaling/) | Technical Strategy · Team Topologies · Conway's Law · Cross-team Collaboration · Change Management · Scaling Organization · Executive Communication |
 
 ### Phần tổng hợp
 
 | File | Nội dung |
 |---|---|
-| [`10-case-studies.md`](/series/engineering-leedership/10-case-studies/) | 7 case study phân tích sâu: thất bại vì giao tiếp · Technical Debt tích tụ · Monolith → Microservices · scale team 5 → 50 · incident nghiêm trọng · mâu thuẫn Product–Engineering · "ship nhanh" vs "làm đúng" |
-| [`11-career-evolution.md`](/series/engineering-leedership/11-career-evolution/) | Junior → Mid → Senior → Tech Lead → Staff → Principal → EM → Director: phạm vi ảnh hưởng, cách ra quyết định, kỹ năng cần phát triển, sai lầm khi chuyển vai trò |
-| [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) | Danh mục anti-pattern quản trị · dấu hiệu sớm · cách tháo gỡ · khi nào KHÔNG nên áp dụng các thực hành trong tài liệu |
+| [`10-case-studies.md`](/series/engineering-leadership/10-case-studies/) | 7 case study phân tích sâu: thất bại vì giao tiếp · Technical Debt tích tụ · Monolith → Microservices · scale team 5 → 50 · incident nghiêm trọng · mâu thuẫn Product–Engineering · "ship nhanh" vs "làm đúng" |
+| [`11-career-evolution.md`](/series/engineering-leadership/11-career-evolution/) | Junior → Mid → Senior → Tech Lead → Staff → Principal → EM → Director: phạm vi ảnh hưởng, cách ra quyết định, kỹ năng cần phát triển, sai lầm khi chuyển vai trò |
+| [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) | Danh mục anti-pattern quản trị · dấu hiệu sớm · cách tháo gỡ · khi nào KHÔNG nên áp dụng các thực hành trong tài liệu |
 
 ---
 

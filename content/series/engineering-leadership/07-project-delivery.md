@@ -3971,26 +3971,26 @@ hệ thống delivery của bạn đang mù.
 
 ## Liên kết chương khác
 
-- [`00-nen-tang-leadership.md`](/series/engineering-leedership/00-nen-tang-leadership/) — Accountability quyết định ai được cắt
+- [`00-nen-tang-leadership.md`](/series/engineering-leadership/00-nen-tang-leadership/) — Accountability quyết định ai được cắt
   scope, ai được dời ngày, và phần nào của quyết định giao hàng thuộc về lead mà không chia được.
-- [`01-self-leadership.md`](/series/engineering-leedership/01-self-leadership/) — Prioritization ở cấp cá nhân và quản lý năng
+- [`01-self-leadership.md`](/series/engineering-leadership/01-self-leadership/) — Prioritization ở cấp cá nhân và quản lý năng
   lượng; crunch có giới hạn là chủ đề chung của hai chương, nhìn từ hai phía.
-- [`02-communication.md`](/series/engineering-leedership/02-communication/) — Stakeholder Management, no-surprise principle, và
+- [`02-communication.md`](/series/engineering-leadership/02-communication/) — Stakeholder Management, no-surprise principle, và
   cách trình bày ba phương án cho người không kỹ thuật bằng ngôn ngữ rủi ro và chi phí.
-- [`03-team-leadership.md`](/series/engineering-leedership/03-team-leadership/) — Psychological Safety quyết định việc rủi ro
+- [`03-team-leadership.md`](/series/engineering-leadership/03-team-leadership/) — Psychological Safety quyết định việc rủi ro
   delivery có được nói ra sớm hay không; đây là biến số ẩn phía sau mọi dự án trễ muộn màng.
-- [`04-decision-making.md`](/series/engineering-leedership/04-decision-making/) — Prioritization Frameworks, cost of delay, và
+- [`04-decision-making.md`](/series/engineering-leadership/04-decision-making/) — Prioritization Frameworks, cost of delay, và
   ngôn ngữ tiền để định giá cả việc trễ lẫn việc vay nợ kỹ thuật.
-- [`05-technical-leadership.md`](/series/engineering-leedership/05-technical-leadership/) — cơ chế lãi kép của technical debt, và
+- [`05-technical-leadership.md`](/series/engineering-leadership/05-technical-leadership/) — cơ chế lãi kép của technical debt, và
   vì sao chất lượng bên trong là biến không nên cắt trừ trường hợp đã nêu.
-- [`06-incident-va-metrics.md`](/series/engineering-leedership/06-incident-va-metrics/) — action item của postmortem cạnh tranh
+- [`06-incident-va-metrics.md`](/series/engineering-leadership/06-incident-va-metrics/) — action item của postmortem cạnh tranh
   capacity với roadmap; bucket technical health là chỗ quyết định chúng sống hay chết.
-- [`08-hiring-va-phat-trien.md`](/series/engineering-leedership/08-hiring-va-phat-trien/) — vì sao thêm người không cứu được dự án
+- [`08-hiring-va-phat-trien.md`](/series/engineering-leadership/08-hiring-va-phat-trien/) — vì sao thêm người không cứu được dự án
   trễ, và onboarding cần bao lâu trước khi một người mới tạo ra đóng góp ròng.
-- [`09-to-chuc-va-scaling.md`](/series/engineering-leedership/09-to-chuc-va-scaling/) — dependency giữa các team là bài toán cấu
+- [`09-to-chuc-va-scaling.md`](/series/engineering-leadership/09-to-chuc-va-scaling/) — dependency giữa các team là bài toán cấu
   trúc tổ chức; Conway's Law giải thích vì sao một số phụ thuộc không thể quản lý mà chỉ có thể thiết
   kế lại.
-- [`10-case-studies.md`](/series/engineering-leedership/10-case-studies/) — case study "ship nhanh hay làm đúng" và case study dự
+- [`10-case-studies.md`](/series/engineering-leadership/10-case-studies/) — case study "ship nhanh hay làm đúng" và case study dự
   án thất bại vì giao tiếp kém, phân tích đầy đủ từ bối cảnh đến bài học.
-- [`12-anti-patterns.md`](/series/engineering-leedership/12-anti-patterns/) — Hero Culture, crunch, và các anti-pattern delivery
+- [`12-anti-patterns.md`](/series/engineering-leadership/12-anti-patterns/) — Hero Culture, crunch, và các anti-pattern delivery
   được tổng hợp cùng dấu hiệu sớm và cách tháo gỡ.
